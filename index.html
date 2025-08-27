@@ -6,38 +6,106 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <!-- THIS must point to assets/css/main.css, relative to index.html -->
   <link rel="stylesheet" href="assets/css/main.css" />
+  <!-- Optional modern font for a sleek look (safe to keep) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
-    /* Background GIF */
+    /* =========================
+       Design system variables
+       ========================= */
+    :root{
+      --bg-overlay: rgba(4,6,12,0.46);
+      --glass: rgba(255,255,255,0.04);
+      --glass-strong: rgba(255,255,255,0.06);
+      --accent-1: #7b61ff;    /* purple */
+      --accent-2: #39ff14;    /* neon green */
+      --accent-3: #ff6b6b;    /* coral */
+      --muted: #bfc8dd;
+      --text: #f2f6ff;
+      --card-radius: 10px;
+      --ease: cubic-bezier(.16,.84,.24,1);
+    }
+
+    /* Keep the background image exactly as you had it */
     body {
       background: url('assets/images/background.gif') no-repeat center center fixed;
       background-size: cover;
+      font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      margin:0;
+      min-height:100vh;
+      position:relative;
+      overflow-x:hidden;
     }
-    /* Neon-glow nav (same as your other pages) */
-    nav ul li a {
-      font-weight: bold;
+
+    /* subtle global overlay so content reads better */
+    body::before{
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.38));
+      pointer-events: none;
+      z-index: 0;
+      mix-blend-mode: multiply;
+    }
+
+    /* make sure wrapper stays on top of overlays */
+    #wrapper { position: relative; z-index: 3; padding-bottom:48px; }
+
+    /* header */
+    header#header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 22px;
+      backdrop-filter: blur(8px) saturate(130%);
+      background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      border-radius: 0 0 10px 10px;
+      z-index: 4;
       position: relative;
-      padding: 0.5rem 1rem;
-      color: #fff;
-      text-decoration: none;
-      cursor: pointer;
+      box-shadow: 0 8px 40px rgba(2,4,12,0.6);
     }
+
+    /* Logo: removed text label, increased size, removed circle/border */
+    .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); user-select:none; }
+    .logo img { height:78px; width:auto; border-radius:0; box-shadow: 0 10px 30px rgba(0,0,0,0.6); transform: translateZ(0); }
+
+    nav ul { list-style:none; margin:0; padding:0; display:flex; gap:10px; align-items:center; }
+    nav ul li a {
+      font-weight:700;
+      font-size:14px;
+      position:relative;
+      padding:8px 12px;
+      color:var(--muted);
+      text-decoration:none;
+      border-radius:8px;
+      transition: all .18s var(--ease);
+      display:inline-block;
+    }
+    nav ul li a:hover { color:var(--text); transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 30px rgba(66, 44, 145, 0.12); }
+
+    /* keep original neon pseudo-element but toned */
     nav ul li a::before {
       content: '';
       position: absolute;
-      top: -2px; left: -2px; right: -2px; bottom: -2px;
-      border: 2px solid #39ff14;
-      border-radius: 5px;
-      box-shadow: 0 0 10px #39ff14, 0 0 20px #39ff14;
-      animation: neonMove 2s infinite linear;
+      top: -4px; left: -6px; right: -6px; bottom: -4px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, rgba(123,97,255,0.06), rgba(57,255,20,0.03));
+      filter: blur(6px);
+      z-index: -1;
+      opacity: 0;
+      transition: opacity .24s var(--ease), transform .24s var(--ease);
+      transform: translateY(6px);
     }
-    @keyframes neonMove {
-      0%   { transform: translate(0,0); }
-      25%  { transform: translate(2px,-2px); }
-      50%  { transform: translate(0,-4px); }
-      75%  { transform: translate(-2px,-2px); }
-      100% { transform: translate(0,0); }
-    }
-    /* List styling */
+    nav ul li a:hover::before { opacity: 1; transform: translateY(0); }
+
+    /* hero / main area keeps layout unchanged but looks better */
+    .wrapper.style1 { padding-top:24px; }
+    .inner { max-width:1100px; margin: 0 auto; padding: 20px; position: relative; z-index: 3; }
+
+    /* list styling (cards) - preserve dimensions & layout */
     .list-container {
       list-style: none;
       padding: 0;
@@ -45,38 +113,230 @@
       flex-wrap: wrap;
       gap: 1rem;
       justify-content: center;
+      align-items: flex-start;
+      margin-top: 6px;
     }
+
     .list-item {
-      width: 150px;
+      width: 150px;            /* keep original width to preserve layout */
       cursor: pointer;
       text-align: center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: var(--card-radius);
+      padding: 10px;
+      transition: transform .28s var(--ease), box-shadow .28s var(--ease), filter .28s var(--ease);
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 8px 30px rgba(6,8,16,0.6);
+      position: relative;
+      overflow: visible;
+      transform-style: preserve-3d;
+      will-change: transform;
+      backdrop-filter: blur(6px) saturate(120%);
     }
+    .list-item::after{
+      /* tiny neon highlight under the thumb */
+      content: '';
+      position: absolute;
+      left: 8px; right: 8px; bottom: 8px; height: 4px;
+      border-radius:4px;
+      background: linear-gradient(90deg, rgba(123,97,255,0.25), rgba(57,255,20,0.18), rgba(255,107,107,0.12));
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity .25s var(--ease), transform .25s var(--ease);
+      pointer-events:none;
+    }
+    .list-item:hover::after{ opacity:1; transform: translateY(0); }
+
+    .list-item:hover {
+      transform: translateY(-10px) rotateX(6deg) scale(1.03);
+      box-shadow: 0 28px 60px rgba(6,8,16,0.75);
+      filter: saturate(1.08);
+    }
+
     .list-item img {
       width: 100%;
-      border-radius: 5px;
+      border-radius: 6px;
+      display:block;
+      transition: transform .6s var(--ease), box-shadow .4s var(--ease);
+      transform-origin: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45), inset 0 -6px 16px rgba(0,0,0,0.08);
+      will-change: transform;
+      background: linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.02));
     }
-    .list-item span {
-      display: block;
-      margin-top: 0.5rem;
-      color: #fff;
+    .list-item:hover img { transform: scale(1.06) translateZ(18px); }
+
+    .list-item .title {
+      display:block;
+      margin-top: 0.45rem;
+      color: var(--text);
+      font-weight:700;
+      font-size:14px;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.45);
     }
-    /* Hide until Home is clicked */
-    #playlist-list,
-    #playlist-videos {
-      display: none;
+
+    /* subtle micro-text */
+    .list-item .subtitle { color:var(--muted); font-size:12px; margin-top:4px; }
+
+    /* modal polished look (preserve layout & iframe sizes) */
+    .modal-backdrop { position:fixed; inset:0; background: linear-gradient(180deg, rgba(2,3,8,0.6), rgba(0,0,0,0.75)); display:flex; align-items:center; justify-content:center; z-index:9999; }
+    .modal {
+      width: min(960px, 95%);
+      background: linear-gradient(180deg, rgba(12,12,12,0.96), rgba(6,6,8,0.98));
+      border-radius:14px;
+      padding:18px;
+      color:#fff;
+      border: 1px solid rgba(255,255,255,0.035);
+      box-shadow: 0 40px 100px rgba(2,6,18,0.9);
     }
+    .modal iframe { width:100%; height:540px; border-radius:8px; border:0; background:#000; box-shadow: 0 10px 40px rgba(0,0,0,0.7); }
+
+    .controls { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; }
+    .btn { background: linear-gradient(90deg, var(--accent-1), var(--accent-3)); color:#fff; padding:8px 12px; border-radius:8px; border:0; cursor:pointer; font-weight:700; }
+    .btn.secondary { background: transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); box-shadow:none; }
+
+    .password-row { display:flex; gap:8px; margin-top:8px; }
+    .password-row input { flex:1; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); color:var(--text); outline:none; transition: box-shadow .15s; }
+    .password-row input:focus { box-shadow: 0 8px 30px rgba(123,97,255,0.12); }
+
+    .muted { color: var(--muted); font-size:13px; }
+
+    /* Back button consistency */
+    .btn.secondary:hover { transform: translateY(-3px); color:var(--text); border-color: rgba(255,255,255,0.06); }
+
+    /* responsive tweaks - preserve behaviour you had */
+    @media (max-width:720px) {
+      .list-item { width: calc(50% - 12px); }
+      .modal iframe { height:320px; }
+    }
+
+    /* tiny animated entrance delay to feel premium */
+    .list-item { opacity:0; transform-origin:center; animation: floatIn .5s forwards; }
+    @keyframes floatIn {
+      from { opacity:0; transform: translateY(12px) scale(.995); }
+      to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    /* focus outlines for accessibility (subtle) */
+    .list-item:focus { outline: 2px solid rgba(123,97,255,0.22); outline-offset:4px; }
+
+    /* little ripple when clicking */
+    .ripple { position:relative; overflow:hidden; }
+    .ripple .drop { position:absolute; border-radius:50%; transform:scale(0); background: rgba(255,255,255,0.10); animation: rip .6s ease-out; pointer-events:none; }
+    @keyframes rip { to { transform:scale(6); opacity:0; } }
+
+    /* =========================
+       TARGETED NEON GREEN OUTLINE FOR HEADER NAV ITEMS + LOGO
+       - sits OUTSIDE the element (negative inset)
+       - only affects header nav links and the logo anchor
+       ========================= */
+
+    /* ensure these specific items can show the external outline */
+    header nav ul li a, .logo {
+      position: relative;
+      z-index: 2;
+      overflow: visible;
+    }
+
+    /* blurred animated glow outside element */
+    header nav ul li a::before,
+    .logo::before {
+      content: "";
+      position: absolute;
+      inset: -10px;               /* pushes the glow outside the element box */
+      border-radius: 14px;        /* visually matches rounded corners */
+      background: linear-gradient(90deg,
+                    rgba(57,255,20,0.06) 0%,
+                    rgba(57,255,20,0.28) 25%,
+                    rgba(57,255,20,0.6) 50%,
+                    rgba(57,255,20,0.28) 75%,
+                    rgba(57,255,20,0.06) 100%);
+      background-size: 300% 100%;
+      filter: blur(8px) saturate(150%);
+      opacity: 0.9;
+      z-index: -1; /* sits behind the element visually */
+      transition: opacity .22s ease, transform .22s ease;
+      pointer-events: none;
+      animation: neonMove 4s linear infinite;
+      box-shadow: 0 8px 30px rgba(57,255,20,0.06);
+    }
+
+    /* crisp outer rim to read as an outline (not inside) */
+    header nav ul li a::after,
+    .logo::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 12px;
+      border: 1px solid rgba(57,255,20,0.22);
+      opacity: 0.75;
+      z-index: -1;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      backdrop-filter: blur(2px);
+    }
+
+    @keyframes neonMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* stronger glow on hover/focus (desktop & keyboard) */
+    header nav ul li a.hover-strong::before,
+    .logo.hover-strong::before {
+      filter: blur(12px) saturate(220%);
+      transform: scale(1.03);
+      opacity: 1;
+      animation-duration: 2.4s;
+    }
+    header nav ul li a.hover-strong::after,
+    .logo.hover-strong::after {
+      border-color: rgba(57,255,20,0.5);
+      opacity: 1;
+      transform: translateY(-2px);
+    }
+
+    /* Touch press effect for mobile */
+    header nav ul li a.touch-active,
+    .logo.touch-active {
+      transform: scale(0.985);
+      transition: transform .08s linear;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+    }
+    header nav ul li a.touch-active::before,
+    .logo.touch-active::before {
+      filter: blur(6px) saturate(160%);
+      transform: scale(1.01);
+      opacity: 1;
+      animation-duration: 1.6s;
+    }
+
+    /* pulse animation */
+    header nav ul li a.pulse,
+    .logo.pulse { animation: btnPulse .5s ease-out; }
+    @keyframes btnPulse {
+      0% { box-shadow: 0 0 0 rgba(57,255,20,0.28); }
+      50% { box-shadow: 0 0 30px rgba(57,255,20,0.22); }
+      100% { box-shadow: 0 0 0 rgba(57,255,20,0); }
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      header nav ul li a::before,
+      .logo::before { animation: none; transition: none; filter: blur(6px); }
+    }
+
   </style>
 </head>
 <body class="landing is-preload">
 
   <div id="wrapper">
 
-    <!-- Header (unchanged) -->
+    <!-- Header: removed the VIDU text next to the logo as requested -->
     <header id="header">
-      <a href="index.html" class="logo">
+      <a href="index.html" class="logo" aria-label="VIDU home">
         <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg"
-             alt="VIDU Logo" style="height:60px; vertical-align:middle;" />
-        <span>VIDU</span>
+             alt="VIDU Logo" style="height:78px; vertical-align:middle; border-radius:0;" />
       </a>
       <nav>
         <ul>
@@ -85,6 +345,12 @@
           <li><a href="about.html">About</a></li>
         </ul>
       </nav>
+
+      <!-- AUTH area kept in original position (top-right inside header) -->
+      <div id="auth-area" style="display:flex; gap:10px; align-items:center; margin-left:16px; min-width:220px; justify-content:flex-end;">
+        <!-- Visible fallback button (guaranteed on page load) -->
+        <button id="signin-fallback" class="btn">Sign in with Google</button>
+      </div>
     </header>
 
     <!-- Main Playlists Section -->
@@ -94,9 +360,30 @@
         <!-- Playlist thumbnails -->
         <ul id="playlist-list" class="list-container"></ul>
         <!-- Videos of selected playlist -->
-        <div id="playlist-videos" style="margin-top:2rem;"></div>
+        <div id="playlist-videos" style="margin-top:2rem; display:none;"></div>
       </div>
     </section>
+
+    <!-- server instructions popup (shown when testing on file://) -->
+    <div id="serve-hint" role="dialog" aria-modal="true" style="display:none; position:fixed; left:50%; top:14%; transform:translateX(-50%); background: rgba(6,8,12,0.95); color:#fff; border-radius:10px; padding:16px 18px; z-index:99999; max-width:680px; box-shadow:0 20px 60px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.04);">
+      <strong style="display:block; margin-bottom:8px;">Heads up — Google sign-in won’t run from <code>file://</code></strong>
+      <div class="muted" style="margin-bottom:10px;">
+        The Google Identity script requires a web origin (http/https or localhost). Run a quick local server and open the page via <code>http://localhost:8000</code>.
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px;">
+          <div style="font-weight:700; margin-bottom:6px;">Python (if installed)</div>
+          <code style="background:rgba(255,255,255,0.03); padding:6px 8px; border-radius:6px; display:inline-block;">python -m http.server 8000</code>
+        </div>
+        <div style="flex:1; min-width:200px;">
+          <div style="font-weight:700; margin-bottom:6px;">Node (http-server)</div>
+          <code style="background:rgba(255,255,255,0.03); padding:6px 8px; border-radius:6px; display:inline-block;">npx http-server -p 8000</code>
+        </div>
+      </div>
+      <div style="text-align:right; margin-top:12px;">
+        <button id="serve-close" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);">Close</button>
+      </div>
+    </div>
 
     <!-- Footer (unchanged) -->
     <footer id="footer">
@@ -105,59 +392,624 @@
 
   </div>
 
-  <!-- Inline script to show playlists/videos when Home is clicked -->
+  <!-- Modal root for password prompt + player -->
+  <div id="modal-root" style="display:none;"></div>
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const playlists = [
+  /*************************************************************************
+   * CONFIG - replace with your values
+   *************************************************************************/
+  const OAUTH_CLIENT_ID = '342354359423-s42kqoigp8207erl9i88pmo324clf6ps.apps.googleusercontent.com'; // <-- replace with your OAuth client id
+  const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI';             // optional fallback for playlist fetch
+
+  /*************************************************************************
+   * DATA
+   *************************************************************************/
+  const playlists = [
+    {
+      id: 1,
+      name: 'Classes',
+      thumbnail: 'https://i.pinimg.com/736x/32/c1/73/32c1737a13e66b165dec8e22e6139abd.jpg',
+      videos: [
         {
-          id: 1,
-          name: 'Classes',
-          thumbnail: 'https://i.pinimg.com/736x/32/c1/73/32c1737a13e66b165dec8e22e6139abd.jpg',
-          videos: [
-            { name: 'SFT speed revision', thumbnail: 'https://i.pinimg.com/736x/f5/2f/e7/f52fe70cb06ab45d2589ce68f28f3dfd.jpg', url: 'https://youtube.com/playlist?list=PL9zX0VbNmKiHKo-BtyV8BPWTSYna5uKac&si=hCLAWmxJBCrwhnsC' },
-            { name: 'SFT Paper Class', thumbnail: 'https://i.pinimg.com/736x/87/f1/09/87f109441adaad6f48f7b0b5337f14a6.jpg', url: 'https://youtube.com/playlist?list=PL9zX0VbNmKiGvjsOA_PkSwmDDk1rvfJba&si=C6RJyotAKOQfuc_l' },
-            { name: 'ET', thumbnail: 'https://i.pinimg.com/736x/75/a7/35/75a735c40d2b905dfb0c93b46cf40cfc.jpg' , url: 'https://youtube.com/playlist?list=PL9zX0VbNmKiGYGvjdBVkcWhzDa_wdY-_f&si=g15ZvFT5mY8JPIKm' },
-            { name: 'ET Paper', thumbnail: 'https://i.pinimg.com/736x/df/4a/9d/df4a9d6b85a6097bd4b273e5fbc51382.jpg' , url: 'https://youtube.com/playlist?list=PL9zX0VbNmKiFkshoAPMjeQfMS2FfzGmrK&si=esy_xYhTcDY90AHw' },
-            { name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/35/d9/78/35d978b32e1240f637a585f27b507799.jpg' , url: 'https://youtube.com/playlist?list=PL9zX0VbNmKiHlw4n8kLRrD7TNfxnuCc0M&si=kuOztSXOkvPYYz88' },
-            { name: '', thumbnail: '' , url: '' },
-          ]
+          name: 'SFT speed revision',
+          thumbnail: 'https://i.pinimg.com/736x/f5/2f/e7/f52fe70cb06ab45d2589ce68f28f3dfd.jpg',
+          type: 'playlist',
+          idB64: 'UExJWUxJVF9fUExJV3ZfMQ==',
+          passB64: 'cGFzczFfYXNk'
+        },
+        {
+          name: 'SFT Paper Class',
+          thumbnail: 'https://i.pinimg.com/736x/87/f1/09/87f109441adaad6f48f7b0b5337f14a6.jpg',
+          type: 'playlist',
+          idB64: 'UExJVF9fUExJVF9JRF8y',
+          passB64: 'cGFzczJfYXNk'
+        },
+        {
+          name: 'ET (single video)',
+          thumbnail: 'https://i.pinimg.com/736x/75/a7/35/75a735c40d2b905dfb0c93b46cf40cfc.jpg',
+          type: 'video',
+          idB64: 'SU5fRVNUMV9WSURFTw==',
+          passB64: 'cGFzczNfYXNk'
+        },
+        {
+          name: 'ET Paper',
+          thumbnail: 'https://i.pinimg.com/736x/df/4a/9d/df4a9d6b85a6097bd4b273e5fbc51382.jpg',
+          type: 'playlist',
+          idB64: 'UExJVF9fUVVZeV8z',
+          passB64: 'cGFzczRfYXNk'
+        },
+        {
+          name: 'ICT',
+          thumbnail: 'https://i.pinimg.com/736x/35/d9/78/35d978b32e1240f637a585f27b507799.jpg',
+          type: 'video',
+          idB64: 'SUNUX1ZJRE9fMQ==',
+          passB64: 'cGFzczVfYXNk'
         }
-        // …add more playlists here…
-      ];
+      ]
+    }
+  ];
 
-      const navHome = document.getElementById('nav-home');
-      const ul = document.getElementById('playlist-list');
-      const container = document.getElementById('playlist-videos');
+  /*************************************************************************
+   * STATE
+   *************************************************************************/
+  let oauthToken = null;
+  let profileInfo = null;
+  let tokenClient = null;
+  let currentItem = null;
+  const isFileProtocol = (location.protocol === 'file:');
 
-      navHome.addEventListener('click', () => {
-        // Show playlist thumbnails
-        ul.style.display = 'flex';
-        container.style.display = 'none';
-        ul.innerHTML = '';
-        playlists.forEach(pl => {
-          const li = document.createElement('li');
-          li.className = 'list-item';
-          li.innerHTML = `<img src="${pl.thumbnail}" alt="${pl.name}" /><span>${pl.name}</span>`;
-          li.addEventListener('click', () => {
-            // When a playlist is clicked, show its videos
-            ul.style.display = 'none';
-            container.style.display = 'block';
-            container.innerHTML = `<h3 style="text-align:center; color:#fff;">${pl.name}</h3>`;
-            const vids = document.createElement('ul');
-            vids.className = 'list-container';
-            pl.videos.forEach(v => {
-              const vli = document.createElement('li');
-              vli.className = 'list-item';
-              vli.innerHTML = `<img src="${v.thumbnail}" alt="${v.name}" /><span>${v.name}</span>`;
-              vli.addEventListener('click', () => window.open(v.url, '_blank'));
-              vids.appendChild(vli);
-            });
-            container.appendChild(vids);
-          });
-          ul.appendChild(li);
-        });
+  /*************************************************************************
+   * HELPERS
+   *************************************************************************/
+  function b64decode(s){ try { return atob(s); } catch(e) { return s; } }
+  function escapeHtml(s){ return (s||'').replace(/[&<>\"'`]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
+
+  /*************************************************************************
+   * Modal creation (unchanged)
+   *************************************************************************/
+  function createModal() {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="modal-backdrop" id="modal-backdrop">
+        <div class="modal" role="dialog" aria-modal="true">
+          <div class="controls">
+            <div>
+              <strong id="modal-title">Locked</strong>
+              <div class="muted" id="modal-subtitle" style="color:#bbb; font-size:12px;"></div>
+            </div>
+            <div>
+              <button id="modal-close" class="btn secondary">Close</button>
+            </div>
+          </div>
+
+          <div id="modal-body">
+            <div id="password-block">
+              <div style="color:#bbb; margin-bottom:8px;">This item is password-protected. Enter password to unlock and play.</div>
+              <div class="password-row">
+                <input id="password-input" type="password" placeholder="Enter password" />
+                <button id="password-submit" class="btn">Unlock</button>
+              </div>
+              <div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div>
+            </div>
+
+            <div id="player-block" style="display:none; margin-top:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div style="color:#bbb">Now playing</div>
+                <div>
+                  <button id="open-youtube" class="btn secondary">Open in YouTube</button>
+                  <button id="close-player" class="btn">Close</button>
+                </div>
+              </div>
+              <div id="player-wrap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('modal-close').onclick = closeModal;
+    document.getElementById('close-player').onclick = closeModal;
+    document.getElementById('password-submit').onclick = onPasswordSubmit;
+    document.getElementById('password-input').onkeydown = (e)=>{ if(e.key === 'Enter') onPasswordSubmit(); };
+    document.getElementById('modal-backdrop').onclick = function(e){ if (e.target === this) closeModal(); };
+  }
+
+  function openPasswordModal(item) {
+    currentItem = item;
+    const root = document.getElementById('modal-root');
+    root.style.display = 'block';
+    document.getElementById('modal-title').textContent = item.name || 'Protected';
+    document.getElementById('modal-subtitle').textContent = (item.type || 'video') + ' — password required';
+    document.getElementById('password-input').value = '';
+    document.getElementById('password-error').style.display = 'none';
+    document.getElementById('password-block').style.display = 'block';
+    document.getElementById('player-block').style.display = 'none';
+    setTimeout(()=>document.getElementById('password-input').focus(), 50);
+  }
+  function closeModal() {
+    const root = document.getElementById('modal-root');
+    root.style.display = 'none';
+    const wrap = document.getElementById('player-wrap');
+    if (wrap) wrap.innerHTML = '';
+    currentItem = null;
+  }
+  function onPasswordSubmit() {
+    const val = (document.getElementById('password-input').value || '').trim();
+    if (!currentItem) return;
+    const expected = b64decode(currentItem.passB64 || '');
+    if (val === expected) {
+      document.getElementById('password-block').style.display = 'none';
+      document.getElementById('password-error').style.display = 'none';
+      showPlayerForItem(currentItem);
+    } else {
+      const err = document.getElementById('password-error');
+      err.style.display = 'block';
+      err.textContent = 'Incorrect password — try again.';
+    }
+  }
+  function showPlayerForItem(item) {
+    const url = buildEmbedUrl(item);
+    const wrap = document.getElementById('player-wrap');
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('src', url);
+    iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
+    iframe.setAttribute('allowfullscreen', '');
+    wrap.innerHTML = '';
+    wrap.appendChild(iframe);
+    document.getElementById('player-block').style.display = 'block';
+    document.getElementById('open-youtube').onclick = function(){
+      if (item.type === 'video') {
+        const v = b64decode(item.idB64);
+        window.open(`https://youtu.be/${v}`, '_blank', 'noopener');
+      } else {
+        const p = b64decode(item.idB64);
+        window.open(`https://www.youtube.com/playlist?list=${p}`, '_blank', 'noopener');
+      }
+    };
+  }
+
+  function buildEmbedUrl(item) {
+    const id = b64decode(item.idB64);
+    if (item.type === 'video') {
+      return `https://www.youtube.com/embed/${encodeURIComponent(id)}?rel=0&autoplay=1`;
+    } else if (item.type === 'playlist') {
+      return `https://www.youtube.com/embed/videoseries?list=${encodeURIComponent(id)}&autoplay=1`;
+    }
+    return '';
+  }
+  function getThumb(item) {
+    if (item.thumbnail && item.thumbnail.trim().length) return item.thumbnail;
+    try {
+      const id = b64decode(item.idB64);
+      if (item.type === 'video') return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+      return 'https://i.imgur.com/8Km9tLL.png';
+    } catch(e) { return 'https://i.imgur.com/8Km9tLL.png'; }
+  }
+
+  // ---------- render playlists + videos ----------
+  function renderPlaylists() {
+    const ul = document.getElementById('playlist-list');
+    ul.innerHTML = '';
+    playlists.forEach(pl => {
+      const li = document.createElement('li');
+      li.className = 'list-item ripple';
+      li.innerHTML = `<img src="${pl.thumbnail}" alt="${pl.name}" /><span>${pl.name}</span>`;
+      li.addEventListener('click', (ev) => {
+        // ripple effect
+        spawnRipple(ev, li);
+        showPlaylistVideos(pl);
       });
+      ul.appendChild(li);
     });
+  }
+
+  function showPlaylistVideos(pl) {
+    const ul = document.getElementById('playlist-list');
+    const container = document.getElementById('playlist-videos');
+    ul.style.display = 'none';
+    container.style.display = 'block';
+    container.innerHTML = `<h3 style="text-align:center; color:#fff;">${pl.name}</h3>`;
+    const vids = document.createElement('ul');
+    vids.className = 'list-container';
+    pl.videos.forEach(v => {
+      const vli = document.createElement('li');
+      vli.className = 'list-item ripple';
+      const thumb = getThumb(v);
+      vli.innerHTML = `<img src="${thumb}" alt="${v.name}" /><span>${v.name}</span>`;
+      vli.addEventListener('click', (ev) => {
+        spawnRipple(ev, vli);
+        openPasswordModal(v);
+      });
+      vids.appendChild(vli);
+      // add tilt for each tile (progressive enhancement)
+      attachTilt(vli);
+    });
+    // back button
+    const back = document.createElement('div');
+    back.style.textAlign = 'center';
+    back.style.marginTop = '16px';
+    back.innerHTML = `<button id="back-to-playlists" class="btn secondary">Back to playlists</button>`;
+    container.appendChild(vids);
+    container.appendChild(back);
+    document.getElementById('back-to-playlists').onclick = () => {
+      ul.style.display = 'flex';
+      container.style.display = 'none';
+    };
+  }
+
+  /*************************************************************************
+   * Google OAuth (GSI) init & UI wiring (auth area remains in original place)
+   *************************************************************************/
+  function renderAuthArea(){
+    const root = document.getElementById('auth-area');
+    root.innerHTML = '';
+    if(profileInfo){
+      const name = document.createElement('div'); name.className = 'user-name'; name.textContent = profileInfo.name || profileInfo.email || 'Signed in';
+      const avatar = document.createElement('div'); avatar.className = 'avatar'; avatar.innerHTML = `<img src="${profileInfo.picture||''}" alt="avatar" />`;
+      const signOutBtn = document.createElement('button'); signOutBtn.className = 'btn'; signOutBtn.textContent = 'Sign out';
+      signOutBtn.onclick = signOutGoogle;
+      root.appendChild(name); root.appendChild(avatar); root.appendChild(signOutBtn);
+    } else {
+      const signInBtn = document.createElement('button'); signInBtn.className = 'btn'; signInBtn.textContent = 'Sign in with Google';
+      signInBtn.onclick = signInWithGoogle;
+      root.appendChild(signInBtn);
+    }
+  }
+
+  function initGoogleOAuth(){
+    if (isFileProtocol) {
+      // will not work on file://
+      return;
+    }
+    if(!OAUTH_CLIENT_ID || OAUTH_CLIENT_ID === 'YOUR_OAUTH_CLIENT_ID_HERE'){
+      console.warn('OAUTH_CLIENT_ID not set. Replace with your real client id.');
+      return;
+    }
+    if(!window.google){
+      // try again shortly if GSI hasn't loaded
+      setTimeout(initGoogleOAuth, 300);
+      return;
+    }
+    if(tokenClient) return;
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: OAUTH_CLIENT_ID,
+      scope: 'openid email profile https://www.googleapis.com/auth/youtube.readonly',
+      callback: (resp) => {
+        if(resp.error){
+          console.error('OAuth failed', resp);
+          alert('Google sign-in failed: ' + (resp.error || 'unknown'));
+          return;
+        }
+        oauthToken = resp.access_token;
+        // fetch simple profile
+        fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + oauthToken } })
+          .then(r=>r.json()).then(profile => {
+            profileInfo = profile;
+            renderAuthArea();
+          }).catch(err => {
+            console.warn('userinfo fetch failed', err);
+            profileInfo = null;
+            renderAuthArea();
+          });
+      }
+    });
+  }
+
+  function signInWithGoogle(){
+    // if on file:// show helpful hint
+    if(isFileProtocol){
+      const hint = document.getElementById('serve-hint');
+      if(hint) hint.style.display = 'block';
+      return;
+    }
+    if(!tokenClient){ initGoogleOAuth(); setTimeout(signInWithGoogle, 300); return; }
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+
+  function signOutGoogle(){
+    if(oauthToken){
+      const revokeUrl = 'https://oauth2.googleapis.com/revoke?token=' + encodeURIComponent(oauthToken);
+      fetch(revokeUrl, { method:'POST', headers:{ 'Content-type':'application/x-www-form-urlencoded' } }).catch(()=>{}).finally(()=>{
+        oauthToken = null; profileInfo = null; renderAuthArea();
+      });
+    } else { profileInfo = null; renderAuthArea(); }
+  }
+
+  /*************************************************************************
+   * YouTube playlist fetch using OAuth token (or fallback API key)
+   *************************************************************************/
+  async function fetchPlaylistVideos(playlistId){
+    const items = []; let pageToken = '';
+    do{
+      let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}`;
+      const headers = {};
+      if(oauthToken) headers['Authorization'] = 'Bearer ' + oauthToken;
+      else if(YT_API_KEY && YT_API_KEY !== 'YOUR_API_KEY_HERE') url += `&key=${encodeURIComponent(YT_API_KEY)}`;
+      else throw new Error('No OAuth token and no API key configured. Sign in or set an API key.');
+
+      if(pageToken) url += `&pageToken=${pageToken}`;
+      const res = await fetch(url, { headers });
+      if(!res.ok){
+        const txt = await res.text().catch(()=>null);
+        throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||''));
+      }
+      const data = await res.json();
+      (data.items||[]).forEach(it => {
+        const sn = it.snippet || {};
+        if(sn.resourceId && sn.resourceId.videoId){
+          const thumb = (sn.thumbnails && (sn.thumbnails.high||sn.thumbnails.medium||sn.thumbnails.default))||{};
+          items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
+        }
+      });
+      pageToken = data.nextPageToken || '';
+    } while(pageToken);
+    return items;
+  }
+
+  /*************************************************************************
+   * Modal + Player (same behavior as before)
+   *************************************************************************/
+  function showPlayerForVideo(videoId, title){
+    const wrap = document.getElementById('player-wrap');
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('src', `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?rel=0&autoplay=1`);
+    iframe.setAttribute('allow','autoplay; encrypted-media; fullscreen');
+    iframe.setAttribute('allowfullscreen','');
+    iframe.style.width='100%'; iframe.style.height='520px';
+    wrap.innerHTML=''; wrap.appendChild(iframe);
+    document.getElementById('player-block').style.display='block';
+    document.getElementById('now-playing-label') && (document.getElementById('now-playing-label').textContent = title ? `Now playing — ${title}` : 'Now playing');
+    document.getElementById('open-youtube').onclick = ()=> window.open(`https://youtu.be/${videoId}`, '_blank','noopener');
+  }
+
+  async function showPlaylistInsideModal(item){
+    const rawId = b64decode(item.idB64), playlistId = rawId.split('&')[0];
+    try{
+      const videos = await fetchPlaylistVideos(playlistId);
+      if(!videos.length){ document.getElementById('player-wrap').innerHTML = `<div class="muted">No videos found or playlist is private.</div>`; document.getElementById('player-block').style.display='block'; return; }
+      const listWrap = document.getElementById('playlist-video-list'); listWrap.innerHTML='';
+      videos.forEach(v=>{
+        const li=document.createElement('div'); li.className='list-item ripple'; li.setAttribute('data-video-id', v.videoId);
+        li.style.display='flex'; li.style.alignItems='center'; li.style.gap='12px'; li.style.padding='8px';
+        li.innerHTML = `<img src="${v.thumb}" alt="${escapeHtml(v.title)}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;" /><div style="flex:1;"><div class="title" style="font-size:13px;">${escapeHtml(v.title)}</div></div>`;
+        li.onclick = ()=> showPlayerForVideo(v.videoId, v.title);
+        listWrap.appendChild(li);
+      });
+      document.getElementById('player-block').style.display='block'; document.getElementById('playlist-list-wrap').style.display='block';
+      showPlayerForVideo(videos[0].videoId, videos[0].title);
+    } catch(err){
+      console.error('Playlist fetch error', err);
+      document.getElementById('player-wrap').innerHTML = `<div class="muted">Failed to load playlist: ${escapeHtml(err.message||'')}</div>`;
+      document.getElementById('player-block').style.display='block';
+    }
+  }
+
+  function showPlayerForItem(item){ if(item.type==='video'){ const id=b64decode(item.idB64); showPlayerForVideo(id, item.name||item.title); } else showPlaylistInsideModal(item); }
+
+  /*************************************************************************
+   * Tiny helpers
+   *************************************************************************/
+  function spawnRipple(ev, target){
+    const rect = target.getBoundingClientRect();
+    const drop = document.createElement('div');
+    drop.className = 'drop';
+    drop.style.left = (ev.clientX - rect.left)+'px';
+    drop.style.top = (ev.clientY - rect.top)+'px';
+    target.appendChild(drop);
+    setTimeout(()=> drop.remove(),700);
+  }
+
+  function attachTilt(card){
+    if(!card) return;
+    const img = card.querySelector('img');
+    const bounds = { w: 150, h: 110 };
+    card.addEventListener('mousemove', (e)=>{
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      const rx = (py - 0.5) * 10; // rotate X
+      const ry = (px - 0.5) * -10; // rotate Y
+      card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(6px)`;
+      if(img) img.style.transform = `translateZ(26px) scale(1.06) translateY(${(0.5-py)*6}px)`;
+    });
+    card.addEventListener('mouseleave', ()=>{
+      card.style.transform = '';
+      if(img) img.style.transform = '';
+    });
+  }
+
+  // serve hint close
+  document.getElementById && document.addEventListener('DOMContentLoaded', ()=> {
+    const sc = document.getElementById('serve-close');
+    if(sc) sc.onclick = ()=> document.getElementById('serve-hint').style.display = 'none';
+  });
+
+  /* ====== particles, header interactions, etc. (unchanged) ====== */
+
+  (function createParticles(){
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.id = 'fx-canvas';
+      canvas.style.position = 'fixed';
+      canvas.style.left = '0';
+      canvas.style.top = '0';
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.zIndex = '1';
+      canvas.style.pointerEvents = 'none';
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      let dpr = Math.min(2, window.devicePixelRatio || 1);
+      function resize(){ canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr; canvas.style.width = innerWidth+'px'; canvas.style.height = innerHeight+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); }
+      window.addEventListener('resize', resize, {passive:true});
+      resize();
+
+      const stars = [];
+      for(let i=0;i<80;i++){
+        stars.push({
+          x: Math.random() * innerWidth,
+          y: Math.random() * innerHeight,
+          r: Math.random()*1.8 + 0.3,
+          vx: (Math.random()-0.5)*0.12,
+          vy: (Math.random()-0.5)*0.06,
+          hue: 200 + Math.random()*120,
+          alpha: Math.random()*0.22 + 0.06
+        });
+      }
+
+      function draw(){
+        ctx.clearRect(0,0,innerWidth,innerHeight);
+        const g = ctx.createRadialGradient(innerWidth*0.7, innerHeight*0.35, 0, innerWidth*0.4, innerHeight*0.6, Math.max(innerWidth, innerHeight));
+        g.addColorStop(0, 'rgba(123,97,255,0.05)');
+        g.addColorStop(0.45, 'rgba(57,255,20,0.02)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,innerWidth,innerHeight);
+
+        for(const s of stars){
+          s.x += s.vx;
+          s.y += s.vy;
+          if(s.x < -10) s.x = innerWidth+10;
+          if(s.x > innerWidth+10) s.x = -10;
+          if(s.y < -10) s.y = innerHeight+10;
+          if(s.y > innerHeight+10) s.y = -10;
+          ctx.beginPath();
+          ctx.fillStyle = `hsla(${s.hue}, 85%, 70%, ${s.alpha})`;
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+          ctx.fill();
+        }
+
+        for(let i=0;i<stars.length;i++){
+          const a = stars[i];
+          for(let j=i+1;j<stars.length;j++){
+            const b = stars[j];
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            const d = Math.sqrt(dx*dx + dy*dy);
+            if(d < 140){
+              ctx.beginPath();
+              ctx.strokeStyle = `rgba(120,150,255,${(1 - d/140) * 0.03})`;
+              ctx.lineWidth = 1;
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    } catch(e){
+      console.warn('particles failed', e);
+    }
+  })();
+
+  function attachHeaderInteractions(){
+    const selector = 'header nav ul li a, .logo';
+    const els = Array.from(document.querySelectorAll(selector));
+    if(els.length === 0){
+      setTimeout(attachHeaderInteractions, 200);
+      return;
+    }
+
+    function onPointerEnter(e){
+      if(e.pointerType === 'touch') return;
+      e.currentTarget.classList.add('hover-strong');
+    }
+    function onPointerLeave(e){ e.currentTarget.classList.remove('hover-strong'); }
+    function onPointerDown(e){
+      const el = e.currentTarget;
+      el.classList.add('touch-active');
+      el.classList.add('pulse');
+      setTimeout(()=> el.classList.remove('pulse'), 480);
+      setTimeout(()=> el.classList.remove('touch-active'), 420);
+    }
+    function onTouchStart(e){
+      const el = e.currentTarget;
+      el.classList.add('touch-active');
+      setTimeout(()=> el.classList.remove('touch-active'), 420);
+    }
+
+    els.forEach(el=>{
+      if(getComputedStyle(el).position === 'static') el.style.position = 'relative';
+      el.addEventListener('pointerenter', onPointerEnter, {passive:true});
+      el.addEventListener('pointerleave', onPointerLeave, {passive:true});
+      el.addEventListener('pointerdown', onPointerDown, {passive:true});
+      el.addEventListener('touchstart', onTouchStart, {passive:true});
+      el.addEventListener('focus', ()=> el.classList.add('hover-strong'));
+      el.addEventListener('blur', ()=> el.classList.remove('hover-strong'));
+    });
+
+    const mo = new MutationObserver(()=>{ attachHeaderInteractions(); });
+    mo.observe(document.body, { childList:true, subtree:true });
+  }
+
+  /*************************************************************************
+   * Init
+   *************************************************************************/
+  document.addEventListener('DOMContentLoaded', function(){
+    createModal();
+    renderPlaylists();
+    // Headless render but show playlists only when nav is clicked (same UX as before)
+    const navHome = document.getElementById('nav-home');
+    if(navHome) navHome.addEventListener('click', () => {
+      document.getElementById('playlist-list').style.display = 'flex';
+      document.getElementById('playlist-videos').style.display = 'none';
+    });
+
+    // attach tilt to initial playlist tiles
+    document.querySelectorAll('.list-item').forEach(el => attachTilt(el));
+
+    // attach neon interactions only to header nav links + logo
+    attachHeaderInteractions();
+
+    // init Google (if not file://)
+    if(!isFileProtocol) initGoogleOAuth();
+    // render auth area (shows "Sign in with Google" button initially)
+    renderAuthArea();
+
+    // small entrance delays
+    (function stagger(){
+      const cards = document.querySelectorAll('.list-item');
+      cards.forEach((c, i) => c.style.animationDelay = (i * 60) + 'ms');
+    })();
+
+    // ensure fallback visible button triggers sign in flow (or shows instructions on file://)
+    const fallback = document.getElementById('signin-fallback');
+    if(fallback){
+      fallback.addEventListener('click', ()=> {
+        if(isFileProtocol){
+          document.getElementById('serve-hint').style.display = 'block';
+          return;
+        }
+        initGoogleOAuth();
+        setTimeout(signInWithGoogle, 250);
+      });
+    }
+
+    // serve-hint close
+    const sc = document.getElementById('serve-close');
+    if(sc) sc.onclick = ()=> document.getElementById('serve-hint').style.display = 'none';
+  });
+
+  // small deterrents: disable right-click, block common DevTools shortcuts (these are petty deterrents)
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, false);
+  document.addEventListener('keydown', function(e){
+    // block Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, F12
+    if ((e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) ||
+        (e.ctrlKey && (e.key === 'U' || e.key === 'u')) ||
+        (e.key === 'F12')) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // Accessibility: allow ESC to close modal
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { const root = document.getElementById('modal-root'); if (root) root.style.display = 'none'; } });
+
   </script>
 
   <!-- HTML5 UP template scripts (paths must be exactly as shown) -->
@@ -166,7 +1018,6 @@
   <script src="assets/js/breakpoints.min.js"></script>
   <script src="assets/js/util.js"></script>
   <script src="assets/js/main.js"></script>
-  
+
 </body>
 </html>
-
