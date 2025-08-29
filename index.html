@@ -1,19 +1,924 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html>
 <head>
-  <title>Under Maintenance</title>
+  <title>VIDU</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
-    body { background: #222; color: #fff; text-align: center; font-family: sans-serif; padding: 100px; }
-    h1 { font-size: 3em; }
+    /* Styles kept from your previous version, with playlist-list safety styles */
+    :root{ --bg-overlay: rgba(4,6,12,0.46); --glass: rgba(255,255,255,0.04); --glass-strong: rgba(255,255,255,0.06); --accent-1: #7b61ff; --accent-2:#39ff14; --accent-3:#ff6b6b; --muted:#bfc8dd; --text:#f2f6ff; --card-radius:10px; --ease:cubic-bezier(.16,.84,.24,1);}
+
+    body{
+      background:url('assets/images/background.gif') no-repeat center center fixed;
+      background-size:cover;
+      font-family:"Inter","Helvetica Neue",Arial,sans-serif;
+      color:var(--text);
+      margin:0;
+      min-height:100vh;
+      position:relative;
+      overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    body::before{
+      content:'';
+      position:fixed;
+      inset:0;
+      background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.38));
+      pointer-events:none;
+      z-index:0;
+      mix-blend-mode:multiply;
+    }
+
+    #wrapper{position:relative;z-index:3;padding-bottom:48px;}
+
+    header#header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 22px;
+      backdrop-filter: blur(8px) saturate(130%);
+      background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      /* removed white bottom border to eliminate white outlines around header/nav */
+      border-bottom: none;
+      border-radius:0 0 10px 10px;
+      z-index:4;
+      position:relative;
+      box-shadow:0 8px 40px rgba(2,4,12,0.6);
+    }
+
+    /* LOGO: now a circular avatar with center-cropped image */
+    .logo{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      text-decoration:none;
+      color:var(--text);
+      user-select:none;
+      position:relative;
+    }
+
+    /* responsive square container — keeps perfect circle and prevents stretching */
+    .logo-circle{
+      width: clamp(72px, 9vw, 120px);
+      aspect-ratio: 1/1;            /* ensures equal width/height */
+      border-radius:50%;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 10px solid rgba(255,255,255,0.06); /* small subtle border kept */
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px) saturate(120%);
+      transform: translateZ(0);
+      flex-shrink:0;
+    }
+
+    /* ensure the source image is center-cropped without stretching */
+    .logo-circle img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      object-position:center center;
+      display:block;
+      transform: translateZ(0);
+    }
+
+    /* rest of header nav & layout */
+    nav ul{list-style:none;margin:0;padding:0;display:flex;gap:10px;align-items:center;}
+    nav ul li a{
+      font-weight:700;
+      font-size:14px;
+      position:relative;
+      padding:8px 12px;
+      color:var(--muted);
+      text-decoration:none;
+      border-radius:8px;
+      transition:all .18s var(--ease);
+      display:inline-block;
+      /* ensure no white border or outline around nav items */
+      border: none;
+      box-shadow: none;
+      outline: none;
+      background: transparent;
+    }
+    nav ul li a:hover{color:var(--text);transform: translateY(-3px) scale(1.02);box-shadow:0 10px 30px rgba(66,44,145,0.12);}
+
+    .wrapper.style1{padding-top:24px;}
+    .inner{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:3;}
+
+    .list-container{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:flex-start;margin-top:6px;}
+    .list-item{width:150px;cursor:pointer;text-align:center;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:var(--card-radius);padding:10px;transition:transform .28s var(--ease),box-shadow .28s var(--ease),filter .28s var(--ease); /* keep tile border for cards */ border:1px solid rgba(255,255,255,0.04); box-shadow:0 8px 30px rgba(6,8,16,0.6);position:relative;overflow:visible;transform-style:preserve-3d;will-change:transform;backdrop-filter:blur(6px) saturate(120%);}
+    .list-item::after{content:'';position:absolute;left:8px;right:8px;bottom:8px;height:4px;border-radius:4px;background:linear-gradient(90deg, rgba(123,97,255,0.25), rgba(57,255,20,0.18), rgba(255,107,107,0.12));opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;}
+    .list-item:hover::after{opacity:1;transform:translateY(0);}
+    .list-item:hover{transform: translateY(-10px) rotateX(6deg) scale(1.03); box-shadow:0 28px 60px rgba(6,8,16,0.75); filter:saturate(1.08);}
+    .list-item img{width:100%;border-radius:6px;display:block;transition:transform .6s var(--ease),box-shadow .4s var(--ease);transform-origin:center;box-shadow:0 8px 24px rgba(0,0,0,0.45), inset 0 -6px 16px rgba(0,0,0,0.08);will-change:transform;background:linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.02));}
+    .list-item:hover img{transform:scale(1.06) translateZ(18px);}
+    .list-item .title{display:block;margin-top:0.45rem;color:var(--text);font-weight:700;font-size:14px;text-shadow:0 1px 0 rgba(0,0,0,0.45);}
+
+    .modal-backdrop{position:fixed;inset:0;background:linear-gradient(180deg, rgba(2,3,8,0.6), rgba(0,0,0,0.75));display:flex;align-items:center;justify-content:center;z-index:9999;}
+    .modal{width:min(960px,95%);background:linear-gradient(180deg, rgba(12,12,12,0.96), rgba(6,6,8,0.98));border-radius:14px;padding:18px;color:#fff;border:1px solid rgba(255,255,255,0.035);box-shadow:0 40px 100px rgba(2,6,18,0.9);}
+    .modal iframe{width:100%;height:540px;border-radius:8px;border:0;background:#000;box-shadow:0 10px 40px rgba(0,0,0,0.7);}
+
+    .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;}
+    .btn{background:linear-gradient(90deg, var(--accent-1), var(--accent-3));color:#fff;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700;}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);box-shadow:none;}
+
+    .password-row{display:flex;gap:8px;margin-top:8px;}
+    .password-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:var(--text);outline:none;transition:box-shadow .15s;}
+    .password-row input:focus{box-shadow:0 8px 30px rgba(123,97,255,0.12);}
+    .muted{color:var(--muted);font-size:13px;}
+
+    @media (max-width:720px){ .list-item{width:calc(50% - 12px);} .modal iframe{height:320px;} }
+
+    .list-item{opacity:0;transform-origin:center;animation:floatIn .5s forwards;}
+    @keyframes floatIn{from{opacity:0;transform:translateY(12px) scale(.995);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+    .ripple{position:relative;overflow:hidden;}
+    .ripple .drop{position:absolute;border-radius:50%;transform:scale(0);background:rgba(255,255,255,0.10);animation:rip .6s ease-out;pointer-events:none;}
+    @keyframes rip{to{transform:scale(6);opacity:0;}}
+
+    /* ---------- NEON: replaced CSS animation with JS-driven background-position controlled via --neon-x ---------- */
+    header nav ul li a, .logo{position:relative;z-index:2;overflow:visible;}
+    header nav ul li a::before, .logo::before{
+      content:"";
+      position:absolute;
+      inset:-10px;
+      border-radius:14px;
+      /* reduced green intensity: greener but muted alpha and slightly desaturated */
+      background:linear-gradient(90deg,
+        rgba(57,190,60,0.06) 0%,
+        rgba(57,190,60,0.20) 25%,
+        rgba(57,190,60,0.45) 50%,
+        rgba(57,190,60,0.20) 75%,
+        rgba(57,190,60,0.06) 100%);
+      background-size:300% 100%;
+      filter:blur(8px) saturate(120%);
+      opacity:0.88;
+      z-index:-1;
+      transition:opacity .22s ease, transform .22s ease;
+      pointer-events:none;
+      /* background-position now controlled by CSS variable (updated by JS at 30fps) */
+      background-position: var(--neon-x, 0%) 50%;
+    }
+    header nav ul li a::after, .logo::after{content:"";position:absolute;inset:-4px;border-radius:12px;border:1px solid rgba(57,190,60,0.22);opacity:0.75;z-index:-1;pointer-events:none;transition:opacity .18s ease, transform .18s ease;backdrop-filter:blur(2px);}
+
+    header nav ul li a.hover-strong::before, .logo.hover-strong::before{filter:blur(12px) saturate(180%);transform:scale(1.03);opacity:1;}
+    header nav ul li a.hover-strong::after, .logo.hover-strong::after{border-color:rgba(57,190,60,0.38);opacity:1;transform:translateY(-2px);}
+    header nav ul li a.touch-active, .logo.touch-active{transform:scale(0.985);transition:transform .08s linear;box-shadow:0 6px 18px rgba(0,0,0,0.6);}
+    header nav ul li a.touch-active::before, .logo.touch-active::before{filter:blur(6px) saturate(160%);transform:scale(1.01);opacity:1;animation-duration:1.6s;}
+    header nav ul li a.pulse, .logo.pulse{animation:btnPulse .5s ease-out;}
+    @keyframes btnPulse{0%{box-shadow:0 0 0 rgba(57,255,20,0.28);}50%{box-shadow:0 0 30px rgba(57,255,20,0.22);}100%{box-shadow:0 0 0 rgba(57,255,20,0);}}
+    @media (prefers-reduced-motion: reduce){ header nav ul li a::before, .logo::before{animation:none;transition:none;filter:blur(6px);} }
+
+    /* playlist-list safety */
+    .playlist-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:320px;overflow:auto;padding-top:6px;}
+    .playlist-list .list-item{width:100%;display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;}
+    .playlist-list .list-item img{width:140px;height:78px;object-fit:cover;border-radius:6px;}
   </style>
 </head>
-<body>
-  <h1>🚧 Site Under Maintenance 🚧</h1>
-  <p>We’re doing some upgrades. Be back soon!</p>
-  <p></p>
-  <p>Will add more features and security to the site after the update </p>
-  <p></p>
-  <p>VIDU</p> 
+<body class="landing is-preload">
+
+  <div id="wrapper">
+    <header id="header">
+      <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
+        <!-- circular avatar: image is center-cropped via object-fit:cover -->
+        <div class="logo-circle" aria-hidden="true">
+          <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+        </div>
+      </a>
+
+      <nav>
+        <ul>
+          <li><a id="nav-home">Classes</a></li>
+          <li><a href="videos.html">Private</a></li>
+          <li><a href="about.html">About</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <section id="home" class="wrapper style1 fade-up">
+      <div class="inner">
+        <h2></h2>
+        <ul id="playlist-list" class="list-container"></ul>
+        <div id="playlist-videos" style="margin-top:2rem; display:none;"></div>
+      </div>
+    </section>
+
+    <footer id="footer">
+      <p>&copy; VIDU. 2025 All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- Modal root -->
+  <div id="modal-root" style="display:none;"></div>
+
+  <script>
+  /*************************************************************************
+   * CONFIG
+   *************************************************************************/
+  const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI'; // optional — only needed if you want per-video listing via Data API
+
+  /*************************************************************************
+   * GLOBAL STATE (single source of truth for pause/resume)
+   *************************************************************************/
+  if(!window.__viduGlobal) window.__viduGlobal = {
+    visualsPaused: false,   // true when we should pause particles and neon (e.g., modal open)
+    headerState: null,
+    neonStarted: false,
+    particlesStarted: false,
+    // playlist navigation stack for folder/back navigation
+    playlistStack: [],
+    currentPl: null
+  };
+
+  /*************************************************************************
+   * DATA (fixed syntax) — moved the three playlist objects inside a parent folder "New"
+   *************************************************************************/
+  const playlists = [
+    {
+      id: 0,
+      name: 'SUBJECTS', // parent folder; click it to open the three child folders
+      thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg',
+      videos: [
+        /* child 1: ET */
+        {
+          id: 1,
+          name: 'ET',
+          thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg',
+          videos: [
+            {
+              name: '',
+              thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg',
+              type: 'playlist',
+              idB64: btoa("PL9zX0VbNmKiHFvj6Q-p04TgdZj_tv0eI3&si=pAyX-6SJILH6QSg2"),
+              passB64: btoa("vidu123et")
+            },
+            {
+              name: '',
+              thumbnail: 'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg',
+              type: 'playlist',
+              idB64: btoa("PL9zX0VbNmKiFcYCAzfcyI0cz8cOfyWlTc&si=nZ224kprFgDGTG9Z"),
+              passB64: btoa("vidu123et")
+            }
+          ]
+        },
+
+        /* child 2: SFT - first copy */
+        {
+          id: 2,
+          name: 'SFT',
+          thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg',
+          videos: [
+           {
+              name: '',
+              thumbnail: 'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg',
+              type: 'playlist',
+              idB64: btoa("PL9zX0VbNmKiG94fMjA7v-6nw55htWj6LH&si=PUXqK2wlIin_tUZm"),
+              passB64: btoa("vidu123sft")
+            },
+            {
+              name: '',
+              thumbnail: 'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg',
+              type: 'playlist',
+              idB64: btoa("PL9zX0VbNmKiEmn6j0O870XYlFRasYABD2&si=vjOY0tK0Em5LZvsf"),
+              passB64: btoa("vidu123sft")
+            }
+         ]
+        },
+
+        /* child 3: ICT - second copy (kept identical to your original duplicate) */
+        {
+          id: 3,
+          name: 'ICT',
+          thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg',
+          videos: [
+            {
+              name: '',
+              thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg',
+              type: 'playlist',
+              idB64: btoa("PL9zX0VbNmKiFUhYSDfiEVVMuBbc2AiwpC&si=1g80otmZOXdp1hE_"),
+              passB64: btoa("vidu123ict")
+          } 
+         ]
+        }
+      ]
+    }
+  ];
+  /*************************************************************************
+   * Helpers & modal
+   *************************************************************************/
+  let currentItem = null;
+  function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
+  function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
+
+  function createModal(){
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="modal-backdrop" id="modal-backdrop">
+        <div class="modal" role="dialog" aria-modal="true">
+          <div class="controls">
+            <div>
+              <strong id="modal-title">Locked</strong>
+              <div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div>
+            </div>
+            <div>
+              <button id="modal-close" class="btn secondary">Close</button>
+            </div>
+          </div>
+
+          <div id="modal-body">
+            <div id="password-block">
+              <div style="color:#bbb;margin-bottom:8px;">This item is password-protected. Enter password to unlock and play.</div>
+              <div class="password-row">
+                <input id="password-input" type="password" placeholder="Enter password" />
+                <button id="password-submit" class="btn">Unlock</button>
+              </div>
+              <div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div>
+            </div>
+
+            <div id="player-block" style="display:none;margin-top:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div style="color:#bbb" id="now-playing-label">Now playing</div>
+                <div>
+                  <button id="close-player" class="btn">Close</button>
+                </div>
+              </div>
+
+              <div id="player-wrap"></div>
+
+              <div id="playlist-list-wrap" style="display:none;margin-top:12px;">
+                <div class="muted">Playlist contents</div>
+                <div class="playlist-list" id="playlist-video-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('modal-close').onclick = closeModal;
+    document.getElementById('close-player').onclick = closeModal;
+    document.getElementById('password-submit').onclick = onPasswordSubmit;
+    document.getElementById('password-input').onkeydown = (e)=>{ if(e.key === 'Enter') onPasswordSubmit(); };
+    document.getElementById('modal-backdrop').onclick = function(e){ if(e.target === this) closeModal(); };
+  }
+
+  function openPasswordModal(item){
+    currentItem = item;
+    const root = document.getElementById('modal-root');
+    root.style.display = 'block';
+    document.getElementById('modal-title').textContent = item.name || 'Protected';
+    document.getElementById('modal-subtitle').textContent = (item.type || 'video') + ' — password required';
+    document.getElementById('password-input').value = '';
+    document.getElementById('password-error').style.display = 'none';
+    document.getElementById('password-block').style.display = 'block';
+    document.getElementById('player-block').style.display = 'none';
+    const plwrap = document.getElementById('playlist-list-wrap'); if(plwrap) plwrap.style.display = 'none';
+    setTimeout(()=>document.getElementById('password-input').focus(), 50);
+    // Pause heavy visuals while the modal is visible (prevent jank while typing)
+    pauseVisuals('modal-open');
+  }
+
+  function closeModal(){
+    const root = document.getElementById('modal-root'); if(root) root.style.display = 'none';
+    const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = '';
+    const plwrap = document.getElementById('playlist-video-list'); if(plwrap) plwrap.innerHTML = '';
+    currentItem = null;
+    // resume visuals
+    resumeVisuals('modal-closed');
+  }
+
+  function onPasswordSubmit(){
+    const val = (document.getElementById('password-input').value || '').trim();
+    if(!currentItem) return;
+    const expected = b64decode(currentItem.passB64 || '');
+    if(val === expected){
+      document.getElementById('password-block').style.display = 'none';
+      document.getElementById('password-error').style.display = 'none';
+      showPlayerForItem(currentItem);
+    } else {
+      const err = document.getElementById('password-error'); err.style.display = 'block'; err.textContent = 'Incorrect password — try again.';
+    }
+  }
+
+  function buildEmbedUrl(item){
+    const id = b64decode(item.idB64);
+    if(item.type === 'video') return `https://www.youtube.com/embed/${encodeURIComponent(id)}?rel=0&autoplay=1`;
+    return `https://www.youtube.com/embed/videoseries?list=${encodeURIComponent(id)}&autoplay=1`;
+  }
+
+  function getThumb(item){
+    if(item.thumbnail && item.thumbnail.trim()) return item.thumbnail;
+    try{ const id=b64decode(item.idB64); if(item.type === 'video') return `https://img.youtube.com/vi/${id}/hqdefault.jpg`; }catch(e){}
+    return 'https://i.imgur.com/8Km9tLL.png';
+  }
+
+  /*************************************************************************
+   * Rendering & playlist UI
+   *************************************************************************/
+  function renderPlaylists(){
+    const ul = document.getElementById('playlist-list');
+    if(!ul) return;
+    ul.innerHTML = '';
+    if(!playlists || playlists.length === 0){
+      ul.innerHTML = '<li class="muted">No playlists available.</li>';
+      return;
+    }
+    playlists.forEach(pl=>{
+      const li = document.createElement('li'); li.className='list-item ripple';
+      li.innerHTML = `<img src="${escapeHtml(pl.thumbnail)}" alt="${escapeHtml(pl.name)}" /><span class="title">${escapeHtml(pl.name)}</span>`;
+      li.addEventListener('click', (ev)=>{ spawnRipple(ev, li); showPlaylistVideos(pl); });
+      attachTilt(li);
+      ul.appendChild(li);
+    });
+    ul.style.display = 'flex';
+  }
+
+  /* Updated: showPlaylistVideos now supports folder navigation.
+     - Clicking an item that has a `videos` array navigates into it (folder).
+     - Back button navigates back up through a stack.
+     Minimal and safe change — everything else unchanged. */
+  function showPlaylistVideos(pl, skipPush){
+    const ul = document.getElementById('playlist-list');
+    const container = document.getElementById('playlist-videos');
+    if(!container || !ul) return;
+
+    // init navigation stack if missing
+    if(!window.__viduGlobal.playlistStack) window.__viduGlobal.playlistStack = [];
+    // push previous view unless caller asked to skip (used for 'Back' navigation)
+    if(!skipPush){
+      const isTop = (ul.style.display !== 'none');
+      window.__viduGlobal.playlistStack.push(isTop ? null : (window.__viduGlobal.currentPl || null));
+    }
+    // set current shown playlist/folder
+    window.__viduGlobal.currentPl = pl;
+
+    ul.style.display = 'none';
+    container.style.display = 'block';
+    container.innerHTML = `<h3 style="text-align:center;color:#fff;">${escapeHtml(pl.name)}</h3>`;
+    const vids = document.createElement('ul'); vids.className='list-container';
+
+    (pl.videos||[]).forEach(v=>{
+      const vli = document.createElement('li'); vli.className='list-item ripple';
+      const thumb = getThumb(v);
+      vli.innerHTML = `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.name)}" /><span class="title">${escapeHtml(v.name)}</span>`;
+
+      // If the child item itself contains `videos` -> treat it as a folder and navigate into it.
+      if(v && Array.isArray(v.videos)){
+        vli.addEventListener('click',(ev)=>{ spawnRipple(ev, vli); showPlaylistVideos(v); });
+      } else {
+        // otherwise keep existing behaviour: open password modal / play
+        vli.addEventListener('click',(ev)=>{ spawnRipple(ev, vli); openPasswordModal(v); });
+      }
+
+      attachTilt(vli);
+      vids.appendChild(vli);
+    });
+
+    const back = document.createElement('div'); back.style.textAlign='center'; back.style.marginTop='16px';
+    back.innerHTML = `<button id="back-to-playlists" class="btn secondary">Back</button>`;
+    container.appendChild(vids); container.appendChild(back);
+
+    // Back button: pop stack and restore previous view (null => top-level list)
+    document.getElementById('back-to-playlists').onclick = ()=>{
+      const prev = (window.__viduGlobal.playlistStack && window.__viduGlobal.playlistStack.length) ? window.__viduGlobal.playlistStack.pop() : null;
+      if(prev === null){
+        // return to top-level list
+        ul.style.display='flex';
+        container.style.display='none';
+        window.__viduGlobal.currentPl = null;
+      } else {
+        // navigate back to previous playlist/folder without pushing current onto the stack again
+        showPlaylistVideos(prev, true);
+      }
+    };
+  }
+
+  async function fetchPlaylistVideos(playlistId){
+    if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
+    const items=[]; let pageToken='';
+    do{
+      const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}` + (pageToken?`&pageToken=${pageToken}`:'');
+      const res = await fetch(url);
+      if(!res.ok){ const txt = await res.text().catch(()=>null); throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||'')); }
+      const data = await res.json();
+      (data.items||[]).forEach(it=>{
+        const sn = it.snippet || {};
+        if(sn.resourceId && sn.resourceId.videoId){
+          const thumb = (sn.thumbnails && (sn.thumbnails.high||sn.thumbnails.medium||sn.thumbnails.default))||{};
+          items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
+        }
+      });
+      pageToken = data.nextPageToken || '';
+    } while(pageToken);
+    return items;
+  }
+
+  function showPlayerForVideo(videoId,title){
+    const wrap = document.getElementById('player-wrap');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('src', `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?rel=0&autoplay=1&playsinline=1`);
+    iframe.setAttribute('allow','autoplay; encrypted-media; fullscreen');
+    iframe.setAttribute('allowfullscreen','');
+    iframe.style.width='100%'; iframe.style.height='520px';
+    wrap.appendChild(iframe);
+    document.getElementById('player-block').style.display='block';
+    const label = document.getElementById('now-playing-label'); if(label) label.textContent = title ? `Now playing — ${title}` : 'Now playing';
+
+    // IMPORTANT: once the player iframe is inserted, pause heavy visuals to ensure smooth video decode
+    pauseVisuals('video-playing');
+
+    // Observe iframe unload/close via closeModal — nothing else needed here due to cross-origin restrictions.
+  }
+
+  async function showPlaylistInsideModal(item){
+    const rawId = b64decode(item.idB64);
+    const playlistId = rawId.split('&')[0];
+
+    // pause visuals proactively while we build player UI
+    pauseVisuals('playlist-loading');
+
+    if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE'){
+      const wrap = document.getElementById('player-wrap');
+      if(wrap){
+        wrap.innerHTML = `<iframe width="100%" height="520" src="https://www.youtube.com/embed/videoseries?list=${encodeURIComponent(playlistId)}&rel=0&playsinline=1" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
+        document.getElementById('player-block').style.display='block';
+        const plwrap = document.getElementById('playlist-list-wrap'); if(plwrap) plwrap.style.display = 'none';
+        // visuals remain paused while modal open
+      }
+      return;
+    }
+
+    try{
+      const videos = await fetchPlaylistVideos(playlistId);
+      if(!videos.length){
+        const wrap = document.getElementById('player-wrap');
+        if(wrap) wrap.innerHTML = `<div class="muted">No videos found or playlist is private.</div>`;
+        document.getElementById('player-block').style.display='block';
+        return;
+      }
+
+      let listWrap = document.getElementById('playlist-video-list');
+      if(!listWrap){
+        const wrapper = document.createElement('div');
+        wrapper.id = 'playlist-list-wrap';
+        wrapper.style.marginTop = '12px';
+        wrapper.innerHTML = `<div class="muted">Playlist contents</div><div class="playlist-list" id="playlist-video-list"></div>`;
+        const playerBlock = document.getElementById('player-block');
+        if(playerBlock) playerBlock.appendChild(wrapper);
+        listWrap = document.getElementById('playlist-video-list');
+      }
+
+      if(listWrap) listWrap.innerHTML = '';
+      videos.forEach(v=>{
+        const li = document.createElement('div'); li.className = 'list-item';
+        li.setAttribute('data-video-id', v.videoId);
+        li.style.display='flex'; li.style.alignItems='center'; li.style.gap='12px'; li.style.padding='8px';
+        li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;" /><div style="flex:1;"><div class="title" style="font-size:13px;">${escapeHtml(v.title)}</div></div>`;
+        li.onclick = ()=> showPlayerForVideo(v.videoId, v.title);
+        listWrap.appendChild(li);
+      });
+
+      document.getElementById('player-block').style.display='block';
+      const outer = document.getElementById('playlist-list-wrap'); if(outer) outer.style.display='block';
+      showPlayerForVideo(videos[0].videoId, videos[0].title);
+    } catch(err){
+      console.error('Playlist fetch error', err);
+      const wrap = document.getElementById('player-wrap');
+      if(wrap) wrap.innerHTML = `<div class="muted">Failed to load playlist: ${escapeHtml(err.message || '')}</div>`;
+      document.getElementById('player-block').style.display='block';
+    }
+  }
+
+  function showPlayerForItem(item){
+    if(item.type === 'video'){ const id = b64decode(item.idB64); showPlayerForVideo(id, item.name||item.title); }
+    else showPlaylistInsideModal(item);
+  }
+
+  function spawnRipple(ev,target){
+    const rect = target.getBoundingClientRect();
+    const drop = document.createElement('div');
+    drop.className = 'drop';
+    drop.style.left = (ev.clientX - rect.left) + 'px';
+    drop.style.top = (ev.clientY - rect.top) + 'px';
+    target.appendChild(drop);
+    setTimeout(()=> drop.remove(),700);
+  }
+
+  function attachTilt(card){
+    if(!card) return;
+    const img = card.querySelector('img');
+    // lightweight: use pointermove and transform only — avoid heavy math when visuals paused
+    let enabled = true;
+    function onMove(e){
+      if(!enabled || window.__viduGlobal.visualsPaused) return;
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      const rx = (py - 0.5) * 10;
+      const ry = (px - 0.5) * -10;
+      card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(6px)`;
+      if(img) img.style.transform = `translateZ(26px) scale(1.06) translateY(${(0.5-py)*6}px)`;
+    }
+    function onLeave(){ card.style.transform = ''; if(img) img.style.transform = ''; }
+    card.addEventListener('pointermove', onMove, {passive:true});
+    card.addEventListener('pointerleave', onLeave, {passive:true});
+  }
+
+  /*************************************************************************
+   * Visual controls: pause/resume helper (centralized)
+   *************************************************************************/
+  function pauseVisuals(reason){
+    // if already paused, just mark the reason stack
+    window.__viduGlobal.visualsPaused = true;
+    // tell subsystems via custom event
+    window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason } }));
+  }
+  function resumeVisuals(reason){
+    window.__viduGlobal.visualsPaused = false;
+    window.dispatchEvent(new CustomEvent('vidu:visuals:resume', { detail:{ reason } }));
+  }
+
+  /*************************************************************************
+   * Particles (optimized)
+   * - fewer particles
+   * - fewer pairwise line checks (lines only every N frames)
+   * - paused when visualsPaused or document.hidden or prefers-reduced-motion
+   *************************************************************************/
+  (function createParticles(){
+    if(window.__viduGlobal.particlesStarted) return;
+    window.__viduGlobal.particlesStarted = true;
+
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(prefersReduced) return;
+
+    try {
+      const canvas=document.createElement('canvas'); canvas.id='fx-canvas'; canvas.style.position='fixed'; canvas.style.left='0'; canvas.style.top='0'; canvas.style.width='100%'; canvas.style.height='100%'; canvas.style.zIndex='1'; canvas.style.pointerEvents='none'; document.body.appendChild(canvas);
+      const ctx=canvas.getContext('2d'); let dpr=Math.min(2, window.devicePixelRatio||1);
+      function resize(){ canvas.width=innerWidth*dpr; canvas.height=innerHeight*dpr; canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); }
+      window.addEventListener('resize', resize, {passive:true}); resize();
+
+      // reduced particle count for better performance while keeping visual
+      const STAR_COUNT = Math.max(28, Math.min(60, Math.floor((innerWidth*innerHeight)/40000))); // scale a bit to screen but capped
+      const stars = [];
+      for(let i=0;i<STAR_COUNT;i++){
+        stars.push({
+          x:Math.random()*innerWidth,
+          y:Math.random()*innerHeight,
+          r:Math.random()*1.6+0.2,
+          vx:(Math.random()-0.5)*0.12,
+          vy:(Math.random()-0.5)*0.06,
+          hue:200+Math.random()*120,
+          alpha:Math.random()*0.18+0.04
+        });
+      }
+
+      let rafId = null;
+      let frameCount = 0;
+      const LINE_THROTTLE_FRAMES = 3; // draw connection lines only every 3 frames
+
+      function draw(){
+        // stop drawing when paused or hidden
+        if(document.hidden || window.__viduGlobal.visualsPaused) {
+          rafId = requestAnimationFrame(draw);
+          return;
+        }
+        frameCount++;
+
+        ctx.clearRect(0,0,innerWidth,innerHeight);
+        const g = ctx.createRadialGradient(innerWidth*0.7, innerHeight*0.35,0,innerWidth*0.4, innerHeight*0.6, Math.max(innerWidth,innerHeight));
+        g.addColorStop(0,'rgba(123,97,255,0.05)');
+        g.addColorStop(0.45,'rgba(57,255,20,0.02)');
+        g.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,innerWidth,innerHeight);
+
+        for(const s of stars){
+          s.x += s.vx;
+          s.y += s.vy;
+          if(s.x < -10) s.x = innerWidth + 10;
+          if(s.x > innerWidth + 10) s.x = -10;
+          if(s.y < -10) s.y = innerHeight + 10;
+          if(s.y > innerHeight + 10) s.y = -10;
+          ctx.beginPath();
+          ctx.fillStyle = `hsla(${s.hue},75%,72%,${s.alpha})`;
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+          ctx.fill();
+        }
+
+        // draw connection lines rarely to cut CPU
+        if((frameCount % LINE_THROTTLE_FRAMES) === 0){
+          const maxDist = Math.min(120, Math.max(80, (innerWidth+innerHeight)/18)); // adapt but cap
+          for(let i=0;i<stars.length;i++){
+            const a = stars[i];
+            // sample only next 6 neighbors rather than all pairs
+            for(let j=i+1, count=0; j<stars.length && count<6; j++, count++){
+              const b = stars[j];
+              const dx = a.x - b.x, dy = a.y - b.y;
+              const d = dx*dx + dy*dy;
+              if(d < maxDist*maxDist){
+                ctx.beginPath();
+                const alpha = (1 - Math.sqrt(d)/(maxDist)) * 0.04;
+                ctx.strokeStyle = `rgba(120,150,255,${alpha})`;
+                ctx.lineWidth = 1;
+                ctx.moveTo(a.x,a.y);
+                ctx.lineTo(b.x,b.y);
+                ctx.stroke();
+              }
+            }
+          }
+        }
+
+        rafId = requestAnimationFrame(draw);
+      }
+
+      // start loop
+      rafId = requestAnimationFrame(draw);
+
+      // pause/resume handling
+      const onPause = ()=>{ /* draw loop checks visualsPaused itself */ };
+      const onResume = ()=>{ /* same */ };
+      window.addEventListener('vidu:visuals:pause', onPause);
+      window.addEventListener('vidu:visuals:resume', onResume);
+      document.addEventListener('visibilitychange', ()=>{ /* draw loop also checks document.hidden */ }, {passive:true});
+
+      // cleanup
+      window.addEventListener('beforeunload', ()=> { try{ if(rafId) cancelAnimationFrame(rafId); window.removeEventListener('vidu:visuals:pause', onPause); window.removeEventListener('vidu:visuals:resume', onResume); }catch(e){} }, {passive:true});
+    } catch(e){ console.warn('particles failed', e); }
+  })();
+
+  /*************************************************************************
+   * Header interactions: single MutationObserver + idempotent attach
+   *************************************************************************/
+  (function headerInteractionsManager(){
+    const selector = 'header nav ul li a, .logo';
+    if(!window.__viduGlobal.headerState) window.__viduGlobal.headerState = { processed: new WeakSet(), observer: null };
+
+    function processElements(nodeList){
+      if(!nodeList || !nodeList.length) return;
+      nodeList.forEach(el=>{
+        if(!(el instanceof Element)) return;
+        if(window.__viduGlobal.headerState.processed.has(el)) return;
+        function onPointerEnter(e){ if(e.pointerType === 'touch') return; el.classList.add('hover-strong'); }
+        function onPointerLeave(e){ el.classList.remove('hover-strong'); }
+        function onPointerDown(e){ el.classList.add('touch-active'); el.classList.add('pulse'); setTimeout(()=>el.classList.remove('pulse'),480); setTimeout(()=>el.classList.remove('touch-active'),420); }
+        function onTouchStart(e){ el.classList.add('touch-active'); setTimeout(()=>el.classList.remove('touch-active'),420); }
+        el.addEventListener('pointerenter', onPointerEnter, {passive:true});
+        el.addEventListener('pointerleave', onPointerLeave, {passive:true});
+        el.addEventListener('pointerdown', onPointerDown, {passive:true});
+        el.addEventListener('touchstart', onTouchStart, {passive:true});
+        el.addEventListener('focus', ()=>el.classList.add('hover-strong'));
+        el.addEventListener('blur', ()=>el.classList.remove('hover-strong'));
+        window.__viduGlobal.headerState.processed.add(el);
+      });
+    }
+
+    function scanAndProcess(){
+      const els = Array.from(document.querySelectorAll(selector));
+      if(els.length) {
+        els.forEach(el => { if(getComputedStyle(el).position==='static') el.style.position='relative'; });
+        processElements(els);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=> {
+      scanAndProcess();
+      if(window.__viduGlobal.headerState.observer) return;
+      const mo = new MutationObserver((mutations)=>{
+        const added = [];
+        for(const m of mutations){
+          if(m.addedNodes && m.addedNodes.length){
+            m.addedNodes.forEach(n=>{
+              if(n.nodeType === 1){
+                if(n.matches && n.matches(selector)) added.push(n);
+                if(n.querySelectorAll) added.push(...Array.from(n.querySelectorAll(selector)));
+              }
+            });
+          }
+        }
+        if(added.length) requestAnimationFrame(()=> processElements(added));
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+      window.__viduGlobal.headerState.observer = mo;
+      window.addEventListener('beforeunload', ()=> { try{ if(window.__viduGlobal.headerState.observer) window.__viduGlobal.headerState.observer.disconnect(); }catch(e){} }, {passive:true});
+    }, { once: true });
+  })();
+
+  /*************************************************************************
+   * Neon animator using RAF capped to 30 FPS, pausable during video playback
+   *************************************************************************/
+  (function neonAnimator(){
+    if(window.__viduGlobal.neonStarted) return;
+    window.__viduGlobal.neonStarted = true;
+
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(prefersReduced) return;
+
+    const FPS = 30;
+    const frameMs = 1000 / FPS;
+    const fullCycleSec = 10;
+    const percentPerMs = 100 / (fullCycleSec * 1000);
+
+    function init(){
+      const elems = Array.from(document.querySelectorAll('header nav ul li a, .logo'));
+      if(!elems.length){
+        setTimeout(init, 120);
+        return;
+      }
+
+      const phaseOffsets = elems.map((_, i) => (i * 6) % 100);
+      let basePos = 0;
+      let last = performance.now();
+      let raf = null;
+
+      function step(now){
+        if(document.hidden || window.__viduGlobal.visualsPaused){
+          last = now;
+          raf = requestAnimationFrame(step);
+          return;
+        }
+        const delta = now - last;
+        if(delta >= 1){
+          basePos = (basePos + percentPerMs * delta) % 100;
+          last = now;
+        }
+        if(!step._lastVisual) step._lastVisual = 0;
+        const sinceVisual = now - step._lastVisual;
+        if(sinceVisual >= frameMs){
+          elems.forEach((el, idx)=>{
+            const speedMultiplier = el.classList.contains('hover-strong') ? 1.9 : 1;
+            const v = (basePos * speedMultiplier + phaseOffsets[idx]) % 100;
+            el.style.setProperty('--neon-x', v + '%');
+          });
+          step._lastVisual = now;
+        }
+        raf = requestAnimationFrame(step);
+      }
+
+      // listen for visual pause/resume so we don't animate when video playing
+      function onPause(){ /* step will early-return */ }
+      function onResume(){ /* will resume automatically */ }
+      window.addEventListener('vidu:visuals:pause', onPause);
+      window.addEventListener('vidu:visuals:resume', onResume);
+      document.addEventListener('visibilitychange', ()=>{}, {passive:true});
+
+      raf = requestAnimationFrame(step);
+
+      window.addEventListener('beforeunload', ()=> { try{ if(raf) cancelAnimationFrame(raf); window.removeEventListener('vidu:visuals:pause', onPause); window.removeEventListener('vidu:visuals:resume', onResume); }catch(e){} }, {passive:true});
+    }
+
+    if(document.readyState === 'complete' || document.readyState === 'interactive') init();
+    else document.addEventListener('DOMContentLoaded', init, { once: true });
+  })();
+
+  /*************************************************************************
+   * Init UI on DOMContentLoaded
+   *************************************************************************/
+  document.addEventListener('DOMContentLoaded', function(){
+    createModal();
+    renderPlaylists();
+    const navHome = document.getElementById('nav-home');
+    if(navHome) navHome.addEventListener('click', ()=>{ document.getElementById('playlist-list').style.display='flex'; document.getElementById('playlist-videos').style.display='none'; });
+
+    // attach tilt to initial playlist tiles
+    document.querySelectorAll('.list-item').forEach(el=>attachTilt(el));
+    (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
+  });
+
+  // minor deterrents (optional)
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, false);
+  document.addEventListener('keydown', function(e){ if ((e.ctrlKey && e.shiftKey && (e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')) || (e.ctrlKey && (e.key==='U'||e.key==='u')) || (e.key==='F12')) { e.preventDefault(); return false; } });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { const root=document.getElementById('modal-root'); if(root) root.style.display='none'; resumeVisuals('esc'); } });
+
+  // ensure we resume visuals if modal closed via other means
+  // observe modal-root visibility changes (fallback)
+  (function modalWatcher(){
+    const root = document.getElementById('modal-root');
+    if(!root) return;
+    const obs = new MutationObserver(()=> {
+      // if modal-root hidden and visuals are paused due to modal, resume
+      const isVisible = (root.style.display !== 'none' && root.style.display !== '');
+      if(!isVisible){
+        // small timeout to avoid jitter when switching quickly
+        setTimeout(()=> { if(!document.querySelector('.modal-backdrop') || document.querySelectorAll('.modal-backdrop').length === 0) resumeVisuals('modalWatcher'); }, 60);
+      }
+    });
+    obs.observe(root, { attributes: true, attributeFilter: ['style', 'class'] });
+    window.addEventListener('beforeunload', ()=> obs.disconnect(), {passive:true});
+  })();
+  </script>
+
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/js/browser.min.js"></script>
+  <script src="assets/js/breakpoints.min.js"></script>
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/main.js"></script>
 </body>
-</head>
+
 </html>
