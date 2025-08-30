@@ -93,7 +93,7 @@
   body.videos-page .list-item { opacity:0; transform-origin:center; animation: fadeIn .45s forwards; }
   @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
-  /* Playlist list inside modal adjustments */
+  /* Playlist list inside modal adjustments (kept but we won't show it) */
   body.videos-page .playlist-list { display:block; max-height:260px; overflow:auto; margin-top:8px; padding:0; }
   body.videos-page .playlist-list .list-item {
     display:flex; align-items:flex-start; gap:12px; padding:10px 12px; border-radius:8px; cursor:pointer; background:transparent; color:#fff; margin-bottom:6px; transition:background .12s, transform .08s; width:100%; max-width:100%; box-sizing:border-box; overflow:visible; opacity:1; animation:none;
@@ -139,7 +139,7 @@
     <section id="videos" class="wrapper style2 fade-up">
       <div class="inner">
         <h2>Private Classes</h2>
-        <p class="muted">To access Enter the password or sign in with a Google account that has admin access </p>
+        <p class="muted">To access Enter the password or sign in with a Google account that has admin access</p>
         <ul id="global-video-list" class="list-container"></ul>
       </div>
     </section>
@@ -167,21 +167,19 @@
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-  <!-- YOUR JS (kept identical to original) -->
+  <!-- YOUR JS (modified: playlist fetching disabled; playlists open as embedded player only) -->
   <script>
-  /* --- I preserved your full script as-is. Paste your original JS here (the same code you provided). --- */
-
   /*************************************************************************
    * CONFIG - replace with your values
    *************************************************************************/
   const OAUTH_CLIENT_ID = '342354359423-s42kqoigp8207erl9i88pmo324clf6ps.apps.googleusercontent.com'; // required for sign-in
-  const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI';             // optional fallback for playlist fetch
+  const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkc9i88pmo324clf6ps';             // kept for compatibility (unused for playlists now)
 
   const globalVideos = [
     { type: 'video', title: 'TEST', thumb: 'https://i.pinimg.com/736x/e9/f1/5d/e9f15d10baf0131ab65bdc35d620adce.jpg', idB64:btoa("Lexok6H2c2s"), passB64:btoa("vidu123test")},
     { type: 'playlist', title: 'SFT - Theory + Revision', thumb: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', idB64:btoa("PL9zX0VbNmKiGt19HZ9wzIwC-VQ_AN0z9K&si=0jJc5HTa68Weq851"), passB64:btoa("vidu123sft") },
     { type: 'playlist', title: 'ICT', thumb: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', idB64:btoa("PL9zX0VbNmKiFlxda5PCTn4_hA_7iKjEaA&si=9nF_7qpAzKt4cYZd"), passB64:btoa("6002vidu") },
-    { type: 'playlist', title: 'ET', thumb: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', idB64:btoa("PL9zX0VbNmKiF-Q7bnmM1v_DrT3_Ol-Of5&si=efJHPzWR-kZcGwYw"), passB64:btoa("vidu123et")}
+    { type: 'playlist', title: 'ET', thumb: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', idB64:btoa("PL9zX0VbNmKiF-Q7bnmM1v_DrT3_Ol-Of5&si=efJHPzWR-kZcGwYw"), passB64:btoa("vidu123et") }
   ];
 
   let oauthToken = null;
@@ -227,6 +225,7 @@
 
               <div id="player-wrap"></div>
 
+              <!-- Playlist listing intentionally disabled/hidden: we only show the player -->
               <div id="playlist-list-wrap" style="display:none; margin-top:12px;">
                 <div class="muted">Playlist contents</div>
                 <div class="playlist-list" id="playlist-video-list" style="max-height:260px; overflow:auto;"></div>
@@ -255,6 +254,9 @@
     document.getElementById('password-error').style.display = 'none';
     document.getElementById('password-block').style.display = 'block';
     document.getElementById('player-block').style.display = 'none';
+    // make sure playlist UI is hidden
+    const plwrap = document.getElementById('playlist-list-wrap');
+    if(plwrap) plwrap.style.display = 'none';
     setTimeout(()=>document.getElementById('password-input').focus(), 50);
   }
 
@@ -295,73 +297,50 @@
     document.getElementById('player-block').style.display = 'block';
     const now = document.getElementById('now-playing-label');
     if(now) now.textContent = title ? `Now playing — ${title}` : 'Now playing';
+    // ensure playlist UI remains hidden
+    const plwrap = document.getElementById('playlist-list-wrap');
+    if(plwrap) plwrap.style.display = 'none';
   }
 
-  async function fetchPlaylistVideos(playlistId){
-    const items = []; let pageToken = '';
-    do{
-      let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}`;
-      const headers = {};
-      if(oauthToken) headers['Authorization'] = 'Bearer ' + oauthToken;
-      else if(YT_API_KEY && YT_API_KEY !== 'YOUR_API_KEY_HERE') url += `&key=${encodeURIComponent(YT_API_KEY)}`;
-      else throw new Error('No OAuth token and no API key configured. Sign in or set an API key.');
-
-      if(pageToken) url += `&pageToken=${pageToken}`;
-      const res = await fetch(url, { headers });
-      if(!res.ok){
-        const txt = await res.text().catch(()=>null);
-        throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||''));
-      }
-      const data = await res.json();
-      (data.items||[]).forEach(it => {
-        const sn = it.snippet || {};
-        if(sn.resourceId && sn.resourceId.videoId){
-          const thumb = (sn.thumbnails && (sn.thumbnails.medium||sn.thumbnails.high||sn.thumbnails.default))||{};
-          items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
-        }
-      });
-      pageToken = data.nextPageToken || '';
-    } while(pageToken);
-    return items;
+  function showPlayerForPlaylist(playlistId, title){
+    // playlistId should be the bare playlist id (without extra & parameters)
+    const wrap = document.getElementById('player-wrap');
+    const iframe = document.createElement('iframe');
+    // Use videoseries embed to play the playlist as a player (no fetching of contents)
+    iframe.setAttribute('src', `https://www.youtube.com/embed/videoseries?list=${encodeURIComponent(playlistId)}&rel=0&autoplay=1`);
+    iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.style.width = '100%';
+    iframe.style.height = '520px';
+    wrap.innerHTML = '';
+    wrap.appendChild(iframe);
+    document.getElementById('player-block').style.display = 'block';
+    const now = document.getElementById('now-playing-label');
+    if(now) now.textContent = title ? `Now playing — ${title}` : 'Now playing';
+    // hide playlist list UI (we intentionally disabled fetch/display)
+    const plwrap = document.getElementById('playlist-list-wrap');
+    if(plwrap) plwrap.style.display = 'none';
   }
 
-  async function showPlaylistInsideModal(item){
-    const rawId = b64decode(item.idB64), playlistId = rawId.split('&')[0];
-    try{
-      const videos = await fetchPlaylistVideos(playlistId);
-      if(!videos.length){ document.getElementById('player-wrap').innerHTML = `<div class="muted">No videos found or playlist is private.</div>`; document.getElementById('player-block').style.display='block'; return; }
-
-      const listWrap = document.getElementById('playlist-video-list');
-      listWrap.innerHTML = '';
-
-      videos.forEach(v=>{
-        const li = document.createElement('div');
-        li.className = 'list-item';
-        li.setAttribute('data-video-id', v.videoId);
-        const thumb = escapeHtml(v.thumb || `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`);
-        const titleHtml = `<div class="title-wrap"><div class="playlist-title">${escapeHtml(v.title)}</div></div>`;
-        li.innerHTML = `<img src="${thumb}" alt="${escapeHtml(v.title)}" loading="lazy" />` + titleHtml;
-        li.onclick = ()=> showPlayerForVideo(v.videoId, v.title);
-        listWrap.appendChild(li);
-      });
-
-      document.getElementById('player-block').style.display='block';
-      document.getElementById('playlist-list-wrap').style.display='block';
-      showPlayerForVideo(videos[0].videoId, videos[0].title);
-    } catch(err){
-      console.error('Playlist fetch error', err);
-      document.getElementById('player-wrap').innerHTML = `<div class="muted">Failed to load playlist: ${escapeHtml(err.message||'')}</div>`;
-      document.getElementById('player-block').style.display='block';
+  // Main single entrypoint: do not fetch playlist contents. Playlists open in embedded player.
+  function showPlayerForItem(item){
+    if(item.type === 'video'){
+      const id = b64decode(item.idB64);
+      showPlayerForVideo(id, item.title || item.name);
+      return;
     }
+    // playlist case: extract bare playlist id (strip any &params)
+    const raw = b64decode(item.idB64 || '');
+    const playlistId = raw.split('&')[0] || raw;
+    showPlayerForPlaylist(playlistId, item.title || item.name);
   }
-
-  function showPlayerForItem(item){ if(item.type==='video'){ const id=b64decode(item.idB64); showPlayerForVideo(id, item.title||item.name); } else showPlaylistInsideModal(item); }
 
   function getThumb(item) {
     if (item.thumb && item.thumb.trim().length) return item.thumb;
     try {
       const id = b64decode(item.idB64);
       if (item.type === 'video') return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+      // for playlists we might try to use a generic folder image
       return 'https://i.imgur.com/8Km9tLL.png';
     } catch(e) { return 'https://i.imgur.com/8Km9tLL.png'; }
   }
