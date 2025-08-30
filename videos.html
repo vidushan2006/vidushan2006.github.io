@@ -6,31 +6,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <link rel="stylesheet" href="assets/css/main.css" />
   <style>
-    /* --- preserve background + fonts --- */
+    /* -------------------------
+       CORE LAYOUT OVERRIDES
+       ------------------------- */
+
+    /* preserve background + fonts */
+    html,body { height:100%; }
     body {
       background: url('assets/images/background.gif') no-repeat center center fixed;
       background-size: cover;
       font-family: "Helvetica Neue", Arial, sans-serif;
       margin:0;
       color: #fff;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      /* ensure content sits below fixed header */
+      padding-top: 110px; /* keeps page content below header (adjustable) */
     }
 
-    /* header/nav tweaks */
+    /* header/nav tweaks - fixed so it overlays background consistently on deploy */
     header#header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 92px;
       display:flex;
       align-items:center;
       justify-content:space-between;
       padding:12px 18px;
-      background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      background:linear-gradient(90deg, rgba(0,0,0,0.32), rgba(0,0,0,0.18));
       backdrop-filter: blur(6px) saturate(120%);
       border-bottom:1px solid rgba(255,255,255,0.03);
       box-shadow: 0 8px 40px rgba(2,4,12,0.6);
-      z-index: 4;
+      z-index: 60; /* higher than canvas / particles */
+      -webkit-backdrop-filter: blur(6px) saturate(120%);
     }
 
-    /* Logo */
-    header#header .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; user-select:none; position:relative; }
-    header#header .logo img { height:78px; width:auto; border-radius:0; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+    /* Logo - keep true circular aspect ratio, responsive and not stretched */
+    header#header .logo {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      text-decoration:none;
+      color:#fff;
+      user-select:none;
+      position:relative;
+      width: auto;
+      height: auto;
+      padding:4px;
+    }
+    header#header .logo img {
+      /* responsive circular avatar that never distorts */
+      width: clamp(48px, 6.6vw, 78px) !important;
+      height: clamp(48px, 6.6vw, 78px) !important;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 50%;
+      display:block;
+      border: 2px solid rgba(0,0,0,0.36);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.2));
+    }
 
     nav ul { list-style:none; display:flex; gap:12px; margin:0; padding:0; align-items:center; }
     nav ul li a {
@@ -43,70 +80,124 @@
       display:inline-block;
       position:relative;
       transition: transform .18s ease, color .18s ease;
+      z-index:2;
     }
     nav ul li a:hover { transform: translateY(-3px); color:#fff; }
 
-    /* --- main container --- */
-    .inner { max-width:1080px; margin: 0 auto; padding: 32px; color:#fff; position:relative; z-index:3; }
+    /* main container */
+    .inner {
+      max-width:1200px;
+      margin: 0 auto;
+      padding: 32px 28px;
+      color:#fff;
+      position:relative;
+      z-index:3;
+    }
     h2 { margin-top:0; }
 
-    /* main list (thumbnails on page) */
-    .list-container { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem; }
+    /* gallery / list */
+    .list-container {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center; /* center the items horizontally */
+      align-items: flex-start;
+    }
+
     .list-item {
-      width: 220px; /* main gallery cards keep fixed width */
+      width: clamp(200px, 18vw, 300px); /* responsive card sizing */
       cursor: pointer;
       text-align: center;
       background: rgba(0,0,0,0.45);
       border-radius:8px;
       padding:8px;
-      transition:transform .12s, box-shadow .12s;
+      transition: transform .14s, box-shadow .14s;
       position:relative;
       overflow:visible;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
-    .list-item:hover { transform: translateY(-6px); box-shadow: 0 8px 30px rgba(0,0,0,0.6); }
-    .list-item img { width: 100%; border-radius: 6px; display:block; }
-    .list-item .title { display:block; margin-top: 0.6rem; color:#fff; font-weight:600; font-size:14px; }
+    .list-item:hover { transform: translateY(-8px); box-shadow: 0 16px 40px rgba(0,0,0,0.6); }
+
+    .list-item img {
+      width: 100%;
+      height: auto;
+      border-radius: 6px;
+      display:block;
+      object-fit: cover;
+      aspect-ratio: 16 / 9;
+      background: #000;
+    }
+    .list-item .title { display:block; margin-top: 0.6rem; color:#fff; font-weight:700; font-size:14px; letter-spacing:0.6px; }
 
     /* modal */
-    .modal-backdrop { position:fixed; inset:0; background: rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:9999; }
-    .modal { width: min(960px, 95%); background:#0b0b0b; border-radius:10px; padding:16px; color:#fff; }
+    .modal-backdrop { position:fixed; inset:0; background: rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:99999; }
+    .modal { width: min(960px, 95%); background:#0b0b0b; border-radius:10px; padding:16px; color:#fff; box-shadow: 0 30px 90px rgba(0,0,0,0.8); }
     .modal .controls { display:flex; gap:8px; justify-content:space-between; align-items:center; margin-bottom:8px; }
-    .modal iframe { width:100%; height:540px; border-radius:8px; border:0; background:#000; }
+    .modal iframe { width:100%; height: clamp(320px, 50vh, 540px); border-radius:8px; border:0; background:#000; }
 
     .btn { background:#ff6b6b; color:#fff; padding:8px 12px; border-radius:6px; text-decoration:none; display:inline-block; border:0; cursor:pointer; position:relative; z-index:1; }
     .btn.secondary { background:#333; color:#fff; }
+
     .password-row { display:flex; gap:8px; margin-top:8px; }
     .password-row input { flex:1; padding:8px; border-radius:6px; border:1px solid #222; background:#0f0f0f; color:#fff; }
+
     .muted { color:#bbb; font-size:13px; }
 
     footer#footer { text-align:center; padding:18px; color:#ddd; margin-top:30px; }
 
+    /* small screens */
     @media (max-width:720px) {
-      .list-item { width: calc(50% - 12px); }
+      .list-item { width: calc(50% - 12px) !important; }
       .modal iframe { height:300px; }
-      header#header .logo img { height:56px; }
+      header#header .logo img { width: clamp(44px, 18vw, 56px) !important; height: clamp(44px, 18vw, 56px) !important; }
+      body { padding-top: 86px; }
     }
 
     /* entrance animation */
     .list-item { opacity:0; transform-origin:center; animation: fadeIn .45s forwards; }
     @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
-    /* header outline effects (unchanged) */
+    /* header neon effects */
     header nav ul li a, header .logo { position: relative; z-index: 2; overflow: visible; }
-    header nav ul li a::before, header .logo::before { content: ""; position: absolute; inset: -10px; border-radius: 14px; background: linear-gradient(90deg, rgba(57,255,20,0.06) 0%, rgba(57,255,20,0.28) 25%, rgba(57,255,20,0.6) 50%, rgba(57,255,20,0.28) 75%, rgba(57,255,20,0.06) 100%); background-size: 300% 100%; filter: blur(8px) saturate(150%); opacity: 0.0; z-index: -1; transition: opacity .22s ease, transform .22s ease; pointer-events: none; animation: neonMove 4s linear infinite; box-shadow: 0 8px 30px rgba(57,255,20,0.06); }
-    header nav ul li a::after, header .logo::after { content: ""; position: absolute; inset: -4px; border-radius: 12px; border: 1px solid rgba(57,255,20,0.18); opacity: 0.0; z-index: -1; pointer-events: none; transition: opacity .18s ease, transform .18s ease; backdrop-filter: blur(2px); }
+    header nav ul li a::before, header .logo::before {
+      content: "";
+      position: absolute;
+      inset: -10px;
+      border-radius: 14px;
+      background: linear-gradient(90deg, rgba(57,255,20,0.06) 0%, rgba(57,255,20,0.28) 25%, rgba(57,255,20,0.6) 50%, rgba(57,255,20,0.28) 75%, rgba(57,255,20,0.06) 100%);
+      background-size: 300% 100%;
+      filter: blur(8px) saturate(150%);
+      opacity: 0.0;
+      z-index: -1;
+      transition: opacity .22s ease, transform .22s ease;
+      pointer-events: none;
+      animation: neonMove 4s linear infinite;
+      box-shadow: 0 8px 30px rgba(57,255,20,0.06);
+    }
+    header nav ul li a::after, header .logo::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 12px;
+      border: 1px solid rgba(57,255,20,0.18);
+      opacity: 0.0;
+      z-index: -1;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      backdrop-filter: blur(2px);
+    }
     @keyframes neonMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
     header nav ul li a.hover-strong::before, header .logo.hover-strong::before { filter: blur(12px) saturate(220%); transform: scale(1.03); opacity: 1; animation-duration: 2.4s; }
     header nav ul li a.hover-strong::after, header .logo.hover-strong::after { border-color: rgba(57,255,20,0.5); opacity: 1; transform: translateY(-2px); }
 
     /* ===========================
-       Playlist list inside modal:
-       show thumbnail + full title (wraps onto multiple lines if needed)
-       clickable rows, comfortable spacing
+       Playlist list inside modal
        =========================== */
     .playlist-list { display:block; max-height:260px; overflow:auto; margin-top:8px; padding:0; }
-
-    /* Important override: modal rows reused .list-item so we must reset width from the global 220px */
     .playlist-list .list-item {
       display:flex;
       align-items:flex-start;
@@ -118,15 +209,17 @@
       color:#fff;
       margin-bottom:6px;
       transition:background .12s, transform .08s;
-      width:100%;       /* key override so rows use full available width */
+      width:100%;
       max-width:100%;
       box-sizing:border-box;
       overflow:visible;
-      opacity:1;        /* avoid repeated entrance animation for modal rows */
+      opacity:1;
       animation:none;
+      box-shadow:none;
+      padding-left:0;
+      padding-right:0;
     }
     .playlist-list .list-item:hover { background: rgba(255,255,255,0.02); transform: translateY(-2px); }
-
     .playlist-list .list-item img {
       width:120px;
       height:68px;
@@ -134,11 +227,8 @@
       border-radius:6px;
       flex: 0 0 120px;
     }
-
-    /* this is the fix enabling the title to use the remaining right-side space */
     .playlist-list .title-wrap { flex:1; min-width:0; display:flex; align-items:flex-start; }
     .playlist-list .playlist-title {
-      display:block;
       white-space:normal;
       overflow:visible;
       font-size:14px;
@@ -146,17 +236,20 @@
       color:#fff;
       line-height:1.25;
       word-wrap:break-word;
-      overflow-wrap: anywhere; /* stronger wrap rules for long words */
-      /* clamp to a reasonable number of lines for neatness (optional) */
+      overflow-wrap: anywhere;
       display: -webkit-box;
       -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
-    /* small visual nicety to separate the sections in the modal */
     #playlist-list-wrap .muted { margin-bottom:6px; display:block; }
+
+    /* small nicety - ensure high z-index for modal root */
+    #modal-root { z-index: 100000; position:relative; }
+
+    /* particle canvas safety: keep below UI, above background */
+    canvas#fx-canvas { z-index: 1 !important; pointer-events: none !important; position: fixed !important; left:0; top:0; width:100% !important; height:100% !important; }
   </style>
 </head>
 <body class="landing is-preload">
@@ -185,7 +278,7 @@
     <section id="videos" class="wrapper style2 fade-up">
       <div class="inner">
         <h2>Private Classes</h2>
-        <p class="muted">To access Enter the password or sign in with a Google account that has admin access </p>
+        <p class="muted">To access Enter the password or sign in with a Google account that has admin access</p>
         <ul id="global-video-list" class="list-container"></ul>
       </div>
     </section>
@@ -200,7 +293,7 @@
   <div id="modal-root" style="display:none;"></div>
 
   <!-- Server hint (shows when user tries file:// sign-in) -->
-  <div id="serve-hint" style="display:none; position:fixed; left:50%; top:10%; transform:translateX(-50%); background:rgba(6,6,8,0.95); color:#fff; padding:14px; border-radius:10px; z-index:99999; max-width:720px; box-shadow:0 30px 80px rgba(0,0,0,0.6);">
+  <div id="serve-hint" style="display:none; position:fixed; left:50%; top:10%; transform:translateX(-50%); background:rgba(6,6,8,0.95); color:#fff; padding:14px; border-radius:10px; z-index:999999; max-width:720px; box-shadow:0 30px 80px rgba(0,0,0,0.6);">
     <div style="font-weight:700; margin-bottom:8px;">Google sign-in won't run from <code>file://</code></div>
     <div class="muted" style="margin-bottom:8px;">Open the site via <code>http://localhost:8000</code> — quick commands:</div>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -451,7 +544,7 @@
   }
 
   /*************************************************************************
-   * Google OAuth (GSI) init & UI wiring (unchanged)
+   * Google OAuth (GSI) init & UI wiring
    *************************************************************************/
   function initGoogleOAuth(){
     if (isFileProtocol) { return; }
@@ -515,27 +608,68 @@
   });
 
   /*************************************************************************
-   * Particles overlay (unchanged)
+   * Particles overlay
    *************************************************************************/
   (function createParticles(){
     try {
-      const canvas=document.createElement('canvas'); canvas.id='fx-canvas'; canvas.style.position='fixed'; canvas.style.left='0'; canvas.style.top='0'; canvas.style.width='100%'; canvas.style.height='100%'; canvas.style.zIndex='1'; canvas.style.pointerEvents='none'; document.body.appendChild(canvas);
+      const canvas=document.createElement('canvas'); canvas.id='fx-canvas';
+      canvas.style.position='fixed';
+      canvas.style.left='0';
+      canvas.style.top='0';
+      canvas.style.width='100%';
+      canvas.style.height='100%';
+      canvas.style.zIndex='1'; /* keep canvas under header (header z-index:60) */
+      canvas.style.pointerEvents='none';
+      document.body.appendChild(canvas);
       const ctx=canvas.getContext('2d'); let dpr=Math.min(2, window.devicePixelRatio || 1);
+
       function resize(){ canvas.width=innerWidth*dpr; canvas.height=innerHeight*dpr; canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); }
       window.addEventListener('resize', resize, {passive:true}); resize();
+
       const stars=[]; for(let i=0;i<80;i++){ stars.push({ x:Math.random()*innerWidth, y:Math.random()*innerHeight, r:Math.random()*1.8+0.3, vx:(Math.random()-0.5)*0.12, vy:(Math.random()-0.5)*0.06, hue:200+Math.random()*120, alpha:Math.random()*0.22+0.06 }); }
-      function draw(){ ctx.clearRect(0,0,innerWidth,innerHeight); const g=ctx.createRadialGradient(innerWidth*0.7, innerHeight*0.35, 0, innerWidth*0.4, innerHeight*0.6, Math.max(innerWidth,innerHeight)); g.addColorStop(0,'rgba(123,97,255,0.05)'); g.addColorStop(0.45,'rgba(57,255,20,0.02)'); g.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,innerWidth,innerHeight);
 
-        for(const s of stars){ s.x+=s.vx; s.y+=s.vy; if(s.x<-10) s.x=innerWidth+10; if(s.x>innerWidth+10) s.x=-10; if(s.y<-10) s.y=innerHeight+10; if(s.y>innerHeight+10) s.y=-10; ctx.beginPath(); ctx.fillStyle=`hsla(${s.hue},85%,70%,${s.alpha})`; ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); }
+      function draw(){
+        ctx.clearRect(0,0,innerWidth,innerHeight);
+        const g=ctx.createRadialGradient(innerWidth*0.7, innerHeight*0.35, 0, innerWidth*0.4, innerHeight*0.6, Math.max(innerWidth,innerHeight));
+        g.addColorStop(0,'rgba(123,97,255,0.05)');
+        g.addColorStop(0.45,'rgba(57,255,20,0.02)');
+        g.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=g; ctx.fillRect(0,0,innerWidth,innerHeight);
 
-        for(let i=0;i<stars.length;i++){ const a=stars[i]; for(let j=i+1;j<stars.length;j++){ const b=stars[j]; const dx=a.x-b.x, dy=a.y-b.y; const d=Math.sqrt(dx*dx+dy*dy); if(d<140){ ctx.beginPath(); ctx.strokeStyle=`rgba(120,150,255,${(1-d/140)*0.03})`; ctx.lineWidth=1; ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); } } }
+        for(const s of stars){
+          s.x+=s.vx; s.y+=s.vy;
+          if(s.x<-10) s.x=innerWidth+10;
+          if(s.x>innerWidth+10) s.x=-10;
+          if(s.y<-10) s.y=innerHeight+10;
+          if(s.y>innerHeight+10) s.y=-10;
+          ctx.beginPath();
+          ctx.fillStyle=`hsla(${s.hue},85%,70%,${s.alpha})`;
+          ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+          ctx.fill();
+        }
+
+        for(let i=0;i<stars.length;i++){
+          const a=stars[i];
+          for(let j=i+1;j<stars.length;j++){
+            const b=stars[j];
+            const dx=a.x-b.x, dy=a.y-b.y; const d=Math.sqrt(dx*dx+dy*dy);
+            if(d<140){
+              ctx.beginPath();
+              ctx.strokeStyle=`rgba(120,150,255,${(1-d/140)*0.03})`;
+              ctx.lineWidth=1;
+              ctx.moveTo(a.x,a.y);
+              ctx.lineTo(b.x,b.y);
+              ctx.stroke();
+            }
+          }
+        }
         requestAnimationFrame(draw);
       }
       draw();
     } catch(e){ console.warn('particles failed', e); }
   })();
 
-  /* header neon interactions (unchanged) */
+  /* header neon interactions */
   function attachHeaderInteractions(){
     const selector = 'header nav ul li a, header .logo';
     const els = Array.from(document.querySelectorAll(selector));
