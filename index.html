@@ -137,7 +137,7 @@
     .playlist-list .list-item img{width:140px;height:78px;object-fit:cover;border-radius:6px;}
 
     /* =========================
-       Player CSS: quality menu, control-bg, bigger time
+       Player CSS: quality menu, control-bg, bigger time, close button
        ========================= */
     .vidu-player-host { position: relative; width:100%; overflow:hidden; border-radius:8px; background:#000; }
     .vidu-mount { width:100%; height:520px; background:#000; display:block; }
@@ -190,6 +190,30 @@
     }
     .vidu-quality-menu .qitem { padding:8px 10px; color:#ddd; font-weight:600; font-size:13px; cursor:pointer; border-radius:6px; }
     .vidu-quality-menu .qitem:hover { background: rgba(255,255,255,0.03); color:#fff; }
+
+    /* close button inside player (top-right) */
+    .vidu-close-btn {
+      position:absolute;
+      top:10px;
+      right:10px;
+      z-index:10002;
+      width:36px;
+      height:36px;
+      padding:6px;
+      border-radius:8px;
+      background:rgba(0,0,0,0.46);
+      border:1px solid rgba(255,255,255,0.06);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:0 8px 24px rgba(0,0,0,0.6);
+    }
+
+    /* hide old close-player button inside modal (we moved it) but keep in DOM */
+    #close-player { display:none !important; }
 
     .vidu-player-host:-webkit-full-screen .vidu-mount,
     .vidu-player-host:-moz-full-screen .vidu-mount,
@@ -342,8 +366,27 @@
     qmenu.style.display = 'none';
     host.appendChild(qmenu);
 
+    // player close button (moved inside player, top-right)
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'vidu-close-btn';
+    closeBtn.id = 'vidu_closebtn';
+    closeBtn.title = 'Close';
+    closeBtn.type = 'button';
+    closeBtn.innerHTML = '✕';
+    closeBtn.addEventListener('click', ()=> {
+      // call global closeModal if available; fallback: hide modal and destroy player
+      try{
+        if(typeof window.closeModal === 'function') window.closeModal();
+        else {
+          const root = document.getElementById('modal-root'); if(root) root.style.display='none';
+          if(window.destroyViduPlayer) window.destroyViduPlayer();
+        }
+      }catch(e){ console.warn('closeBtn error', e); }
+    });
+    host.appendChild(closeBtn);
+
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, qmenu };
+    return { host, mount, overlay, ctrlBg, qmenu, closeBtn };
   }
 
   function disableIframeClicks(host){
@@ -448,12 +491,24 @@
       qualities = Array.isArray(levels) ? levels.slice() : [];
       const friendly = { 'highres':'2160p','hd2160':'2160p','hd1440':'1440p','hd1080':'1080p','hd720':'720p','large':'480p','medium':'360p','small':'240p','tiny':'144p','auto':'Auto' };
       qmenu.innerHTML = '';
+      // add Auto first option
       const autoItem = document.createElement('div');
       autoItem.className = 'qitem';
       autoItem.textContent = 'Auto';
       autoItem.dataset.quality = 'default';
-      autoItem.onclick = ()=> { if(state.player && typeof state.player.setPlaybackQuality === 'function') state.player.setPlaybackQuality('default'); qmenu.style.display='none'; qualityBtn.textContent = 'Auto ▾'; qualityBtn.setAttribute('aria-expanded','false'); };
+      autoItem.onclick = ()=> { 
+        try{
+          if(state.player && typeof state.player.setPlaybackQuality === 'function'){
+            state.player.setPlaybackQuality('default');
+          } else if(state.player && typeof state.player.setPlaybackQualityRange === 'function'){
+            /* older fallback - try */
+            state.player.setPlaybackQualityRange('small');
+          }
+        }catch(e){ console.warn('setPlaybackQuality(auto) err', e); }
+        qmenu.style.display='none'; qualityBtn.textContent = 'Auto ▾'; qualityBtn.setAttribute('aria-expanded','false');
+      };
       qmenu.appendChild(autoItem);
+
       qualities.forEach(q=>{
         const label = friendly[q] || q;
         const el = document.createElement('div');
@@ -464,14 +519,25 @@
           try{
             if(state.player && typeof state.player.setPlaybackQuality === 'function'){
               state.player.setPlaybackQuality(q);
-              qualityBtn.textContent = label + ' ▾';
+            } else if(state.player && typeof state.player.setPlaybackQualityRange === 'function'){
+              state.player.setPlaybackQualityRange(q);
             }
+            qualityBtn.textContent = label + ' ▾';
           }catch(e){ console.warn('setPlaybackQuality error', e); }
           qmenu.style.display='none';
           qualityBtn.setAttribute('aria-expanded','false');
         };
         qmenu.appendChild(el);
       });
+
+      // update qualityBtn label to current quality if available
+      try{
+        if(state.player && typeof state.player.getPlaybackQuality === 'function'){
+          const cur = state.player.getPlaybackQuality() || 'default';
+          if(cur === 'default') qualityBtn.textContent = 'Auto ▾';
+          else qualityBtn.textContent = (friendly[cur] || cur) + ' ▾';
+        }
+      }catch(e){}
     }
 
     qualityBtn.addEventListener('click', (ev)=>{
@@ -728,21 +794,37 @@
             state.mo = new MutationObserver(()=> disableIframeClicks(host));
             state.mo.observe(host, { childList:true, subtree:true });
 
-            // populate quality menu now
-            try{
-              if(typeof state.player.getAvailableQualityLevels === 'function'){
-                const levels = state.player.getAvailableQualityLevels() || [];
-                populateQualityMenu(levels);
+            // populate quality menu now if possible; poll a few times until levels are available
+            (function pollQuality(attemptsLeft){
+              try{
+                if(!state.player) return;
+                if(typeof state.player.getAvailableQualityLevels === 'function'){
+                  const levels = state.player.getAvailableQualityLevels() || [];
+                  if(levels && levels.length > 0){
+                    populateQualityMenu(levels);
+                    return;
+                  }
+                }
+              }catch(e){ /* ignore */ }
+              if(attemptsLeft > 0){
+                setTimeout(()=> pollQuality(attemptsLeft - 1), 300);
               } else {
-                setTimeout(()=> {
-                  try{
-                    if(state.player && typeof state.player.getAvailableQualityLevels === 'function'){
-                      populateQualityMenu(state.player.getAvailableQualityLevels() || []);
-                    }
-                  }catch(e){}
-                }, 800);
+                // final fallback: populate with empty (Auto only)
+                populateQualityMenu([]);
               }
-            }catch(e){ console.warn('quality populate err', e); }
+            })(16); // ~16 attempts * 300ms ~ ~4.8s max wait
+
+            // also try to populate on state change (metadata may appear later)
+            try{
+              if(typeof state.player.addEventListener === 'function'){
+                state.player.addEventListener('onStateChange', function(){ 
+                  try{
+                    const lv = state.player.getAvailableQualityLevels ? state.player.getAvailableQualityLevels() : [];
+                    if(lv && lv.length) populateQualityMenu(lv);
+                  }catch(e){}
+                });
+              }
+            }catch(e){/* ignore */}
 
             resolve(state.player);
           },
