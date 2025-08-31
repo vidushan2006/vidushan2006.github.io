@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="assets/css/main.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
-    /* ====== Your original page styles (kept intact) ====== */
+    /* ====== Original page CSS (unchanged logic) ====== */
     :root{ --bg-overlay: rgba(4,6,12,0.46); --glass: rgba(255,255,255,0.04); --glass-strong: rgba(255,255,255,0.06); --accent-1: #7b61ff; --accent-2:#39ff14; --accent-3:#ff6b6b; --muted:#bfc8dd; --text:#f2f6ff; --card-radius:10px; --ease:cubic-bezier(.16,.84,.24,1);}
 
     body{
@@ -22,89 +22,18 @@
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
     }
-
-    body::before{
-      content:'';
-      position:fixed;
-      inset:0;
-      background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.38));
-      pointer-events:none;
-      z-index:0;
-      mix-blend-mode:multiply;
-    }
-
+    body::before{ content:''; position:fixed; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.38)); pointer-events:none; z-index:0; mix-blend-mode:multiply; }
     #wrapper{position:relative;z-index:3;padding-bottom:48px;}
-
-    header#header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:14px 22px;
-      backdrop-filter: blur(8px) saturate(130%);
-      background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-bottom: none;
-      border-radius:0 0 10px 10px;
-      z-index:4;
-      position:relative;
-      box-shadow:0 8px 40px rgba(2,4,12,0.6);
-    }
-
-    .logo{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      text-decoration:none;
-      color:var(--text);
-      user-select:none;
-      position:relative;
-    }
-
-    .logo-circle{
-      width: clamp(72px, 9vw, 120px);
-      aspect-ratio: 1/1;
-      border-radius:50%;
-      overflow:hidden;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-      border: 10px solid rgba(255,255,255,0.06);
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
-      backdrop-filter: blur(6px) saturate(120%);
-      transform: translateZ(0);
-      flex-shrink:0;
-    }
-
-    .logo-circle img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      object-position:center center;
-      display:block;
-      transform: translateZ(0);
-    }
-
+    header#header{ display:flex; align-items:center; justify-content:space-between; padding:14px 22px; backdrop-filter: blur(8px) saturate(130%); background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-bottom: none; border-radius:0 0 10px 10px; z-index:4; position:relative; box-shadow:0 8px 40px rgba(2,4,12,0.6); }
+    .logo{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); user-select:none; position:relative; }
+    .logo-circle{ width: clamp(72px, 9vw, 120px); aspect-ratio: 1/1; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); border: 10px solid rgba(255,255,255,0.06); box-shadow: 0 10px 28px rgba(0,0,0,0.55); backdrop-filter: blur(6px) saturate(120%); transform: translateZ(0); flex-shrink:0; }
+    .logo-circle img{ width:100%; height:100%; object-fit:cover; object-position:center center; display:block; transform: translateZ(0); }
     nav ul{list-style:none;margin:0;padding:0;display:flex;gap:10px;align-items:center;}
-    nav ul li a{
-      font-weight:700;
-      font-size:14px;
-      position:relative;
-      padding:8px 12px;
-      color:var(--muted);
-      text-decoration:none;
-      border-radius:8px;
-      transition:all .18s var(--ease);
-      display:inline-block;
-      border: none;
-      box-shadow: none;
-      outline: none;
-      background: transparent;
-    }
+    nav ul li a{ font-weight:700; font-size:14px; position:relative; padding:8px 12px; color:var(--muted); text-decoration:none; border-radius:8px; transition:all .18s var(--ease); display:inline-block; border: none; box-shadow: none; outline: none; background: transparent; }
     nav ul li a:hover{color:var(--text);transform: translateY(-3px) scale(1.02);box-shadow:0 10px 30px rgba(66,44,145,0.12);}
 
     .wrapper.style1{padding-top:24px;}
     .inner{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:3;}
-
     .list-container{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:flex-start;margin-top:6px;}
     .list-item{width:150px;cursor:pointer;text-align:center;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:var(--card-radius);padding:10px;transition:transform .28s var(--ease),box-shadow .28s var(--ease),filter .28s var(--ease); border:1px solid rgba(255,255,255,0.04); box-shadow:0 8px 30px rgba(6,8,16,0.6);position:relative;overflow:visible;transform-style:preserve-3d;will-change:transform;backdrop-filter:blur(6px) saturate(120%);}
     .list-item::after{content:'';position:absolute;left:8px;right:8px;bottom:8px;height:4px;border-radius:4px;background:linear-gradient(90deg, rgba(123,97,255,0.25), rgba(57,255,20,0.18), rgba(255,107,107,0.12));opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;}
@@ -170,28 +99,34 @@
     .playlist-list .list-item{width:100%;display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;}
     .playlist-list .list-item img{width:140px;height:78px;object-fit:cover;border-radius:6px;}
 
-    /* ====== Minimal VIDU overlay player CSS (namespaced — safe) ====== */
-    .vidu-player-container { position: relative; border-radius: 8px; overflow: hidden; background:#000; }
-    .vidu-yt-mount { width:100%; height:520px; background:#000; display:block; }
-    .vidu-yt-iframe { width:100%; height:100%; border:0; display:block; pointer-events:none; }
-
-    .vidu-overlay{
+    /* ====== Overlay CSS (namespaced & updated) ====== */
+    .vidu-overlay-global {
       position: absolute;
-      left: 12px; right: 12px; bottom: 12px;
-      z-index: 2147483646;
-      display:flex; gap:12px; align-items:center;
+      z-index: 2147483647;
+      pointer-events: auto;
+      display:flex;
+      align-items:center;
+      gap:12px;
       background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.28));
-      padding:10px; border-radius:8px; pointer-events:auto;
-      transition: opacity .14s ease;
+      padding:10px;
+      border-radius:8px;
+      transition: opacity .12s ease;
+      box-sizing:border-box;
+      min-width: 220px;
     }
-    .vidu-btn { background: rgba(255,255,255,0.06); color:#fff; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:700; user-select:none; border:1px solid rgba(255,255,255,0.04); }
-    .vidu-range { flex:1; -webkit-appearance:none; height:8px; border-radius:8px; background: rgba(255,255,255,0.06); }
-    .vidu-range::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#7b61ff; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
-    .vidu-time { min-width:48px; font-size:12px; color:#cbd5ff; text-align:center; }
+    .vidu-overlay-global .vidu-btn { background: rgba(255,255,255,0.06); color:#fff; padding:8px; border-radius:8px; cursor:pointer; font-weight:700; user-select:none; border:1px solid rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; width:44px; height:44px; }
+    .vidu-overlay-global .vidu-range { flex:1; -webkit-appearance:none; height:8px; border-radius:8px; background: rgba(255,255,255,0.06); }
+    .vidu-overlay-global .vidu-range::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#7b61ff; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
+    .vidu-overlay-global .vidu-time { min-width:48px; font-size:12px; color:#cbd5ff; text-align:center; }
 
-    :fullscreen .vidu-overlay, :-webkit-full-screen .vidu-overlay, :-moz-full-screen .vidu-overlay { bottom:18px; left:18px; right:18px; z-index:2147483646; }
+    .vidu-overlay-fixed {
+      position: fixed !important;
+      left: 0 !important; top: 0 !important; width: 100% !important; height: auto !important;
+      display:flex; align-items:flex-end; justify-content:center; padding:18px; pointer-events:auto;
+      box-sizing:border-box;
+    }
 
-    @media (max-width:720px){ .vidu-yt-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
+    @media (max-width:720px){ .vidu-overlay-global{ left:8px; right:8px; bottom:8px; } }
   </style>
 </head>
 <body class="landing is-preload">
@@ -231,229 +166,353 @@
 
   <script>
   /*************************************************************************
-   * Minimal, non-invasive VIDU overlay player implementation
-   * - mounts into existing #player-wrap
-   * - blocks native YT clicks by setting iframe pointer-events:none
-   * - provides Play/Pause, seek, spacebar toggle, fullscreen (on container)
-   * - exposes showViduPlayer(videoId, title) and destroyViduPlayer()
+   * Final overlay player script
+   * - Fix: fullscreen toggles (enter/exit)
+   * - Fix: iframe grows to full viewport in fullscreen
+   * - Fix: play/pause icon (SVG) instead of text
+   * - All other behavior preserved
    *************************************************************************/
 
-  (function(){
-    const NAMESPACE = '__vidu_custom';
-    if(window[NAMESPACE] && window[NAMESPACE].initialized) return;
-    window[NAMESPACE] = window[NAMESPACE] || {};
-    window[NAMESPACE].initialized = true;
+  const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI';
+  if(!window.__viduGlobal) window.__viduGlobal = {};
+  if(!window.__viduGlobal.vOverlayInit) {
+    window.__viduGlobal.vOverlayInit = true;
 
-    const state = {
-      player: null,
-      updateInterval: null,
-      keyHandler: null,
-      observer: null
-    };
+    (function(){
+      const state = { player: null, updateTimer: null, overlayEl: null, rafId: null, keyHandler: null, mo: null, host: null, mount: null };
 
-    function loadYTApi(){
-      if(window.YT && window.YT.Player) return Promise.resolve();
-      if(window._vidu_loading_yt) {
-        return new Promise((res, rej) => {
-          const t = setInterval(()=>{ if(window.YT && window.YT.Player){ clearInterval(t); res(); } }, 80);
-          setTimeout(()=>{ clearInterval(t); rej(new Error('YT load timeout')) }, 20000);
-        });
-      }
-      window._vidu_loading_yt = true;
-      return new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = 'https://www.youtube.com/iframe_api';
-        s.async = true;
-        s.onerror = ()=> reject(new Error('YT api failed'));
-        document.head.appendChild(s);
-        window.onYouTubeIframeAPIReady = function(){ resolve(); };
-        setTimeout(()=> { if(window.YT && window.YT.Player) resolve(); }, 800);
-        setTimeout(()=> { if(!(window.YT && window.YT.Player)) reject(new Error('YT api timeout')); }, 20000);
-      });
-    }
-
-    function formatTime(s){
-      s = Math.max(0, Math.floor(s||0));
-      const mm = Math.floor(s/60), ss = s%60;
-      return mm + ':' + (ss < 10 ? '0'+ss : ss);
-    }
-
-    function mountPlayerShell(){
-      const wrap = document.getElementById('player-wrap');
-      if(!wrap) return null;
-      const existing = wrap.querySelector('.vidu-player-container');
-      if(existing) return existing;
-      const container = document.createElement('div');
-      container.className = 'vidu-player-container';
-      container.innerHTML = `
-        <div class="vidu-yt-mount" id="vidu-yt-mount"></div>
-        <div class="vidu-overlay" id="vidu-overlay" style="display:flex;">
-          <button id="vidu-playpause" class="vidu-btn">Pause</button>
-          <div class="vidu-time" id="vidu-cur">0:00</div>
-          <input id="vidu-seek" type="range" class="vidu-range" min="0" max="100" step="0.1" value="0">
-          <div class="vidu-time" id="vidu-dur">0:00</div>
-          <button id="vidu-full" class="vidu-btn">⤢</button>
-        </div>
-      `;
-      // IMPORTANT: Clear only the player-wrap area — DO NOT touch the rest of the layout
-      wrap.innerHTML = '';
-      wrap.appendChild(container);
-      return container;
-    }
-
-    function disableIframeClicks(mount){
-      try {
-        const ifr = mount.querySelector('iframe');
-        if(ifr){
-          ifr.classList.add('vidu-yt-iframe');
-          ifr.style.pointerEvents = 'none';
-          ifr.setAttribute('allow', (ifr.getAttribute('allow') || '') + '; fullscreen');
-          ifr.setAttribute('allowfullscreen', '');
-        }
-      } catch(e){ console.warn('disableIframeClicks error', e); }
-    }
-
-    function cleanup(){
-      try{
-        if(state.updateInterval){ clearInterval(state.updateInterval); state.updateInterval = null; }
-        if(state.player){ try{ state.player.destroy(); }catch(e){} state.player = null; }
-        if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
-      }catch(e){ console.warn('cleanup err', e); }
-    }
-
-    function createAndWirePlayer(videoId, title){
-      const shell = mountPlayerShell();
-      if(!shell) return Promise.reject(new Error('player-wrap not found'));
-      const mount = document.getElementById('vidu-yt-mount');
-      const btn = document.getElementById('vidu-playpause');
-      const seek = document.getElementById('vidu-seek');
-      const curEl = document.getElementById('vidu-cur');
-      const durEl = document.getElementById('vidu-dur');
-      const fullBtn = document.getElementById('vidu-full');
-
-      cleanup();
-
-      return loadYTApi().then(()=> {
-        return new Promise((resolve, reject) => {
-          state.player = new YT.Player('vidu-yt-mount', {
-            height: '520',
-            width: '100%',
-            videoId: videoId,
-            playerVars: {
-              controls: 0,
-              disablekb: 1,
-              rel: 0,
-              modestbranding: 1,
-              playsinline: 1,
-              iv_load_policy: 3,
-              origin: location.origin
-            },
-            events: {
-              onReady: function(evt){
-                disableIframeClicks(shell);
-                try{ evt.target.playVideo(); }catch(e){}
-                state.updateInterval = setInterval(()=> {
-                  try {
-                    const dur = (state.player.getDuration && state.player.getDuration()) || 0;
-                    const cur = (state.player.getCurrentTime && state.player.getCurrentTime()) || 0;
-                    if(dur && isFinite(dur)){
-                      durEl.textContent = formatTime(dur);
-                      if(!seek.dragging) seek.value = (cur / Math.max(1,dur)) * 100;
-                    }
-                    curEl.textContent = formatTime(cur);
-                    const st = state.player.getPlayerState();
-                    btn.textContent = (st === 1 ? 'Pause' : 'Play');
-                  } catch(e) {}
-                }, 200);
-
-                btn.onclick = function(){
-                  try{
-                    const st = state.player.getPlayerState();
-                    if(st === 1) state.player.pauseVideo();
-                    else state.player.playVideo();
-                  }catch(e){}
-                };
-                seek.addEventListener('pointerdown', ()=> seek.dragging = true, {passive:true});
-                seek.addEventListener('pointerup', ()=> {
-                  const dur = state.player.getDuration ? state.player.getDuration() : 0;
-                  if(dur){ state.player.seekTo(dur * (parseFloat(seek.value)/100), true); }
-                  seek.dragging = false;
-                }, {passive:true});
-                seek.addEventListener('input', ()=> {
-                  if(seek.dragging){
-                    const dur = state.player.getDuration ? state.player.getDuration() : 0;
-                    if(dur) curEl.textContent = formatTime(dur * (parseFloat(seek.value)/100));
-                  }
-                });
-
-                fullBtn.onclick = function(){
-                  const el = shell;
-                  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-                  if(req) req.call(el);
-                };
-
-                state.keyHandler = function(e){
-                  if(e.code === 'Space' || e.key === ' '){
-                    const tag = (document.activeElement && document.activeElement.tagName) || '';
-                    if(tag === 'INPUT' || tag === 'TEXTAREA' || (document.activeElement && document.activeElement.isContentEditable)) return;
-                    const root = document.getElementById('modal-root');
-                    if(!root || root.style.display === 'none') return;
-                    e.preventDefault();
-                    try{
-                      const st = state.player.getPlayerState();
-                      if(st === 1) state.player.pauseVideo();
-                      else state.player.playVideo();
-                    }catch(e){}
-                  }
-                };
-                document.addEventListener('keydown', state.keyHandler);
-
-                // safety: ensure iframe non-interactive if created slightly later
-                setTimeout(()=> disableIframeClicks(shell), 150);
-
-                resolve(state.player);
-              },
-              onStateChange: function(evt){}
-            }
+      function loadYTApi(){
+        if(window.YT && window.YT.Player) return Promise.resolve();
+        if(window._vidu_loading_yt) {
+          return new Promise((res, rej) => {
+            const t = setInterval(()=>{ if(window.YT && window.YT.Player){ clearInterval(t); res(); } }, 120);
+            setTimeout(()=>{ clearInterval(t); rej(new Error('YT load timeout')); }, 20000);
           });
+        }
+        window._vidu_loading_yt = true;
+        return new Promise((resolve, reject)=>{
+          const s = document.createElement('script');
+          s.src = 'https://www.youtube.com/iframe_api';
+          s.async = true;
+          s.onerror = ()=> reject(new Error('YT API failed to load'));
+          document.head.appendChild(s);
+          window.onYouTubeIframeAPIReady = function(){ resolve(); };
+          setTimeout(()=>{ if(window.YT && window.YT.Player) resolve(); }, 800);
+          setTimeout(()=>{ if(!(window.YT && window.YT.Player)) reject(new Error('YT API timed out')); }, 20000);
         });
-      }).catch(err => { console.error('vidu player error', err); throw err; });
-    }
-
-    window.showViduPlayer = function(videoId, title){
-      if(!document.getElementById('player-wrap')){
-        console.warn('player-wrap not found. Make sure there is an element with id="player-wrap" where the player should mount.');
       }
-      return createAndWirePlayer(videoId, title);
-    };
 
-    window.destroyViduPlayer = function(){
-      cleanup();
-      const wrap = document.getElementById('player-wrap');
-      if(wrap){ const shell = wrap.querySelector('.vidu-player-container'); if(shell) shell.remove(); }
-    };
+      function formatTime(s){
+        s = Math.max(0, Math.floor(s||0));
+        const mm = Math.floor(s/60), ss = s%60;
+        return mm + ':' + (ss < 10 ? '0'+ss : ss);
+      }
 
-    // monitor #player-wrap and ensure iframe pointer-events stay disabled if other scripts inject iframes
-    (function observePlayerWrap(){
-      const pw = document.getElementById('player-wrap');
-      if(!pw) return;
-      const mo = new MutationObserver(()=> {
-        const shell = pw.querySelector('.vidu-player-container');
-        if(shell) disableIframeClicks(shell);
-      });
-      mo.observe(pw, { childList:true, subtree:true });
-      state.observer = mo;
+      function playIconSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4.5v15l12-7.5L6 4.5z" fill="#fff"/></svg>`; }
+      function pauseIconSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4" width="4" height="16" rx="1.2" fill="#fff"/><rect x="15" y="4" width="4" height="16" rx="1.2" fill="#fff"/></svg>`; }
+      function setPlayIcon(isPlaying){
+        const ov = state.overlayEl; if(!ov) return;
+        const btn = ov.querySelector('#vidu_btn_play');
+        if(!btn) return;
+        btn.innerHTML = isPlaying ? pauseIconSVG() : playIconSVG();
+      }
+
+      function ensureOverlay(){
+        if(state.overlayEl) return state.overlayEl;
+        const ov = document.createElement('div');
+        ov.className = 'vidu-overlay-global';
+        ov.setAttribute('role','region');
+        ov.setAttribute('aria-label','Video controls');
+        ov.style.pointerEvents = 'auto';
+        ov.innerHTML = `
+          <button class="vidu-btn" id="vidu_btn_play">${playIconSVG()}</button>
+          <div class="vidu-time" id="vidu_time_cur">0:00</div>
+          <input id="vidu_range" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
+          <div class="vidu-time" id="vidu_time_dur">0:00</div>
+          <button class="vidu-btn" id="vidu_btn_full">⤢</button>
+        `;
+        document.body.appendChild(ov);
+        state.overlayEl = ov;
+
+        const btnPlay = ov.querySelector('#vidu_btn_play');
+        btnPlay.addEventListener('click', ()=>{
+          if(!state.player) return;
+          try{
+            const st = state.player.getPlayerState();
+            if(st === 1) state.player.pauseVideo();
+            else state.player.playVideo();
+          }catch(e){ console.warn('play toggle err', e); }
+        });
+
+        const range = ov.querySelector('#vidu_range');
+        range.addEventListener('pointerdown', ()=> range._dragging = true, {passive:true});
+        range.addEventListener('pointerup', ()=>{
+          range._dragging = false;
+          if(!state.player) return;
+          const dur = state.player.getDuration ? state.player.getDuration() : 0;
+          if(dur) state.player.seekTo(dur * (parseFloat(range.value)/100), true);
+        }, {passive:true});
+        range.addEventListener('input', ()=>{
+          if(!state.player) return;
+          if(range._dragging){
+            const dur = state.player.getDuration ? state.player.getDuration() : 0;
+            if(dur) ov.querySelector('#vidu_time_cur').textContent = formatTime(dur * (parseFloat(range.value)/100));
+          }
+        }, {passive:true});
+
+        ov.querySelector('#vidu_btn_full').addEventListener('click', ()=>{
+          // toggle fullscreen: if fullscreen -> exit; else request on host
+          const fs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+          if(fs){
+            const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+            if(exit) exit.call(document);
+          } else {
+            const container = state.host || document.getElementById('player-wrap');
+            if(container){
+              const req = container.requestFullscreen || container.webkitRequestFullscreen || container.mozRequestFullScreen || container.msRequestFullscreen;
+              if(req) req.call(container);
+            }
+          }
+        });
+
+        return ov;
+      }
+
+      // make overlay track the host bounding rect (and switch to fixed in fullscreen)
+      function positionOverlayFor(host){
+        if(!host) return;
+        state.host = host;
+        const ov = ensureOverlay();
+        function applyRect(r){
+          if(!ov) return;
+          const fs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+          if(fs){
+            ov.classList.add('vidu-overlay-fixed');
+            ov.style.left = '0px'; ov.style.top = '0px'; ov.style.width = '100%'; ov.style.height = 'auto';
+            ov.style.padding = '18px'; ov.style.justifyContent = 'center'; ov.style.alignItems = 'flex-end';
+          } else {
+            ov.classList.remove('vidu-overlay-fixed');
+            ov.style.position = 'absolute';
+            ov.style.left = (Math.round(r.left) + 12) + 'px';
+            // place overlay near bottom, but keep it inside host
+            const bottomY = Math.round(r.top + r.height - 68);
+            ov.style.top = bottomY + 'px';
+            ov.style.width = Math.max(300, Math.round(r.width - 24)) + 'px';
+            ov.style.height = 'auto';
+            ov.style.justifyContent = 'space-between';
+            ov.style.alignItems = 'center';
+          }
+        }
+
+        // initial placement
+        applyRect(host.getBoundingClientRect());
+
+        // RAF loop
+        cancelAnimationFrame(state.rafId || 0);
+        function rafLoop(){
+          try{
+            const rect = host.getBoundingClientRect();
+            applyRect(rect);
+          }catch(e){}
+          state.rafId = requestAnimationFrame(rafLoop);
+        }
+        state.rafId = requestAnimationFrame(rafLoop);
+      }
+
+      function killOverlayPositioning(){
+        if(state.rafId){ cancelAnimationFrame(state.rafId); state.rafId = null; }
+      }
+
+      function disableIframeInteraction(h){
+        try{
+          const iframe = h.querySelector('iframe');
+          if(iframe){
+            iframe.style.pointerEvents = 'none';
+            iframe.classList.add('vidu-yt-blocked');
+            if(!iframe.hasAttribute('allow')) iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
+            iframe.setAttribute('allowfullscreen','');
+            iframe.setAttribute('tabindex','-1');
+          }
+        }catch(e){ console.warn('disableIframeInteraction', e); }
+      }
+
+      // create player host + mount, ensure later fullscreen expands iframe to viewport height
+      function createPlayerIn(container, videoId){
+        if(!container) return Promise.reject(new Error('player-wrap missing'));
+        // clear only player-wrap
+        container.innerHTML = '';
+        // host wrapper
+        const host = document.createElement('div');
+        host.className = 'vidu-player-container-host';
+        host.style.width = '100%';
+        host.style.position = 'relative';
+        host.style.height = 'auto';
+        container.appendChild(host);
+
+        // mount
+        const mountId = 'vidu_yt_mount_' + Math.floor(Math.random()*1000000);
+        const mount = document.createElement('div');
+        mount.id = mountId;
+        mount.style.width = '100%';
+        mount.style.height = '520px';
+        mount.style.background = '#000';
+        host.appendChild(mount);
+
+        // save for later
+        state.host = host; state.mount = mount;
+
+        // position overlay and set up full-screen awareness
+        ensureOverlay();
+        positionOverlayFor(host);
+
+        // fullscreen change handler: expand mount height when host is fullscreen
+        function onFSC(){
+          const fs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+          if(fs === host){ // our host entered fullscreen
+            try{ mount.style.height = window.innerHeight + 'px'; }catch(e){}
+          } else {
+            try{ mount.style.height = '520px'; }catch(e){}
+          }
+          // also switch overlay class handled by positionOverlayFor's RAF, but call onFullScreenChange to re-evaluate
+        }
+        document.addEventListener('fullscreenchange', onFSC);
+        document.addEventListener('webkitfullscreenchange', onFSC);
+        document.addEventListener('mozfullscreenchange', onFSC);
+
+        // load YT player
+        return loadYTApi().then(()=> {
+          return new Promise((resolve, reject)=>{
+            // if there's already a player, destroy
+            if(state.player && typeof state.player.destroy === 'function'){
+              try{ state.player.destroy(); }catch(e){} state.player = null;
+            }
+            state.player = new YT.Player(mountId, {
+              videoId: videoId,
+              width: '100%',
+              height: '100%',
+              playerVars: {
+                controls: 0,
+                disablekb: 1,
+                rel: 0,
+                modestbranding: 1,
+                playsinline: 1,
+                iv_load_policy: 3,
+                origin: location.origin
+              },
+              events: {
+                onReady: function(evt){
+                  // block iframe clicks
+                  disableIframeInteraction(host);
+                  try{ evt.target.playVideo(); }catch(e){}
+                  // ensure mount height respects potential fullscreen state
+                  const fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+                  if(fsEl === host){ mount.style.height = window.innerHeight + 'px'; } else { mount.style.height = '520px'; }
+
+                  // update loop
+                  if(state.updateTimer) clearInterval(state.updateTimer);
+                  state.updateTimer = setInterval(()=> {
+                    try{
+                      if(!state.player) return;
+                      const dur = state.player.getDuration ? state.player.getDuration() : 0;
+                      const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+                      const ov = ensureOverlay();
+                      if(ov){
+                        const rcur = ov.querySelector('#vidu_time_cur');
+                        const rdur = ov.querySelector('#vidu_time_dur');
+                        const rrange = ov.querySelector('#vidu_range');
+                        if(rcur) rcur.textContent = formatTime(cur);
+                        if(rdur) rdur.textContent = (dur && isFinite(dur)) ? formatTime(dur) : '0:00';
+                        if(rrange && !rrange._dragging && dur && isFinite(dur)){
+                          rrange.value = (cur / Math.max(1,dur))*100;
+                        }
+                        const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
+                        setPlayIcon(st === 1);
+                      }
+                    }catch(e){}
+                  }, 160);
+
+                  // spacebar toggling when modal visible
+                  state.keyHandler = function(e){
+                    if(e.code === 'Space' || e.key === ' '){
+                      const tag = (document.activeElement && document.activeElement.tagName) || '';
+                      if(tag === 'INPUT' || tag === 'TEXTAREA' || (document.activeElement && document.activeElement.isContentEditable)) return;
+                      const root = document.getElementById('modal-root');
+                      if(!root || root.style.display === 'none') return;
+                      e.preventDefault();
+                      try{
+                        const st = state.player.getPlayerState();
+                        if(st === 1) state.player.pauseVideo();
+                        else state.player.playVideo();
+                      }catch(e){}
+                    }
+                  };
+                  document.addEventListener('keydown', state.keyHandler);
+
+                  // watch host subtree for iframe changes
+                  if(state.mo) state.mo.disconnect();
+                  state.mo = new MutationObserver(()=> disableIframeInteraction(host));
+                  state.mo.observe(host, { childList:true, subtree:true });
+
+                  resolve(state.player);
+                },
+                onStateChange: function(evt){ /* ok */ },
+                onError: function(err){ console.error('YT player error', err); }
+              }
+            });
+          });
+        }).catch(err => { console.error('create player error', err); throw err; });
+      }
+
+      function destroyPlayer(){
+        try{
+          if(state.updateTimer){ clearInterval(state.updateTimer); state.updateTimer = null; }
+          if(state.player){ try{ state.player.destroy(); }catch(e){} state.player = null; }
+          if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
+          if(state.mo){ try{ state.mo.disconnect(); }catch(e){} state.mo = null; }
+          if(state.overlayEl){ try{ state.overlayEl.remove(); }catch(e){} state.overlayEl = null; }
+          if(state.rafId){ cancelAnimationFrame(state.rafId); state.rafId = null; }
+          // reset mount if present
+          if(state.mount) try{ state.mount.style.height = '520px'; }catch(e){}
+        }catch(e){ console.warn('destroyPlayer err', e); }
+      }
+
+      // Public API
+      window.showViduPlayer = function(videoId, title){
+        const wrap = document.getElementById('player-wrap');
+        if(!wrap){
+          console.warn('showViduPlayer: #player-wrap not found. Ensure your modal contains <div id="player-wrap"></div>');
+          return Promise.reject(new Error('#player-wrap not found'));
+        }
+        return createPlayerIn(wrap, videoId);
+      };
+      window.destroyViduPlayer = function(){
+        const wrap = document.getElementById('player-wrap');
+        if(wrap) wrap.innerHTML = '';
+        destroyPlayer();
+      };
+
+      // cleanup on navigation
+      window.addEventListener('beforeunload', ()=> { try{ window.destroyViduPlayer(); }catch(e){} }, {passive:true});
+
+      // react to fullscreenchange and ensure mount gets full height when our host is fullscreen
+      document.addEventListener('fullscreenchange', function(){
+        const fs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+        if(fs && fs.classList && fs.classList.contains('vidu-player-container-host')){
+          // host entered fullscreen; expand mount
+          try{ if(state.mount) state.mount.style.height = window.innerHeight + 'px'; }catch(e){}
+        } else {
+          try{ if(state.mount) state.mount.style.height = '520px'; }catch(e){}
+        }
+      }, {passive:true});
+
     })();
-
-    window.addEventListener('beforeunload', ()=> { try{ window.destroyViduPlayer(); if(state.observer) state.observer.disconnect(); }catch(e){} }, {passive:true});
-  })();
+  } // end guard
   </script>
 
   <script>
   /*************************************************************************
-   * The rest of your app: playlists, modal, password handling, UI behaviour.
-   * I did NOT change your layout — only adapted the play action to call
-   * `showViduPlayer(videoId)` so the new overlay mounts safely inside #player-wrap.
+   * Playlist/Modal/Password & UI — preserved (no layout changes)
+   * Use showViduPlayer(videoId) to mount player
    *************************************************************************/
 
   const playlists = [
@@ -492,11 +551,9 @@
     }
   ];
 
-  // Helpers
   function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
   function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
-  // Render playlists
   function renderPlaylists(){
     const ul = document.getElementById('playlist-list');
     if(!ul) return;
@@ -516,7 +573,6 @@
     const ul = document.getElementById('playlist-list');
     const container = document.getElementById('playlist-videos');
     if(!container || !ul) return;
-    if(!window.__viduGlobal) window.__viduGlobal = {};
     if(!window.__viduGlobal.playlistStack) window.__viduGlobal.playlistStack = [];
     if(!skipPush){ window.__viduGlobal.playlistStack.push(window.__viduGlobal.currentPl || null); }
     window.__viduGlobal.currentPl = pl;
@@ -542,19 +598,10 @@
     };
   }
 
-  // spawn ripple & attach tilt (kept lightweight)
-  function spawnRipple(ev,target){
-    const rect = target.getBoundingClientRect();
-    const drop = document.createElement('div');
-    drop.className = 'drop';
-    drop.style.left = (ev.clientX - rect.left) + 'px';
-    drop.style.top = (ev.clientY - rect.top) + 'px';
-    target.appendChild(drop);
-    setTimeout(()=> drop.remove(),700);
-  }
+  function spawnRipple(ev,target){ const rect = target.getBoundingClientRect(); const drop = document.createElement('div'); drop.className = 'drop'; drop.style.left = (ev.clientX - rect.left) + 'px'; drop.style.top = (ev.clientY - rect.top) + 'px'; target.appendChild(drop); setTimeout(()=> drop.remove(),700); }
   function attachTilt(card){ if(!card) return; const img = card.querySelector('img'); function onMove(e){ if(window.__viduGlobal && window.__viduGlobal.visualsPaused) return; const r = card.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width; const py = (e.clientY - r.top) / r.height; const rx = (py - 0.5) * 10; const ry = (px - 0.5) * -10; card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(6px)`; if(img) img.style.transform = `translateZ(26px) scale(1.06) translateY(${(0.5-py)*6}px)`; } function onLeave(){ card.style.transform = ''; if(img) img.style.transform = ''; } card.addEventListener('pointermove', onMove, {passive:true}); card.addEventListener('pointerleave', onLeave, {passive:true}); }
 
-  // Modal + password + player mount logic
+  // Modal + player mount
   let currentItem = null;
   function createModal(){
     const root = document.getElementById('modal-root');
@@ -589,7 +636,7 @@
                 </div>
               </div>
 
-              <!-- THIS is where the overlay player will mount -->
+              <!-- mount point - DO NOT rename -->
               <div id="player-wrap"></div>
 
               <div id="playlist-list-wrap" style="display:none;margin-top:12px;">
@@ -642,25 +689,23 @@
     if(val === expected){
       document.getElementById('password-block').style.display = 'none';
       document.getElementById('password-error').style.display = 'none';
-      // Show player block
       document.getElementById('player-block').style.display = 'block';
-      // If this item is a playlist -> show playlist listing inside modal (and mount first video)
       if(currentItem.type === 'playlist'){
         showPlaylistInsideModal(currentItem);
       } else {
-        // direct video idB64 -> decode and mount through the safe API
         const id = b64decode(currentItem.idB64 || '');
         document.getElementById('now-playing-label').textContent = currentItem.name || 'Now playing';
-        // use the safe namespaced API that mounts only in #player-wrap
-        if(window.showViduPlayer) window.showViduPlayer(id, currentItem.name || '');
+        if(window.showViduPlayer) window.showViduPlayer(id, currentItem.name || '').catch(err => {
+          console.error('showViduPlayer failed', err);
+          const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player.</div>`;
+        });
       }
     } else {
       const err = document.getElementById('password-error'); err.style.display = 'block'; err.textContent = 'Incorrect password — try again.';
     }
   }
 
-  // Playlist fetcher (uses your API key if present)
-  const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI';
+  // Playlist fetching (kept)
   async function fetchPlaylistVideos(playlistId){
     if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
     const items=[]; let pageToken='';
@@ -714,18 +759,22 @@
         li.style.display='flex'; li.style.alignItems='center'; li.style.gap='12px'; li.style.padding='8px';
         li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;" /><div style="flex:1;"><div class="title" style="font-size:13px;">${escapeHtml(v.title)}</div></div>`;
         li.onclick = ()=> {
-          // mount selected video in the safe player
           document.getElementById('now-playing-label').textContent = v.title || 'Now playing';
-          if(window.showViduPlayer) window.showViduPlayer(v.videoId, v.title || '');
+          if(window.showViduPlayer) window.showViduPlayer(v.videoId, v.title || '').catch(err => {
+            console.error('showViduPlayer failed', err);
+            const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player.</div>`;
+          });
         };
         listWrap.appendChild(li);
       });
 
       document.getElementById('player-block').style.display='block';
       const outer = document.getElementById('playlist-list-wrap'); if(outer) outer.style.display='block';
-      // mount first video via safe API
       document.getElementById('now-playing-label').textContent = videos[0].title || 'Now playing';
-      if(window.showViduPlayer) window.showViduPlayer(videos[0].videoId, videos[0].title || '');
+      if(window.showViduPlayer) window.showViduPlayer(videos[0].videoId, videos[0].title || '').catch(err => {
+        console.error('showViduPlayer failed', err);
+        const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player.</div>`;
+      });
     } catch(err){
       console.error('Playlist fetch error', err);
       const wrap = document.getElementById('player-wrap');
@@ -734,7 +783,7 @@
     }
   }
 
-  // small visual controls (pause/resume)
+  // Visual helpers
   function pauseVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = true; window.dispatchEvent(new CustomEvent('vidu:visuals:pause',{detail:{reason}})); }
   function resumeVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = false; window.dispatchEvent(new CustomEvent('vidu:visuals:resume',{detail:{reason}})); }
 
@@ -747,7 +796,7 @@
     (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
   });
 
-  // deter devtools / context menu (preserve original)
+  // deterrents
   document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, false);
   document.addEventListener('keydown', function(e){ if ((e.ctrlKey && e.shiftKey && (e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')) || (e.ctrlKey && (e.key==='U'||e.key==='u')) || (e.key==='F12')) { e.preventDefault(); return false; } });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { const root=document.getElementById('modal-root'); if(root) root.style.display='none'; resumeVisuals('esc'); } });
