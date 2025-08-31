@@ -31,9 +31,10 @@
     .card{display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.45));border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:transform .22s,box-shadow .22s;box-shadow:0 14px 30px rgba(0,0,0,0.55);min-height:300px}
     .card:hover{transform:translateY(-8px);box-shadow:0 34px 60px rgba(0,0,0,0.65)}
     .card-media{position:relative;height:220px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.75));border-bottom:1px solid rgba(255,255,255,0.03);overflow:visible}
-    .neon{font-weight:900;letter-spacing:6px;font-size:94px;color:#00ff3a;text-shadow:0 0 6px rgba(0,255,120,0.95),0 0 18px rgba(0,255,120,0.45),0 18px 28px rgba(0,0,0,0.6);mix-blend-mode:screen;line-height:0.9;transform:translateY(-6px);pointer-events:none;user-select:none;white-space:nowrap}
-    .neon.small{font-size:60px;letter-spacing:4px}
-    .neon-reflect{position:absolute;bottom:-38px;left:0;right:0;text-align:center;transform:scaleY(-1);opacity:0.22;filter:blur(4px);font-weight:900;font-size:94px;color:#00ff3a;mix-blend-mode:screen;pointer-events:none;white-space:nowrap}
+    /* responsive neon text: clamp so it doesn't overflow on small screens */
+    .neon{font-weight:900;letter-spacing:6px;color:#00ff3a;text-shadow:0 0 6px rgba(0,255,120,0.95),0 0 18px rgba(0,255,120,0.45),0 18px 28px rgba(0,0,0,0.6);mix-blend-mode:screen;line-height:0.9;transform:translateY(-6px);pointer-events:none;user-select:none;white-space:nowrap; font-size: clamp(48px, 14vw, 94px); }
+    .neon.small{font-size: clamp(36px, 12vw, 60px); letter-spacing:4px;}
+    .neon-reflect{position:absolute;bottom:-38px;left:0;right:0;text-align:center;transform:scaleY(-1);opacity:0.22;filter:blur(4px);font-weight:900;font-size: clamp(36px, 14vw, 94px);color:#00ff3a;mix-blend-mode:screen;pointer-events:none;white-space:nowrap}
     .card-caption{padding:14px 12px 18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));display:flex;flex-direction:column;align-items:center;gap:6px}
     .card-title{font-weight:800;color:#eaf8ea;font-size:14px;text-align:center}
     .card-type{font-size:11px;color:rgba(170,255,190,0.92);font-weight:700;text-transform:uppercase}
@@ -70,6 +71,10 @@
     .vidu-mount{width:100%;height:100%;background:#000}
     .vidu-mount iframe{width:100%;height:100%;border:0;display:block}
 
+    /* loading overlay (shows header.png until playback begins) */
+    .vidu-loading{position:absolute;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background-image: url('assets/images/header.png');background-repeat:no-repeat;background-position:center;background-size:cover;transition:opacity .28s ease;pointer-events:none}
+    .vidu-loading.hidden{opacity:0;transform:scale(1.02);pointer-events:none;display:none}
+
     .vidu-controls-bg{position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.75));pointer-events:none;z-index:9996;opacity:1;transition:opacity .22s ease, transform .22s ease;backdrop-filter:blur(4px)}
     .vidu-controls-bg.hidden{opacity:0;transform:translateY(6px)}
 
@@ -85,9 +90,7 @@
     .vidu-range::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#39ff14;box-shadow:0 2px 8px rgba(0,0,0,0.5);border:2px solid rgba(0,0,0,0.18);margin-top:-4px}
     .vidu-range::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#39ff14;border:2px solid rgba(0,0,0,0.18)}
 
-    .vidu-volume{width:140px;appearance:none;height:8px;border-radius:8px;background:rgba(255,255,255,0.06);margin-left:8px;margin-right:8px}
-    .vidu-volume::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#39ff14;box-shadow:0 2px 6px rgba(0,0,0,0.45);border:2px solid rgba(0,0,0,0.12);margin-top:-3px}
-    .vidu-volume::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#39ff14;border:2px solid rgba(0,0,0,0.12)}
+    /* removed vidu-volume styles (volume UI removed) */
 
     .vidu-time{min-width:90px;font-size:14px;font-weight:800;color:#cbd5ff;text-align:center;letter-spacing:1px}
 
@@ -339,6 +342,13 @@
         const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
         mount.style.height = '100%'; mount.style.background = '#000';
         host.appendChild(mount);
+
+        // Loading overlay - show header.png until playback begins
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'vidu-loading';
+        loadingDiv.id = 'vidu_loading';
+        host.appendChild(loadingDiv);
+
         const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg'; host.appendChild(ctrlBg);
         const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
         overlay.innerHTML = `
@@ -347,7 +357,6 @@
           <div class="vidu-time" id="vidu_cur">` + fmtTime(0) + `</div>
           <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
           <div class="vidu-time" id="vidu_dur">` + fmtTime(0) + `</div>
-          <input id="vidu_vol" class="vidu-volume" type="range" min="0" max="100" step="1" value="100" aria-label="Volume" />
           <button class="vidu-btn" id="vidu_fullbtn">⤢</button>
         `;
         host.appendChild(overlay);
@@ -365,7 +374,7 @@
         host.appendChild(closeBtn);
 
         wrap.appendChild(host);
-        return { host, mount, overlay, ctrlBg, closeBtn };
+        return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv };
       }
 
       function disableIframeClicks(host){
@@ -385,7 +394,7 @@
         await loadYTApi();
 
         // create host + mount now that API is available
-        const { host, mount, overlay, ctrlBg, closeBtn } = createHostElementsIn(mountRootId);
+        const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv } = createHostElementsIn(mountRootId);
         state.host = host; state.mount = mount;
 
         // saved styles container so we can restore when exit fullscreen
@@ -396,7 +405,6 @@
         const durEl = overlay.querySelector('#vidu_dur');
         const seekEl = overlay.querySelector('#vidu_seek');
         const fullBtn = overlay.querySelector('#vidu_fullbtn');
-        const volEl = overlay.querySelector('#vidu_vol');
 
         function getFullscreenElement(){
           return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
@@ -460,7 +468,7 @@
         updateSeekBackground(seekEl);
 
         // play/pause UI
-        playBtn.addEventListener('click', ()=>{
+        playBtn.addEventListener('click', ()=> {
           if(!state.player) return;
           let st = -1;
           try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){}
@@ -470,23 +478,6 @@
           try{ if(wantPlay){ if(typeof state.player.playVideo === 'function') state.player.playVideo(); } else { if(typeof state.player.pauseVideo === 'function') state.player.pauseVideo(); } }catch(e){ console.warn('play/pause toggle err', e); }
           resetInactivityTimer();
         });
-
-        // volume
-        volEl.addEventListener('input', ()=> {
-          const v = Math.max(0, Math.min(100, parseInt(volEl.value,10) || 0));
-          state.lastVolume = v;
-          try{
-            if(state.player && typeof state.player.setVolume === 'function'){
-              state.player.setVolume(v);
-              if(v === 0 && typeof state.player.mute === 'function') state.player.mute();
-              else if(v > 0 && typeof state.player.unMute === 'function') state.player.unMute();
-            }
-          }catch(e){ console.warn('setVolume err', e); }
-          try{ volEl.style.background = `linear-gradient(90deg, #39ff14 ${v}%, rgba(255,255,255,0.06) ${v}%)`; }catch(e){}
-          resetInactivityTimer();
-        }, {passive:true});
-
-        (function initVolBg(){ try{ const v = Math.max(0, Math.min(100, parseInt((document.getElementById('vidu_vol')||{value:100}).value,10) || state.lastVolume || 100)); const volElLocal = document.getElementById('vidu_vol'); if(volElLocal) volElLocal.style.background = `linear-gradient(90deg, #39ff14 ${v}%, rgba(255,255,255,0.06) ${v}%)`; }catch(e){} })();
 
         function onFSChange(){
           const fs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
@@ -612,7 +603,7 @@
           state.lastActivity = Date.now();
           setOverlayHidden(false);
           if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
-          state.inactivityTimer = setTimeout(()=>{
+          state.inactivityTimer = setTimeout(()=>{ 
             try{
               const st = state.player && typeof state.player.getPlayerState === 'function' ? state.player.getPlayerState() : -1;
               if(st === 1 || st === 3 || st === -1 || st === 0 || st === 5){
@@ -638,16 +629,20 @@
               events: {
                 onReady: function(evt){
                   disableIframeClicks(host);
+
+                  // ensure loading overlay visible until playback starts
+                  try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.remove('hidden'); ld.style.display='flex'; } }catch(e){}
+
                   try{
                     if(typeof evt.target.setVolume === 'function'){
                       const v = Math.max(0, Math.min(100, state.lastVolume || 100));
                       evt.target.setVolume(v);
                       if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute();
                       else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute();
-                      const volEl = document.getElementById('vidu_vol');
-                      if(volEl) { volEl.value = v; volEl.style.background = `linear-gradient(90deg, #39ff14 ${v}%, rgba(255,255,255,0.06) ${v}%)`; }
                     }
                   }catch(e){}
+
+                  // explicitly set default (auto) so YouTube chooses the best quality
                   try{
                     if(typeof evt.target.setPlaybackQuality === 'function'){
                       evt.target.setPlaybackQuality('default');
@@ -655,7 +650,9 @@
                       setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 2200);
                     }
                   }catch(e){}
+
                   try{ evt.target.playVideo(); }catch(e){}
+
                   if(state.updateInterval) clearInterval(state.updateInterval);
                   state.updateInterval = setInterval(()=>{
                     try{
@@ -680,13 +677,23 @@
                       else setTimeout(()=> { try{ const check = state.player.getPlayerState ? state.player.getPlayerState() : -1; if(check === 1) playBtn.innerHTML = pauseSVG(); else playBtn.innerHTML = playSVG(); }catch(e){} }, 600);
                     }catch(e){}
                   }, 160);
+
                   if(state.mo) state.mo.disconnect();
                   state.mo = new MutationObserver(()=> disableIframeClicks(host));
                   state.mo.observe(host, { childList:true, subtree:true });
+
                   resetInactivityTimer();
                   resolve(state.player);
                 },
-                onError: function(err){ console.error('YT player error', err); reject(err); }
+                onStateChange: function(e){
+                  // hide loading overlay when state becomes PLAYING (1)
+                  try{
+                    if(e && e.data === 1){
+                      try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(err){}
+                    }
+                  }catch(err){}
+                },
+                onError: function(err){ console.error('YT player error', err); try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} reject(err); }
               }
             });
           }catch(err){ reject(err || new Error('YT player creation failed')); }
@@ -742,9 +749,7 @@
       return results;
     }
 
-    /* ---------- show playlist (advanced only) ----------
-       Playlist UI now renders in #viewer-playlist (below the video)
-    -------------------------------------------------- */
+    /* ---------- show playlist (advanced only) ---------- */
     async function showPlaylistInsideViewer(item){
       const rawId = normalizeIdFromB64(item.idB64);
       const playlistId = rawId.split('&')[0];
