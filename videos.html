@@ -71,40 +71,28 @@
     .modal-backdrop { position:fixed; inset:0; background: rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:9999; }
     .modal { width: min(960px, 95%); background:#0b0b0b; border-radius:10px; padding:16px; color:#fff; }
     .modal .controls { display:flex; gap:8px; justify-content:space-between; align-items:center; margin-bottom:8px; }
-    .modal .player-area { position:relative; width:100%; height:520px; border-radius:8px; overflow:hidden; background:#000; }
+    .modal iframe { width:100%; height:540px; border-radius:8px; border:0; background:#000; }
 
-    /* YouTube iframe container (YT iframe will be injected here) */
-    #yt-player { width:100%; height:100%; display:block; background:#000; }
+    .btn { background:#ff6b6b; color:#fff; padding:8px 12px; border-radius:6px; text-decoration:none; display:inline-block; border:0; cursor:pointer; position:relative; z-index:1; }
+    .btn.secondary { background:#333; color:#fff; }
+    .password-row { display:flex; gap:8px; margin-top:8px; }
+    .password-row input { flex:1; padding:8px; border-radius:6px; border:1px solid #222; background:#0f0f0f; color:#fff; }
+    .muted { color:#bbb; font-size:13px; }
 
-    /* Custom overlay controls (on top of the iframe) */
-    .custom-controls {
-      position:absolute;
-      left:0;
-      right:0;
-      bottom:0;
-      padding:10px 14px;
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:space-between;
-      background: linear-gradient(180deg, rgba(0,0,0,0.0), rgba(0,0,0,0.45));
-      z-index: 20;
-      pointer-events: auto;
-    }
-    .cc-left { display:flex; gap:8px; align-items:center; min-width:0; }
-    .cc-button {
-      width:44px; height:44px; border-radius:10px; border:0; background:rgba(255,255,255,0.06);
-      color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px;
-    }
-    .cc-progress {
-      flex:1; height:10px; background: rgba(255,255,255,0.08); border-radius:8px; position:relative; cursor:pointer; margin:0 8px;
-      overflow:hidden;
-    }
-    .cc-progress .fill { position:absolute; left:0; top:0; bottom:0; width:0%; background: linear-gradient(90deg,#ff6b6b,#ffb86b); border-radius:8px; transition: width .08s linear; }
-    .cc-time { color:#ddd; font-size:13px; min-width:72px; text-align:right; }
+    footer#footer { text-align:center; padding:18px; color:#ddd; margin-top:30px; }
 
+    @media (max-width:720px) {
+      .list-item { width: calc(50% - 12px); }
+      .modal iframe { height:300px; }
+      header#header .logo img { height:56px; }
+    }
+
+    /* entrance animation */
+    .list-item { opacity:0; transform-origin:center; animation: fadeIn .45s forwards; }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+    /* playlist rows */
     .playlist-list { display:block; max-height:260px; overflow:auto; margin-top:8px; padding:0; }
-
     .playlist-list .list-item {
       display:flex;
       align-items:flex-start;
@@ -124,15 +112,7 @@
       animation:none;
     }
     .playlist-list .list-item:hover { background: rgba(255,255,255,0.02); transform: translateY(-2px); }
-
-    .playlist-list .list-item img {
-      width:120px;
-      height:68px;
-      object-fit:cover;
-      border-radius:6px;
-      flex: 0 0 120px;
-    }
-
+    .playlist-list .list-item img { width:120px; height:68px; object-fit:cover; border-radius:6px; flex: 0 0 120px; }
     .playlist-list .title-wrap { flex:1; min-width:0; display:flex; align-items:flex-start; }
     .playlist-list .playlist-title {
       display:block;
@@ -150,16 +130,84 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
-    /* small visual nicety to separate the sections in the modal */
     #playlist-list-wrap .muted { margin-bottom:6px; display:block; }
 
-    @media (max-width:720px) {
-      .list-item { width: calc(50% - 12px); }
-      .modal .player-area { height:300px; }
-      header#header .logo img { height:56px; }
+    /* ===========================
+       NEW: overlay player styles
+       =========================== */
+    .yt-player-outer {
+      position: relative;
+      width: 100%;
+      height: 520px;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    /* IFrame will be absolute and intentionally not receive pointer events.
+       All interactions must go through our overlay controls. */
+    .yt-player-outer iframe,
+    .yt-player-outer > iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      pointer-events: none; /* <- makes the iframe untouchable */
     }
 
+    /* overlay sits on top and handles interactions */
+    .yt-overlay {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 10px 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: linear-gradient(to top, rgba(0,0,0,0.66), rgba(0,0,0,0.0));
+      pointer-events: auto; /* overlay should capture clicks */
+      z-index: 20;
+    }
+    .yt-overlay .play-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      min-width: 86px;
+      font-weight: 700;
+    }
+    .yt-overlay .time {
+      color: #ddd;
+      font-size: 13px;
+      min-width: 96px;
+      text-align:center;
+    }
+    .yt-overlay .seek {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 6px;
+      outline: none;
+      cursor: pointer;
+    }
+    .yt-overlay .seek::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ff6b6b;
+      border: 2px solid rgba(255,255,255,0.9);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .yt-player-outer.responsive-compact { height: 320px; }
+    @media (max-width:720px) {
+      .yt-player-outer { height: 320px; }
+    }
   </style>
 </head>
 <body class="landing is-preload">
@@ -216,10 +264,12 @@
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-  <!-- YouTube IFrame API will be loaded dynamically by the script below -->
+  <!-- YouTube IFrame API (we use it to control playback while iframe is not interactive) -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
   <script>
   /*************************************************************************
-   * CONFIG - replace with your values
+   * CONFIG - replace with your values (unchanged)
    *************************************************************************/
   const OAUTH_CLIENT_ID = '342354359423-s42kqoigp8207erl9i88pmo324clf6ps.apps.googleusercontent.com'; // required for sign-in
   const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI';             // optional fallback for playlist fetch
@@ -243,23 +293,19 @@
   let currentItemIndex = null;
   const isFileProtocol = (location.protocol === 'file:');
 
-  // YouTube API / player state
-  let ytApiLoaded = false;
+  // YT player state
   let ytPlayer = null;
-  let pendingVideoRequest = null;
-  let progressInterval = null;
+  let ytPollInterval = null;
+  let YT_API_READY = new Promise((resolve) => {
+    if (window.YT && window.YT.Player) return resolve(window.YT);
+    window.onYouTubeIframeAPIReady = () => resolve(window.YT);
+  });
 
   /*************************************************************************
    * HELPERS
    *************************************************************************/
   function b64decode(s) { try { return atob(s); } catch(e) { return s; } }
-  function escapeHtml(s){ return (s||'').replace(/[&<>\"'`]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
-  function secsToTime(s){
-    if(!isFinite(s) || isNaN(s)) return '0:00';
-    s = Math.max(0, Math.floor(s));
-    const mm = Math.floor(s/60); const ss = (s%60).toString().padStart(2,'0');
-    return mm + ':' + ss;
-  }
+  function escapeHtml(s){ return (s||'').replace(/[&<>\"'`]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch]); }
 
   /*************************************************************************
    * Show serve hint for file:// testing
@@ -304,22 +350,7 @@
                 </div>
               </div>
 
-              <div class="player-area" id="player-wrap">
-                <!-- YT player container will be injected here -->
-                <div id="yt-player" aria-hidden="false"></div>
-
-                <!-- overlay custom controls -->
-                <div class="custom-controls" id="custom-controls" style="display:none; pointer-events:auto;">
-                  <div class="cc-left">
-                    <button id="cc-playpause" class="cc-button" title="Play/Pause">▶</button>
-                    <div class="cc-progress" id="cc-progress" title="Seek">
-                      <div class="fill" id="cc-fill"></div>
-                    </div>
-                  </div>
-                  <div class="cc-time" id="cc-time">0:00 / 0:00</div>
-                </div>
-
-              </div>
+              <div id="player-wrap"></div>
 
               <div id="playlist-list-wrap" style="display:none; margin-top:12px;">
                 <div class="muted">Playlist contents</div>
@@ -334,18 +365,6 @@
     document.getElementById('password-submit').onclick = onPasswordSubmit;
     document.getElementById('password-input').onkeydown = (e)=>{ if(e.key === 'Enter') onPasswordSubmit(); };
     document.getElementById('modal-backdrop').onclick = function(e){ if(e.target === this) closeModal(); };
-
-    // custom controls hookup
-    document.getElementById('cc-playpause').onclick = togglePlayPause;
-    const progress = document.getElementById('cc-progress');
-    progress.addEventListener('click', function(e){
-      if(!ytPlayer || typeof ytPlayer.getDuration !== 'function') return;
-      const rect = progress.getBoundingClientRect();
-      const frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const dur = ytPlayer.getDuration() || 0;
-      ytPlayer.seekTo(dur * frac, true);
-      updateProgressNow(); // immediate UI feedback
-    });
   }
 
   function openPasswordModal(idx) {
@@ -367,7 +386,9 @@
   function closeModal() {
     const root = document.getElementById('modal-root');
     root.style.display = 'none';
-    teardownPlayer();
+    destroyYTPlayer();
+    const wrap = document.getElementById('player-wrap');
+    if (wrap) wrap.innerHTML = '';
     const pl = document.getElementById('playlist-video-list'); if(pl) pl.innerHTML = '';
     currentItemIndex = null;
   }
@@ -388,185 +409,131 @@
   }
 
   /*************************************************************************
-   * YouTube IFrame API + custom overlay controls
+   * YouTube player / overlay logic (NEW)
    *
-   * Strategy:
-   *  - Load the official IFrame API.
-   *  - Create a single YT.Player and reuse it when the user opens different videos.
-   *  - Set playerVars.controls = 0 (so native UI is hidden).
-   *  - Set the iframe element to pointer-events: none once ready (so user can't interact with the native UI).
-   *  - Provide our own overlay controls that call player.playVideo(), pauseVideo(), seekTo().
+   * - iframe/player is intentionally untouchable via pointer-events:none
+   * - overlay on top provides Pause/Resume + seek only
    *************************************************************************/
-  function loadYouTubeAPIOnce(){
-    if(ytApiLoaded) return;
-    // Insert script only once
-    if(!document.querySelector('script[data-yt-api]')){
-      const s = document.createElement('script');
-      s.src = 'https://www.youtube.com/iframe_api';
-      s.setAttribute('data-yt-api','1');
-      document.head.appendChild(s);
-    }
+  function destroyYTPlayer(){
+    if(ytPollInterval){ clearInterval(ytPollInterval); ytPollInterval = null; }
+    if(ytPlayer && ytPlayer.destroy) { try { ytPlayer.destroy(); } catch(e){} }
+    ytPlayer = null;
   }
 
-  // Called by YouTube API when loaded
-  function onYouTubeIframeAPIReady() {
-    ytApiLoaded = true;
-    // If there's a pending request to play a video, handle it
-    if(pendingVideoRequest){
-      createOrLoadVideo(pendingVideoRequest.videoId, pendingVideoRequest.title);
-      pendingVideoRequest = null;
-    }
-  }
+  async function createYouTubePlayer(videoId, title){
+    // Wait for YT API
+    await YT_API_READY;
 
-  function createOrLoadVideo(videoId, title){
+    // Prepare player DOM with overlay
     const wrap = document.getElementById('player-wrap');
-    if(!wrap) return;
+    wrap.innerHTML = `
+      <div class="yt-player-outer" id="yt-player-outer">
+        <div id="yt-player"></div>
+        <div class="yt-overlay" id="yt-overlay" aria-label="Video controls">
+          <button class="play-btn" id="yt-play-toggle" aria-pressed="false">Pause</button>
+          <div class="time" id="yt-current-time">0:00</div>
+          <input type="range" min="0" max="100" value="0" step="0.1" id="yt-seek" class="seek" aria-label="Seek video">
+          <div class="time" id="yt-duration">0:00</div>
+        </div>
+      </div>
+    `;
 
-    // Ensure player container exists
-    const playerContainer = document.getElementById('yt-player');
-    if(!playerContainer) {
-      console.error('No player container found');
-      return;
-    }
+    // Ensure previous is removed
+    destroyYTPlayer();
 
-    // If an existing YT player exists, load the new video
-    if(ytPlayer && typeof ytPlayer.loadVideoById === 'function'){
-      try {
-        ytPlayer.loadVideoById({'videoId': videoId, 'startSeconds': 0});
-        // ensure controls visible
-        showCustomControls(true);
-      } catch(e){
-        // fallback: destroy and recreate
-        teardownPlayer();
-        createNewPlayer(videoId);
-      }
-      updateNowPlayingLabel(title);
-      return;
-    }
-
-    // create new YT.Player
-    createNewPlayer(videoId, title);
-  }
-
-  function createNewPlayer(videoId, title){
-    // player will be created inside div#yt-player
+    // Create the player via YT.Player (enablejsapi=1 is set by API itself)
     ytPlayer = new YT.Player('yt-player', {
-      height: '100%',
+      height: '520',
       width: '100%',
       videoId: videoId,
       playerVars: {
-        controls: 0,
-        disablekb: 1,
+        autoplay: 1,
+        controls: 0,          // hide native controls
         rel: 0,
         modestbranding: 1,
         iv_load_policy: 3,
-        playsinline: 1,
-        fs: 1
+        disablekb: 1,
+        fs: 0,                // prevent fullscreen button in player chrome (we control UI)
+        origin: location.origin
       },
       events: {
-        onReady: function(e){
-          try {
-            // make iframe non-interactive so native controls can't be used
-            const ifr = e.target.getIframe();
-            if(ifr) {
-              ifr.style.pointerEvents = 'none';
-              // also disable tab focus for iframe for safety
-              ifr.setAttribute('tabindex','-1');
-            }
-          } catch(err){ console.warn('could not set iframe props', err); }
-          // autoplay
+        onReady: (e) => {
           try { e.target.playVideo(); } catch(e){}
-          showCustomControls(true);
-          startProgressLoop();
+          // Start updater
+          startYTUpdater();
+          // Update title
+          const now = document.getElementById('now-playing-label');
+          if(now) now.textContent = title ? `Now playing — ${title}` : 'Now playing';
         },
-        onStateChange: function(e){
-          updatePlayPauseIcon();
-          if(e.data === YT.PlayerState.ENDED){
-            // optional: reset progress to end
-            updateProgressNow();
-          }
+        onStateChange: (e) => {
+          const btn = document.getElementById('yt-play-toggle');
+          if(!btn) return;
+          // 1 = playing, 2 = paused, 0 = ended
+          if (e.data === YT.PlayerState.PLAYING) { btn.textContent = 'Pause'; btn.setAttribute('aria-pressed','false'); }
+          else if (e.data === YT.PlayerState.PAUSED) { btn.textContent = 'Resume'; btn.setAttribute('aria-pressed','true'); }
+          else if (e.data === YT.PlayerState.ENDED) { btn.textContent = 'Replay'; btn.setAttribute('aria-pressed','true'); }
         }
       }
     });
-    updateNowPlayingLabel(title);
-  }
 
-  function teardownPlayer(){
-    if(ytPlayer){
-      try { ytPlayer.stopVideo(); } catch(e){}
-      try { ytPlayer.destroy(); } catch(e){}
-      ytPlayer = null;
-    }
-    stopProgressLoop();
-    // clear DOM container so next creation is clean
-    const container = document.getElementById('yt-player');
-    if(container) container.innerHTML = '';
-    // hide overlay controls
-    showCustomControls(false);
-  }
+    // Hook up overlay controls
+    const toggle = document.getElementById('yt-play-toggle');
+    const seek = document.getElementById('yt-seek');
 
-  function showCustomControls(visible){
-    const ctrl = document.getElementById('custom-controls');
-    if(!ctrl) return;
-    ctrl.style.display = visible ? 'flex' : 'none';
-    updatePlayPauseIcon();
-    updateProgressNow();
-  }
+    toggle.onclick = () => {
+      if (!ytPlayer || !ytPlayer.getPlayerState) return;
+      const state = ytPlayer.getPlayerState();
+      if(state === YT.PlayerState.PLAYING) { ytPlayer.pauseVideo(); }
+      else { ytPlayer.playVideo(); }
+    };
 
-  function updateNowPlayingLabel(title){
-    const now = document.getElementById('now-playing-label');
-    if(now) now.textContent = title ? `Now playing — ${title}` : 'Now playing';
-  }
+    let isSeeking = false;
+    seek.addEventListener('input', (e) => {
+      // while dragging, update current time text, don't force seek until change event
+      const p = parseFloat(e.target.value);
+      const dur = Math.max(1, (ytPlayer && ytPlayer.getDuration) ? ytPlayer.getDuration() : 1);
+      const secs = (p / 100) * dur;
+      document.getElementById('yt-current-time').textContent = formatTime(secs);
+    });
+    seek.addEventListener('change', (e) => {
+      if(!ytPlayer || !ytPlayer.seekTo) return;
+      const p = parseFloat(e.target.value);
+      const dur = Math.max(1, ytPlayer.getDuration ? ytPlayer.getDuration() : 1);
+      const secs = (p / 100) * dur;
+      // Seek and reflect
+      ytPlayer.seekTo(secs, true);
+    });
 
-  function togglePlayPause(){
-    if(!ytPlayer || typeof ytPlayer.getPlayerState !== 'function') return;
-    const st = ytPlayer.getPlayerState();
-    if(st === YT.PlayerState.PLAYING || st === YT.PlayerState.BUFFERING){
-      ytPlayer.pauseVideo();
-    } else {
-      ytPlayer.playVideo();
-    }
-    updatePlayPauseIcon();
-  }
-
-  function updatePlayPauseIcon(){
-    const btn = document.getElementById('cc-playpause');
-    if(!btn || !ytPlayer || typeof ytPlayer.getPlayerState !== 'function'){ if(btn) btn.textContent = '▶'; return; }
-    const st = ytPlayer.getPlayerState();
-    // playing or buffering -> show pause
-    if(st === YT.PlayerState.PLAYING || st === YT.PlayerState.BUFFERING){
-      btn.textContent = '❚❚';
-    } else {
-      btn.textContent = '▶';
+    // start updater polls
+    function startYTUpdater(){
+      if(ytPollInterval) clearInterval(ytPollInterval);
+      ytPollInterval = setInterval(()=> {
+        if(!ytPlayer || !ytPlayer.getCurrentTime || !ytPlayer.getDuration) return;
+        try {
+          const cur = ytPlayer.getCurrentTime() || 0;
+          const dur = ytPlayer.getDuration() || 0;
+          // avoid NaN
+          if(isFinite(cur) && isFinite(dur) && dur > 0){
+            const pct = (cur / dur) * 100;
+            const seekEl = document.getElementById('yt-seek');
+            if(seekEl && !seekEl.matches(':active')) seekEl.value = pct;
+            document.getElementById('yt-current-time').textContent = formatTime(cur);
+            document.getElementById('yt-duration').textContent = formatTime(dur);
+          }
+        } catch(e){}
+      }, 250);
     }
   }
 
-  function startProgressLoop(){
-    if(progressInterval) return;
-    progressInterval = setInterval(()=> {
-      updateProgressNow();
-    }, 250);
-  }
-  function stopProgressLoop(){ if(progressInterval){ clearInterval(progressInterval); progressInterval = null; } }
-
-  function updateProgressNow(){
-    const fill = document.getElementById('cc-fill');
-    const time = document.getElementById('cc-time');
-    if(!fill || !time) return;
-    if(!ytPlayer || typeof ytPlayer.getCurrentTime !== 'function' || typeof ytPlayer.getDuration !== 'function'){
-      fill.style.width = '0%';
-      time.textContent = '0:00 / 0:00';
-      return;
-    }
-    const cur = ytPlayer.getCurrentTime() || 0;
-    const dur = ytPlayer.getDuration() || 0;
-    const pct = dur > 0 ? Math.max(0, Math.min(100, (cur / dur) * 100)) : 0;
-    fill.style.width = pct + '%';
-    time.textContent = `${secsToTime(cur)} / ${secsToTime(dur)}`;
+  function formatTime(seconds){
+    seconds = Math.max(0, Math.floor(seconds || 0));
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2,'0')}`;
   }
 
   /*************************************************************************
-   * Playlist fetching & showing
+   * Playlist fetch + render (unchanged except hooking into createYouTubePlayer)
    *************************************************************************/
   async function fetchPlaylistVideos(playlistId){
     const items = []; let pageToken = '';
@@ -613,14 +580,14 @@
         const thumb = escapeHtml(v.thumb || `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`);
         const titleHtml = `<div class="title-wrap"><div class="playlist-title">${escapeHtml(v.title)}</div></div>`;
         li.innerHTML = `<img src="${thumb}" alt="${escapeHtml(v.title)}" loading="lazy" />` + titleHtml;
-        li.onclick = ()=> showPlayerForVideo(v.videoId, v.title);
+        li.onclick = ()=> createYouTubePlayer(v.videoId, v.title); // open via our API + overlay
         listWrap.appendChild(li);
       });
 
       document.getElementById('player-block').style.display='block';
       document.getElementById('playlist-list-wrap').style.display='block';
       // Play first video immediately
-      showPlayerForVideo(videos[0].videoId, videos[0].title);
+      createYouTubePlayer(videos[0].videoId, videos[0].title);
     } catch(err){
       console.error('Playlist fetch error', err);
       document.getElementById('player-wrap').innerHTML = `<div class="muted">Failed to load playlist: ${escapeHtml(err.message||'')}</div>`;
@@ -628,30 +595,17 @@
     }
   }
 
-  /*************************************************************************
-   * Show player for a single video (entry point)
-   *************************************************************************/
   function showPlayerForVideo(videoId, title){
-    const wrap = document.getElementById('player-wrap');
-    if(!wrap) return;
-    // ensure player-block visible
-    document.getElementById('player-block').style.display = 'block';
-    // Make sure the API is loaded
-    loadYouTubeAPIOnce();
-    // If API not ready yet, store a pending request and wait
-    if(!ytApiLoaded || typeof YT === 'undefined' || !YT.Player){
-      pendingVideoRequest = { videoId, title };
-      // if onYouTubeIframeAPIReady gets called later it will handle playing pendingVideoRequest
-      return;
-    }
-    // create or load video
-    createOrLoadVideo(videoId, title);
+    // Create the locked iframe + overlay using the YT API
+    createYouTubePlayer(videoId, title);
   }
 
-  function showPlayerForItem(item){ if(item.type==='video'){ const id=b64decode(item.idB64); showPlayerForVideo(id, item.title||item.name); } else showPlaylistInsideModal(item); }
+  function showPlayerForItem(item){
+    if(item.type==='video'){ const id=b64decode(item.idB64); showPlayerForVideo(id, item.title||item.name); } else showPlaylistInsideModal(item);
+  }
 
   /*************************************************************************
-   * Render main list
+   * Render main list (unchanged)
    *************************************************************************/
   function getThumb(item) {
     if (item.thumb && item.thumb.trim().length) return item.thumb;
@@ -727,7 +681,7 @@
   }
 
   // fallback hookup for initial visible button
-  document.addEventListener('DOMContentLoaded', ()=>{
+  document.addEventListener('DOMContentLoaded', ()=> {
     createModal();
     renderList();
     attachHeaderInteractions();
@@ -796,9 +750,6 @@
         (e.key === 'F12')) { e.preventDefault(); return false; }
   });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { closeModal(); } });
-
-  // Expose onYouTubeIframeAPIReady globally so the API can call it
-  window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
   </script>
 
   <!-- HTML5 UP Scripts kept as before -->
