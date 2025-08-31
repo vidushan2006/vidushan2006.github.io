@@ -160,6 +160,27 @@
     .vidu-mount { width:100%; height:520px; background:#000; display:block; }
     .vidu-mount iframe{ width:100%; height:100%; display:block; border:0; pointer-events:none; }
 
+    /* Loading overlay (shows header.png until the video actually starts playing) */
+    .vidu-loading {
+      position:absolute;
+      inset:0;
+      z-index:9995;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background-image: url('assets/images/header.png');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      transition: opacity .28s ease, transform .28s ease;
+      pointer-events:none;
+    }
+    .vidu-loading.hidden {
+      opacity:0;
+      transform: scale(1.02);
+      pointer-events:none;
+    }
+
     .vidu-controls-bg {
       position:absolute;
       left:0;
@@ -198,35 +219,9 @@
 
     .vidu-time { min-width:90px; font-size:14px; font-weight:800; color:#cbd5ff; text-align:center; letter-spacing:1px; }
 
-    /* QUALITY button & menu (top-left) */
-    .vidu-quality-btn {
-      position:absolute;
-      top:10px;
-      left:10px;
-      z-index:10003;
-      width:44px;
-      height:28px;
-      padding:4px 8px;
-      border-radius:6px;
-      background:rgba(0,0,0,0.52);
-      border:1px solid rgba(255,255,255,0.06);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:800;
-      cursor:pointer;
-      gap:6px;
-      font-size:13px;
-      letter-spacing:0.8px;
-      user-select:none;
-    }
-    .vidu-quality-btn.hidden { opacity:0; transform: translateY(-6px); pointer-events:none; }
-
+    /* QUALITY menu (kept but not opened by the visible "720p" button) */
     .vidu-quality-menu {
       position:absolute;
-      top:44px;
-      left:10px;
       z-index:10004;
       min-width:140px;
       background:linear-gradient(180deg, rgba(10,10,10,0.98), rgba(8,8,8,0.95));
@@ -242,57 +237,6 @@
     .vidu-quality-menu button { display:block; width:100%; text-align:left; border:none; background:transparent; color:#ddd; padding:8px 10px; border-radius:6px; cursor:pointer; font-weight:700; }
     .vidu-quality-menu button:hover { background:rgba(255,255,255,0.02); color:#fff; }
     .vidu-quality-menu button.active { color: var(--accent-2); background: rgba(255,255,255,0.02); }
-
-    /* Volume icon + vertical slider */
-    .vidu-volume-btn {
-      position:relative;
-      width:46px;
-      height:46px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:22px;
-      background:rgba(255,255,255,0.06);
-      border:1px solid rgba(255,255,255,0.04);
-      cursor:pointer;
-      color:#fff;
-      font-weight:800;
-      flex:0 0 auto;
-    }
-    .vidu-volume-menu {
-      position:absolute;
-      bottom:58px;
-      left:50%;
-      transform:translateX(-50%);
-      display:none;
-      width:44px;
-      padding:8px 6px;
-      border-radius:8px;
-      background:linear-gradient(180deg, rgba(10,10,10,0.98), rgba(8,8,8,0.95));
-      border:1px solid rgba(255,255,255,0.04);
-      box-shadow:0 10px 30px rgba(0,0,0,0.6);
-      z-index:10005;
-      align-items:center;
-      justify-content:center;
-    }
-    .vidu-volume-menu.open { display:flex; }
-
-    .vidu-volume-vertical {
-      -webkit-appearance:none;
-      appearance:none;
-      width:96px;
-      height:8px;
-      transform:rotate(-90deg);
-      transform-origin:center;
-      outline:none;
-      background:rgba(255,255,255,0.06);
-      border-radius:8px;
-    }
-    .vidu-volume-vertical::-webkit-slider-thumb{
-      -webkit-appearance:none;
-      width:14px;height:14px;border-radius:50%;background:var(--accent-2);border:2px solid rgba(0,0,0,0.12);box-shadow:0 2px 6px rgba(0,0,0,0.45);
-    }
-    .vidu-volume-vertical::-moz-range-thumb{ width:14px;height:14px;border-radius:50%;background:var(--accent-2);border:2px solid rgba(0,0,0,0.12); }
 
     /* close button inside player (top-right) */
     .vidu-close-btn {
@@ -349,15 +293,12 @@
       .vidu-controls-bg { height:56px; }
       .vidu-time { min-width:76px; font-size:12px; }
       .vidu-range{ min-width:100px; }
-      .vidu-volume-vertical{width:80px}
-      .vidu-volume-menu{left:50%;}
     }
 
     @media (max-width:540px){
       .vidu-overlay{ flex-wrap:wrap; justify-content:flex-start; }
       .vidu-time{ min-width:68px; font-size:12px; }
       .vidu-range{ min-width:86px; }
-      .vidu-volume-vertical{width:72px}
       .vidu-btn{ width:38px; height:38px; }
       .vidu-close-btn{ top:8px; right:8px; }
     }
@@ -365,7 +306,6 @@
     @media (max-width:420px){
       .vidu-time{ min-width:60px; font-size:12px; }
       .vidu-range{ min-width:72px; }
-      .vidu-volume-vertical{width:64px}
       .vidu-btn{ width:36px; height:36px; }
     }
   </style>
@@ -425,10 +365,13 @@
     lastActivity: Date.now(),
     desiredPlaying: null,
     lastVolume: 100,
-    // timestamp to avoid immediate close after opening menus
     _menuOpenTs: 0
   };
 
+  /**
+   * Load YouTube iframe API. Exposed on window as well (defensive).
+   * Returns a Promise that resolves when API ready.
+   */
   function loadYTApi(){
     if(window.YT && window.YT.Player) return Promise.resolve();
     if(window._vidu_loading_yt){
@@ -444,15 +387,24 @@
       s.async=true;
       s.onerror = ()=> reject(new Error('YT API failed to load'));
       document.head.appendChild(s);
+      // YouTube will call this global when ready
       window.onYouTubeIframeAPIReady = function(){ resolve(); };
+      // small fallbacks
       setTimeout(()=>{ if(window.YT && window.YT.Player) resolve(); },1200);
       setTimeout(()=>{ if(!(window.YT && window.YT.Player)) reject(new Error('YT API timed out')); },20000);
     });
   }
-  try{ window.loadYTApi = loadYTApi; }catch(e){}
+  // make available globally so other modules/callbacks can call it safely
+  try{ window.loadYTApi = loadYTApi; }catch(e){ /* ignore */ }
 
-  function pad2(n){ n = Math.max(0, Math.floor(n||0)); return (n < 10 ? '0' + n : String(n)); }
+  function pad2(n){
+    n = Math.max(0, Math.floor(n||0));
+    return (n < 10 ? '0' + n : String(n));
+  }
 
+  // Time formatting rules:
+  // - current time (left): if < 1 hour -> MM : SS ; else HH : MM
+  // - duration (right): always HH : MM
   function fmtCurrentFromSeconds(s){
     s = Math.max(0, Math.floor(s||0));
     if(s < 3600){
@@ -488,17 +440,11 @@
     mount.style.background = '#000';
     host.appendChild(mount);
 
-    const qualityBtn = document.createElement('button');
-    qualityBtn.className = 'vidu-quality-btn';
-    qualityBtn.id = 'vidu_quality_btn';
-    qualityBtn.type = 'button';
-    qualityBtn.innerText = 'HQ';
-    host.appendChild(qualityBtn);
-
-    const qmenu = document.createElement('div');
-    qmenu.className = 'vidu-quality-menu';
-    qmenu.id = 'vidu_quality_menu';
-    host.appendChild(qmenu);
+    // Loading overlay - shows header.png while YT hasn't started playing
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'vidu-loading';
+    loadingDiv.id = 'vidu_loading';
+    host.appendChild(loadingDiv);
 
     const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
     host.appendChild(ctrlBg);
@@ -511,16 +457,19 @@
       <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
       <div class="vidu-time" id="vidu_dur">` + fmtDurationFromSeconds(0) + `</div>
 
-      <div id="vidu_vol_control" style="display:inline-flex;align-items:center;justify-content:center;position:relative;">
-        <button id="vidu_vol_btn" class="vidu-volume-btn" aria-label="Volume">🔊</button>
-        <div id="vidu_vol_menu" class="vidu-volume-menu" aria-hidden="true">
-          <input id="vidu_vol_slider" class="vidu-volume-vertical" type="range" min="0" max="100" step="1" value="100" />
-        </div>
-      </div>
+      <!-- 720p inert button (replaces previous HQ/volume spot). It's intentionally inert. -->
+      <button id="vidu_720_btn" class="vidu-btn" aria-label="Pretend 720p">720p</button>
 
       <button class="vidu-btn" id="vidu_fullbtn">⤢</button>
     `;
     host.appendChild(overlay);
+
+    // quality menu (kept but not opened by the visible "720p" button)
+    const qmenu = document.createElement('div');
+    qmenu.className = 'vidu-quality-menu';
+    qmenu.id = 'vidu_quality_menu';
+    // append to host so it sits above everything; we populate it internally for consistency, but it won't be opened by the 720p button.
+    host.appendChild(qmenu);
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'vidu-close-btn';
@@ -540,7 +489,7 @@
     host.appendChild(closeBtn);
 
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, qualityBtn, qmenu, volBtn: overlay.querySelector('#vidu_vol_btn'), volMenu: overlay.querySelector('#vidu_vol_menu'), volSlider: overlay.querySelector('#vidu_vol_slider') };
+    return { host, mount, overlay, ctrlBg, closeBtn, btn720: overlay.querySelector('#vidu_720_btn'), qmenu, loadingDiv };
   }
 
   function disableIframeClicks(host){
@@ -598,7 +547,7 @@
   }
 
   function createPlayer(videoId){
-    const { host, mount, overlay, ctrlBg, closeBtn, qualityBtn, qmenu, volBtn, volMenu, volSlider } = createHostElements();
+    const { host, mount, overlay, ctrlBg, closeBtn, btn720, qmenu, loadingDiv } = createHostElements();
     state.host = host; state.mount = mount;
 
     const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -630,112 +579,63 @@
         overlay.classList.add('hidden');
         ctrlBg.classList.add('hidden');
         if(closeBtn) closeBtn.classList.add('hidden');
-        if(qualityBtn) qualityBtn.classList.add('hidden');
-        if(volBtn) volBtn.classList.add('hidden');
+        if(btn720) btn720.classList.add('hidden');
         if(qmenu) qmenu.classList.remove('open');
-        if(volMenu) volMenu.classList.remove('open');
       } else {
         overlay.classList.remove('hidden');
         ctrlBg.classList.remove('hidden');
         if(closeBtn) closeBtn.classList.remove('hidden');
-        if(qualityBtn) qualityBtn.classList.remove('hidden');
-        if(volBtn) volBtn.classList.remove('hidden');
+        if(btn720) btn720.classList.remove('hidden');
       }
     }
 
-    // quality menu handling
-    let qualityMenuOpen = false;
-    qualityBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); if(!qmenu) return; qualityMenuOpen ? qmenu.classList.remove('open') : qmenu.classList.add('open'); qualityMenuOpen = !qualityMenuOpen; });
-
-    // Global click handler with small guard to prevent immediate close after opening menus
-    document.addEventListener('click', function docClick(e){
-      const now = Date.now();
-      // If we opened a menu less than 250ms ago, ignore this click (prevents immediate close races)
-      if(now - state._menuOpenTs < 250) return;
-
-      // quality menu
-      if(qualityMenuOpen){
-        if(!qmenu) return;
-        if(qmenu.contains(e.target) || (qualityBtn && qualityBtn.contains(e.target))) return;
-        qmenu.classList.remove('open'); qualityMenuOpen = false;
-      }
-      // volume menu
-      if(volMenu && volMenu.classList.contains('open')){
-        if(volMenu.contains(e.target) || (volBtn && volBtn.contains(e.target))) return;
-        volMenu.classList.remove('open'); volMenu.setAttribute('aria-hidden','true');
-      }
-    }, {passive:true});
-
-    // Robust volume button toggle - uses pointerup + click fallback and stopImmediatePropagation to avoid races
-    function openVolumeMenu(){
-      if(!volMenu || !volBtn || !host) return;
-      // mark menu open time to prevent immediate outside-close
-      state._menuOpenTs = Date.now();
-      volMenu.classList.add('open');
-      volMenu.style.display = 'flex';
-      volMenu.setAttribute('aria-hidden','false');
-      // position menu centered above volBtn using 50% centering (avoid unreliable bounding on some browsers)
+    // Loading overlay show/hide helpers
+    function showLoading(){
       try{
-        volMenu.style.left = '50%';
-        volMenu.style.transform = 'translateX(-50%)';
-        const btnRect = volBtn.getBoundingClientRect();
-        const hostRect = host.getBoundingClientRect();
-        // compute vertical position to place it above the button
-        const approxHeight = volMenu.offsetHeight || 72;
-        const top = Math.max(6, (btnRect.top - hostRect.top - approxHeight - 8));
-        volMenu.style.top = top + 'px';
+        if(loadingDiv){
+          loadingDiv.classList.remove('hidden');
+          loadingDiv.style.display = 'flex';
+        }
       }catch(e){}
     }
-    function closeVolumeMenu(){
-      if(!volMenu) return;
-      volMenu.classList.remove('open');
-      volMenu.style.display = '';
-      volMenu.setAttribute('aria-hidden','true');
+    function hideLoading(){
+      try{
+        if(loadingDiv){
+          loadingDiv.classList.add('hidden');
+          // keep it in DOM to allow CSS transition; remove after transition to fully free resources
+          setTimeout(()=> { try{ loadingDiv.style.display = 'none'; }catch(e){} }, 320);
+        }
+      }catch(e){}
     }
 
-    if(volBtn){
-      volBtn.addEventListener('pointerup', function onVolPointer(e){
-        // prevent the page-level click from firing for this interaction
-        try{ e.stopImmediatePropagation(); }catch(_){}
-        try{ e.preventDefault && e.preventDefault(); }catch(_){}
-        if(!volMenu) return;
-        const isOpen = volMenu.classList.contains('open');
-        if(isOpen) closeVolumeMenu();
-        else openVolumeMenu();
-        resetInactivityTimer();
-      }, {passive:false});
-
-      // click fallback (some environments fire click but not pointerup)
-      volBtn.addEventListener('click', function onVolClick(e){
-        try{ e.stopImmediatePropagation(); }catch(_){}
-        try{ e.preventDefault && e.preventDefault(); }catch(_){}
-        if(!volMenu) return;
-        const isOpen = volMenu.classList.contains('open');
-        if(isOpen) closeVolumeMenu();
-        else openVolumeMenu();
-        resetInactivityTimer();
-      }, {passive:false});
-    }
-
-    // slider input -> set volume
-    if(volSlider){
-      volSlider.addEventListener('input', (e)=>{
-        const v = Math.max(0, Math.min(100, parseInt(e.target.value,10) || 0));
-        state.lastVolume = v;
+    // The visible 720p button is intentionally inert: clicking it will not open the internal quality menu
+    // to ensure YouTube always controls the real quality selection (auto). We still populate the internal
+    // quality menu for consistency but it is not exposed via this button.
+    if(btn720){
+      // provide a small tactile feedback (visual only) on click, but do not change quality
+      btn720.addEventListener('click', (e)=>{
+        e.stopPropagation();
         try{
-          if(state.player && typeof state.player.setVolume === 'function'){
-            state.player.setVolume(v);
-            if(v === 0 && typeof state.player.mute === 'function') state.player.mute();
-            else if(v > 0 && typeof state.player.unMute === 'function') state.player.unMute();
-          }
-        }catch(e){}
-        try{ e.target.style.background = `linear-gradient(90deg, var(--accent-2) ${v}%, rgba(255,255,255,0.06) ${v}%)`; }catch(e){}
+          btn720.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 140, easing: 'ease-out' });
+        }catch(_){}
+        // intentionally do nothing else — quality remains managed by YouTube (auto)
+        // reset inactivity so controls remain visible briefly
         resetInactivityTimer();
       }, {passive:true});
-
-      // ensure pointer events while dragging (better mobile experience)
-      volSlider.addEventListener('pointerdown', (e)=>{ try{ e.stopImmediatePropagation(); }catch(_){} }, {passive:true});
     }
+
+    // quality menu handling (not triggered by 720p button)
+    let qualityMenuOpen = false;
+    // keep a simple doc click to close any menus if opened programmatically elsewhere
+    document.addEventListener('click', function docClick(e){
+      const now = Date.now();
+      if(now - state._menuOpenTs < 250) return; // small guard to avoid immediate close races
+      if(qualityMenuOpen){
+        if(!qmenu) return;
+        if(qmenu.contains(e.target)) return;
+        qmenu.classList.remove('open'); qualityMenuOpen = false;
+      }
+    }, {passive:true});
 
     state.keyHandler = function(e){
       const active = document.activeElement;
@@ -948,8 +848,6 @@
           const st = state.player && typeof state.player.getPlayerState === 'function' ? state.player.getPlayerState() : -1;
           if(st === 1 || st === 3 || st === -1 || st === 0 || st === 5){
             setOverlayHidden(true);
-            // close vol menu when controls hide
-            if(volMenu) { volMenu.classList.remove('open'); volMenu.setAttribute('aria-hidden','true'); volMenu.style.display=''; }
             if(qmenu) { qmenu.classList.remove('open'); }
           }
         }catch(e){}
@@ -978,6 +876,7 @@
     return loadYTApi().then(()=> new Promise((resolve,reject)=>{
       if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
 
+      // create YT player
       try{
         state.player = new YT.Player(mount.id, {
           videoId: videoId,
@@ -996,22 +895,26 @@
             onReady: function(evt){
               disableIframeClicks(host);
 
+              // show loading overlay initially
+              showLoading();
+
+              // apply volume (keep lastVolume state, but there is no UI to change it here)
               try{
                 if(typeof evt.target.setVolume === 'function'){
                   const v = Math.max(0, Math.min(100, state.lastVolume || 100));
                   evt.target.setVolume(v);
                   if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute();
                   else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute();
-                  const volS = document.getElementById('vidu_vol_slider');
-                  if(volS) { volS.value = v; volS.style.background = `linear-gradient(90deg, var(--accent-2) ${v}%, rgba(255,255,255,0.06) ${v}%)`; }
                 }
               }catch(e){}
 
+              // request default quality (let YT pick) and populate internal quality menu for consistency
               try{
                 let avail = [];
                 if(typeof evt.target.getAvailableQualityLevels === 'function') avail = evt.target.getAvailableQualityLevels() || [];
                 const curQ = (typeof evt.target.getPlaybackQuality === 'function') ? evt.target.getPlaybackQuality() : 'default';
                 populateQualityMenu(qmenu, avail, curQ, evt.target);
+                // explicitly set default (auto) so YouTube chooses the best quality
                 if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 800); }
               }catch(e){}
 
@@ -1051,6 +954,7 @@
                     }, 600);
                   }
 
+                  // refresh internal quality menu dynamically if available levels change (menu remains hidden to user)
                   try{
                     if(typeof state.player.getAvailableQualityLevels === 'function'){
                       const levels = state.player.getAvailableQualityLevels() || [];
@@ -1069,7 +973,20 @@
 
               resolve(state.player);
             },
-            onError: function(err){ console.error('YT player error', err); reject(err); }
+            onStateChange: function(e){
+              // e.data === 1 means playing — hide loading overlay
+              try{
+                if(e && e.data === 1){
+                  try{ hideLoading(); }catch(e){/*ignore*/ }
+                }
+                // if video ends or errors, we keep the loading hidden; only show until play
+              }catch(err){}
+            },
+            onError: function(err){
+              // hide loading on error so user can see error message / black screen replaced
+              try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){}
+              console.error('YT player error', err);
+            }
           }
         });
       }catch(err){
@@ -1109,7 +1026,9 @@
     }catch(e){ console.warn('destroyPlayer err', e); }
   }
 
+  // Public API
   window.showViduPlayer = function(videoId){
+    // defensive: ensure loader exists globally before calling (so other callers won't hit "loadYTApi is not defined")
     if(typeof window.loadYTApi !== 'function') {
       window.loadYTApi = loadYTApi;
     }
@@ -1120,6 +1039,7 @@
     const w = document.getElementById('player-wrap'); if(w) w.innerHTML = '';
   };
 
+  // cleanup on unload
   window.addEventListener('beforeunload', ()=> { try{ window.destroyViduPlayer(); }catch(e){} }, {passive:true});
 })();
 </script>
@@ -1129,7 +1049,7 @@
      ========================= -->
 <script>
 /*************************************************************************
- * Playlist data + UI + modal + Playlist-inside-modal + YouTube playlist fetching
+ * Playlist data + UI + modal + YouTube playlist fetching
  *************************************************************************/
 const playlists = [
   {
