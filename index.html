@@ -108,7 +108,6 @@
 
     .modal-backdrop{position:fixed;inset:0;background:linear-gradient(180deg, rgba(2,3,8,0.6), rgba(0,0,0,0.75));display:flex;align-items:center;justify-content:center;z-index:9999;}
     .modal{width:min(960px,95%);background:linear-gradient(180deg, rgba(12,12,12,0.96), rgba(6,6,8,0.98));border-radius:14px;padding:18px;color:#fff;border:1px solid rgba(255,255,255,0.035);box-shadow:0 40px 100px rgba(2,6,18,0.9);}
-    .modal iframe{width:100%;height:540px;border-radius:8px;border:0;background:#000;box-shadow:0 10px 40px rgba(0,0,0,0.7);}
 
     .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;}
     .btn{background:linear-gradient(90deg, var(--accent-1), var(--accent-3));color:#fff;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700;}
@@ -122,7 +121,7 @@
     @media (max-width:720px){ .list-item{width:calc(50% - 12px);} .modal iframe{height:320px;} }
 
     .list-item{opacity:0;transform-origin:center;animation:floatIn .5s forwards;}
-    @keyframes floatIn{from{opacity:0;transform:translateY(12px) scale(.995);}to{opacity:1;transform:translateY(0) scale(1);}}
+    @keyframes floatIn{from{opacity:0;transform:translateY(12px) scale(.995);}to{opacity:1;transform:translateY(0) scale(1);} }
 
     .ripple{position:relative;overflow:hidden;}
     .ripple .drop{position:absolute;border-radius:50%;transform:scale(0);background:rgba(255,255,255,0.10);animation:rip .6s ease-out;pointer-events:none;}
@@ -130,7 +129,7 @@
 
     header nav ul li a.touch-active, .logo.touch-active{transform:scale(0.985);transition:transform .08s linear;box-shadow:0 6px 18px rgba(0,0,0,0.6);}
     header nav ul li a.pulse, .logo.pulse{animation:btnPulse .5s ease-out;}
-    @keyframes btnPulse{0%{box-shadow:0 0 0 rgba(57,255,20,0.28);}50%{box-shadow:0 0 30px rgba(57,255,20,0.22);}100%{box-shadow:0 0 0 rgba(57,255,20,0);}}
+    @keyframes btnPulse{0%{box-shadow:0 0 0 rgba(57,255,20,0.28);}50%{box-shadow:0 0 30px rgba(57,255,20,0.22);}100%{box-shadow:0 0 0 rgba(57,255,20,0);} }
 
     .playlist-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:320px;overflow:auto;padding-top:6px;}
     .playlist-list .list-item{width:100%;display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;}
@@ -165,11 +164,16 @@
 
     .vidu-overlay .inner-bg{ position:absolute; inset:0; border-radius:10px; pointer-events:none; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); z-index:-1; }
 
-    .vidu-btn { background: rgba(255,255,255,0.06); color:#fff; padding:8px; border-radius:8px; cursor:pointer; font-weight:700;
+    /* More rounded control buttons */
+    .vidu-btn { background: rgba(255,255,255,0.06); color:#fff; padding:8px; border-radius:22px; cursor:pointer; font-weight:700;
                user-select:none; border:1px solid rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center;
-               width:44px; height:44px; }
+               width:46px; height:46px; transition:transform .12s ease; }
+    .vidu-btn:active{ transform: scale(.96); }
+
+    /* Slider - we will update its background with JS to show the filled portion in green */
     .vidu-range { flex:1; -webkit-appearance:none; height:8px; border-radius:8px; background: rgba(255,255,255,0.06); }
-    .vidu-range::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#7b61ff; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
+    .vidu-range::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent-2); box-shadow:0 2px 8px rgba(0,0,0,0.5); border:2px solid rgba(0,0,0,0.18); margin-top:-4px; }
+    .vidu-range::-moz-range-thumb{ width:16px; height:16px; border-radius:50%; background:var(--accent-2); border:2px solid rgba(0,0,0,0.18); }
 
     .vidu-time { min-width:56px; font-size:14px; font-weight:800; color:#cbd5ff; text-align:center; }
 
@@ -297,7 +301,10 @@
     mount: null,
     fsResizeHandler: null,
     fsListener: null,
-    docClickHandler: null
+    docClickHandler: null,
+    inactivityTimer: null,
+    lastActivity: Date.now(),
+    desiredPlaying: null
   };
 
   function loadYTApi(){
@@ -374,7 +381,6 @@
     closeBtn.type = 'button';
     closeBtn.innerHTML = '✕';
     closeBtn.addEventListener('click', ()=> {
-      // call global closeModal if available; fallback: hide modal and destroy player
       try{
         if(typeof window.closeModal === 'function') window.closeModal();
         else {
@@ -454,8 +460,12 @@
       if(e.code === 'Space' || e.key === ' '){
         e.preventDefault();
         if(state.player){
-          const st = state.player.getPlayerState();
-          if(st === 1) state.player.pauseVideo(); else state.player.playVideo();
+          const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
+          if(st === 1) {
+            try{ state.player.pauseVideo(); }catch(e){}
+          } else {
+            try{ state.player.playVideo(); }catch(e){}
+          }
         }
       } else if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){
         e.preventDefault();
@@ -476,20 +486,51 @@
       if(seekEl._drag && state.player){
         const dur = state.player.getDuration ? state.player.getDuration() : 0;
         if(dur) curEl.textContent = fmtTime(dur * (parseFloat(seekEl.value)/100));
+        // update visual fill
+        updateSeekBackground(seekEl);
       }
     }, {passive:true});
 
+    // helper to set seek bar background to show filled portion (green)
+    function updateSeekBackground(el){
+      try{
+        const v = Math.max(0, Math.min(100, parseFloat(el.value) || 0));
+        el.style.background = `linear-gradient(90deg, var(--accent-2) ${v}%, rgba(255,255,255,0.06) ${v}%)`;
+      }catch(e){}
+    }
+    // initial
+    updateSeekBackground(seekEl);
+
+    // play/pause button — more robust: immediate UI feedback and desiredPlaying flag
     playBtn.addEventListener('click', ()=>{
       if(!state.player) return;
-      const st = state.player.getPlayerState();
-      if(st === 1) state.player.pauseVideo(); else state.player.playVideo();
+      // determine intent: if currently playing -> pause, else play
+      let st = -1;
+      try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){}
+      const wantPlay = !(st === 1);
+      state.desiredPlaying = wantPlay;
+      // immediate UI change for snappy feel
+      playBtn.innerHTML = wantPlay ? pauseSVG() : playSVG();
+      try{
+        if(wantPlay){
+          // try play
+          if(typeof state.player.playVideo === 'function') state.player.playVideo();
+        } else {
+          if(typeof state.player.pauseVideo === 'function') state.player.pauseVideo();
+        }
+      }catch(e){ console.warn('play/pause toggle err', e); }
+      resetInactivityTimer();
     });
 
     // QUALITY: populate & menu behavior
     let qualities = [];
     function populateQualityMenu(levels){
       qualities = Array.isArray(levels) ? levels.slice() : [];
-      const friendly = { 'highres':'2160p','hd2160':'2160p','hd1440':'1440p','hd1080':'1080p','hd720':'720p','large':'480p','medium':'360p','small':'240p','tiny':'144p','auto':'Auto' };
+      const friendly = { 'highres':'2160p','hd2160':'2160p','hd1440':'1440p','hd1080':'1080p','hd720':'720p','large':'480p','medium':'360p','small':'240p','tiny':'144p','default':'Auto','auto':'Auto' };
+      // sort levels descending by preference if possible (map known codes to numeric)
+      const rank = { 'highres':9999,'hd2160':2160,'hd1440':1440,'hd1080':1080,'hd720':720,'large':480,'medium':360,'small':240,'tiny':144 };
+      qualities.sort((a,b)=> (rank[b]||0) - (rank[a]||0) );
+
       qmenu.innerHTML = '';
       // add Auto first option
       const autoItem = document.createElement('div');
@@ -501,11 +542,11 @@
           if(state.player && typeof state.player.setPlaybackQuality === 'function'){
             state.player.setPlaybackQuality('default');
           } else if(state.player && typeof state.player.setPlaybackQualityRange === 'function'){
-            /* older fallback - try */
             state.player.setPlaybackQualityRange('small');
           }
         }catch(e){ console.warn('setPlaybackQuality(auto) err', e); }
         qmenu.style.display='none'; qualityBtn.textContent = 'Auto ▾'; qualityBtn.setAttribute('aria-expanded','false');
+        resetInactivityTimer();
       };
       qmenu.appendChild(autoItem);
 
@@ -522,10 +563,20 @@
             } else if(state.player && typeof state.player.setPlaybackQualityRange === 'function'){
               state.player.setPlaybackQualityRange(q);
             }
+            // set label immediately
             qualityBtn.textContent = label + ' ▾';
+            // remember desiredQuality so we can reapply if YT auto-changes quickly
+            state._desiredQuality = q;
+            // attempt a second application shortly after to increase chance of applying
+            setTimeout(()=> {
+              try{
+                if(state.player && typeof state.player.setPlaybackQuality === 'function') state.player.setPlaybackQuality(q);
+              }catch(e){}
+            }, 700);
           }catch(e){ console.warn('setPlaybackQuality error', e); }
           qmenu.style.display='none';
           qualityBtn.setAttribute('aria-expanded','false');
+          resetInactivityTimer();
         };
         qmenu.appendChild(el);
       });
@@ -536,6 +587,9 @@
           const cur = state.player.getPlaybackQuality() || 'default';
           if(cur === 'default') qualityBtn.textContent = 'Auto ▾';
           else qualityBtn.textContent = (friendly[cur] || cur) + ' ▾';
+        } else {
+          // leave Auto by default
+          qualityBtn.textContent = 'Auto ▾';
         }
       }catch(e){}
     }
@@ -549,6 +603,7 @@
         qmenu.style.display = 'flex';
         qualityBtn.setAttribute('aria-expanded','true');
       }
+      resetInactivityTimer();
     });
 
     // document click handler to close quality menu; store to remove on destroy
@@ -753,6 +808,43 @@
     document.addEventListener('mozfullscreenchange', state.fsListener);
     document.addEventListener('MSFullscreenChange', state.fsListener);
 
+    // Inactivity — hide controls after 5s if no activity. Re-show on any activity.
+    function resetInactivityTimer(){
+      state.lastActivity = Date.now();
+      // always show controls on activity
+      setOverlayHidden(false);
+      if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
+      // if player exists and playing, only then auto-hide
+      state.inactivityTimer = setTimeout(()=>{
+        try{
+          const st = state.player && typeof state.player.getPlayerState === 'function' ? state.player.getPlayerState() : -1;
+          // hide even if buffering/playing; keep visible when paused
+          if(st === 1 || st === 3 || st === -1 || st === 0 || st === 5){
+            setOverlayHidden(true);
+          }
+        }catch(e){}
+      }, 5000);
+    }
+
+    // attach activity listeners to host so moving mouse/touch resets timer
+    function attachActivityListeners(){
+      try{
+        ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{
+          host.addEventListener(ev, resetInactivityTimer, {passive:true});
+          document.addEventListener(ev, resetInactivityTimer, {passive:true});
+        });
+      }catch(e){}
+    }
+    function detachActivityListeners(){
+      try{
+        ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{
+          host.removeEventListener(ev, resetInactivityTimer);
+          document.removeEventListener(ev, resetInactivityTimer);
+        });
+      }catch(e){}
+    }
+    attachActivityListeners();
+
     // load YT and mount player
     return loadYTApi().then(()=> new Promise((resolve,reject)=>{
       if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
@@ -773,7 +865,10 @@
         events: {
           onReady: function(evt){
             disableIframeClicks(host);
+
+            // try to autoplay quietly
             try{ evt.target.playVideo(); }catch(e){}
+
             mount.style.height = mount.style.height || '520px';
 
             if(state.updateInterval) clearInterval(state.updateInterval);
@@ -784,9 +879,41 @@
                 const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
                 curEl.textContent = fmtTime(cur);
                 durEl.textContent = (dur && isFinite(dur)) ? fmtTime(dur) : '0:00';
-                if(!seekEl._drag && dur && isFinite(dur)) seekEl.value = (cur / Math.max(1,dur)) * 100;
+                if(!seekEl._drag && dur && isFinite(dur)) {
+                  seekEl.value = (cur / Math.max(1,dur)) * 100;
+                  updateSeekBackground(seekEl);
+                }
                 const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
-                playBtn.innerHTML = (st === 1) ? pauseSVG() : playSVG();
+                // if desiredPlaying was set by user, attempt to reconcile
+                if(state.desiredPlaying !== null){
+                  if(state.desiredPlaying && st !== 1){
+                    try{ state.player.playVideo(); }catch(e){}
+                  } else if(!state.desiredPlaying && st === 1){
+                    try{ state.player.pauseVideo(); }catch(e){}
+                  }
+                }
+                // update play button icon according to actual state (but keep user-initiated immediate feedback)
+                const currentIcon = (st === 1) ? pauseSVG() : playSVG();
+                // If user recently pressed toggle, keep immediate UI for a short time; else sync
+                if(Date.now() - state.lastActivity > 300) {
+                  playBtn.innerHTML = currentIcon;
+                } else {
+                  // subtle: allow immediate feedback to persist; if player state contradicts user desire after some time, sync
+                  setTimeout(()=> {
+                    try{
+                      const check = state.player.getPlayerState ? state.player.getPlayerState() : -1;
+                      if(check === 1) playBtn.innerHTML = pauseSVG(); else playBtn.innerHTML = playSVG();
+                    }catch(e){}
+                  }, 600);
+                }
+
+                // If user requested a quality and YT auto-switched, try to reapply if available
+                if(state._desiredQuality && typeof state.player.getAvailableQualityLevels === 'function'){
+                  const levels = state.player.getAvailableQualityLevels() || [];
+                  if(levels.indexOf(state._desiredQuality) !== -1){
+                    try{ state.player.setPlaybackQuality(state._desiredQuality); }catch(e){}
+                  }
+                }
               }catch(e){}
             }, 160);
 
@@ -826,12 +953,19 @@
               }
             }catch(e){/* ignore */}
 
+            // show controls initially and start inactivity timer
+            resetInactivityTimer();
+
             resolve(state.player);
           },
           onError: function(err){ console.error('YT player error', err); reject(err); }
         }
       });
-    }));
+    })).then(p=>{
+      // Ensure the host shows controls on mount
+      setTimeout(()=> resetInactivityTimer(), 40);
+      return p;
+    });
   }
 
   function destroyPlayer(){
@@ -848,6 +982,16 @@
         document.removeEventListener('mozfullscreenchange', state.fsListener);
         document.removeEventListener('MSFullscreenChange', state.fsListener);
         state.fsListener = null;
+      }
+      if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
+      // remove activity listeners attached to host
+      if(state.host){
+        try{
+          ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{
+            state.host.removeEventListener(ev, resetInactivityTimer);
+            document.removeEventListener(ev, resetInactivityTimer);
+          });
+        }catch(e){}
       }
       if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
     }catch(e){ console.warn('destroyPlayer err', e); }
@@ -962,7 +1106,7 @@ function showPlaylistVideos(pl, skipPush){
 function spawnRipple(ev,target){ const rect = target.getBoundingClientRect(); const drop = document.createElement('div'); drop.className = 'drop'; drop.style.left = (ev.clientX - rect.left) + 'px'; drop.style.top = (ev.clientY - rect.top) + 'px'; target.appendChild(drop); setTimeout(()=> drop.remove(),700); }
 function attachTilt(card){ if(!card) return; const img = card.querySelector('img'); function onMove(e){ if(window.__viduGlobal && window.__viduGlobal.visualsPaused) return; const r = card.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width; const py = (e.clientY - r.top) / r.height; const rx = (py - 0.5) * 10; const ry = (px - 0.5) * -10; card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(6px)`; if(img) img.style.transform = `translateZ(26px) scale(1.06) translateY(${(0.5-py)*6}px)`; } function onLeave(){ card.style.transform = ''; if(img) img.style.transform = ''; } card.addEventListener('pointermove', onMove, {passive:true}); card.addEventListener('pointerleave', onLeave, {passive:true}); }
 
-// Modal + password + player mount logic
+ // Modal + password + player mount logic
 let currentItem = null;
 function createModal(){
   const root = document.getElementById('modal-root');
@@ -1158,7 +1302,7 @@ document.addEventListener('DOMContentLoaded', function(){
   (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
 });
 
-// deterrents (kept)
+ // deterrents (kept)
 document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, false);
 document.addEventListener('keydown', function(e){ if ((e.ctrlKey && e.shiftKey && (e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')) || (e.ctrlKey && (e.key==='U'||e.key==='u')) || (e.key==='F12')) { e.preventDefault(); return false; } });
 document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { const root=document.getElementById('modal-root'); if(root) root.style.display='none'; resumeVisuals('esc'); } });
