@@ -309,7 +309,44 @@
         card.addEventListener('click', ()=> openPasswordModal(it));
         tiles.appendChild(card);
       });
+
+      // After tiles are built, ensure neon sizes fit
+      adjustNeonSizes();
     }
+
+    /* ---------- function to automatically shrink neon text to fit ---------- */
+    let _adjustDebounce = null;
+    function adjustNeonSizes(){
+      // debounce small rapid calls
+      if(_adjustDebounce) clearTimeout(_adjustDebounce);
+      _adjustDebounce = setTimeout(()=> {
+        document.querySelectorAll('.neon-wrap').forEach(wrap => {
+          const neon = wrap.querySelector('.neon');
+          const reflect = wrap.querySelector('.neon-reflect');
+          if(!neon) return;
+          // compute available width (wrap inner width)
+          const avail = Math.max(8, wrap.clientWidth - 6); // small padding allowance
+          // start size: choose clamp upper bound or based on wrap width
+          // prefer to base initial size on wrap width to minimize iterations
+          let fs = Math.min(94, Math.max(12, Math.floor(avail * 0.62)));
+          neon.style.fontSize = fs + 'px';
+          if(reflect) reflect.style.fontSize = fs + 'px';
+          // reduce until it fits inline (use scrollWidth)
+          // allow a tiny tolerance
+          const tolerance = 2;
+          while((neon.scrollWidth - tolerance > avail || (reflect && reflect.scrollWidth - tolerance > avail)) && fs > 10){
+            fs -= 2;
+            neon.style.fontSize = fs + 'px';
+            if(reflect) reflect.style.fontSize = fs + 'px';
+          }
+          // ensure letter-spacing reduces for smaller sizes to avoid wrap look
+          if(fs < 28) neon.style.letterSpacing = '2px';
+          else neon.style.letterSpacing = '';
+        });
+      }, 70);
+    }
+    window.addEventListener('resize', adjustNeonSizes);
+    window.addEventListener('orientationchange', adjustNeonSizes);
 
     /* ---------- modal ---------- */
     let currentItem = null;
@@ -1069,4 +1106,3 @@
   </script>
 </body>
 </html>
-
