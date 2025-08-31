@@ -129,10 +129,23 @@
     /* ===== small-screen centering fixes (NEW) ===== */
     @media (max-width:640px){
       /* Center the internals of each card on small screens */
-      .card { align-items: center; }
-      .card-media { justify-content: center; align-items: center; }
+      .card { align-items: center; background: rgba(0,0,0,0.66); }
+      .card-media { justify-content: center; align-items: center; position:relative; width:100%; }
+      /* full black fill behind the neon on mobile */
+      .card-media::before{
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: #000;
+        border-radius: 6px;
+        z-index: 0;
+        opacity: 0.96;
+      }
+      .neon, .neon-reflect, .card-caption { position: relative; z-index: 1; }
       .card-caption { align-items: center; text-align: center; }
       .neon, .neon-reflect { margin: 0 auto; }
+      /* slightly adjust caption spacing so the black frame looks consistent */
+      .card-caption { padding-top: 12px; padding-bottom: 14px; }
     }
   </style>
 </head>
