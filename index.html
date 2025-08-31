@@ -308,6 +308,23 @@
       .vidu-range{ min-width:72px; }
       .vidu-btn{ width:36px; height:36px; }
     }
+
+    /* ---- Specific override to remove circular look from the visible 720p button ---- */
+    #vidu_720_btn {
+      background: transparent !important;
+      border-radius: 8px !important;
+      width: auto !important;
+      height: auto !important;
+      padding: 6px 10px !important;
+      min-width: 40px !important;
+      border: 1px solid rgba(255,255,255,0.06) !important;
+      font-weight:800;
+      color: #fff !important;
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+    }
+    #vidu_720_btn:active { transform: none !important; } /* keep tactile animation handled in JS only */
   </style>
 </head>
 <body class="landing is-preload">
@@ -402,26 +419,13 @@
     return (n < 10 ? '0' + n : String(n));
   }
 
-  // Time formatting rules:
-  // - current time (left): if < 1 hour -> MM : SS ; else HH : MM
-  // - duration (right): always HH : MM
-  function fmtCurrentFromSeconds(s){
-    s = Math.max(0, Math.floor(s||0));
-    if(s < 3600){
-      const m = Math.floor(s / 60);
-      const sec = s % 60;
-      return pad2(m) + ' : ' + pad2(sec);
-    } else {
-      const h = Math.floor(s / 3600);
-      const m = Math.floor((s % 3600) / 60);
-      return pad2(h) + ' : ' + pad2(m);
-    }
-  }
-  function fmtDurationFromSeconds(s){
+  // Time formatting rules: both current time and duration are always HH : MM : SS
+  function fmtHHMMSS(s){
     s = Math.max(0, Math.floor(s||0));
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
-    return pad2(h) + ' : ' + pad2(m);
+    const sec = s % 60;
+    return pad2(h) + ' : ' + pad2(m) + ' : ' + pad2(sec);
   }
 
   function playSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4.5v15l12-7.5L6 4.5z" fill="#fff"/></svg>`; }
@@ -453,9 +457,9 @@
     overlay.innerHTML = `
       <div class="inner-bg" aria-hidden="true"></div>
       <button class="vidu-btn" id="vidu_playbtn">${playSVG()}</button>
-      <div class="vidu-time" id="vidu_cur">` + fmtCurrentFromSeconds(0) + `</div>
+      <div class="vidu-time" id="vidu_cur">` + fmtHHMMSS(0) + `</div>
       <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
-      <div class="vidu-time" id="vidu_dur">` + fmtDurationFromSeconds(0) + `</div>
+      <div class="vidu-time" id="vidu_dur">` + fmtHHMMSS(0) + `</div>
 
       <!-- 720p inert button (replaces previous HQ/volume spot). It's intentionally inert. -->
       <button id="vidu_720_btn" class="vidu-btn" aria-label="Pretend 720p">720p</button>
@@ -616,7 +620,7 @@
       btn720.addEventListener('click', (e)=>{
         e.stopPropagation();
         try{
-          btn720.animate([{ transform: 'scale(0.96)' }, { transform: 'scale(1)' }], { duration: 140, easing: 'ease-out' });
+          btn720.animate([{ transform: 'scale(0.98)' }, { transform: 'scale(1)' }], { duration: 140, easing: 'ease-out' });
         }catch(_){}
         // intentionally do nothing else — quality remains managed by YouTube (auto)
         // reset inactivity so controls remain visible briefly
@@ -670,7 +674,7 @@
     seekEl.addEventListener('input', ()=>{ 
       if(seekEl._drag && state.player){
         const dur = state.player.getDuration ? state.player.getDuration() : 0;
-        if(dur) curEl.textContent = fmtCurrentFromSeconds(Math.floor(dur * (parseFloat(seekEl.value)/100)));
+        if(dur) curEl.textContent = fmtHHMMSS(Math.floor(dur * (parseFloat(seekEl.value)/100)));
         updateSeekBackground(seekEl);
       }
     }, {passive:true});
@@ -928,8 +932,8 @@
                   if(!state.player) return;
                   const dur = state.player.getDuration ? state.player.getDuration() : 0;
                   const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
-                  curEl.textContent = fmtCurrentFromSeconds(Math.floor(cur));
-                  durEl.textContent = (dur && isFinite(dur)) ? fmtDurationFromSeconds(Math.floor(dur)) : fmtDurationFromSeconds(0);
+                  curEl.textContent = fmtHHMMSS(Math.floor(cur));
+                  durEl.textContent = (dur && isFinite(dur)) ? fmtHHMMSS(Math.floor(dur)) : fmtHHMMSS(0);
                   if(!seekEl._drag && dur && isFinite(dur)) {
                     seekEl.value = (cur / Math.max(1,dur)) * 100;
                     updateSeekBackground(seekEl);
