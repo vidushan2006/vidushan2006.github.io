@@ -50,11 +50,13 @@
 
     .viewer{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.78);z-index:400;padding:22px}
     .viewer.hidden{display:none}
-    .viewer-inner{width:100%;max-width:800px;height:72vh;border-radius:12px;overflow:hidden;background:rgba(2,2,2,0.75);position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.8);display:flex;flex-direction:column}
+    /* make viewer a column container - we'll size it dynamically via JS to always fit viewport */
+    .viewer-inner{width:100%;max-width:1100px;max-height:calc(100vh - 32px);height:auto;border-radius:12px;overflow:hidden;background:rgba(2,2,2,0.75);position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.8);display:flex;flex-direction:column}
     .viewer-close{position:absolute;top:10px;right:10px;background:transparent;border:none;color:#ddd;font-size:20px;cursor:pointer;z-index:5}
-    .iframe-wrap{width:100%;height:62%;display:block;background:#000;position:relative;border-bottom:1px solid rgba(255,255,255,0.03)}
-    /* playlist area now lives below the iframe-wrap */
-    .viewer-playlist{width:100%;height:38%;box-sizing:border-box;overflow:auto;padding:10px;background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.08));}
+    /* make iframe-wrap flexible but its height will be set by JS to ensure controls visible */
+    .iframe-wrap{width:100%;display:block;background:#000;position:relative;border-bottom:1px solid rgba(255,255,255,0.03);flex:0 0 auto}
+    /* playlist BELOW the player now */
+    .viewer-playlist{width:100%;box-sizing:border-box;overflow:auto;padding:10px;background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.08));flex:1 1 auto}
     .viewer-playlist .list-item{display:flex;align-items:center;gap:12px;padding:8px;border-radius:8px;cursor:pointer;background:transparent;transition:background .12s}
     .viewer-playlist .list-item:hover{background:rgba(255,255,255,0.02)}
     .viewer-playlist img{width:120px;height:68px;object-fit:cover;border-radius:6px;flex:0 0 120px;}
@@ -62,7 +64,6 @@
     .playlist-title{font-size:14px;font-weight:700;color:#fff}
     .playlist-sub{font-size:12px;color:rgba(220,220,220,0.7)}
 
-    .playlist-list{max-height:220px;overflow:auto}
     .copyright{text-align:center;margin-top:28px;color:rgba(255,255,255,0.85);font-size:13px}
 
     /* ===== player UI styles (must match JS expectations) ===== */
@@ -97,9 +98,7 @@
     /* small responsive tweaks */
     @media (max-width:720px){
       .vidu-time{min-width:76px;font-size:12px}
-      .vidu-mount{height:320px}
-      .iframe-wrap{height:56%}
-      .viewer-playlist{height:44%}
+      .viewer-inner{max-width:calc(100vw - 20px)}
     }
   </style>
 </head>
@@ -155,7 +154,7 @@
       <button id="viewer-close" class="viewer-close" aria-label="Close viewer">✕</button>
 
       <!-- video host -->
-      <div id="iframe-wrap" class="iframe-wrap"></div>
+      <div id="iframe-wrap" class="iframe-wrap" role="region" aria-label="Video player area"></div>
 
       <!-- playlist BELOW the player now -->
       <div id="viewer-playlist" class="viewer-playlist" aria-live="polite"></div>
@@ -167,7 +166,7 @@
   <script>
   (function(){
     /* ---------- configuration ---------- */
-    const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI'; // keep your key here (used for playlist fetching)
+    const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI'; // used for playlist fetching
     const YT_API_LOAD_TIMEOUT = 18000; // ms - how long to wait for YT API before showing error
 
     /* ---------- sample items (unchanged layout) ---------- */
@@ -348,7 +347,7 @@
           <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
           <div class="vidu-time" id="vidu_dur">` + fmtTime(0) + `</div>
           <input id="vidu_vol" class="vidu-volume" type="range" min="0" max="100" step="1" value="100" aria-label="Volume" />
-          <button class="vidu-btn" id="vidu_fullbtn">⤢</button>
+          <button class="vidu-btn" id="vidu_fullbtn" aria-label="Toggle fullscreen">⤢</button>
         `;
         host.appendChild(overlay);
 
@@ -742,6 +741,59 @@
       return results;
     }
 
+    /* ---------- Layout adjustment so player + controls always fit viewport ---------- */
+    const layoutState = { resizeHandler: null, orientationHandler: null };
+    function adjustViewerLayout(){
+      try{
+        const viewerInner = document.querySelector('.viewer-inner');
+        const iframeWrap = document.getElementById('iframe-wrap');
+        const playlist = document.getElementById('viewer-playlist');
+        if(!viewerInner || !iframeWrap || !playlist) return;
+
+        // leave a small margin/padding so modal never reaches the absolute edges
+        const horizontalPadding = 28; // left + right combined (22 default + a bit)
+        const verticalPadding = 24;   // top + bottom (viewer padding + margins)
+
+        const maxWidth = Math.max(320, window.innerWidth - horizontalPadding);
+        viewerInner.style.maxWidth = Math.min(1400, maxWidth) + 'px';
+
+        // ensure overall viewer is never taller than viewport minus small margin
+        const availableH = Math.max(320, window.innerHeight - verticalPadding);
+        viewerInner.style.maxHeight = availableH + 'px';
+
+        // compute safe video height: normally allocate ~62% of available, but ensure controls (approx 90-110px) remain visible
+        const controlsReserve = 110; // space to reserve for overlay + some breathing room
+        let videoH = Math.floor(availableH * 0.62);
+        if(videoH + controlsReserve > availableH){
+          videoH = Math.max(140, availableH - controlsReserve);
+        }
+        // cap video height also to not exceed viewport width ratio (16:9)
+        const maxByWidth = Math.floor((Math.min(maxWidth, window.innerWidth) * 9) / 16);
+        if(videoH > maxByWidth) videoH = maxByWidth;
+
+        iframeWrap.style.height = videoH + 'px';
+
+        // playlist occupies remaining height
+        const playlistH = Math.max(100, availableH - videoH);
+        playlist.style.height = playlistH + 'px';
+      }catch(e){ console.warn('adjustViewerLayout err', e); }
+    }
+
+    function attachViewerLayoutListeners(){
+      detachViewerLayoutListeners();
+      layoutState.resizeHandler = function(){ adjustViewerLayout(); };
+      layoutState.orientationHandler = function(){ setTimeout(adjustViewerLayout, 120); };
+      window.addEventListener('resize', layoutState.resizeHandler, {passive:true});
+      window.addEventListener('orientationchange', layoutState.orientationHandler, {passive:true});
+    }
+    function detachViewerLayoutListeners(){
+      try{
+        if(layoutState.resizeHandler) window.removeEventListener('resize', layoutState.resizeHandler);
+        if(layoutState.orientationHandler) window.removeEventListener('orientationchange', layoutState.orientationHandler);
+      }catch(e){}
+      layoutState.resizeHandler = null; layoutState.orientationHandler = null;
+    }
+
     /* ---------- show playlist (advanced only) ----------
        Playlist UI now renders in #viewer-playlist (below the video)
     -------------------------------------------------- */
@@ -824,6 +876,9 @@
             mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn);
           }
         }
+
+        // adjust sizes now the player & playlist elements exist
+        setTimeout(adjustViewerLayout, 80);
       }catch(err){
         // show error and retry button in playlist area (no iframe fallback)
         playlistContainer.innerHTML = '';
@@ -866,6 +921,8 @@
       // attempt advanced player - if fails, show clear error and a retry button in the playlist area
       try{
         await window.showViduPlayer(vid, 'player-wrap');
+        // adjust sizes now
+        setTimeout(adjustViewerLayout, 40);
       }catch(err){
         mountRoot.innerHTML = '';
         playlistContainer.innerHTML = '';
@@ -893,12 +950,17 @@
 
     function openViewer(item){
       viewer.classList.remove('hidden'); viewer.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+      // adjust layout to the current viewport immediately and attach listeners
+      adjustViewerLayout();
+      attachViewerLayoutListeners();
       if(item.type === 'video') showVideoInViewer(item); else showPlaylistInsideViewer(item);
     }
     function closeViewer(){
       if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
       const iframeWrap = document.getElementById('iframe-wrap'); if(iframeWrap) iframeWrap.innerHTML = '';
       const playlistContainer = document.getElementById('viewer-playlist'); if(playlistContainer) playlistContainer.innerHTML = '';
+      // remove resize/orientation listeners
+      detachViewerLayoutListeners();
       viewer.classList.add('hidden'); viewer.setAttribute('aria-hidden','true'); document.body.style.overflow='';
     }
     viewerClose.addEventListener('click', closeViewer);
@@ -920,4 +982,3 @@
   </script>
 </body>
 </html>
-
