@@ -1,817 +1,524 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE HTML>
+<html>
 <head>
+  <title>VIDU</title>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Private Classes — VIDU</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 
   <style>
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-    body{background:url('assets/images/background.gif') center/cover fixed no-repeat; color:#eaf7ea; line-height:1.35}
+  /* Scoped page CSS */
+  body.videos-page {
+    background: url('assets/images/background.gif') no-repeat center center fixed !important;
+    background-size: cover !important;
+    font-family: "Helvetica Neue", Arial, sans-serif !important;
+    margin:0 !important;
+    color: #fff !important;
+  }
 
-    .topbar{position:fixed;left:0;right:0;top:0;z-index:120;background:linear-gradient(180deg, rgba(8,10,10,0.45), rgba(8,10,10,0.18));backdrop-filter:blur(6px) saturate(120%);border-bottom:1px solid rgba(255,255,255,0.03);box-shadow:0 6px 20px rgba(0,0,0,0.6)}
-    .topbar-inner{max-width:1200px;margin:0 auto;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .left{display:flex;align-items:center;gap:14px}
-    .logo-btn{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:6px;background:linear-gradient(180deg,#07110a,#06200b);box-shadow:0 8px 26px rgba(0,0,0,0.6);text-decoration:none}
-    .nav{display:flex;gap:12px;align-items:center}
-    .nav a,.nav button{color:#dfeee1;text-decoration:none;padding:8px 10px;font-weight:700;border-radius:6px;font-size:14px;background:transparent;border:0;cursor:pointer}
-    .nav a:hover,.nav button:hover{transform:translateY(-2px);transition:transform .18s ease}
+  header#header { display:flex; align-items:center; justify-content:space-between; padding:12px 22px; background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(8px) saturate(120%); border-radius:0 0 8px 8px; box-shadow:0 8px 40px rgba(2,4,12,0.6); }
 
-    .page{margin-top:100px;min-height:calc(100vh - 120px)}
-    .container{max-width:1200px;margin:0 auto;padding:28px}
-    .title{font-size:42px;color:#fff;text-shadow:0 8px 36px rgba(0,0,0,0.65);margin-bottom:8px;font-weight:900}
-    .subtitle{color:rgba(230,240,230,0.78);margin-bottom:32px;font-size:15px}
+  .list-container{list-style:none;padding:10px;margin:0;display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+  .list-item{width:180px;text-align:left;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:10px;padding:10px;cursor:pointer;border:1px solid rgba(255,255,255,0.03)}
+  .list-item img{width:100%;height:100px;object-fit:cover;border-radius:6px}
+  .list-item .title{font-weight:700;margin-top:8px;font-size:14px}
 
-    .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;align-items:start}
-    @media (min-width:900px){ .tiles{grid-template-columns:repeat(4,1fr)} }
-    @media (max-width:640px){ .tiles{grid-template-columns:1fr;gap:14px} }
+  #player-wrap{width:100%;max-width:1000px;margin:12px auto;border-radius:10px;overflow:hidden;background:#000;position:relative}
+  .vidu-player-host{position:relative;width:100%;overflow:hidden;border-radius:8px;background:#000}
+  .vidu-mount{width:100%;height:520px;background:#black}
+  .vidu-mount iframe{width:100%;height:100%;display:block;border:0;pointer-events:none}
 
-    .card{display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.45));border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:transform .22s,box-shadow .22s;box-shadow:0 14px 30px rgba(0,0,0,0.55);min-height:300px}
-    .card:hover{transform:translateY(-8px);box-shadow:0 34px 60px rgba(0,0,0,0.65)}
-    .card-media{position:relative;height:220px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.75));border-bottom:1px solid rgba(255,255,255,0.03);overflow:visible}
-    .neon{font-weight:900;letter-spacing:6px;font-size:94px;color:#00ff3a;text-shadow:0 0 6px rgba(0,255,120,0.95),0 0 18px rgba(0,255,120,0.45),0 18px 28px rgba(0,0,0,0.6);mix-blend-mode:screen;line-height:0.9;transform:translateY(-6px);pointer-events:none;user-select:none;white-space:nowrap}
-    .neon.small{font-size:60px;letter-spacing:4px}
-    .neon-reflect{position:absolute;bottom:-38px;left:0;right:0;text-align:center;transform:scaleY(-1);opacity:0.22;filter:blur(4px);font-weight:900;font-size:94px;color:#00ff3a;mix-blend-mode:screen;pointer-events:none;white-space:nowrap}
-    .card-caption{padding:14px 12px 18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));display:flex;flex-direction:column;align-items:center;gap:6px}
-    .card-title{font-weight:800;color:#eaf8ea;font-size:14px;text-align:center}
-    .card-type{font-size:11px;color:rgba(170,255,190,0.92);font-weight:700;text-transform:uppercase}
+  .vidu-controls-bg{position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.75));pointer-events:none;z-index:9996}
+  .vidu-overlay{position:absolute;left:12px;right:12px;bottom:12px;z-index:9999;display:flex;gap:12px;align-items:center;padding:8px 12px;border-radius:10px;box-sizing:border-box;pointer-events:auto;flex-wrap:wrap;justify-content:flex-start}
+  .vidu-btn{background:rgba(255,255,255,0.06);color:#fff;padding:8px;border-radius:22px;cursor:pointer;width:46px;height:46px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.04)}
+  .vidu-range{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,0.06);min-width:100px}
+  .vidu-time{min-width:90px;text-align:center;font-weight:800;color:#cbd5ff}
+  .vidu-close-btn{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.46);border-radius:8px;padding:6px;border:1px solid rgba(255,255,255,0.06);color:#fff}
 
-    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.62);z-index:300;padding:18px}
-    .modal.hidden{display:none}
-    .modal-box{max-width:420px;width:100%;background:linear-gradient(180deg, rgba(8,10,8,0.98), rgba(6,8,6,0.95));border-radius:12px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,0.7);color:#fff;text-align:center;position:relative}
-    .modal-close{position:absolute;right:10px;top:10px;background:transparent;border:none;color:#ddd;font-size:18px;cursor:pointer}
-    .modal-preview{height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
-    .pw-input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;margin-top:8px}
-    .pw-actions{display:flex;gap:8px;margin-top:12px;justify-content:center}
-    .btn{padding:10px 14px;border-radius:8px;border:none;font-weight:700;cursor:pointer;background:linear-gradient(180deg,#00c85f,#00a955);color:white}
-    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#dfeee1}
+  /* QUALITY button & menu (top-left) */
+  .vidu-quality-btn {
+    position:absolute;
+    top:10px;
+    left:10px;
+    z-index:10003;
+    width:44px;
+    height:28px;
+    padding:4px 8px;
+    border-radius:6px;
+    background:rgba(0,0,0,0.52);
+    border:1px solid rgba(255,255,255,0.06);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    cursor:pointer;
+    gap:6px;
+    font-size:13px;
+    letter-spacing:0.8px;
+    user-select:none;
+  }
+  .vidu-quality-menu {
+    position:absolute;
+    top:44px;
+    left:10px;
+    z-index:10004;
+    min-width:140px;
+    background:linear-gradient(180deg, rgba(10,10,10,0.98), rgba(8,8,8,0.95));
+    border-radius:8px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.6);
+    border:1px solid rgba(255,255,255,0.04);
+    overflow:hidden;
+    display:none;
+    padding:6px;
+  }
+  .vidu-quality-menu.open { display:block; }
+  .vidu-quality-menu button { display:block; width:100%; text-align:left; border:none; background:transparent; color:#ddd; padding:8px 10px; border-radius:6px; cursor:pointer; font-weight:700; }
+  .vidu-quality-menu button:hover { background:rgba(255,255,255,0.02); color:#fff; }
+  .vidu-quality-menu button.active { color: #39ff14; background: rgba(255,255,255,0.02); }
 
-    .viewer{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.78);z-index:400;padding:22px}
-    .viewer.hidden{display:none}
-    .viewer-inner{width:100%;max-width:1100px;max-height:calc(100vh - 32px);height:auto;border-radius:12px;overflow:hidden;background:rgba(2,2,2,0.75);position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.8);display:flex;flex-direction:column}
-    .viewer-close{position:absolute;top:10px;right:10px;background:transparent;border:none;color:#ddd;font-size:20px;cursor:pointer;z-index:5}
-    .iframe-wrap{width:100%;display:block;background:#000;position:relative;border-bottom:1px solid rgba(255,255,255,0.03);flex:0 0 auto}
-    .viewer-playlist{width:100%;box-sizing:border-box;overflow:auto;padding:10px;background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.08));flex:1 1 auto}
-    .viewer-playlist .list-item{display:flex;align-items:center;gap:12px;padding:8px;border-radius:8px;cursor:pointer;background:transparent;transition:background .12s}
-    .viewer-playlist .list-item:hover{background:rgba(255,255,255,0.02)}
-    .viewer-playlist img{width:120px;height:68px;object-fit:cover;border-radius:6px;flex:0 0 120px;}
-    .playlist-meta{flex:1;display:flex;flex-direction:column;gap:6px}
-    .playlist-title{font-size:14px;font-weight:700;color:#fff}
-    .playlist-sub{font-size:12px;color:rgba(220,220,220,0.7)}
+  /* volume icon + vertical slider */
+  .vidu-volume-btn {
+    position:relative;
+    width:46px;
+    height:46px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:22px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.04);
+    cursor:pointer;
+    color:#fff;
+    font-weight:800;
+    flex:0 0 auto;
+  }
+  .vidu-volume-menu {
+    position:absolute;
+    bottom:58px;
+    left:50%;
+    transform:translateX(-50%);
+    display:none;
+    width:44px;
+    padding:8px 6px;
+    border-radius:8px;
+    background:linear-gradient(180deg, rgba(10,10,10,0.98), rgba(8,8,8,0.95));
+    border:1px solid rgba(255,255,255,0.04);
+    box-shadow:0 10px 30px rgba(0,0,0,0.6);
+    z-index:10005;
+    align-items:center;
+    justify-content:center;
+  }
+  .vidu-volume-menu.open { display:flex; }
+  .vidu-volume-vertical {
+    -webkit-appearance:none;
+    appearance:none;
+    width:96px;
+    height:8px;
+    transform:rotate(-90deg);
+    transform-origin:center;
+    outline:none;
+    background:rgba(255,255,255,0.06);
+    border-radius:8px;
+  }
+  .vidu-volume-vertical::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#39ff14;border:2px solid rgba(0,0,0,0.12);box-shadow:0 2px 6px rgba(0,0,0,0.45);
+  }
+  .vidu-volume-vertical::-moz-range-thumb{ width:14px;height:14px;border-radius:50%;background:#39ff14;border:2px solid rgba(0,0,0,0.12); }
 
-    .copyright{text-align:center;margin-top:28px;color:rgba(255,255,255,0.85);font-size:13px}
-
-    /* player UI */
-    .vidu-player-host{position:relative;width:100%;height:100%;overflow:hidden;border-radius:8px;background:#000}
-    .vidu-mount{width:100%;height:100%;background:#000}
-    .vidu-mount iframe{width:100%;height:100%;border:0;display:block}
-
-    .vidu-controls-bg{position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.75));pointer-events:none;z-index:9996;opacity:1;transition:opacity .22s ease, transform .22s ease;backdrop-filter:blur(4px)}
-    .vidu-controls-bg.hidden{opacity:0;transform:translateY(6px)}
-
-    .vidu-overlay{position:absolute;left:12px;right:12px;bottom:12px;z-index:9999;display:flex;gap:12px;align-items:center;padding:8px 12px;border-radius:10px;box-sizing:border-box;pointer-events:auto;flex-wrap:nowrap;justify-content:flex-start}
-    .vidu-overlay.hidden{opacity:0;transform:translateY(6px);pointer-events:none}
-
-    .vidu-overlay .inner-bg{position:absolute;inset:0;border-radius:10px;pointer-events:none;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));z-index:-1}
-
-    .vidu-btn{background:rgba(255,255,255,0.06);color:#fff;padding:8px;border-radius:22px;cursor:pointer;font-weight:700;user-select:none;border:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;width:46px;height:46px;transition:transform .12s ease;flex:0 0 auto}
-    .vidu-btn:active{transform:scale(.96)}
-
-    .vidu-range{flex:1;-webkit-appearance:none;height:8px;border-radius:8px;background:rgba(255,255,255,0.06);min-width:120px}
-    .vidu-range::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#39ff14;box-shadow:0 2px 8px rgba(0,0,0,0.5);border:2px solid rgba(0,0,0,0.18);margin-top:-4px}
-    .vidu-range::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#39ff14;border:2px solid rgba(0,0,0,0.18)}
-
-    /* shortened volume length */
-    .vidu-volume{width:96px;appearance:none;height:8px;border-radius:8px;background:rgba(255,255,255,0.06);margin-left:8px;margin-right:8px;flex:0 0 auto}
-    .vidu-volume::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#39ff14;box-shadow:0 2px 6px rgba(0,0,0,0.45);border:2px solid rgba(0,0,0,0.12);margin-top:-3px}
-    .vidu-volume::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#39ff14;border:2px solid rgba(0,0,0,0.12)}
-
-    .vidu-time{min-width:90px;font-size:14px;font-weight:800;color:#cbd5ff;text-align:center;letter-spacing:1px;flex:0 0 auto}
-
-    .vidu-close-btn{position:absolute;top:10px;right:10px;z-index:10002;width:36px;height:36px;padding:6px;border-radius:8px;background:rgba(0,0,0,0.46);border:1px solid rgba(255,255,255,0.06);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.6);transition:opacity .18s ease,transform .18s ease}
-    .vidu-close-btn.hidden{opacity:0;transform:translateY(-6px);pointer-events:none}
-
-    /* small screen adjustments so controls never overflow */
-    @media (max-width:540px){
-      .viewer-inner{max-width:calc(100vw - 20px)}
-      .vidu-overlay{left:8px; right:8px; gap:8px; padding:8px; align-items:center; justify-content:flex-start; flex-wrap:wrap}
-      .vidu-btn{width:40px;height:40px;border-radius:18px}
-      .vidu-time{min-width:68px;font-size:12px}
-      .vidu-range{min-width:100px}
-      .vidu-volume{width:80px;margin-left:6px;margin-right:6px}
-      .vidu-overlay .inner-bg{border-radius:8px}
-      /* ensure close button is visible above controls */
-      .vidu-close-btn{top:8px;right:8px}
-    }
-
-    @media (max-width:420px){
-      .vidu-time{min-width:60px;font-size:12px}
-      .vidu-range{min-width:86px}
-      .vidu-volume{width:70px}
-      .vidu-btn{width:38px;height:38px}
-    }
+  @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; gap:8px; padding:8px; } .vidu-volume-vertical{width:80px} .vidu-volume-menu{left:50%;} }
   </style>
 </head>
-<body>
-  <header class="topbar" role="banner">
-    <div class="topbar-inner">
-      <div class="left">
-        <a class="logo-btn" href="index.html" title="Home" aria-label="Home">
-          <svg width="30" height="30" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-            <defs><linearGradient id="gV" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#00ff55"/><stop offset="1" stop-color="#00b86a"/></linearGradient></defs>
-            <rect x="4" y="4" width="56" height="56" rx="8" fill="#07120b"/>
-            <path d="M16 16 L32 46 L48 16" stroke="url(#gV)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
-        <nav class="nav" aria-label="Main navigation">
-          <a href="index.html">Home</a>
-          <button id="nav-private">Private</button>
-          <a href="about.html">About</a>
-        </nav>
-      </div>
-      <div style="width:46px;height:46px;"></div>
+<body class="videos-page">
+  <header id="header">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="index.html" style="display:flex;align-items:center;text-decoration:none;color:#fff">
+        <div style="width:64px;height:64px;border-radius:50%;background:#07120b;display:flex;align-items:center;justify-content:center;border:8px solid rgba(255,255,255,0.05)"><img src="assets/images/logo.jpg" alt="logo" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+        <div style="margin-left:12px"><strong>VIDU</strong></div>
+      </a>
     </div>
+    <nav>
+      <a href="index.html" style="color:#dfeee1;margin-right:12px;font-weight:700">Home</a>
+      <a href="videos.html" style="color:#dfeee1;margin-right:12px;font-weight:700">Private</a>
+      <a href="about.html" style="color:#dfeee1;font-weight:700">About</a>
+    </nav>
   </header>
 
-  <main class="page" role="main">
-    <div class="container">
-      <h1 class="title">Private Classes</h1>
-      <p class="subtitle">To access Enter the password or sign in with a Google account that has admin access</p>
+  <main style="padding:22px;">
+    <section>
+      <ul class="list-container" id="playlist-list">
+        <!-- playlist tiles injected by the page script -->
+      </ul>
+    </section>
 
-      <section id="tiles" class="tiles" aria-live="polite"></section>
-      <div class="copyright">© VIDU. All rights reserved.</div>
-    </div>
+    <section id="player-section" style="margin-top:18px">
+      <div id="player-wrap">
+        <!-- advanced player will mount here -->
+      </div>
+    </section>
   </main>
 
-  <!-- password modal -->
-  <div id="pw-modal" class="modal hidden" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-box" role="document">
-      <button class="modal-close" id="pw-close" aria-label="Close">✕</button>
-      <div class="modal-preview" id="modal-preview"></div>
-      <h3 id="pw-title" style="color:#dfeee1;font-weight:800;margin-bottom:6px;">Enter password</h3>
-      <input id="pw-input" class="pw-input" type="password" placeholder="Password" autocomplete="off" />
-      <div class="pw-actions">
-        <button id="pw-submit" class="btn">Unlock</button>
-        <button id="pw-cancel" class="btn ghost">Cancel</button>
+  <footer style="padding:28px;text-align:center;color:#dfeee1">© VIDU</footer>
+
+<script>
+(function(){
+  /* Local helper functions for time formatting */
+  function pad2(n){ n = Math.max(0, Math.floor(n||0)); return (n < 10 ? '0' + n : String(n)); }
+  function fmtCurrentFromSeconds(s){
+    s = Math.max(0, Math.floor(s||0));
+    if(s < 3600){
+      const m = Math.floor(s/60);
+      const sec = s % 60;
+      return pad2(m) + ' : ' + pad2(sec);
+    } else {
+      const h = Math.floor(s/3600);
+      const m = Math.floor((s%3600)/60);
+      return pad2(h) + ' : ' + pad2(m);
+    }
+  }
+  function fmtDurationFromSeconds(s){
+    s = Math.max(0, Math.floor(s||0));
+    const h = Math.floor(s/3600);
+    const m = Math.floor((s%3600)/60);
+    return pad2(h) + ' : ' + pad2(m);
+  }
+})();
+</script>
+
+<!-- Full advanced player + HQ menu (mirrors index.html with vertical volume slider) -->
+<script>
+(function(){
+  if(window.__viduPlayerLoadedOnVideos) return;
+  window.__viduPlayerLoadedOnVideos = true;
+
+  const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI';
+  const state = { player: null, updateInterval: null, host: null, mount: null, mo: null, inactivityTimer: null, lastActivity: Date.now(), desiredPlaying: null, lastVolume: 100 };
+
+  function loadYTApi(){
+    if(window.YT && window.YT.Player) return Promise.resolve();
+    if(window._vidu_loading_yt_v) {
+      return new Promise((res, rej)=>{
+        const t = setInterval(()=>{ if(window.YT && window.YT.Player){ clearInterval(t); res(); } },80);
+        setTimeout(()=>{ clearInterval(t); rej(new Error('YT load timeout')); },20000);
+      });
+    }
+    window._vidu_loading_yt_v = true;
+    return new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='https://www.youtube.com/iframe_api';
+      s.async=true;
+      s.onerror = ()=> reject(new Error('YT API failed to load'));
+      document.head.appendChild(s);
+      window.onYouTubeIframeAPIReady = function(){ resolve(); };
+      setTimeout(()=>{ if(window.YT && window.YT.Player) resolve(); },1200);
+      setTimeout(()=>{ if(!(window.YT && window.YT.Player)) reject(new Error('YT API timed out')); },20000);
+    });
+  }
+
+  function playSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4.5v15l12-7.5L6 4.5z" fill="#fff"/></svg>`; }
+  function pauseSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4" width="4" height="16" rx="1.2" fill="#fff"/><rect x="15" y="4" width="4" height="16" rx="1.2" fill="#fff"/></svg>`; }
+
+  function createHostElements(){
+    const wrap = document.getElementById('player-wrap');
+    if(!wrap) throw new Error('#player-wrap not found');
+    wrap.innerHTML = '';
+    const host = document.createElement('div'); host.className = 'vidu-player-host';
+    const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
+    mount.style.height = '520px';
+    host.appendChild(mount);
+
+    const qbtn = document.createElement('button');
+    qbtn.className = 'vidu-quality-btn';
+    qbtn.id = 'vidu_quality_btn';
+    qbtn.type = 'button';
+    qbtn.innerText = 'HQ';
+    host.appendChild(qbtn);
+
+    const qmenu = document.createElement('div');
+    qmenu.className = 'vidu-quality-menu';
+    qmenu.id = 'vidu_quality_menu';
+    host.appendChild(qmenu);
+
+    const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
+    host.appendChild(ctrlBg);
+
+    const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
+    overlay.innerHTML = `
+      <div class="inner-bg" aria-hidden="true"></div>
+      <button class="vidu-btn" id="vidu_playbtn">${playSVG()}</button>
+      <div class="vidu-time" id="vidu_cur">00 : 00</div>
+      <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
+      <div class="vidu-time" id="vidu_dur">00 : 00</div>
+      <div id="vidu_vol_control" style="display:inline-flex;align-items:center;justify-content:center;">
+        <button id="vidu_vol_btn" class="vidu-volume-btn" aria-label="Volume">🔊</button>
+        <div id="vidu_vol_menu" class="vidu-volume-menu" aria-hidden="true">
+          <input id="vidu_vol_slider" class="vidu-volume-vertical" type="range" min="0" max="100" step="1" value="100" />
+        </div>
       </div>
-      <p id="pw-error" style="color:#ff8080;margin-top:10px;min-height:18px;"></p>
-    </div>
-  </div>
+      <button class="vidu-btn" id="vidu_fullbtn">⤢</button>
+    `;
+    host.appendChild(overlay);
 
-  <!-- viewer overlay -->
-  <div id="viewer" class="viewer hidden" aria-hidden="true">
-    <div class="viewer-inner" role="dialog" aria-label="Video viewer">
-      <button id="viewer-close" class="viewer-close" aria-label="Close viewer">✕</button>
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'vidu-close-btn';
+    closeBtn.innerText = '✕';
+    closeBtn.addEventListener('click', ()=> {
+      try{ if(window.destroyViduPlayer) window.destroyViduPlayer(); document.getElementById('player-wrap').innerHTML=''; }catch(e){}
+    });
+    host.appendChild(closeBtn);
 
-      <!-- video host -->
-      <div id="iframe-wrap" class="iframe-wrap" role="region" aria-label="Video player area"></div>
+    wrap.appendChild(host);
+    return { host, mount, overlay, ctrlBg, qbtn, qmenu, closeBtn, volBtn: overlay.querySelector('#vidu_vol_btn'), volMenu: overlay.querySelector('#vidu_vol_menu'), volSlider: overlay.querySelector('#vidu_vol_slider') };
+  }
 
-      <!-- playlist BELOW the player now -->
-      <div id="viewer-playlist" class="viewer-playlist" aria-live="polite"></div>
-    </div>
-  </div>
-
-  <div id="js-fail-note" style="display:none;position:fixed;right:14px;bottom:14px;background:rgba(255,80,80,0.12);color:#ffdede;border:1px solid rgba(255,80,80,0.2);padding:8px 12px;border-radius:8px;font-size:13px;z-index:9999">Some features may be unavailable — enable JavaScript.</div>
-
-  <script>
-  (function(){
-    /* ---------- configuration ---------- */
-    const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI';
-    const YT_API_LOAD_TIMEOUT = 18000;
-
-    const items = [
-      { type: 'video', title: 'TEST', idB64: btoa("Lexok6H2c2s"), passB64: btoa("vidu123test")},
-      { type: 'playlist', title: 'SFT - Theory + Revision', idB64: btoa("PL9zX0VbNmKiGt19HZ9wzIwC-VQ_AN0z9K&si=0jJc5HTa68Weq851"), passB64: btoa("vidu123sft") },
-      { type: 'playlist', title: 'ICT', idB64: btoa("PL9zX0VbNmKiFlxda5PCTn4_hA_7iKjEaA&si=9nF_7qpAzKt4cYZd"), passB64: btoa("6002vidu") },
-      { type: 'playlist', title: 'ET', idB64: btoa("PL9zX0VbNmKiF-Q7bnmM1v_DrT3_Ol-Of5&si=efJHPzWR-kZcGwYw"), passB64: btoa("vidu123et")}
-    ];
-
-    function escapeHtml(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function neonTextFor(title){ if(!title) return ''; const main = (title||'').split(/[\u2013\u2014\-+]/)[0].trim(); const words = main.split(/\s+/); if(words.length === 1) return words[0].toUpperCase().slice(0, 6); return words[0].toUpperCase(); }
-    function normalizeIdFromB64(idB64){ try { return atob(idB64 || '').split('&')[0]; } catch(e){ console.warn('Invalid idB64', idB64, e); return ''; } }
-
-    /* ---------- render tiles ---------- */
-    function buildTiles(){
-      const tiles = document.getElementById('tiles'); tiles.innerHTML = '';
-      items.forEach((it, idx)=>{
-        const card = document.createElement('button');
-        card.className = 'card'; card.type = 'button'; card.setAttribute('data-idx', idx);
-        card.setAttribute('aria-label', it.title + ' ' + it.type);
-        const neon = neonTextFor(it.title);
-        const small = neon.length > 6 ? ' small' : '';
-        card.innerHTML = `
-          <div class="card-media" role="img" aria-label="${escapeHtml(it.title)} thumbnail">
-            <div class="neon${small}">${escapeHtml(neon)}</div>
-            <div class="neon-reflect${small}" aria-hidden="true">${escapeHtml(neon)}</div>
-          </div>
-          <div class="card-caption">
-            <div class="card-title">${escapeHtml(it.title)}</div>
-            <div class="card-type">${escapeHtml(it.type)}</div>
-          </div>
-        `;
-        card.addEventListener('click', ()=> openPasswordModal(it));
-        tiles.appendChild(card);
-      });
-    }
-
-    /* ---------- modal ---------- */
-    let currentItem = null;
-    const pwModal = document.getElementById('pw-modal');
-    const pwTitleEl = document.getElementById('pw-title');
-    const pwInput = document.getElementById('pw-input');
-    const pwSubmit = document.getElementById('pw-submit');
-    const pwCancel = document.getElementById('pw-cancel');
-    const pwClose = document.getElementById('pw-close');
-    const pwError = document.getElementById('pw-error');
-    const modalPreview = document.getElementById('modal-preview');
-
-    function showModal(el){ el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
-    function closeModal(el){ el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
-
-    function openPasswordModal(item){
-      currentItem = item; pwError.textContent = ''; pwInput.value = '';
-      pwTitleEl.textContent = `Unlock: ${item.title}`;
-      modalPreview.innerHTML = `<div class="neon" style="font-size:56px;">${escapeHtml(neonTextFor(item.title))}</div>`;
-      showModal(pwModal); setTimeout(()=> pwInput.focus(), 120);
-    }
-
-    function verifyPassword(){
-      if(!currentItem) return;
-      const entered = (pwInput.value || '').trim();
-      try{
-        const expected = atob(currentItem.passB64 || '');
-        if(entered === expected){ closeModal(pwModal); openViewer(currentItem); } else { pwError.textContent = 'Incorrect password. Try again.'; pwInput.select(); }
-      }catch(e){ pwError.textContent = 'Error checking password.'; }
-    }
-
-    pwSubmit.addEventListener('click', verifyPassword);
-    pwInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') verifyPassword(); });
-    pwCancel.addEventListener('click', ()=> closeModal(pwModal));
-    pwClose.addEventListener('click', ()=> closeModal(pwModal));
-    pwModal.addEventListener('click', (e)=> { if(e.target === pwModal) closeModal(pwModal); });
-
-    /* ---------- YT API loader ---------- */
-    function loadYTApi(){
-      if(window.YT && window.YT.Player) return Promise.resolve();
-      if(window._vidu_loading_yt_promise) return window._vidu_loading_yt_promise;
-      window._vidu_loading_yt_promise = new Promise((resolve, reject)=>{
-        const s = document.createElement('script');
-        s.src = 'https://www.youtube.com/iframe_api';
-        s.async = true;
-        s.onerror = () => reject(new Error('YT API failed to load (network error)'));
-        document.head.appendChild(s);
-        let finished = false;
-        window.onYouTubeIframeAPIReady = function(){
-          if(finished) return;
-          finished = true;
-          resolve();
-        };
-        const poll = setInterval(()=> {
-          if(window.YT && window.YT.Player){
-            if(finished) return;
-            finished = true;
-            clearInterval(poll);
-            resolve();
-          }
-        }, 200);
-        setTimeout(()=> {
-          if(finished) return;
-          finished = true;
-          clearInterval(poll);
-          reject(new Error('YT API timed out'));
-        }, YT_API_LOAD_TIMEOUT);
-      });
-      return window._vidu_loading_yt_promise;
-    }
-    function resetYTLoader(){ try{ delete window._vidu_loading_yt_promise; }catch(e){} try{ delete window.onYouTubeIframeAPIReady; }catch(e){} }
-
-    /* ---------- player module ---------- */
-    (function playerModule(){
-      if(window.__viduPlayerLoaded) return;
-      window.__viduPlayerLoaded = true;
-
-      const state = { player: null, updateInterval: null, keyHandler: null, mo: null, host: null, mount: null, fsListener: null, fsResizeHandler: null, inactivityTimer: null, lastActivity: Date.now(), desiredPlaying: null, lastVolume: 100 };
-
-      function pad2(n){ n = Math.max(0, Math.floor(n||0)); return (n < 10 ? '0' + n : String(n)); }
-      function fmtTime(s){ s = Math.max(0, Math.floor(s||0)); const h = Math.floor(s/3600); const m = Math.floor((s%3600)/60); const sec = s%60; return pad2(h) + ' : ' + pad2(m) + ' : ' + pad2(sec); }
-      function playSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4.5v15l12-7.5L6 4.5z" fill="#fff"/></svg>`; }
-      function pauseSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4" width="4" height="16" rx="1.2" fill="#fff"/><rect x="15" y="4" width="4" height="16" rx="1.2" fill="#fff"/></svg>`; }
-
-      function createHostElementsIn(mountRootId){
-        const wrap = document.getElementById(mountRootId);
-        if(!wrap) throw new Error('#' + mountRootId + ' not found');
-        const prev = wrap.querySelector('.vidu-player-host');
-        if(prev) prev.remove();
-        const host = document.createElement('div'); host.className = 'vidu-player-host';
-        const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
-        mount.style.height = '100%'; mount.style.background = '#000';
-        host.appendChild(mount);
-        const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg'; host.appendChild(ctrlBg);
-        const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
-        overlay.innerHTML = `
-          <div class="inner-bg" aria-hidden="true"></div>
-          <button class="vidu-btn" id="vidu_playbtn">${playSVG()}</button>
-          <div class="vidu-time" id="vidu_cur">` + fmtTime(0) + `</div>
-          <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
-          <div class="vidu-time" id="vidu_dur">` + fmtTime(0) + `</div>
-          <input id="vidu_vol" class="vidu-volume" type="range" min="0" max="100" step="1" value="100" aria-label="Volume" />
-          <button class="vidu-btn" id="vidu_fullbtn" aria-label="Toggle fullscreen">⤢</button>
-        `;
-        host.appendChild(overlay);
-
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
-        closeBtn.addEventListener('click', ()=> {
-          try{
-            const v = document.getElementById('viewer'); if(v){ v.classList.add('hidden'); v.setAttribute('aria-hidden','true'); }
-            if(window.destroyViduPlayer) window.destroyViduPlayer();
-            const wrap = document.getElementById(mountRootId); if(wrap) wrap.innerHTML = '';
-            document.body.style.overflow = '';
-          }catch(e){ console.warn('closeBtn error', e); }
-        });
-        host.appendChild(closeBtn);
-
-        wrap.appendChild(host);
-        return { host, mount, overlay, ctrlBg, closeBtn };
+  function disableIframeClicks(host){
+    try{
+      const ifr = host.querySelector('iframe');
+      if(ifr){
+        ifr.style.pointerEvents = 'none';
+        ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen');
+        ifr.setAttribute('allowfullscreen','');
+        ifr.setAttribute('tabindex','-1');
       }
+    }catch(e){}
+  }
 
-      function disableIframeClicks(host){
-        try{
-          const ifr = host.querySelector('iframe');
-          if(ifr){
-            ifr.style.pointerEvents = 'none';
-            ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen');
-            ifr.setAttribute('allowfullscreen','');
-            ifr.setAttribute('tabindex','-1');
-          }
-        }catch(e){ console.warn('disableIframeClicks', e); }
+  function populateQualityMenu(qmenu, player, levels){
+    qmenu.innerHTML = '';
+    const add = (key,label,active)=>{
+      const b = document.createElement('button');
+      b.type='button';
+      b.dataset.qualityKey = key;
+      b.textContent = label;
+      if(active) b.classList.add('active');
+      b.addEventListener('click', (ev)=>{ ev.stopPropagation(); try{ if(player && typeof player.setPlaybackQuality === 'function') player.setPlaybackQuality(key); qmenu.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); qmenu.classList.remove('open'); }catch(e){ console.warn(e); } });
+      qmenu.appendChild(b);
+    };
+    add('default','Auto',false);
+    const order = ['highres','hd1080','hd720','large','medium','small'];
+    const present = (Array.isArray(levels) && levels.length>0) ? levels.slice() : [];
+    order.forEach(k=>{
+      if(present.indexOf(k) !== -1){
+        const label = k==='highres' ? 'Highres' : (k==='hd1080' ? '1080p' : (k==='hd720'? '720p' : (k==='large'? '480p' : (k==='medium'?'360p':'144p'))));
+        add(k,label,false);
       }
+    });
+    if(present.length === 0){
+      add('small','144p',false); add('medium','360p',false); add('large','480p',false); add('hd720','720p',false);
+    }
+  }
 
-      async function createYTPlayer(videoId, mountRootId='player-wrap'){
-        await loadYTApi();
-        const { host, mount, overlay, ctrlBg, closeBtn } = createHostElementsIn(mountRootId);
-        state.host = host; state.mount = mount;
+  function createPlayer(videoId){
+    const { host, mount, overlay, ctrlBg, qbtn, qmenu, closeBtn, volBtn, volMenu, volSlider } = createHostElements();
+    state.host = host; state.mount = mount;
 
-        const saved = { stored:false, host:{}, mount:{}, iframe:{} };
-        const playBtn = overlay.querySelector('#vidu_playbtn');
-        const curEl = overlay.querySelector('#vidu_cur');
-        const durEl = overlay.querySelector('#vidu_dur');
-        const seekEl = overlay.querySelector('#vidu_seek');
-        const fullBtn = overlay.querySelector('#vidu_fullbtn');
-        const volEl = overlay.querySelector('#vidu_vol');
+    const playBtn = overlay.querySelector('#vidu_playbtn');
+    const curEl = overlay.querySelector('#vidu_cur');
+    const durEl = overlay.querySelector('#vidu_dur');
+    const seekEl = overlay.querySelector('#vidu_seek');
+    const fullBtn = overlay.querySelector('#vidu_fullbtn');
 
-        function getFullscreenElement(){
-          return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
-        }
+    function toggleFullscreen(){
+      const req = host.requestFullscreen || host.webkitRequestFullscreen || host.mozRequestFullScreen || host.msRequestFullscreen;
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+      if(document.fullscreenElement === host || document.webkitFullscreenElement === host) { if(exit) exit.call(document); }
+      else if(req) req.call(host);
+    }
+    fullBtn.addEventListener('click', toggleFullscreen);
 
-        const savedResizeHandler = ()=> {
+    // quality toggling
+    let qualityMenuOpen = false;
+    qbtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); qualityMenuOpen ? qmenu.classList.remove('open') : qmenu.classList.add('open'); qualityMenuOpen = !qualityMenuOpen; });
+    document.addEventListener('click', (e)=>{ if(qualityMenuOpen && !qmenu.contains(e.target) && !qbtn.contains(e.target)){ qmenu.classList.remove('open'); qualityMenuOpen=false; } }, {passive:true});
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') { qmenu.classList.remove('open'); qualityMenuOpen=false; } }, {passive:true});
+
+    // volume button toggle - shows vertical slider upward
+    if(volBtn && volMenu && volSlider){
+      volBtn.addEventListener('click', (ev)=>{
+        ev.stopPropagation();
+        const open = volMenu.classList.toggle('open');
+        volMenu.setAttribute('aria-hidden', open ? 'false' : 'true');
+        if(open){
           try{
-            const curFS = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
-            const stillOurFS = !!(curFS && (curFS === host || host.contains(curFS) || (curFS.contains && curFS.contains(host))));
-            if(stillOurFS){
-              try{ host.style.width = window.innerWidth + 'px'; host.style.height = window.innerHeight + 'px'; }catch(e){}
-              try{ mount.style.height = window.innerHeight + 'px'; }catch(e){}
-              try{ const ifr = host.querySelector('iframe'); if(ifr) ifr.style.height = window.innerHeight + 'px'; }catch(e){}
-            }
+            const btnRect = volBtn.getBoundingClientRect();
+            const hostRect = host.getBoundingClientRect();
+            volMenu.style.left = (btnRect.left - hostRect.left + (btnRect.width/2)) + 'px';
+            const menuRect = volMenu.getBoundingClientRect();
+            volMenu.style.top = (btnRect.top - hostRect.top - menuRect.height - 8) + 'px';
+            volMenu.style.transform = 'translateX(-50%)';
           }catch(e){}
-        };
-
-        function toggleFullscreen(){
-          const fs = getFullscreenElement();
-          if(fs === host){ const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen; if(exit) exit.call(document); }
-          else { const req = host.requestFullscreen || host.webkitRequestFullscreen || host.mozRequestFullScreen || host.msRequestFullscreen; if(req) req.call(host); }
         }
-        fullBtn.addEventListener('click', toggleFullscreen);
+      });
 
-        function setOverlayHidden(hidden){
-          if(hidden){ overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); if(closeBtn) closeBtn.classList.add('hidden'); }
-          else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); }
-        }
+      volSlider.addEventListener('input', (e)=>{
+        const v = Math.max(0, Math.min(100, parseInt(e.target.value,10) || 0));
+        state.lastVolume = v;
+        try{ if(state.player && typeof state.player.setVolume === 'function'){ state.player.setVolume(v); if(v===0 && typeof state.player.mute === 'function') state.player.mute(); else if(v>0 && typeof state.player.unMute === 'function') state.player.unMute(); } }catch(e){}
+        e.target.style.background = `linear-gradient(90deg, #39ff14 ${v}%, rgba(255,255,255,0.06) ${v}%)`;
+      }, {passive:true});
+    }
 
-        state.keyHandler = function(e){
-          const active = document.activeElement;
-          if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
-          const modal = document.getElementById('viewer');
-          if(!modal || modal.classList.contains('hidden')) return;
-          if(e.code === 'Space' || e.key === ' '){
-            e.preventDefault();
-            if(state.player){
-              const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
-              if(st === 1) try{ state.player.pauseVideo(); }catch(e){} else try{ state.player.playVideo(); }catch(e){}
-            }
-          } else if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){
-            e.preventDefault();
-            toggleFullscreen();
+    // seek handling
+    seekEl.addEventListener('pointerdown', ()=> seekEl._drag=true, {passive:true});
+    seekEl.addEventListener('pointerup', ()=>{ seekEl._drag=false; if(!state.player) return; const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) state.player.seekTo(dur * (parseFloat(seekEl.value)/100), true); }, {passive:true});
+    seekEl.addEventListener('input', ()=>{ if(seekEl._drag && state.player){ const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) curEl.textContent = fmtCurrentFromSeconds(Math.floor(dur * (parseFloat(seekEl.value)/100))); updateSeek(seekEl); } }, {passive:true});
+
+    function updateSeek(el){ try{ const v = Math.max(0, Math.min(100, parseFloat(el.value)||0)); el.style.background = `linear-gradient(90deg, #39ff14 ${v}%, rgba(255,255,255,0.06) ${v}%)`; }catch(e){} }
+    updateSeek(seekEl);
+
+    // play/pause
+    playBtn.addEventListener('click', ()=> {
+      if(!state.player) return;
+      const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
+      const want = !(st === 1);
+      state.desiredPlaying = want;
+      playBtn.innerHTML = want ? pauseSVG() : playSVG();
+      try{ if(want) state.player.playVideo(); else state.player.pauseVideo(); }catch(e){ console.warn(e); }
+      resetInactivityTimer();
+    });
+
+    function setOverlayHidden(h){
+      if(h){ overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); if(closeBtn) closeBtn.classList.add('hidden'); if(qbtn) qbtn.classList.add('hidden'); if(volBtn) volBtn.classList.add('hidden'); if(volMenu) volMenu.classList.remove('open'); qmenu.classList.remove('open'); }
+      else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); if(qbtn) qbtn.classList.remove('hidden'); if(volBtn) volBtn.classList.remove('hidden'); }
+    }
+
+    function resetInactivityTimer(){
+      state.lastActivity = Date.now();
+      setOverlayHidden(false);
+      if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer=null; }
+      state.inactivityTimer = setTimeout(()=>{
+        try{ const st = state.player && state.player.getPlayerState ? state.player.getPlayerState() : -1; if(st === 1 || st === 3 || st === -1 || st === 0 || st === 5) setOverlayHidden(true); }catch(e){}
+      }, 5000);
+    }
+    ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev => { try{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); }catch(e){} });
+
+    // load YT and create player
+    return loadYTApi().then(()=> new Promise((resolve,reject)=>{
+      try{
+        state.player = new YT.Player(mount.id, {
+          videoId: videoId,
+          width: '100%',
+          height: '100%',
+          playerVars: { controls:0, disablekb:1, rel:0, modestbranding:1, playsinline:1, iv_load_policy:3, origin: location.origin },
+          events: {
+            onReady: function(evt){
+              disableIframeClicks(host);
+              try{
+                const v = Math.max(0, Math.min(100, state.lastVolume || 100));
+                if(typeof evt.target.setVolume === 'function'){ evt.target.setVolume(v); if(v===0 && typeof evt.target.mute === 'function') evt.target.mute(); else if(v>0 && typeof evt.target.unMute === 'function') evt.target.unMute(); }
+                const vs = document.getElementById('vidu_vol_slider'); if(vs){ vs.value = v; vs.style.background = `linear-gradient(90deg, #39ff14 ${v}%, rgba(255,255,255,0.06) ${v}%)`; }
+              }catch(e){}
+              let avail = [];
+              try{ if(typeof evt.target.getAvailableQualityLevels === 'function') avail = evt.target.getAvailableQualityLevels() || []; }catch(e){}
+              populateQualityMenu(qmenu, evt.target, avail);
+              try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); setTimeout(()=>{ try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 600); } }catch(e){}
+              try{ evt.target.playVideo(); }catch(e){}
+
+              if(state.updateInterval) clearInterval(state.updateInterval);
+              state.updateInterval = setInterval(()=>{
+                try{
+                  if(!state.player) return;
+                  const dur = state.player.getDuration ? state.player.getDuration() : 0;
+                  const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+                  curEl.textContent = fmtCurrentFromSeconds(Math.floor(cur));
+                  durEl.textContent = (dur && isFinite(dur)) ? fmtDurationFromSeconds(Math.floor(dur)) : fmtDurationFromSeconds(0);
+                  if(!seekEl._drag && dur && isFinite(dur)) {
+                    seekEl.value = (cur / Math.max(1,dur)) * 100;
+                    updateSeek(seekEl);
+                  }
+                  const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
+                  if(state.desiredPlaying !== null){
+                    if(state.desiredPlaying && st !== 1) try{ state.player.playVideo(); }catch(e){}
+                    else if(!state.desiredPlaying && st === 1) try{ state.player.pauseVideo(); }catch(e){}
+                  }
+                }catch(e){}
+              }, 160);
+
+              if(state.mo) state.mo.disconnect();
+              state.mo = new MutationObserver(()=> disableIframeClicks(host));
+              state.mo.observe(host, { childList:true, subtree:true });
+              resetInactivityTimer();
+              resolve(state.player);
+            },
+            onError: function(err){ reject(err); }
           }
-        };
-        document.addEventListener('keydown', state.keyHandler);
-
-        // seek handling
-        seekEl.addEventListener('pointerdown', ()=> seekEl._drag=true, {passive:true});
-        seekEl.addEventListener('pointerup', ()=>{ seekEl._drag=false; if(!state.player) return; const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) state.player.seekTo(dur * (parseFloat(seekEl.value)/100), true); }, {passive:true});
-        seekEl.addEventListener('input', ()=>{ if(seekEl._drag && state.player){ const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) curEl.textContent = fmtTime(Math.floor(dur * (parseFloat(seekEl.value)/100))); updateSeekBackground(seekEl); } }, {passive:true});
-
-        function updateSeekBackground(el){ try{ const v = Math.max(0, Math.min(100, parseFloat(el.value) || 0)); el.style.background = `linear-gradient(90deg, #39ff14 ${v}%, rgba(255,255,255,0.06) ${v}%)`; }catch(e){} }
-        updateSeekBackground(seekEl);
-
-        // play/pause
-        playBtn.addEventListener('click', ()=>{
-          if(!state.player) return;
-          let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){}
-          const wantPlay = !(st === 1);
-          state.desiredPlaying = wantPlay;
-          playBtn.innerHTML = wantPlay ? pauseSVG() : playSVG();
-          try{ if(wantPlay){ if(typeof state.player.playVideo === 'function') state.player.playVideo(); } else { if(typeof state.player.pauseVideo === 'function') state.player.pauseVideo(); } }catch(e){ console.warn('play/pause toggle err', e); }
-          resetInactivityTimer();
         });
+      }catch(err){ reject(err||new Error('create failed')); }
+    })).catch(err=>{ throw err; });
+  }
 
-        // volume
-        volEl.addEventListener('input', ()=> {
-          const v = Math.max(0, Math.min(100, parseInt(volEl.value,10) || 0));
-          state.lastVolume = v;
-          try{
-            if(state.player && typeof state.player.setVolume === 'function'){
-              state.player.setVolume(v);
-              if(v === 0 && typeof state.player.mute === 'function') state.player.mute();
-              else if(v > 0 && typeof state.player.unMute === 'function') state.player.unMute();
-            }
-          }catch(e){ console.warn('setVolume err', e); }
-          try{ volEl.style.background = `linear-gradient(90deg, #39ff14 ${v}%, rgba(255,255,255,0.06) ${v}%)`; }catch(e){}
-          resetInactivityTimer();
-        }, {passive:true});
+  window.showViduPlayer = function(videoId){
+    return createPlayer(videoId);
+  };
+  window.destroyViduPlayer = function(){
+    try{ if(state.updateInterval) clearInterval(state.updateInterval); }catch(e){}
+    try{ if(state.player && typeof state.player.destroy === 'function') state.player.destroy(); }catch(e){}
+    state.player = null;
+    const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = '';
+  };
 
-        (function initVolBg(){ try{ const v = Math.max(0, Math.min(100, parseInt((document.getElementById('vidu_vol')||{value:100}).value,10) || state.lastVolume || 100)); const volElLocal = document.getElementById('vidu_vol'); if(volElLocal) volElLocal.style.background = `linear-gradient(90deg, #39ff14 ${v}%, rgba(255,255,255,0.06) ${v}%)`; }catch(e){} })();
+})();
+</script>
 
-        function onFSChange(){
-          const fs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
-          const isOurFullscreen = !!(fs && (fs === host || host.contains(fs) || (fs.contains && fs.contains(host))));
-          if(isOurFullscreen){
-            try{
-              if(!saved.stored){
-                saved.host.position = host.style.position || '';
-                saved.host.top = host.style.top || '';
-                saved.host.left = host.style.left || '';
-                saved.host.width = host.style.width || '';
-                saved.host.height = host.style.height || '';
-                saved.host.zIndex = host.style.zIndex || '';
-                saved.host.borderRadius = host.style.borderRadius || '';
-                saved.mount.height = mount.style.height || '';
-                saved.mount.width = mount.style.width || '';
-                saved.mount.maxHeight = mount.style.maxHeight || '';
-                saved.mount.maxWidth = mount.style.maxWidth || '';
-                const ifr = host.querySelector('iframe');
-                if(ifr){ saved.iframe.height = ifr.style.height || ''; saved.iframe.width = ifr.style.width || ''; saved.iframe.pointerEvents = ifr.style.pointerEvents || ''; saved.iframe.maxHeight = ifr.style.maxHeight || ''; saved.iframe.maxWidth = ifr.style.maxWidth || ''; } else { saved.iframe = {}; }
-                saved.stored = true;
-              }
+<!-- Playlist + basic password UI for this page -->
+<script>
+/* Minimal playlist data + simple modal-like password unlock flow for this page.
+   Clicking an item opens and calls showViduPlayer(id) after password verified. */
 
-              host.style.position = 'fixed'; host.style.top = '0'; host.style.left = '0'; host.style.width = '100vw'; host.style.height = '100vh'; host.style.zIndex = '2147483647'; host.style.borderRadius = '0';
-              mount.style.width = '100%'; mount.style.height = '100%'; mount.style.maxHeight = 'none'; mount.style.maxWidth = 'none';
-              const ifr = host.querySelector('iframe');
-              if(ifr){ ifr.style.width = '100%'; ifr.style.height = '100%'; ifr.style.maxHeight = 'none'; ifr.style.maxWidth = 'none'; ifr.style.pointerEvents = 'auto'; }
-            }catch(e){}
-            ctrlBg.classList.remove('hidden');
-            overlay.classList.remove('hidden');
-            if(closeBtn) closeBtn.classList.remove('hidden');
+const sampleList = [
+  { type:'playlist', name:'SFT - Playlist', idB64: btoa('PL9zX0VbNmKiGt19HZ9wzIwC-VQ_AN0z9K&si=0jJc5HTa68Weq851'), passB64: btoa('vidu123sft'), thumbnail:'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg' },
+  { type:'video', name:'TEST VIDEO', idB64: btoa('Lexok6H2c2s'), passB64: btoa('vidu123test'), thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg' }
+];
 
-            if(!state.fsResizeHandler){ state.fsResizeHandler = savedResizeHandler; window.addEventListener('resize', state.fsResizeHandler); }
-          } else {
-            try{
-              if(saved.stored){
-                host.style.position = saved.host.position;
-                host.style.top = saved.host.top;
-                host.style.left = saved.host.left;
-                host.style.width = saved.host.width;
-                host.style.height = saved.host.height;
-                host.style.zIndex = saved.host.zIndex;
-                host.style.borderRadius = saved.host.borderRadius;
-                mount.style.height = saved.mount.height;
-                mount.style.width = saved.mount.width;
-                mount.style.maxHeight = saved.mount.maxHeight;
-                mount.style.maxWidth = saved.mount.maxWidth;
-                const ifr = host.querySelector('iframe');
-                if(ifr){ ifr.style.height = saved.iframe.height; ifr.style.width = saved.iframe.width; ifr.style.pointerEvents = saved.iframe.pointerEvents; ifr.style.maxHeight = saved.iframe.maxHeight; ifr.style.maxWidth = saved.iframe.maxWidth; }
-                saved.stored = false;
-              } else {
-                try{ mount.style.height = '100%'; mount.style.width = '100%'; }catch(e){}
-                try{ const ifr = host.querySelector('iframe'); if(ifr) ifr.style.pointerEvents = 'none'; }catch(e){}
-              }
-            }catch(e){}
-            if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
-            if(overlay.classList.contains('hidden')){ ctrlBg.classList.add('hidden'); if(closeBtn) closeBtn.classList.add('hidden'); } else { ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); }
-          }
-        }
+function b64(s){ try{ return atob(s); }catch(e){ return s; } }
+function escape(t){ return (t||'').replace(/[&<>"'`]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[c])); }
 
-        state.fsListener = onFSChange;
-        document.addEventListener('fullscreenchange', state.fsListener);
-        document.addEventListener('webkitfullscreenchange', state.fsListener);
-        document.addEventListener('mozfullscreenchange', state.fsListener);
-        document.addEventListener('MSFullscreenChange', state.fsListener);
-
-        function resetInactivityTimer(){
-          state.lastActivity = Date.now();
-          setOverlayHidden(false);
-          if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
-          state.inactivityTimer = setTimeout(()=>{
-            try{
-              const st = state.player && typeof state.player.getPlayerState === 'function' ? state.player.getPlayerState() : -1;
-              if(st === 1 || st === 3 || st === -1 || st === 0 || st === 5){
-                setOverlayHidden(true);
-              }
-            }catch(e){}
-          }, 5000);
-        }
-
-        function attachActivityListeners(){
-          try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); }); }catch(e){}
-        }
-        attachActivityListeners();
-
-        return new Promise((resolve,reject)=>{
-          try{
-            state.player = new YT.Player(mount.id, {
-              videoId: videoId,
-              width: '100%',
-              height: '100%',
-              playerVars: { controls: 0, disablekb: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, origin: location.origin },
-              events: {
-                onReady: function(evt){
-                  disableIframeClicks(host);
-                  try{
-                    if(typeof evt.target.setVolume === 'function'){
-                      const v = Math.max(0, Math.min(100, state.lastVolume || 100));
-                      evt.target.setVolume(v);
-                      if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute();
-                      else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute();
-                      const volEl = document.getElementById('vidu_vol');
-                      if(volEl) { volEl.value = v; volEl.style.background = `linear-gradient(90deg, #39ff14 ${v}%, rgba(255,255,255,0.06) ${v}%)`; }
-                    }
-                  }catch(e){}
-                  try{
-                    if(typeof evt.target.setPlaybackQuality === 'function'){
-                      evt.target.setPlaybackQuality('default');
-                      setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 800);
-                      setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 2200);
-                    }
-                  }catch(e){}
-                  try{ evt.target.playVideo(); }catch(e){}
-                  if(state.updateInterval) clearInterval(state.updateInterval);
-                  state.updateInterval = setInterval(()=>{
-                    try{
-                      if(!state.player) return;
-                      const dur = state.player.getDuration ? state.player.getDuration() : 0;
-                      const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
-                      const curElLocal = document.getElementById('vidu_cur');
-                      const durElLocal = document.getElementById('vidu_dur');
-                      if(curElLocal) curElLocal.textContent = fmtTime(Math.floor(cur));
-                      if(durElLocal) durElLocal.textContent = (dur && isFinite(dur)) ? fmtTime(Math.floor(dur)) : fmtTime(0);
-                      if(!seekEl._drag && dur && isFinite(dur)) {
-                        seekEl.value = (cur / Math.max(1,dur)) * 100;
-                        updateSeekBackground(seekEl);
-                      }
-                      const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
-                      if(state.desiredPlaying !== null){
-                        if(state.desiredPlaying && st !== 1) try{ state.player.playVideo(); }catch(e){}
-                        else if(!state.desiredPlaying && st === 1) try{ state.player.pauseVideo(); }catch(e){}
-                      }
-                      const currentIcon = (st === 1) ? pauseSVG() : playSVG();
-                      if(Date.now() - state.lastActivity > 300) playBtn.innerHTML = currentIcon;
-                      else setTimeout(()=> { try{ const check = state.player.getPlayerState ? state.player.getPlayerState() : -1; if(check === 1) playBtn.innerHTML = pauseSVG(); else playBtn.innerHTML = playSVG(); }catch(e){} }, 600);
-                    }catch(e){}
-                  }, 160);
-                  if(state.mo) state.mo.disconnect();
-                  state.mo = new MutationObserver(()=> disableIframeClicks(host));
-                  state.mo.observe(host, { childList:true, subtree:true });
-                  resetInactivityTimer();
-                  resolve(state.player);
-                },
-                onError: function(err){ console.error('YT player error', err); reject(err); }
-              }
-            });
-          }catch(err){ reject(err || new Error('YT player creation failed')); }
-        });
-      }
-
-      function destroyPlayer(){
+function renderList(){
+  const ul = document.getElementById('playlist-list');
+  sampleList.forEach(i=>{
+    const li = document.createElement('li'); li.className='list-item';
+    li.innerHTML = `<img src="${escape(i.thumbnail)}" alt=""><div class="title">${escape(i.name)}</div>`;
+    li.onclick = ()=> openPassword(i);
+    ul.appendChild(li);
+  });
+}
+function openPassword(item){
+  const pass = prompt('Enter password for ' + (item.name||'item'));
+  if(pass === b64(item.passB64 || '')) {
+    if(item.type === 'playlist'){
+      const pid = b64(item.idB64 || '');
+      (async function(){
         try{
-          if(state.updateInterval){ clearInterval(state.updateInterval); state.updateInterval = null; }
-          if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
-          if(state.player){ try{ state.player.destroy(); }catch(e){} state.player = null; }
-          if(state.mo){ try{ state.mo.disconnect(); }catch(e){} state.mo = null; }
-          if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
-          if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); document.removeEventListener('mozfullscreenchange', state.fsListener); document.removeEventListener('MSFullscreenChange', state.fsListener); state.fsListener = null; }
-          if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
-          if(state.host){
-            try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){}
-          }
-          if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
-        }catch(e){ console.warn('destroyPlayer err', e); }
-      }
-
-      window.showViduPlayer = async function(videoId, mountRootId='player-wrap'){ return createYTPlayer(videoId, mountRootId); };
-      window.destroyViduPlayer = function(){ destroyPlayer(); const w = document.getElementById('player-wrap'); if(w) w.innerHTML = ''; };
-      window.addEventListener('beforeunload', ()=> { try{ window.destroyViduPlayer(); }catch(e){} }, {passive:true});
-
-      function resetInactivityTimer(){ /* placeholder */ }
-    })();
-
-    /* ---------- playlist fetcher ---------- */
-    async function fetchPlaylistVideos(playlistId){
-      if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
-      const results = []; let pageToken = '';
-      do {
-        const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}` + (pageToken?`&pageToken=${pageToken}`:'');
-        const res = await fetch(url);
-        if(!res.ok){ const txt = await res.text().catch(()=>null); throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||'')); }
-        const data = await res.json();
-        (data.items||[]).forEach(it => {
-          const sn = it.snippet || {};
-          if(sn.resourceId && sn.resourceId.videoId){
-            const thumb = (sn.thumbnails && (sn.thumbnails.high||sn.thumbnails.medium||sn.thumbnails.default))||{};
-            results.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
-          }
-        });
-        pageToken = data.nextPageToken || '';
-      } while(pageToken);
-      return results;
+          const playlistId = pid.split('&')[0];
+          const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}`;
+          const res = await fetch(url);
+          if(!res.ok) throw new Error('YT fetch failed');
+          const data = await res.json();
+          const first = (data.items||[]).find(it=>it.snippet && it.snippet.resourceId && it.snippet.resourceId.videoId);
+          const vid = first && first.snippet && first.snippet.resourceId && first.snippet.resourceId.videoId;
+          if(vid){
+            document.getElementById('player-wrap').scrollIntoView({behavior:'smooth'});
+            try{ window.showViduPlayer(vid); }catch(e){ console.error(e); alert('Failed to start player'); }
+          } else alert('No playable video found in playlist');
+        }catch(err){ console.error(err); alert('Failed to load playlist: '+ (err.message||err)); }
+      })();
+    } else {
+      const id = b64(item.idB64 || '');
+      document.getElementById('player-wrap').scrollIntoView({behavior:'smooth'});
+      try{ window.showViduPlayer(id); }catch(e){ console.error(e); alert('Failed to start player'); }
     }
+  } else {
+    alert('Incorrect password');
+  }
+}
 
-    /* ---------- responsive layout helper ---------- */
-    const layoutState = { resizeHandler: null, orientationHandler: null };
-    function adjustViewerLayout(){
-      try{
-        const viewerInner = document.querySelector('.viewer-inner');
-        const iframeWrap = document.getElementById('iframe-wrap');
-        const playlist = document.getElementById('viewer-playlist');
-        if(!viewerInner || !iframeWrap || !playlist) return;
+document.addEventListener('DOMContentLoaded', ()=> renderList());
+</script>
 
-        // leave slightly larger margin so controls don't touch edges on phones
-        const horizontalPadding = 44;
-        const verticalPadding = 28;
-
-        const maxWidth = Math.max(320, window.innerWidth - horizontalPadding);
-        viewerInner.style.maxWidth = Math.min(1400, maxWidth) + 'px';
-
-        const availableH = Math.max(320, window.innerHeight - verticalPadding);
-        viewerInner.style.maxHeight = availableH + 'px';
-
-        // reserve space for controls (controls area height + some breathing room)
-        const controlsReserve = 110;
-        let videoH = Math.floor(availableH * 0.62);
-        if(videoH + controlsReserve > availableH){
-          videoH = Math.max(140, availableH - controlsReserve);
-        }
-        // cap by width-based 16:9
-        const maxByWidth = Math.floor((Math.min(maxWidth, window.innerWidth) * 9) / 16);
-        if(videoH > maxByWidth) videoH = maxByWidth;
-
-        iframeWrap.style.height = videoH + 'px';
-        const playlistH = Math.max(100, availableH - videoH);
-        playlist.style.height = playlistH + 'px';
-      }catch(e){ console.warn('adjustViewerLayout err', e); }
-    }
-
-    function attachViewerLayoutListeners(){
-      detachViewerLayoutListeners();
-      layoutState.resizeHandler = function(){ adjustViewerLayout(); };
-      layoutState.orientationHandler = function(){ setTimeout(adjustViewerLayout, 120); };
-      window.addEventListener('resize', layoutState.resizeHandler, {passive:true});
-      window.addEventListener('orientationchange', layoutState.orientationHandler, {passive:true});
-    }
-    function detachViewerLayoutListeners(){
-      try{
-        if(layoutState.resizeHandler) window.removeEventListener('resize', layoutState.resizeHandler);
-        if(layoutState.orientationHandler) window.removeEventListener('orientationchange', layoutState.orientationHandler);
-      }catch(e){}
-      layoutState.resizeHandler = null; layoutState.orientationHandler = null;
-    }
-
-    /* ---------- playlist rendering ---------- */
-    async function showPlaylistInsideViewer(item){
-      const rawId = normalizeIdFromB64(item.idB64);
-      const playlistId = rawId.split('&')[0];
-      const iframeWrap = document.getElementById('iframe-wrap');
-      iframeWrap.innerHTML = '';
-      const mountRoot = document.createElement('div'); mountRoot.id = 'player-wrap'; mountRoot.style.width='100%'; mountRoot.style.height='100%';
-      iframeWrap.appendChild(mountRoot);
-      const playlistContainer = document.getElementById('viewer-playlist'); playlistContainer.innerHTML = ''; playlistContainer.scrollTop = 0;
-      try{
-        const videos = await fetchPlaylistVideos(playlistId);
-        if(!videos.length) throw new Error('No videos found or playlist is private.');
-        videos.forEach(v=>{
-          const li = document.createElement('div');
-          li.className = 'list-item'; li.setAttribute('role','button'); li.tabIndex = 0;
-          li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" /><div class="playlist-meta"><div class="playlist-title">${escapeHtml(v.title)}</div><div class="playlist-sub">Click to play</div></div>`;
-          function playThis(){
-            if(window.showViduPlayer){
-              try{ window.destroyViduPlayer(); }catch(e){}
-              mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Loading advanced player...</div>`;
-              window.showViduPlayer(v.videoId, 'player-wrap').catch(err=>{
-                mountRoot.innerHTML = '';
-                const errBlock = document.createElement('div');
-                errBlock.style.padding = '18px'; errBlock.style.color = '#ffdede';
-                errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
-                const retryBtn = document.createElement('button'); retryBtn.className = 'btn'; retryBtn.textContent = 'Retry Advanced Player';
-                retryBtn.addEventListener('click', ()=> { resetYTLoader(); mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Retrying advanced player...</div>`; window.showViduPlayer(v.videoId, 'player-wrap').catch(e2=>{ mountRoot.innerHTML = ''; errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(e2 && e2.message ? e2.message : String(e2))}</div>`; mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn); }); });
-                mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn);
-              });
-            }
-          }
-          li.addEventListener('click', playThis);
-          li.addEventListener('keydown', (e)=> { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playThis(); } });
-          playlistContainer.appendChild(li);
-        });
-
-        const first = videos[0];
-        if(first && window.showViduPlayer){
-          try{ await window.showViduPlayer(first.videoId, 'player-wrap'); }catch(err){ mountRoot.innerHTML = ''; const errBlock = document.createElement('div'); errBlock.style.padding = '18px'; errBlock.style.color = '#ffdede'; errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`; const retryBtn = document.createElement('button'); retryBtn.className = 'btn'; retryBtn.textContent = 'Retry Advanced Player'; retryBtn.addEventListener('click', ()=> { resetYTLoader(); mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Retrying advanced player...</div>`; window.showViduPlayer(first.videoId, 'player-wrap').catch(e2=>{ mountRoot.innerHTML = ''; errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(e2 && e2.message ? e2.message : String(e2))}</div>`; mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn); }); }); mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn); }
-        }
-
-        // adjust sizes after mount
-        setTimeout(adjustViewerLayout, 80);
-      }catch(err){
-        playlistContainer.innerHTML = '';
-        const errBlock = document.createElement('div'); errBlock.style.padding = '18px'; errBlock.style.color = '#ffdede';
-        errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load playlist</div><div style="margin-bottom:10px;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
-        const retryBtn = document.createElement('button'); retryBtn.className = 'btn'; retryBtn.textContent = 'Retry Advanced Player';
-        retryBtn.addEventListener('click', ()=> {
-          resetYTLoader();
-          playlistContainer.innerHTML = `<div style="padding:18px;color:#ddd;">Retrying advanced player...</div>`;
-          fetchPlaylistVideos(playlistId).then(videos=>{
-            if(!videos || !videos.length) throw new Error('No videos found on retry');
-            window.showViduPlayer(videos[0].videoId, 'player-wrap').catch(e2=>{
-              playlistContainer.innerHTML = '';
-              errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(e2 && e2.message ? e2.message : String(e2))}</div>`;
-              playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
-            });
-          }).catch(e3=>{
-            playlistContainer.innerHTML = '';
-            errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load playlist</div><div style="margin-bottom:10px;">${escapeHtml(e3 && e3.message ? e3.message : String(e3))}</div>`;
-            playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
-          });
-        });
-        playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
-      }
-    }
-
-    /* ---------- show single video ---------- */
-    async function showVideoInViewer(item){
-      const vid = normalizeIdFromB64(item.idB64);
-      if(!vid){ alert('Unable to load the selected item.'); return; }
-      const iframeWrap = document.getElementById('iframe-wrap'); iframeWrap.innerHTML = '';
-      const playlistContainer = document.getElementById('viewer-playlist'); playlistContainer.innerHTML = '';
-      const mountRoot = document.createElement('div'); mountRoot.id = 'player-wrap'; mountRoot.style.width='100%'; mountRoot.style.height='100%';
-      iframeWrap.appendChild(mountRoot);
-
-      try{
-        await window.showViduPlayer(vid, 'player-wrap');
-        setTimeout(adjustViewerLayout, 40);
-      }catch(err){
-        mountRoot.innerHTML = '';
-        playlistContainer.innerHTML = '';
-        const errBlock = document.createElement('div'); errBlock.style.padding = '18px'; errBlock.style.color = '#ffdede';
-        errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
-        const retryBtn = document.createElement('button'); retryBtn.className = 'btn'; retryBtn.textContent = 'Retry Advanced Player';
-        retryBtn.addEventListener('click', ()=> {
-          resetYTLoader();
-          mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Retrying advanced player...</div>`;
-          window.showViduPlayer(vid, 'player-wrap').catch(e2=>{
-            mountRoot.innerHTML = '';
-            errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(e2 && e2.message ? e2.message : String(e2))}</div>`;
-            playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
-          });
-        });
-        playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
-      }
-    }
-
-    /* ---------- viewer open/close ---------- */
-    const viewer = document.getElementById('viewer');
-    const viewerClose = document.getElementById('viewer-close');
-
-    function openViewer(item){
-      viewer.classList.remove('hidden'); viewer.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
-      adjustViewerLayout();
-      attachViewerLayoutListeners();
-      if(item.type === 'video') showVideoInViewer(item); else showPlaylistInsideViewer(item);
-    }
-    function closeViewer(){
-      if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
-      const iframeWrap = document.getElementById('iframe-wrap'); if(iframeWrap) iframeWrap.innerHTML = '';
-      const playlistContainer = document.getElementById('viewer-playlist'); if(playlistContainer) playlistContainer.innerHTML = '';
-      detachViewerLayoutListeners();
-      viewer.classList.add('hidden'); viewer.setAttribute('aria-hidden','true'); document.body.style.overflow='';
-    }
-    viewerClose.addEventListener('click', closeViewer);
-    viewer.addEventListener('click', (e)=> { if(e.target === viewer){ closeViewer(); } });
-    document.addEventListener('keydown', (e)=> { if(e.key === 'Escape'){ if(!pwModal.classList.contains('hidden')) closeModal(pwModal); if(!viewer.classList.contains('hidden')) closeViewer(); } });
-
-    document.getElementById('nav-private').addEventListener('click', ()=> location.reload());
-
-    document.addEventListener('DOMContentLoaded', ()=>{ try{ buildTiles(); }catch(err){ console.error('buildTiles error', err); document.getElementById('js-fail-note').style.display='block'; } setTimeout(()=>{ const t = document.getElementById('tiles'); if(!t || !t.children || t.children.length===0) document.getElementById('js-fail-note').style.display='block'; }, 1200); });
-
-    window.resetYTLoader = resetYTLoader;
-  })();
-  </script>
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/browser.min.js"></script>
+<script src="assets/js/breakpoints.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/main.js"></script>
 </body>
 </html>
