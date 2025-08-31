@@ -50,13 +50,19 @@
 
     .viewer{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.78);z-index:400;padding:22px}
     .viewer.hidden{display:none}
-    .viewer-inner{width:100%;max-width:1100px;height:72vh;border-radius:12px;overflow:hidden;background:rgba(2,2,2,0.75);position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.8)}
+    .viewer-inner{width:100%;max-width:1100px;height:72vh;border-radius:12px;overflow:hidden;background:rgba(2,2,2,0.75);position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.8);display:flex;flex-direction:column}
     .viewer-close{position:absolute;top:10px;right:10px;background:transparent;border:none;color:#ddd;font-size:20px;cursor:pointer;z-index:5}
-    .iframe-wrap{width:100%;height:100%;display:block;background:#000;position:relative}
+    .iframe-wrap{width:100%;height:62%;display:block;background:#000;position:relative;border-bottom:1px solid rgba(255,255,255,0.03)}
+    /* playlist area now lives below the iframe-wrap */
+    .viewer-playlist{width:100%;height:38%;box-sizing:border-box;overflow:auto;padding:10px;background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.08));}
+    .viewer-playlist .list-item{display:flex;align-items:center;gap:12px;padding:8px;border-radius:8px;cursor:pointer;background:transparent;transition:background .12s}
+    .viewer-playlist .list-item:hover{background:rgba(255,255,255,0.02)}
+    .viewer-playlist img{width:120px;height:68px;object-fit:cover;border-radius:6px;flex:0 0 120px;}
+    .playlist-meta{flex:1;display:flex;flex-direction:column;gap:6px}
+    .playlist-title{font-size:14px;font-weight:700;color:#fff}
+    .playlist-sub{font-size:12px;color:rgba(220,220,220,0.7)}
 
     .playlist-list{max-height:220px;overflow:auto}
-    .playlist-list .list-item{display:flex;align-items:center;gap:12px;padding:8px;border-radius:8px;cursor:pointer;background:transparent}
-
     .copyright{text-align:center;margin-top:28px;color:rgba(255,255,255,0.85);font-size:13px}
 
     /* ===== player UI styles (must match JS expectations) ===== */
@@ -92,6 +98,8 @@
     @media (max-width:720px){
       .vidu-time{min-width:76px;font-size:12px}
       .vidu-mount{height:320px}
+      .iframe-wrap{height:56%}
+      .viewer-playlist{height:44%}
     }
   </style>
 </head>
@@ -145,7 +153,12 @@
   <div id="viewer" class="viewer hidden" aria-hidden="true">
     <div class="viewer-inner">
       <button id="viewer-close" class="viewer-close" aria-label="Close viewer">✕</button>
+
+      <!-- video host -->
       <div id="iframe-wrap" class="iframe-wrap"></div>
+
+      <!-- playlist BELOW the player now -->
+      <div id="viewer-playlist" class="viewer-playlist" aria-live="polite"></div>
     </div>
   </div>
 
@@ -729,34 +742,36 @@
       return results;
     }
 
-    /* ---------- show playlist (advanced only) ---------- */
+    /* ---------- show playlist (advanced only) ----------
+       Playlist UI now renders in #viewer-playlist (below the video)
+    -------------------------------------------------- */
     async function showPlaylistInsideViewer(item){
       const rawId = normalizeIdFromB64(item.idB64);
       const playlistId = rawId.split('&')[0];
       const iframeWrap = document.getElementById('iframe-wrap');
       iframeWrap.innerHTML = '';
 
-      // create mount and playlist area
+      // create mount inside the iframe-wrap for the advanced player
       const mountRoot = document.createElement('div'); mountRoot.id = 'player-wrap'; mountRoot.style.width='100%'; mountRoot.style.height='100%';
       iframeWrap.appendChild(mountRoot);
-      const listWrap = document.createElement('div'); listWrap.className = 'playlist-list';
-      listWrap.style.position = 'absolute'; listWrap.style.left='0'; listWrap.style.right='0'; listWrap.style.bottom='0';
-      listWrap.style.maxHeight='220px'; listWrap.style.overflow='auto'; listWrap.style.padding='10px'; listWrap.style.boxSizing='border-box';
-      listWrap.style.background = 'linear-gradient(180deg, rgba(0,0,0,0.0), rgba(0,0,0,0.6))';
-      iframeWrap.appendChild(listWrap);
+
+      // use the playlist container below the player
+      const playlistContainer = document.getElementById('viewer-playlist');
+      playlistContainer.innerHTML = '';
+      playlistContainer.scrollTop = 0;
 
       try{
         const videos = await fetchPlaylistVideos(playlistId);
         if(!videos.length) throw new Error('No videos found or playlist is private.');
 
-        // populate list
-        listWrap.innerHTML = '';
-        videos.forEach(v => {
+        // populate playlistContainer (below player)
+        videos.forEach(v=>{
           const li = document.createElement('div');
           li.className = 'list-item';
-          li.style.display='flex'; li.style.gap='12px'; li.style.alignItems='center'; li.style.padding='8px'; li.style.borderRadius='8px'; li.style.cursor='pointer';
-          li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;flex:0 0 120px;" /><div style="flex:1;"><div style="font-size:14px;font-weight:700;color:#fff;">${escapeHtml(v.title)}</div></div>`;
-          li.onclick = ()=> {
+          li.setAttribute('role','button');
+          li.tabIndex = 0;
+          li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" /><div class="playlist-meta"><div class="playlist-title">${escapeHtml(v.title)}</div><div class="playlist-sub">Click to play</div></div>`;
+          function playThis(){
             if(window.showViduPlayer){
               try{ window.destroyViduPlayer(); }catch(e){}
               mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Loading advanced player...</div>`;
@@ -779,11 +794,13 @@
                 mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn);
               });
             }
-          };
-          listWrap.appendChild(li);
+          }
+          li.addEventListener('click', playThis);
+          li.addEventListener('keydown', (e)=> { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playThis(); } });
+          playlistContainer.appendChild(li);
         });
 
-        // autoplay first using advanced player (no fallback)
+        // autoplay first video using advanced player
         const first = videos[0];
         if(first && window.showViduPlayer){
           try{
@@ -808,7 +825,8 @@
           }
         }
       }catch(err){
-        mountRoot.innerHTML = '';
+        // show error and retry button in playlist area (no iframe fallback)
+        playlistContainer.innerHTML = '';
         const errBlock = document.createElement('div');
         errBlock.style.padding = '18px'; errBlock.style.color = '#ffdede';
         errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load playlist</div><div style="margin-bottom:10px;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
@@ -816,21 +834,21 @@
         retryBtn.className = 'btn'; retryBtn.textContent = 'Retry Advanced Player';
         retryBtn.addEventListener('click', ()=> {
           resetYTLoader();
-          mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Retrying advanced player...</div>`;
+          playlistContainer.innerHTML = `<div style="padding:18px;color:#ddd;">Retrying advanced player...</div>`;
           fetchPlaylistVideos(playlistId).then(videos=>{
             if(!videos || !videos.length) throw new Error('No videos found on retry');
             window.showViduPlayer(videos[0].videoId, 'player-wrap').catch(e2=>{
-              mountRoot.innerHTML = '';
+              playlistContainer.innerHTML = '';
               errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(e2 && e2.message ? e2.message : String(e2))}</div>`;
-              mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn);
+              playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
             });
           }).catch(e3=>{
-            mountRoot.innerHTML = '';
+            playlistContainer.innerHTML = '';
             errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load playlist</div><div style="margin-bottom:10px;">${escapeHtml(e3 && e3.message ? e3.message : String(e3))}</div>`;
-            mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn);
+            playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
           });
         });
-        mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn);
+        playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
       }
     }
 
@@ -840,14 +858,17 @@
       if(!vid){ alert('Unable to load the selected item.'); return; }
       const iframeWrap = document.getElementById('iframe-wrap');
       iframeWrap.innerHTML = '';
+      const playlistContainer = document.getElementById('viewer-playlist');
+      playlistContainer.innerHTML = ''; // clear playlist when showing a single video
       const mountRoot = document.createElement('div'); mountRoot.id = 'player-wrap'; mountRoot.style.width='100%'; mountRoot.style.height='100%';
       iframeWrap.appendChild(mountRoot);
 
-      // attempt advanced player - if fails, show clear error and a retry button
+      // attempt advanced player - if fails, show clear error and a retry button in the playlist area
       try{
         await window.showViduPlayer(vid, 'player-wrap');
       }catch(err){
         mountRoot.innerHTML = '';
+        playlistContainer.innerHTML = '';
         const errBlock = document.createElement('div');
         errBlock.style.padding = '18px'; errBlock.style.color = '#ffdede';
         errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
@@ -859,10 +880,10 @@
           window.showViduPlayer(vid, 'player-wrap').catch(e2=>{
             mountRoot.innerHTML = '';
             errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(e2 && e2.message ? e2.message : String(e2))}</div>`;
-            mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn);
+            playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
           });
         });
-        mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn);
+        playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
       }
     }
 
@@ -877,6 +898,7 @@
     function closeViewer(){
       if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
       const iframeWrap = document.getElementById('iframe-wrap'); if(iframeWrap) iframeWrap.innerHTML = '';
+      const playlistContainer = document.getElementById('viewer-playlist'); if(playlistContainer) playlistContainer.innerHTML = '';
       viewer.classList.add('hidden'); viewer.setAttribute('aria-hidden','true'); document.body.style.overflow='';
     }
     viewerClose.addEventListener('click', closeViewer);
