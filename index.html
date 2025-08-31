@@ -660,38 +660,77 @@
     let qualityMenuOpen = false;
     qualityBtn.addEventListener('click', (ev)=>{ ev.stopPropagation(); if(!qmenu) return; qualityMenuOpen ? qmenu.classList.remove('open') : qmenu.classList.add('open'); qualityMenuOpen = !qualityMenuOpen; });
 
-    // close menus on outside click
+    // Close menus on outside click (global handler)
     document.addEventListener('click', function docClick(e){
+      // quality menu
       if(qualityMenuOpen){
         if(!qmenu) return;
         if(qmenu.contains(e.target) || (qualityBtn && qualityBtn.contains(e.target))) return;
         qmenu.classList.remove('open'); qualityMenuOpen = false;
       }
+      // volume menu
       if(volMenu && volMenu.classList.contains('open')){
+        // if click was inside volMenu or volBtn, don't close
         if(volMenu.contains(e.target) || (volBtn && volBtn.contains(e.target))) return;
         volMenu.classList.remove('open'); volMenu.setAttribute('aria-hidden','true');
       }
     }, {passive:true});
 
-    // volume button toggle - shows vertical slider upward
-    if(volBtn && volMenu && volSlider){
-      volBtn.addEventListener('click', (ev)=>{
-        ev.stopPropagation();
-        const open = volMenu.classList.toggle('open');
-        volMenu.setAttribute('aria-hidden', open ? 'false' : 'true');
-        if(open){
-          try{
-            const btnRect = volBtn.getBoundingClientRect();
-            const hostRect = host.getBoundingClientRect();
-            volMenu.style.left = (btnRect.left - hostRect.left + (btnRect.width/2)) + 'px';
-            const menuRect = volMenu.getBoundingClientRect();
-            volMenu.style.top = (btnRect.top - hostRect.top - menuRect.height - 8) + 'px';
-            volMenu.style.transform = 'translateX(-50%)';
-          }catch(e){}
-        }
-      });
+    // Robust volume button toggle - uses pointerup + click fallback and stopImmediatePropagation to avoid races
+    function openVolumeMenu(){
+      if(!volMenu || !volBtn || !host) return;
+      volMenu.classList.add('open');
+      volMenu.setAttribute('aria-hidden','false');
+      // position menu centered above volBtn, but clamp to host bounds
+      try{
+        const btnRect = volBtn.getBoundingClientRect();
+        const hostRect = host.getBoundingClientRect();
+        const menuRect = volMenu.getBoundingClientRect();
+        // center horizontally relative to volBtn
+        let left = (btnRect.left - hostRect.left + (btnRect.width / 2));
+        // clamp so menu doesn't go beyond host edges
+        const minLeft = menuRect.width * 0.5 + 6;
+        const maxLeft = hostRect.width - (menuRect.width * 0.5) - 6;
+        if(left < minLeft) left = minLeft;
+        if(left > maxLeft) left = maxLeft;
+        volMenu.style.left = left + 'px';
+        // place slightly above button
+        volMenu.style.top = (btnRect.top - hostRect.top - menuRect.height - 8) + 'px';
+        volMenu.style.transform = 'translateX(-50%)';
+      }catch(e){}
+    }
+    function closeVolumeMenu(){
+      if(!volMenu) return;
+      volMenu.classList.remove('open');
+      volMenu.setAttribute('aria-hidden','true');
+    }
 
-      // slider input -> set volume
+    // prefer pointerup to handle touch and mouse; also add click as fallback
+    if(volBtn){
+      volBtn.addEventListener('pointerup', function onVolPointer(e){
+        e.stopImmediatePropagation();
+        e.preventDefault && e.preventDefault();
+        if(!volMenu) return;
+        const isOpen = volMenu.classList.contains('open');
+        if(isOpen) closeVolumeMenu();
+        else openVolumeMenu();
+        resetInactivityTimer();
+      }, {passive:false});
+
+      // fallback click (some browsers might not fire pointerup reliably)
+      volBtn.addEventListener('click', function onVolClick(e){
+        e.stopImmediatePropagation();
+        e.preventDefault && e.preventDefault();
+        if(!volMenu) return;
+        const isOpen = volMenu.classList.contains('open');
+        if(isOpen) closeVolumeMenu();
+        else openVolumeMenu();
+        resetInactivityTimer();
+      }, {passive:false});
+    }
+
+    // slider input -> set volume
+    if(volSlider){
       volSlider.addEventListener('input', (e)=>{
         const v = Math.max(0, Math.min(100, parseInt(e.target.value,10) || 0));
         state.lastVolume = v;
@@ -918,6 +957,9 @@
           const st = state.player && typeof state.player.getPlayerState === 'function' ? state.player.getPlayerState() : -1;
           if(st === 1 || st === 3 || st === -1 || st === 0 || st === 5){
             setOverlayHidden(true);
+            // close vol menu when controls hide
+            if(volMenu) { volMenu.classList.remove('open'); volMenu.setAttribute('aria-hidden','true'); }
+            if(qmenu) { qmenu.classList.remove('open'); }
           }
         }catch(e){}
       }, 5000);
