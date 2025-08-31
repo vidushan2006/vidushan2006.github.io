@@ -67,9 +67,7 @@
     nav ul li a{font-weight:700;font-size:14px;position:relative;padding:8px 12px;color:var(--muted);text-decoration:none;border-radius:8px;transition:all .18s var(--ease);display:inline-block;border: none;box-shadow: none;outline: none;background: transparent;}
     nav ul li a:hover{color:var(--text);transform: translateY(-3px) scale(1.02);box-shadow:0 10px 30px rgba(66,44,145,0.12);}
 
-    /* ================
-       Neon green effect for header nav items & logo (RESTORED)
-       ================ */
+    /* Neon green effect for header nav items & logo */
     header nav ul li a::before,
     .logo::before{
       content: "";
@@ -115,7 +113,6 @@
       opacity: 1;
       transform: translateY(-2px);
     }
-    /* ================ end neon effect ================ */
 
     .wrapper.style1{padding-top:24px;}
     .inner{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:3;}
@@ -325,12 +322,41 @@
     lastVolume: 100
   };
 
+  /**
+   * Load YouTube iframe API. Exposed on window as well (defensive).
+   * Returns a Promise that resolves when API ready.
+   */
+  function loadYTApi(){
+    if(window.YT && window.YT.Player) return Promise.resolve();
+    if(window._vidu_loading_yt){
+      return new Promise((res, rej)=>{
+        const t = setInterval(()=>{ if(window.YT && window.YT.Player){ clearInterval(t); res(); } },80);
+        setTimeout(()=>{ clearInterval(t); rej(new Error('YT load timeout')); },20000);
+      });
+    }
+    window._vidu_loading_yt = true;
+    return new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='https://www.youtube.com/iframe_api';
+      s.async=true;
+      s.onerror = ()=> reject(new Error('YT API failed to load'));
+      document.head.appendChild(s);
+      // YouTube will call this global when ready
+      window.onYouTubeIframeAPIReady = function(){ resolve(); };
+      // small fallbacks
+      setTimeout(()=>{ if(window.YT && window.YT.Player) resolve(); },1200);
+      setTimeout(()=>{ if(!(window.YT && window.YT.Player)) reject(new Error('YT API timed out')); },20000);
+    });
+  }
+  // make available globally so other modules/callbacks can call it safely
+  try{ window.loadYTApi = loadYTApi; }catch(e){ /* ignore */ }
+
   function pad2(n){
     n = Math.max(0, Math.floor(n||0));
     return (n < 10 ? '0' + n : String(n));
   }
 
-  // new time format: HH : MM : SS with leading zeros (e.g. 02 : 30 : 05)
+  // HH : MM : SS
   function fmtTime(s){
     s = Math.max(0, Math.floor(s||0));
     const h = Math.floor(s / 3600);
@@ -346,7 +372,6 @@
     const wrap = document.getElementById('player-wrap');
     if(!wrap) throw new Error('#player-wrap not found');
 
-    // remove previous host if present
     const prev = wrap.querySelector('.vidu-player-host');
     if(prev) prev.remove();
 
@@ -356,11 +381,9 @@
     mount.style.background = '#000';
     host.appendChild(mount);
 
-    // control background under controls
     const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
     host.appendChild(ctrlBg);
 
-    // overlay controls - replaced quality with volume control
     const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
     overlay.innerHTML = `
       <div class="inner-bg" aria-hidden="true"></div>
@@ -368,13 +391,11 @@
       <div class="vidu-time" id="vidu_cur">` + fmtTime(0) + `</div>
       <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
       <div class="vidu-time" id="vidu_dur">` + fmtTime(0) + `</div>
-      <!-- volume control placed here (replaces quality selector) -->
       <input id="vidu_vol" class="vidu-volume" type="range" min="0" max="100" step="1" value="100" aria-label="Volume" />
       <button class="vidu-btn" id="vidu_fullbtn">⤢</button>
     `;
     host.appendChild(overlay);
 
-    // player close button (top-right)
     const closeBtn = document.createElement('button');
     closeBtn.className = 'vidu-close-btn';
     closeBtn.id = 'vidu_closebtn';
@@ -419,7 +440,6 @@
     const fullBtn = overlay.querySelector('#vidu_fullbtn');
     const volEl = overlay.querySelector('#vidu_vol');
 
-    // ensure initial time text uses new format
     try{ if(curEl) curEl.textContent = fmtTime(0); }catch(e){}
     try{ if(durEl) durEl.textContent = fmtTime(0); }catch(e){}
 
@@ -427,10 +447,8 @@
       return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
     }
 
-    // saved inline styles for restore
     const saved = { stored:false, host:{}, mount:{}, iframe:{}, modal:{}, backdrop:{}, playerWrap:{} };
 
-    // fullscreen toggle helper
     function toggleFullscreen(){
       const fs = getFullscreenElement();
       if(fs === host){
@@ -456,7 +474,6 @@
       }
     }
 
-    // keyboard handler
     state.keyHandler = function(e){
       const active = document.activeElement;
       if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
@@ -479,7 +496,7 @@
     };
     document.addEventListener('keydown', state.keyHandler);
 
-    // seeking
+    // seek handling
     seekEl.addEventListener('pointerdown', ()=> seekEl._drag=true, {passive:true});
     seekEl.addEventListener('pointerup', ()=>{ 
       seekEl._drag=false;
@@ -495,24 +512,21 @@
       }
     }, {passive:true});
 
-    // helper to set seek bar background to show filled portion (green)
     function updateSeekBackground(el){
       try{
         const v = Math.max(0, Math.min(100, parseFloat(el.value) || 0));
         el.style.background = `linear-gradient(90deg, var(--accent-2) ${v}%, rgba(255,255,255,0.06) ${v}%)`;
       }catch(e){}
     }
-    // initial
     updateSeekBackground(seekEl);
 
-    // Play/pause — instant UI feedback and desiredPlaying flag
+    // play/pause with immediate UI response
     playBtn.addEventListener('click', ()=>{
       if(!state.player) return;
       let st = -1;
       try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){}
       const wantPlay = !(st === 1);
       state.desiredPlaying = wantPlay;
-      // immediate UI change
       playBtn.innerHTML = wantPlay ? pauseSVG() : playSVG();
       try{
         if(wantPlay){
@@ -524,7 +538,7 @@
       resetInactivityTimer();
     });
 
-    // Volume control behavior
+    // volume
     volEl.addEventListener('input', ()=> {
       const v = Math.max(0, Math.min(100, parseInt(volEl.value,10) || 0));
       state.lastVolume = v;
@@ -535,12 +549,10 @@
           else if(v > 0 && typeof state.player.unMute === 'function') state.player.unMute();
         }
       }catch(e){ console.warn('setVolume err', e); }
-      // visual fill
       try{ volEl.style.background = `linear-gradient(90deg, var(--accent-2) ${v}%, rgba(255,255,255,0.06) ${v}%)`; }catch(e){}
       resetInactivityTimer();
     }, {passive:true});
 
-    // initialize vol background
     (function initVolBg(){
       try{
         const v = Math.max(0, Math.min(100, parseInt(volEl.value,10) || state.lastVolume || 100));
@@ -548,7 +560,6 @@
       }catch(e){}
     })();
 
-    // fullscreen change handling
     function onFSChange(){
       const fs = getFullscreenElement();
       const isOurFullscreen = !!(fs && (fs === host || host.contains(fs) || (fs.contains && fs.contains(host))));
@@ -650,7 +661,6 @@
         }
 
       } else {
-        // leaving fullscreen: restore
         if(saved.stored){
           try{
             host.style.position = saved.host.position;
@@ -722,7 +732,6 @@
           state.fsResizeHandler = null;
         }
 
-        // sync ctrlBg with overlay visibility
         if(overlay.classList.contains('hidden')){
           ctrlBg.classList.add('hidden');
           if(closeBtn) closeBtn.classList.add('hidden');
@@ -733,24 +742,19 @@
       }
     }
 
-    // add listeners; store reference for removal
     state.fsListener = onFSChange;
     document.addEventListener('fullscreenchange', state.fsListener);
     document.addEventListener('webkitfullscreenchange', state.fsListener);
     document.addEventListener('mozfullscreenchange', state.fsListener);
     document.addEventListener('MSFullscreenChange', state.fsListener);
 
-    // Inactivity — hide controls after 5s if no activity. Re-show on any activity.
     function resetInactivityTimer(){
       state.lastActivity = Date.now();
-      // always show controls on activity
       setOverlayHidden(false);
       if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
-      // if player exists and playing, only then auto-hide
       state.inactivityTimer = setTimeout(()=>{
         try{
           const st = state.player && typeof state.player.getPlayerState === 'function' ? state.player.getPlayerState() : -1;
-          // hide when playing/buffering/ended or unstarted; keep visible when paused
           if(st === 1 || st === 3 || st === -1 || st === 0 || st === 5){
             setOverlayHidden(true);
           }
@@ -758,7 +762,6 @@
       }, 5000);
     }
 
-    // attach activity listeners to host so moving mouse/touch resets timer
     function attachActivityListeners(){
       try{
         ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{
@@ -781,101 +784,102 @@
     return loadYTApi().then(()=> new Promise((resolve,reject)=>{
       if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
 
-      state.player = new YT.Player(mount.id, {
-        videoId: videoId,
-        width: '100%',
-        height: '100%',
-        playerVars: {
-          controls: 0,
-          disablekb: 1,
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          iv_load_policy: 3,
-          origin: location.origin
-        },
-        events: {
-          onReady: function(evt){
-            disableIframeClicks(host);
+      // create YT player
+      try{
+        state.player = new YT.Player(mount.id, {
+          videoId: videoId,
+          width: '100%',
+          height: '100%',
+          playerVars: {
+            controls: 0,
+            disablekb: 1,
+            rel: 0,
+            modestbranding: 1,
+            playsinline: 1,
+            iv_load_policy: 3,
+            origin: location.origin
+          },
+          events: {
+            onReady: function(evt){
+              disableIframeClicks(host);
 
-            // Ensure volume is applied
-            try{
-              if(typeof evt.target.setVolume === 'function'){
-                const v = Math.max(0, Math.min(100, state.lastVolume || 100));
-                evt.target.setVolume(v);
-                if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute();
-                else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute();
-                // set vol control UI
-                const volEl = document.getElementById('vidu_vol');
-                if(volEl) { volEl.value = v; volEl.style.background = `linear-gradient(90deg, var(--accent-2) ${v}%, rgba(255,255,255,0.06) ${v}%)`; }
-              }
-            }catch(e){}
-
-            // Force "auto" quality by default: request default afterwards a couple times (YouTube may override)
-            try{
-              if(typeof evt.target.setPlaybackQuality === 'function'){
-                evt.target.setPlaybackQuality('default');
-                setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 800);
-                setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 2200);
-              }
-            }catch(e){}
-
-            // try to autoplay quietly
-            try{ evt.target.playVideo(); }catch(e){}
-
-            mount.style.height = mount.style.height || '520px';
-
-            if(state.updateInterval) clearInterval(state.updateInterval);
-            state.updateInterval = setInterval(()=>{
+              // apply volume
               try{
-                if(!state.player) return;
-                const dur = state.player.getDuration ? state.player.getDuration() : 0;
-                const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
-                curEl.textContent = fmtTime(Math.floor(cur));
-                durEl.textContent = (dur && isFinite(dur)) ? fmtTime(Math.floor(dur)) : fmtTime(0);
-                if(!seekEl._drag && dur && isFinite(dur)) {
-                  seekEl.value = (cur / Math.max(1,dur)) * 100;
-                  updateSeekBackground(seekEl);
-                }
-                const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
-                // if desiredPlaying was set by user, attempt to reconcile
-                if(state.desiredPlaying !== null){
-                  if(state.desiredPlaying && st !== 1){
-                    try{ state.player.playVideo(); }catch(e){}
-                  } else if(!state.desiredPlaying && st === 1){
-                    try{ state.player.pauseVideo(); }catch(e){}
-                  }
-                }
-                // update play button icon according to actual state (but keep user-initiated immediate feedback)
-                const currentIcon = (st === 1) ? pauseSVG() : playSVG();
-                // If user recently pressed toggle, keep immediate UI for a short time; else sync
-                if(Date.now() - state.lastActivity > 300) {
-                  playBtn.innerHTML = currentIcon;
-                } else {
-                  setTimeout(()=> {
-                    try{
-                      const check = state.player.getPlayerState ? state.player.getPlayerState() : -1;
-                      if(check === 1) playBtn.innerHTML = pauseSVG(); else playBtn.innerHTML = playSVG();
-                    }catch(e){}
-                  }, 600);
+                if(typeof evt.target.setVolume === 'function'){
+                  const v = Math.max(0, Math.min(100, state.lastVolume || 100));
+                  evt.target.setVolume(v);
+                  if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute();
+                  else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute();
+                  const volEl = document.getElementById('vidu_vol');
+                  if(volEl) { volEl.value = v; volEl.style.background = `linear-gradient(90deg, var(--accent-2) ${v}%, rgba(255,255,255,0.06) ${v}%)`; }
                 }
               }catch(e){}
-            }, 160);
 
-            if(state.mo) state.mo.disconnect();
-            state.mo = new MutationObserver(()=> disableIframeClicks(host));
-            state.mo.observe(host, { childList:true, subtree:true });
+              // request default quality (let YT pick)
+              try{
+                if(typeof evt.target.setPlaybackQuality === 'function'){
+                  evt.target.setPlaybackQuality('default');
+                  setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 800);
+                  setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 2200);
+                }
+              }catch(e){}
 
-            // show controls initially and start inactivity timer
-            resetInactivityTimer();
+              try{ evt.target.playVideo(); }catch(e){}
 
-            resolve(state.player);
-          },
-          onError: function(err){ console.error('YT player error', err); reject(err); }
-        }
-      });
-    })).then(p=>{
-      // Ensure the host shows controls on mount
+              mount.style.height = mount.style.height || '520px';
+
+              if(state.updateInterval) clearInterval(state.updateInterval);
+              state.updateInterval = setInterval(()=>{
+                try{
+                  if(!state.player) return;
+                  const dur = state.player.getDuration ? state.player.getDuration() : 0;
+                  const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+                  curEl.textContent = fmtTime(Math.floor(cur));
+                  durEl.textContent = (dur && isFinite(dur)) ? fmtTime(Math.floor(dur)) : fmtTime(0);
+                  if(!seekEl._drag && dur && isFinite(dur)) {
+                    seekEl.value = (cur / Math.max(1,dur)) * 100;
+                    updateSeekBackground(seekEl);
+                  }
+                  const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
+                  if(state.desiredPlaying !== null){
+                    if(state.desiredPlaying && st !== 1){
+                      try{ state.player.playVideo(); }catch(e){}
+                    } else if(!state.desiredPlaying && st === 1){
+                      try{ state.player.pauseVideo(); }catch(e){}
+                    }
+                  }
+                  const currentIcon = (st === 1) ? pauseSVG() : playSVG();
+                  if(Date.now() - state.lastActivity > 300) {
+                    playBtn.innerHTML = currentIcon;
+                  } else {
+                    setTimeout(()=> {
+                      try{
+                        const check = state.player.getPlayerState ? state.player.getPlayerState() : -1;
+                        if(check === 1) playBtn.innerHTML = pauseSVG(); else playBtn.innerHTML = playSVG();
+                      }catch(e){}
+                    }, 600);
+                  }
+                }catch(e){}
+              }, 160);
+
+              if(state.mo) state.mo.disconnect();
+              state.mo = new MutationObserver(()=> disableIframeClicks(host));
+              state.mo.observe(host, { childList:true, subtree:true });
+
+              resetInactivityTimer();
+
+              resolve(state.player);
+            },
+            onError: function(err){ console.error('YT player error', err); reject(err); }
+          }
+        });
+      }catch(err){
+        reject(err || new Error('YT player creation failed'));
+      }
+    })).catch(err=>{
+      // surface a clear error in the UI
+      throw err;
+    }).then(p=>{
       setTimeout(()=> resetInactivityTimer(), 40);
       return p;
     });
@@ -897,7 +901,6 @@
         state.fsListener = null;
       }
       if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
-      // remove activity listeners attached to host
       if(state.host){
         try{
           ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{
@@ -912,6 +915,10 @@
 
   // Public API
   window.showViduPlayer = function(videoId){
+    // defensive: ensure loader exists globally before calling (so other callers won't hit "loadYTApi is not defined")
+    if(typeof window.loadYTApi !== 'function') {
+      window.loadYTApi = loadYTApi;
+    }
     return createPlayer(videoId).catch(err => { console.error('createPlayer failed', err); throw err; });
   };
   window.destroyViduPlayer = function(){
@@ -926,7 +933,6 @@
 
 <!-- =========================
      Playlist/Modal/Password & UI
-     (complete and intact)
      ========================= -->
 <script>
 /*************************************************************************
@@ -1115,7 +1121,7 @@ function onPasswordSubmit(){
       document.getElementById('now-playing-label').textContent = currentItem.name || 'Now playing';
       if(window.showViduPlayer) window.showViduPlayer(id).catch(err => {
         console.error('showViduPlayer failed', err);
-        const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player.</div>`;
+        const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
       });
     }
   } else {
@@ -1181,7 +1187,7 @@ async function showPlaylistInsideModal(item){
         document.getElementById('now-playing-label').textContent = v.title || 'Now playing';
         if(window.showViduPlayer) window.showViduPlayer(v.videoId).catch(err => {
           console.error('showViduPlayer failed', err);
-          const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player.</div>`;
+          const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
         });
       };
       listWrap.appendChild(li);
@@ -1192,7 +1198,7 @@ async function showPlaylistInsideModal(item){
     document.getElementById('now-playing-label').textContent = videos[0].title || 'Now playing';
     if(window.showViduPlayer) window.showViduPlayer(videos[0].videoId).catch(err => {
       console.error('showViduPlayer failed', err);
-      const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player.</div>`;
+      const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
     });
   } catch(err){
     console.error('Playlist fetch error', err);
@@ -1215,7 +1221,7 @@ document.addEventListener('DOMContentLoaded', function(){
   (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
 });
 
- // deterrents (kept)
+// deterrents
 document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, false);
 document.addEventListener('keydown', function(e){ if ((e.ctrlKey && e.shiftKey && (e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')) || (e.ctrlKey && (e.key==='U'||e.key==='u')) || (e.key==='F12')) { e.preventDefault(); return false; } });
 document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { const root=document.getElementById('modal-root'); if(root) root.style.display='none'; resumeVisuals('esc'); } });
