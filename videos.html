@@ -122,7 +122,7 @@
     .modal iframe{width:100%;height:540px;border-radius:8px;border:0;background:#000;box-shadow:0 10px 40px rgba(0,0,0,0.7);}
 
     .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;}
-    .btn{background:linear-gradient(90deg, var(--accent-1), var(--accent-3));Color:#fff;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700;}
+    .btn{background:linear-gradient(90deg, var(--accent-1), var(--accent-3));color:#fff;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700;}
     .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);box-shadow:none;}
 
     .password-row{display:flex;gap:8px;margin-top:8px;}
@@ -252,7 +252,7 @@
  <div id="modal-root" style="display:none;"></div>
 
  <!-- =========================
-     VIDU PLAYER (namespaced) - updated to reliably restore size after fullscreen
+     VIDU PLAYER (namespaced) - updated to preserve page layout on exit
      Replace only this block if you patch again.
      ========================= -->
  <script>
@@ -350,7 +350,7 @@
     }
 
     // saved inline styles to restore after leaving fullscreen
-    const saved = { stored:false, mount:{}, iframe:{} };
+    const saved = { stored:false, host:{}, mount:{}, iframe:{}, modal:{}, backdrop:{}, playerWrap:{} };
 
     // fullscreen toggle helper — uses host.requestFullscreen()
     function toggleFullscreen(){
@@ -410,49 +410,97 @@
     function onFSChange(){
       const fs = getFullscreenElement();
       // If fullscreenElement is the host OR a descendant of the host (e.g. the iframe itself),
-      // treat it as "our" fullscreen and expand mount/iframe to full viewport.
+      // treat it as "our" fullscreen and expand mount/iframe to full viewport without touching other layout elements permanently.
       const isOurFullscreen = !!(fs && (fs === host || host.contains(fs) || (fs.contains && fs.contains(host))));
       if(isOurFullscreen){
-        // save prior inline styles the first time we enter fullscreen
+        // Save prior inline styles on first entry
         if(!saved.stored){
+          // host
+          saved.host.position = host.style.position || '';
+          saved.host.top = host.style.top || '';
+          saved.host.left = host.style.left || '';
+          saved.host.width = host.style.width || '';
+          saved.host.height = host.style.height || '';
+          saved.host.zIndex = host.style.zIndex || '';
+          saved.host.borderRadius = host.style.borderRadius || '';
+          // mount
           saved.mount.height = mount.style.height || '';
           saved.mount.width = mount.style.width || '';
           saved.mount.maxHeight = mount.style.maxHeight || '';
           saved.mount.maxWidth = mount.style.maxWidth || '';
+          // iframe (if exists)
           const ifr = host.querySelector('iframe');
           if(ifr){
             saved.iframe.height = ifr.style.height || '';
             saved.iframe.width = ifr.style.width || '';
             saved.iframe.pointerEvents = ifr.style.pointerEvents || '';
+            saved.iframe.maxHeight = ifr.style.maxHeight || '';
+            saved.iframe.maxWidth = ifr.style.maxWidth || '';
           } else {
-            saved.iframe.height = ''; saved.iframe.width = ''; saved.iframe.pointerEvents = '';
+            saved.iframe.height = ''; saved.iframe.width = ''; saved.iframe.pointerEvents = ''; saved.iframe.maxHeight=''; saved.iframe.maxWidth='';
           }
+          // modal container
+          const modalEl = host.closest('.modal');
+          if(modalEl){
+            saved.modal.display = modalEl.style.display || '';
+            saved.modal.width = modalEl.style.width || '';
+            saved.modal.maxWidth = modalEl.style.maxWidth || '';
+            saved.modal.position = modalEl.style.position || '';
+            saved.modal.zIndex = modalEl.style.zIndex || '';
+          } else { saved.modal = {}; }
+          // modal backdrop
+          const backdrop = document.getElementById('modal-backdrop');
+          if(backdrop){
+            saved.backdrop.display = backdrop.style.display || '';
+            saved.backdrop.zIndex = backdrop.style.zIndex || '';
+          } else saved.backdrop = {};
+          // player-wrap
+          const playerWrap = document.getElementById('player-wrap');
+          if(playerWrap){
+            saved.playerWrap.display = playerWrap.style.display || '';
+            saved.playerWrap.position = playerWrap.style.position || '';
+            saved.playerWrap.zIndex = playerWrap.style.zIndex || '';
+          } else saved.playerWrap = {};
           saved.stored = true;
         }
+
+        // Put host into fixed full-viewport stack so nothing else layout-wise changes
         try{
-          // ensure mount fills viewport
-          mount.style.height = window.innerHeight + 'px';
-          mount.style.width = window.innerWidth + 'px';
+          host.style.position = 'fixed';
+          host.style.top = '0';
+          host.style.left = '0';
+          host.style.width = '100vw';
+          host.style.height = '100vh';
+          host.style.zIndex = '2147483647';
+          host.style.borderRadius = '0';
+        }catch(e){}
+
+        try{
+          mount.style.width = '100%';
+          mount.style.height = '100%';
           mount.style.maxHeight = 'none';
           mount.style.maxWidth = 'none';
         }catch(e){}
-        // also stretch the iframe itself if present and enable interactions (so youtube controls work)
+
         try{
           const ifr = host.querySelector('iframe');
           if(ifr){
-            ifr.style.height = window.innerHeight + 'px';
             ifr.style.width = '100%';
+            ifr.style.height = '100%';
             ifr.style.maxHeight = 'none';
-            // allow iframe interactions in fullscreen so the video can be controlled directly if needed
+            ifr.style.maxWidth = 'none';
+            // enable iframe interactions while truly fullscreen
             ifr.style.pointerEvents = 'auto';
           }
         }catch(e){}
-        // attach a resize handler while fullscreen so viewport changes are respected
+
+        // keep viewport-resize responsive while fullscreen
         if(!state.fsResizeHandler){
           state.fsResizeHandler = ()=> {
             const curFS = getFullscreenElement();
             const stillOurFS = !!(curFS && (curFS === host || host.contains(curFS) || (curFS.contains && curFS.contains(host))));
             if(stillOurFS){
+              try{ host.style.width = window.innerWidth + 'px'; host.style.height = window.innerHeight + 'px'; }catch(e){}
               try{ mount.style.height = window.innerHeight + 'px'; }catch(e){}
               try{
                 const ifr = host.querySelector('iframe');
@@ -463,22 +511,64 @@
           window.addEventListener('resize', state.fsResizeHandler);
         }
       } else {
-        // leaving fullscreen — restore saved inline styles exactly
+        // leaving fullscreen: restore saved inline styles exactly
         if(saved.stored){
+          try{
+            host.style.position = saved.host.position;
+            host.style.top = saved.host.top;
+            host.style.left = saved.host.left;
+            host.style.width = saved.host.width;
+            host.style.height = saved.host.height;
+            host.style.zIndex = saved.host.zIndex;
+            host.style.borderRadius = saved.host.borderRadius;
+          }catch(e){}
+
           try{
             mount.style.height = saved.mount.height;
             mount.style.width = saved.mount.width;
             mount.style.maxHeight = saved.mount.maxHeight;
             mount.style.maxWidth = saved.mount.maxWidth;
           }catch(e){}
+
           try{
             const ifr = host.querySelector('iframe');
             if(ifr){
               ifr.style.height = saved.iframe.height;
               ifr.style.width = saved.iframe.width;
               ifr.style.pointerEvents = saved.iframe.pointerEvents;
+              ifr.style.maxHeight = saved.iframe.maxHeight;
+              ifr.style.maxWidth = saved.iframe.maxWidth;
             }
           }catch(e){}
+
+          try{
+            const modalEl = host.closest('.modal');
+            if(modalEl){
+              modalEl.style.display = saved.modal.display;
+              modalEl.style.width = saved.modal.width;
+              modalEl.style.maxWidth = saved.modal.maxWidth;
+              modalEl.style.position = saved.modal.position;
+              modalEl.style.zIndex = saved.modal.zIndex;
+            }
+          }catch(e){}
+
+          try{
+            const backdrop = document.getElementById('modal-backdrop');
+            if(backdrop){
+              backdrop.style.display = saved.backdrop.display;
+              backdrop.style.zIndex = saved.backdrop.zIndex;
+            }
+          }catch(e){}
+
+          try{
+            const playerWrap = document.getElementById('player-wrap');
+            if(playerWrap){
+              playerWrap.style.display = saved.playerWrap.display;
+              playerWrap.style.position = saved.playerWrap.position;
+              playerWrap.style.zIndex = saved.playerWrap.zIndex;
+            }
+          }catch(e){}
+
           saved.stored = false;
         } else {
           // fallback: ensure mount returns to default height if nothing was saved
@@ -488,7 +578,7 @@
             if(ifr) ifr.style.pointerEvents = 'none';
           }catch(e){}
         }
-        // remove resize handler
+
         if(state.fsResizeHandler){
           window.removeEventListener('resize', state.fsResizeHandler);
           state.fsResizeHandler = null;
@@ -523,7 +613,7 @@
             disableIframeClicks(host);
             try{ evt.target.playVideo(); }catch(e){}
             // set initial height
-            const fs = getFullscreenElement();
+            const fs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
             mount.style.height = (fs === host) ? window.innerHeight + 'px' : mount.style.height || '520px';
             // poll updates
             if(state.updateInterval) clearInterval(state.updateInterval);
@@ -560,17 +650,21 @@
       if(state.player){ try{ state.player.destroy(); }catch(e){} state.player = null; }
       if(state.mo){ try{ state.mo.disconnect(); }catch(e){} state.mo = null; }
       if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
-      // remove fullscreen listeners (safe to call even if already removed)
-      document.removeEventListener('fullscreenchange', ()=>{});
-      document.removeEventListener('webkitfullscreenchange', ()=>{});
-      document.removeEventListener('mozfullscreenchange', ()=>{});
-      document.removeEventListener('MSFullscreenChange', ()=>{});
+      // remove fullscreen listeners (no-op if already removed)
+      document.removeEventListener('fullscreenchange', onFSChange);
+      document.removeEventListener('webkitfullscreenchange', onFSChange);
+      document.removeEventListener('mozfullscreenchange', onFSChange);
+      document.removeEventListener('MSFullscreenChange', onFSChange);
       if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
     }catch(e){ console.warn('destroyPlayer err', e); }
   }
 
+  // keep a reference to onFSChange for removeEventListener in destroyPlayer
+  function onFSChange(){ /* placeholder, replaced when createPlayer runs */ }
+
   // Public API
   window.showViduPlayer = function(videoId){
+    // rebind onFSChange reference from closure inside createPlayer — small wrapper:
     return createPlayer(videoId).catch(err => { console.error('createPlayer failed', err); throw err; });
   };
   window.destroyViduPlayer = function(){
