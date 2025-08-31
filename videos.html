@@ -26,11 +26,7 @@
 
     .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;align-items:start}
     @media (min-width:900px){ .tiles{grid-template-columns:repeat(4,1fr)} }
-    /* MOBILE: single column and center items */
-    @media (max-width:640px){
-      .tiles{grid-template-columns:1fr;gap:14px; justify-items:center;}
-      .card{width:100%;max-width:360px;}
-    }
+    @media (max-width:640px){ .tiles{grid-template-columns:1fr;gap:14px; justify-items:center;} .card{width:100%;max-width:360px;} }
 
     .card{display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.45));border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:transform .22s,box-shadow .22s;box-shadow:0 14px 30px rgba(0,0,0,0.55);min-height:300px}
     .card:hover{transform:translateY(-8px);box-shadow:0 34px 60px rgba(0,0,0,0.65)}
@@ -128,6 +124,15 @@
       .viewer-playlist{height:44%}
       .now-playing{font-size:13px;padding:8px 10px}
       .now-playing .title{font-size:13px}
+    }
+
+    /* ===== small-screen centering fixes (NEW) ===== */
+    @media (max-width:640px){
+      /* Center the internals of each card on small screens */
+      .card { align-items: center; }
+      .card-media { justify-content: center; align-items: center; }
+      .card-caption { align-items: center; text-align: center; }
+      .neon, .neon-reflect { margin: 0 auto; }
     }
   </style>
 </head>
@@ -1011,4 +1016,3 @@
   </script>
 </body>
 </html>
-
