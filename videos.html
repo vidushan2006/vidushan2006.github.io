@@ -5,982 +5,576 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <link rel="stylesheet" href="assets/css/main.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
-    /* ===========================
-       Your original page CSS — preserved
-       (truncated comments for brevity, unchanged values)
-       =========================== */
-    :root{ --bg-overlay: rgba(4,6,12,0.46); --glass: rgba(255,255,255,0.04); --glass-strong: rgba(255,255,255,0.06); --accent-1: #7b61ff; --accent-2:#39ff14; --accent-3:#ff6b6b; --muted:#bfc8dd; --text:#f2f6ff; --card-radius:10px; --ease:cubic-bezier(.16,.84,.24,1);}
-
-    body{
-      background:url('assets/images/background.gif') no-repeat center center fixed;
-      background-size:cover;
-      font-family:"Inter","Helvetica Neue",Arial,sans-serif;
-      color:var(--text);
+    /* --- preserve background + fonts --- */
+    body {
+      background: url('assets/images/background.gif') no-repeat center center fixed;
+      background-size: cover;
+      font-family: "Helvetica Neue", Arial, sans-serif;
       margin:0;
-      min-height:100vh;
-      position:relative;
-      overflow-x:hidden;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
+      color: #fff;
     }
 
-    body::before{
-      content:'';
-      position:fixed;
-      inset:0;
-      background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.38));
-      pointer-events:none;
-      z-index:0;
-      mix-blend-mode:multiply;
-    }
-
-    #wrapper{position:relative;z-index:3;padding-bottom:48px;}
-
-    header#header{
+    /* header/nav tweaks */
+    header#header {
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding:14px 22px;
-      backdrop-filter: blur(8px) saturate(130%);
+      padding:12px 18px;
       background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-bottom: none;
-      border-radius:0 0 10px 10px;
-      z-index:4;
-      position:relative;
-      box-shadow:0 8px 40px rgba(2,4,12,0.6);
-    }
-
-    .logo{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      text-decoration:none;
-      color:var(--text);
-      user-select:none;
-      position:relative;
-    }
-
-    .logo-circle{
-      width: clamp(72px, 9vw, 120px);
-      aspect-ratio: 1/1;
-      border-radius:50%;
-      overflow:hidden;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-      border: 10px solid rgba(255,255,255,0.06);
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
       backdrop-filter: blur(6px) saturate(120%);
-      transform: translateZ(0);
-      flex-shrink:0;
+      border-bottom:1px solid rgba(255,255,255,0.03);
+      box-shadow: 0 8px 40px rgba(2,4,12,0.6);
+      z-index: 4;
     }
 
-    .logo-circle img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      object-position:center center;
-      display:block;
-      transform: translateZ(0);
-    }
+    /* Logo */
+    header#header .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; user-select:none; position:relative; }
+    header#header .logo img { height:78px; width:auto; border-radius:0; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
 
-    nav ul{list-style:none;margin:0;padding:0;display:flex;gap:10px;align-items:center;}
-    nav ul li a{
+    nav ul { list-style:none; display:flex; gap:12px; margin:0; padding:0; align-items:center; }
+    nav ul li a {
+      color:#fff;
+      text-decoration:none;
+      padding:8px 12px;
+      border-radius:8px;
       font-weight:700;
       font-size:14px;
-      position:relative;
-      padding:8px 12px;
-      color:var(--muted);
-      text-decoration:none;
-      border-radius:8px;
-      transition:all .18s var(--ease);
       display:inline-block;
-      border: none;
-      box-shadow: none;
-      outline: none;
-      background: transparent;
+      position:relative;
+      transition: transform .18s ease, color .18s ease;
     }
-    nav ul li a:hover{color:var(--text);transform: translateY(-3px) scale(1.02);box-shadow:0 10px 30px rgba(66,44,145,0.12);}
+    nav ul li a:hover { transform: translateY(-3px); color:#fff; }
 
-    .wrapper.style1{padding-top:24px;}
-    .inner{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:3;}
+    /* --- main container --- */
+    .inner { max-width:1080px; margin: 0 auto; padding: 32px; color:#fff; position:relative; z-index:3; }
+    h2 { margin-top:0; }
 
-    .list-container{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:flex-start;margin-top:6px;}
-    .list-item{width:150px;cursor:pointer;text-align:center;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:var(--card-radius);padding:10px;transition:transform .28s var(--ease),box-shadow .28s var(--ease),filter .28s var(--ease); border:1px solid rgba(255,255,255,0.04); box-shadow:0 8px 30px rgba(6,8,16,0.6);position:relative;overflow:visible;transform-style:preserve-3d;will-change:transform;backdrop-filter:blur(6px) saturate(120%);}
-    .list-item::after{content:'';position:absolute;left:8px;right:8px;bottom:8px;height:4px;border-radius:4px;background:linear-gradient(90deg, rgba(123,97,255,0.25), rgba(57,255,20,0.18), rgba(255,107,107,0.12));opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;}
-    .list-item:hover::after{opacity:1;transform:translateY(0);}
-    .list-item:hover{transform: translateY(-10px) rotateX(6deg) scale(1.03); box-shadow:0 28px 60px rgba(6,8,16,0.75); filter:saturate(1.08);}
-    .list-item img{width:100%;border-radius:6px;display:block;transition:transform .6s var(--ease),box-shadow .4s var(--ease);transform-origin:center;box-shadow:0 8px 24px rgba(0,0,0,0.45), inset 0 -6px 16px rgba(0,0,0,0.08);will-change:transform;background:linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.02));}
-    .list-item:hover img{transform:scale(1.06) translateZ(18px);}
-    .list-item .title{display:block;margin-top:0.45rem;color:var(--text);font-weight:700;font-size:14px;text-shadow:0 1px 0 rgba(0,0,0,0.45);}
-
-    .modal-backdrop{position:fixed;inset:0;background:linear-gradient(180deg, rgba(2,3,8,0.6), rgba(0,0,0,0.75));display:flex;align-items:center;justify-content:center;z-index:9999;}
-    .modal{width:min(960px,95%);background:linear-gradient(180deg, rgba(12,12,12,0.96), rgba(6,6,8,0.98));border-radius:14px;padding:18px;color:#fff;border:1px solid rgba(255,255,255,0.035);box-shadow:0 40px 100px rgba(2,6,18,0.9);}
-    .modal iframe{width:100%;height:540px;border-radius:8px;border:0;background:#000;box-shadow:0 10px 40px rgba(0,0,0,0.7);}
-
-    .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;}
-    .btn{background:linear-gradient(90deg, var(--accent-1), var(--accent-3));color:#fff;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700;}
-    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);box-shadow:none;}
-
-    .password-row{display:flex;gap:8px;margin-top:8px;}
-    .password-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:var(--text);outline:none;transition:box-shadow .15s;}
-    .password-row input:focus{box-shadow:0 8px 30px rgba(123,97,255,0.12);}
-    .muted{color:var(--muted);font-size:13px;}
-
-    @media (max-width:720px){ .list-item{width:calc(50% - 12px);} .modal iframe{height:320px;} }
-
-    .list-item{opacity:0;transform-origin:center;animation:floatIn .5s forwards;}
-    @keyframes floatIn{from{opacity:0;transform:translateY(12px) scale(.995);}to{opacity:1;transform:translateY(0) scale(1);}}
-
-    .ripple{position:relative;overflow:hidden;}
-    .ripple .drop{position:absolute;border-radius:50%;transform:scale(0);background:rgba(255,255,255,0.10);animation:rip .6s ease-out;pointer-events:none;}
-    @keyframes rip{to{transform:scale(6);opacity:0;}}
-
-    header nav ul li a, .logo{position:relative;z-index:2;overflow:visible;}
-    header nav ul li a::before, .logo::before{
-      content:"";
-      position:absolute;
-      inset:-10px;
-      border-radius:14px;
-      background:linear-gradient(90deg,
-        rgba(57,190,60,0.06) 0%,
-        rgba(57,190,60,0.20) 25%,
-        rgba(57,190,60,0.45) 50%,
-        rgba(57,190,60,0.20) 75%,
-        rgba(57,190,60,0.06) 100%);
-      background-size:300% 100%;
-      filter:blur(8px) saturate(120%);
-      opacity:0.88;
-      z-index:-1;
-      transition:opacity .22s ease, transform .22s ease;
-      pointer-events:none;
-      background-position: var(--neon-x, 0%) 50%;
+    /* main list (thumbnails on page) */
+    .list-container { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem; }
+    .list-item {
+      width: 220px; /* main gallery cards keep fixed width */
+      cursor: pointer;
+      text-align: center;
+      background: rgba(0,0,0,0.45);
+      border-radius:8px;
+      padding:8px;
+      transition:transform .12s, box-shadow .12s;
+      position:relative;
+      overflow:visible;
     }
-    header nav ul li a::after, .logo::after{content:"";position:absolute;inset:-4px;border-radius:12px;border:1px solid rgba(57,190,60,0.22);opacity:0.75;z-index:-1;pointer-events:none;transition:opacity .18s ease, transform .18s ease;backdrop-filter:blur(2px);}
+    .list-item:hover { transform: translateY(-6px); box-shadow: 0 8px 30px rgba(0,0,0,0.6); }
+    .list-item img { width: 100%; border-radius: 6px; display:block; }
+    .list-item .title { display:block; margin-top: 0.6rem; color:#fff; font-weight:600; font-size:14px; }
 
-    header nav ul li a.hover-strong::before, .logo.hover-strong::before{filter:blur(12px) saturate(180%);transform:scale(1.03);opacity:1;}
-    header nav ul li a.hover-strong::after, .logo.hover-strong::after{border-color:rgba(57,190,60,0.38);opacity:1;transform:translateY(-2px);}
-    header nav ul li a.touch-active, .logo.touch-active{transform:scale(0.985);transition:transform .08s linear;box-shadow:0 6px 18px rgba(0,0,0,0.6);}
-    header nav ul li a.touch-active::before, .logo.touch-active::before{filter:blur(6px) saturate(160%);transform:scale(1.01);opacity:1;animation-duration:1.6s;}
-    header nav ul li a.pulse, .logo.pulse{animation:btnPulse .5s ease-out;}
-    @keyframes btnPulse{0%{box-shadow:0 0 0 rgba(57,255,20,0.28);}50%{box-shadow:0 0 30px rgba(57,255,20,0.22);}100%{box-shadow:0 0 0 rgba(57,255,20,0);}}
-    @media (prefers-reduced-motion: reduce){ header nav ul li a::before, .logo::before{animation:none;transition:none;filter:blur(6px);} }
+    /* modal */
+    .modal-backdrop { position:fixed; inset:0; background: rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:9999; }
+    .modal { width: min(960px, 95%); background:#0b0b0b; border-radius:10px; padding:16px; color:#fff; }
+    .modal .controls { display:flex; gap:8px; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .modal iframe { width:100%; height:540px; border-radius:8px; border:0; background:#000; }
 
-    .playlist-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:320px;overflow:auto;padding-top:6px;}
-    .playlist-list .list-item{width:100%;display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;}
-    .playlist-list .list-item img{width:140px;height:78px;object-fit:cover;border-radius:6px;}
+    .btn { background:#ff6b6b; color:#fff; padding:8px 12px; border-radius:6px; text-decoration:none; display:inline-block; border:0; cursor:pointer; position:relative; z-index:1; }
+    .btn.secondary { background:#333; color:#fff; }
+    .password-row { display:flex; gap:8px; margin-top:8px; }
+    .password-row input { flex:1; padding:8px; border-radius:6px; border:1px solid #222; background:#0f0f0f; color:#fff; }
+    .muted { color:#bbb; font-size:13px; }
 
-    /* =========================
-       Minimal player CSS — safe, namespaced to prevent layout bleed
-       (UPDATED: add fullscreen iframe rules so the iframe always fills viewport)
-       ========================= */
-    .vidu-player-host { position: relative; width:100%; overflow:hidden; border-radius:8px; background:#000; }
-    .vidu-mount { width:100%; height:520px; background:#000; display:block; }
-    .vidu-mount iframe{ width:100%; height:100%; display:block; border:0; pointer-events:none; }
+    footer#footer { text-align:center; padding:18px; color:#ddd; margin-top:30px; }
 
-    .vidu-overlay { position:absolute; left:12px; right:12px; bottom:12px; z-index:9999; display:flex; gap:12px; align-items:center;
-                    background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.28)); padding:10px; border-radius:8px;
-                    pointer-events:auto; box-sizing:border-box; }
-    .vidu-btn { background: rgba(255,255,255,0.06); color:#fff; padding:8px; border-radius:8px; cursor:pointer; font-weight:700;
-               user-select:none; border:1px solid rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center;
-               width:44px; height:44px; }
-    .vidu-range { flex:1; -webkit-appearance:none; height:8px; border-radius:8px; background: rgba(255,255,255,0.06); }
-    .vidu-range::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#7b61ff; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
-    .vidu-time { min-width:48px; font-size:12px; color:#cbd5ff; text-align:center; }
-
-    /* fullscreen host rules — keep overlay visible and mount full-viewport */
-    .vidu-player-host:-webkit-full-screen .vidu-mount,
-    .vidu-player-host:-moz-full-screen .vidu-mount,
-    .vidu-player-host:fullscreen .vidu-mount { height:100vh !important; width:100% !important; }
-
-    /* ensure iframe fills viewport when the host or the iframe itself becomes fullscreen */
-    .vidu-player-host:-webkit-full-screen .vidu-mount iframe,
-    .vidu-player-host:-moz-full-screen .vidu-mount iframe,
-    .vidu-player-host:fullscreen .vidu-mount iframe,
-    :-webkit-full-screen .vidu-mount iframe,
-    :-moz-full-screen .vidu-mount iframe,
-    :fullscreen .vidu-mount iframe {
-      height:100vh !important;
-      width:100% !important;
-      max-height:none !important;
+    @media (max-width:720px) {
+      .list-item { width: calc(50% - 12px); }
+      .modal iframe { height:300px; }
+      header#header .logo img { height:56px; }
     }
 
-    .vidu-player-host:-webkit-full-screen .vidu-overlay,
-    .vidu-player-host:-moz-full-screen .vidu-overlay,
-    .vidu-player-host:fullscreen .vidu-overlay {
-      left:0 !important; right:0 !important; bottom:18px !important; width:100% !important; justify-content:center !important; padding:18px !important;
+    /* entrance animation */
+    .list-item { opacity:0; transform-origin:center; animation: fadeIn .45s forwards; }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+    /* header outline effects (unchanged) */
+    header nav ul li a, header .logo { position: relative; z-index: 2; overflow: visible; }
+    header nav ul li a::before, header .logo::before { content: ""; position: absolute; inset: -10px; border-radius: 14px; background: linear-gradient(90deg, rgba(57,255,20,0.06) 0%, rgba(57,255,20,0.28) 25%, rgba(57,255,20,0.6) 50%, rgba(57,255,20,0.28) 75%, rgba(57,255,20,0.06) 100%); background-size: 300% 100%; filter: blur(8px) saturate(150%); opacity: 0.0; z-index: -1; transition: opacity .22s ease, transform .22s ease; pointer-events: none; animation: neonMove 4s linear infinite; box-shadow: 0 8px 30px rgba(57,255,20,0.06); }
+    header nav ul li a::after, header .logo::after { content: ""; position: absolute; inset: -4px; border-radius: 12px; border: 1px solid rgba(57,255,20,0.18); opacity: 0.0; z-index: -1; pointer-events: none; transition: opacity .18s ease, transform .18s ease; backdrop-filter: blur(2px); }
+    @keyframes neonMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    header nav ul li a.hover-strong::before, header .logo.hover-strong::before { filter: blur(12px) saturate(220%); transform: scale(1.03); opacity: 1; animation-duration: 2.4s; }
+    header nav ul li a.hover-strong::after, header .logo.hover-strong::after { border-color: rgba(57,255,20,0.5); opacity: 1; transform: translateY(-2px); }
+
+    /* ===========================
+       Playlist list inside modal:
+       show thumbnail + full title (wraps onto multiple lines if needed)
+       clickable rows, comfortable spacing
+       =========================== */
+    .playlist-list { display:block; max-height:260px; overflow:auto; margin-top:8px; padding:0; }
+
+    /* Important override: modal rows reused .list-item so we must reset width from the global 220px */
+    .playlist-list .list-item {
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      padding:10px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      background:transparent;
+      color:#fff;
+      margin-bottom:6px;
+      transition:background .12s, transform .08s;
+      width:100%;       /* key override so rows use full available width */
+      max-width:100%;
+      box-sizing:border-box;
+      overflow:visible;
+      opacity:1;        /* avoid repeated entrance animation for modal rows */
+      animation:none;
     }
-    @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
+    .playlist-list .list-item:hover { background: rgba(255,255,255,0.02); transform: translateY(-2px); }
+
+    .playlist-list .list-item img {
+      width:120px;
+      height:68px;
+      object-fit:cover;
+      border-radius:6px;
+      flex: 0 0 120px;
+    }
+
+    /* this is the fix enabling the title to use the remaining right-side space */
+    .playlist-list .title-wrap { flex:1; min-width:0; display:flex; align-items:flex-start; }
+    .playlist-list .playlist-title {
+      display:block;
+      white-space:normal;
+      overflow:visible;
+      font-size:14px;
+      font-weight:600;
+      color:#fff;
+      line-height:1.25;
+      word-wrap:break-word;
+      overflow-wrap: anywhere; /* stronger wrap rules for long words */
+      /* clamp to a reasonable number of lines for neatness (optional) */
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* small visual nicety to separate the sections in the modal */
+    #playlist-list-wrap .muted { margin-bottom:6px; display:block; }
   </style>
 </head>
 <body class="landing is-preload">
 
- <div id="wrapper">
-  <header id="header">
-    <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
-      <div class="logo-circle" aria-hidden="true">
+  <div id="wrapper">
+    <!-- Header: logo text removed, logo enlarged -->
+    <header id="header">
+      <a href="index.html" class="logo" aria-label="VIDU home">
         <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+      </a>
+      <nav>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="videos.html">Private</a></li>
+          <li><a href="about.html">About</a></li>
+        </ul>
+      </nav>
+
+      <!-- Auth area -->
+      <div id="auth-area">
+        <button id="signin-fallback" class="btn">Sign in with Google</button>
       </div>
-    </a>
+    </header>
 
-    <nav>
-      <ul>
-        <li><a id="nav-home">Classes</a></li>
-        <li><a href="videos.html">Private</a></li>
-        <li><a href="about.html">About</a></li>
-      </ul>
-    </nav>
-  </header>
+    <!-- Videos Section -->
+    <section id="videos" class="wrapper style2 fade-up">
+      <div class="inner">
+        <h2>Private Videos</h2>
+        <p class="muted">Click a thumbnail and enter the password to view the video/playlist.</p>
+        <ul id="global-video-list" class="list-container"></ul>
+      </div>
+    </section>
 
-  <section id="home" class="wrapper style1 fade-up">
-    <div class="inner">
-      <h2></h2>
-      <ul id="playlist-list" class="list-container"></ul>
-      <div id="playlist-videos" style="margin-top:2rem; display:none;"></div>
+    <!-- Footer -->
+    <footer id="footer">
+      <p>&copy; VIDU. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- Password & Embed Modal (hidden until needed) -->
+  <div id="modal-root" style="display:none;"></div>
+
+  <!-- Server hint (shows when user tries file:// sign-in) -->
+  <div id="serve-hint" style="display:none; position:fixed; left:50%; top:10%; transform:translateX(-50%); background:rgba(6,6,8,0.95); color:#fff; padding:14px; border-radius:10px; z-index:99999; max-width:720px; box-shadow:0 30px 80px rgba(0,0,0,0.6);">
+    <div style="font-weight:700; margin-bottom:8px;">Google sign-in won't run from <code>file://</code></div>
+    <div class="muted" style="margin-bottom:8px;">Open the site via <code>http://localhost:8000</code> — quick commands:</div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:180px;"><div style="font-weight:700">Python</div><code>python -m http.server 8000</code></div>
+      <div style="flex:1; min-width:180px;"><div style="font-weight:700">Node</div><code>npx http-server -p 8000</code></div>
     </div>
-  </section>
+    <div style="text-align:right; margin-top:10px;"><button id="serve-close" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);">Close</button></div>
+  </div>
 
-  <footer id="footer">
-    <p>&copy; VIDU. 2025 All rights reserved.</p>
-  </footer>
- </div>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
- <!-- Modal root -->
- <div id="modal-root" style="display:none;"></div>
+  <script>
+  /*************************************************************************
+   * CONFIG - replace with your values
+   *************************************************************************/
+  const OAUTH_CLIENT_ID = '342354359423-s42kqoigp8207erl9i88pmo324clf6ps.apps.googleusercontent.com'; // required for sign-in
+  const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI';             // optional fallback for playlist fetch
 
- <!-- =========================
-     VIDU PLAYER (namespaced) - updated to preserve page layout on exit
-     Replace only this block if you patch again.
-     ========================= -->
- <script>
-/* Minimal, robust VIDU overlay player — safe API: showViduPlayer(videoId), destroyViduPlayer() */
-(function(){
-  if(window.__viduPlayerLoaded) return; // guard
-  window.__viduPlayerLoaded = true;
+  /*************************************************************************
+   * SAMPLE DATA (replace with your actual playlists)
+   *************************************************************************/
+  const globalVideos = [
+    { type: 'video', title: 'TEST', thumb: 'https://i.pinimg.com/736x/e9/f1/5d/e9f15d10baf0131ab65bdc35d620adce.jpg', idB64:btoa("Lexok6H2c2s"), passB64:btoa("vidu123")},
+    { type: 'playlist', title: 'SFT - Theory + Revision', thumb: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', idB64:btoa("PL9zX0VbNmKiGt19HZ9wzIwC-VQ_AN0z9K&si=0jJc5HTa68Weq851"), passB64:btoa("12zx34cvvidu") },
+    { type: 'playlist', title: 'ICT', thumb: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', idB64:btoa("PL9zX0VbNmKiFlxda5PCTn4_hA_7iKjEaA&si=9nF_7qpAzKt4cYZd"), passB64:btoa("6002vidu") },
+    { type: 'playlist', title: 'ET', thumb: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', idB64:btoa("PL9zX0VbNmKiF-Q7bnmM1v_DrT3_Ol-Of5&si=efJHPzWR-kZcGwYw"), passB64:btoa("12zx34cvvidu")}
+  ];
 
-  const state = { player:null, updateInterval:null, keyHandler:null, mo:null, host:null, mount:null, fsResizeHandler:null };
+  /*************************************************************************
+   * STATE
+   *************************************************************************/
+  let oauthToken = null;
+  let profileInfo = null;
+  let tokenClient = null;
+  let currentItemIndex = null;
+  const isFileProtocol = (location.protocol === 'file:');
 
-  function loadYTApi(){
-    if(window.YT && window.YT.Player) return Promise.resolve();
-    if(window._vidu_loading_yt){
-      return new Promise((res, rej)=>{
-        const t=setInterval(()=>{ if(window.YT && window.YT.Player){ clearInterval(t); res(); } },80);
-        setTimeout(()=>{ clearInterval(t); rej(new Error('YT load timeout')); },20000);
-      });
-    }
-    window._vidu_loading_yt = true;
-    return new Promise((resolve,reject)=>{
-      const s=document.createElement('script');
-      s.src='https://www.youtube.com/iframe_api';
-      s.async=true;
-      s.onerror = ()=> reject(new Error('YT API failed to load'));
-      document.head.appendChild(s);
-      window.onYouTubeIframeAPIReady = function(){ resolve(); };
-      setTimeout(()=>{ if(window.YT && window.YT.Player) resolve(); },1200);
-      setTimeout(()=>{ if(!(window.YT && window.YT.Player)) reject(new Error('YT API timed out')); },20000);
-    });
+  /*************************************************************************
+   * HELPERS
+   *************************************************************************/
+  function b64decode(s) { try { return atob(s); } catch(e) { return s; } }
+  function escapeHtml(s){ return (s||'').replace(/[&<>\"'`]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
+
+  /*************************************************************************
+   * Show serve hint for file:// testing
+   *************************************************************************/
+  function showServeHint(){
+    const el = document.getElementById('serve-hint');
+    if(!el) return;
+    el.style.display = 'block';
+    document.getElementById('serve-close').onclick = ()=> el.style.display='none';
   }
 
-  function fmtTime(s){
-    s = Math.max(0, Math.floor(s||0));
-    const mm = Math.floor(s/60), ss = s%60;
-    return mm + ':' + (ss<10?('0'+ss):ss);
-  }
-
-  function playSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4.5v15l12-7.5L6 4.5z" fill="#fff"/></svg>`; }
-  function pauseSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4" width="4" height="16" rx="1.2" fill="#fff"/><rect x="15" y="4" width="4" height="16" rx="1.2" fill="#fff"/></svg>`; }
-
-  function createHostElements(){
-    const wrap = document.getElementById('player-wrap');
-    if(!wrap) throw new Error('#player-wrap not found');
-
-    // remove only previous host (safe)
-    const prev = wrap.querySelector('.vidu-player-host');
-    if(prev) prev.remove();
-
-    const host = document.createElement('div'); host.className = 'vidu-player-host';
-    const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
-    // keep default mount height (520px) unless user changed it; we'll restore after exit
-    mount.style.height = '520px';
-    mount.style.background = '#000';
-    host.appendChild(mount);
-
-    const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
-    overlay.innerHTML = `
-      <button class="vidu-btn" id="vidu_playbtn">${playSVG()}</button>
-      <div class="vidu-time" id="vidu_cur">0:00</div>
-      <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
-      <div class="vidu-time" id="vidu_dur">0:00</div>
-      <button class="vidu-btn" id="vidu_fullbtn">⤢</button>
-    `;
-    host.appendChild(overlay);
-    wrap.appendChild(host);
-    return { host, mount, overlay };
-  }
-
-  function disableIframeClicks(host){
-    try{
-      const ifr = host.querySelector('iframe');
-      if(ifr){
-        // default to no pointer events so overlay controls receive clicks
-        ifr.style.pointerEvents = 'none';
-        ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen');
-        ifr.setAttribute('allowfullscreen','');
-        ifr.setAttribute('tabindex','-1');
-      }
-    }catch(e){ console.warn('disableIframeClicks', e); }
-  }
-
-  function createPlayer(videoId){
-    const { host, mount, overlay } = createHostElements();
-    state.host = host; state.mount = mount;
-
-    const playBtn = overlay.querySelector('#vidu_playbtn');
-    const curEl = overlay.querySelector('#vidu_cur');
-    const durEl = overlay.querySelector('#vidu_dur');
-    const seekEl = overlay.querySelector('#vidu_seek');
-    const fullBtn = overlay.querySelector('#vidu_fullbtn');
-
-    // helper to detect fullscreen element cross-browser
-    function getFullscreenElement(){
-      return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
-    }
-
-    // saved inline styles to restore after leaving fullscreen
-    const saved = { stored:false, host:{}, mount:{}, iframe:{}, modal:{}, backdrop:{}, playerWrap:{} };
-
-    // fullscreen toggle helper — uses host.requestFullscreen()
-    function toggleFullscreen(){
-      const fs = getFullscreenElement();
-      if(fs === host){
-        const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
-        if(exit) exit.call(document);
-      } else {
-        const req = host.requestFullscreen || host.webkitRequestFullscreen || host.mozRequestFullScreen || host.msRequestFullscreen;
-        if(req) req.call(host);
-      }
-    }
-
-    fullBtn.addEventListener('click', toggleFullscreen);
-
-    // keyboard handlers (Space -> play/pause; F -> fullscreen toggle); respects input focus
-    state.keyHandler = function(e){
-      const active = document.activeElement;
-      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
-      const modal = document.getElementById('modal-root');
-      if(!modal || modal.style.display === 'none') return;
-      if(e.code === 'Space' || e.key === ' '){
-        e.preventDefault();
-        if(state.player){
-          const st = state.player.getPlayerState();
-          if(st === 1) state.player.pauseVideo(); else state.player.playVideo();
-        }
-      } else if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){
-        e.preventDefault();
-        toggleFullscreen();
-      }
-    };
-    document.addEventListener('keydown', state.keyHandler);
-
-    // seeking handlers
-    seekEl.addEventListener('pointerdown', ()=> seekEl._drag=true, {passive:true});
-    seekEl.addEventListener('pointerup', ()=>{ 
-      seekEl._drag=false;
-      if(!state.player) return;
-      const dur = state.player.getDuration ? state.player.getDuration() : 0;
-      if(dur) state.player.seekTo(dur * (parseFloat(seekEl.value)/100), true);
-    }, {passive:true});
-    seekEl.addEventListener('input', ()=>{ 
-      if(seekEl._drag && state.player){
-        const dur = state.player.getDuration ? state.player.getDuration() : 0;
-        if(dur) curEl.textContent = fmtTime(dur * (parseFloat(seekEl.value)/100));
-      }
-    }, {passive:true});
-
-    playBtn.addEventListener('click', ()=>{
-      if(!state.player) return;
-      const st = state.player.getPlayerState();
-      if(st === 1) state.player.pauseVideo(); else state.player.playVideo();
-    });
-
-    // fullscreen change: expand mount height when host or iframe becomes fullscreen
-    function onFSChange(){
-      const fs = getFullscreenElement();
-      // If fullscreenElement is the host OR a descendant of the host (e.g. the iframe itself),
-      // treat it as "our" fullscreen and expand mount/iframe to full viewport without touching other layout elements permanently.
-      const isOurFullscreen = !!(fs && (fs === host || host.contains(fs) || (fs.contains && fs.contains(host))));
-      if(isOurFullscreen){
-        // Save prior inline styles on first entry
-        if(!saved.stored){
-          // host
-          saved.host.position = host.style.position || '';
-          saved.host.top = host.style.top || '';
-          saved.host.left = host.style.left || '';
-          saved.host.width = host.style.width || '';
-          saved.host.height = host.style.height || '';
-          saved.host.zIndex = host.style.zIndex || '';
-          saved.host.borderRadius = host.style.borderRadius || '';
-          // mount
-          saved.mount.height = mount.style.height || '';
-          saved.mount.width = mount.style.width || '';
-          saved.mount.maxHeight = mount.style.maxHeight || '';
-          saved.mount.maxWidth = mount.style.maxWidth || '';
-          // iframe (if exists)
-          const ifr = host.querySelector('iframe');
-          if(ifr){
-            saved.iframe.height = ifr.style.height || '';
-            saved.iframe.width = ifr.style.width || '';
-            saved.iframe.pointerEvents = ifr.style.pointerEvents || '';
-            saved.iframe.maxHeight = ifr.style.maxHeight || '';
-            saved.iframe.maxWidth = ifr.style.maxWidth || '';
-          } else {
-            saved.iframe.height = ''; saved.iframe.width = ''; saved.iframe.pointerEvents = ''; saved.iframe.maxHeight=''; saved.iframe.maxWidth='';
-          }
-          // modal container
-          const modalEl = host.closest('.modal');
-          if(modalEl){
-            saved.modal.display = modalEl.style.display || '';
-            saved.modal.width = modalEl.style.width || '';
-            saved.modal.maxWidth = modalEl.style.maxWidth || '';
-            saved.modal.position = modalEl.style.position || '';
-            saved.modal.zIndex = modalEl.style.zIndex || '';
-          } else { saved.modal = {}; }
-          // modal backdrop
-          const backdrop = document.getElementById('modal-backdrop');
-          if(backdrop){
-            saved.backdrop.display = backdrop.style.display || '';
-            saved.backdrop.zIndex = backdrop.style.zIndex || '';
-          } else saved.backdrop = {};
-          // player-wrap
-          const playerWrap = document.getElementById('player-wrap');
-          if(playerWrap){
-            saved.playerWrap.display = playerWrap.style.display || '';
-            saved.playerWrap.position = playerWrap.style.position || '';
-            saved.playerWrap.zIndex = playerWrap.style.zIndex || '';
-          } else saved.playerWrap = {};
-          saved.stored = true;
-        }
-
-        // Put host into fixed full-viewport stack so nothing else layout-wise changes
-        try{
-          host.style.position = 'fixed';
-          host.style.top = '0';
-          host.style.left = '0';
-          host.style.width = '100vw';
-          host.style.height = '100vh';
-          host.style.zIndex = '2147483647';
-          host.style.borderRadius = '0';
-        }catch(e){}
-
-        try{
-          mount.style.width = '100%';
-          mount.style.height = '100%';
-          mount.style.maxHeight = 'none';
-          mount.style.maxWidth = 'none';
-        }catch(e){}
-
-        try{
-          const ifr = host.querySelector('iframe');
-          if(ifr){
-            ifr.style.width = '100%';
-            ifr.style.height = '100%';
-            ifr.style.maxHeight = 'none';
-            ifr.style.maxWidth = 'none';
-            // enable iframe interactions while truly fullscreen
-            ifr.style.pointerEvents = 'auto';
-          }
-        }catch(e){}
-
-        // keep viewport-resize responsive while fullscreen
-        if(!state.fsResizeHandler){
-          state.fsResizeHandler = ()=> {
-            const curFS = getFullscreenElement();
-            const stillOurFS = !!(curFS && (curFS === host || host.contains(curFS) || (curFS.contains && curFS.contains(host))));
-            if(stillOurFS){
-              try{ host.style.width = window.innerWidth + 'px'; host.style.height = window.innerHeight + 'px'; }catch(e){}
-              try{ mount.style.height = window.innerHeight + 'px'; }catch(e){}
-              try{
-                const ifr = host.querySelector('iframe');
-                if(ifr) ifr.style.height = window.innerHeight + 'px';
-              }catch(e){}
-            }
-          };
-          window.addEventListener('resize', state.fsResizeHandler);
-        }
-      } else {
-        // leaving fullscreen: restore saved inline styles exactly
-        if(saved.stored){
-          try{
-            host.style.position = saved.host.position;
-            host.style.top = saved.host.top;
-            host.style.left = saved.host.left;
-            host.style.width = saved.host.width;
-            host.style.height = saved.host.height;
-            host.style.zIndex = saved.host.zIndex;
-            host.style.borderRadius = saved.host.borderRadius;
-          }catch(e){}
-
-          try{
-            mount.style.height = saved.mount.height;
-            mount.style.width = saved.mount.width;
-            mount.style.maxHeight = saved.mount.maxHeight;
-            mount.style.maxWidth = saved.mount.maxWidth;
-          }catch(e){}
-
-          try{
-            const ifr = host.querySelector('iframe');
-            if(ifr){
-              ifr.style.height = saved.iframe.height;
-              ifr.style.width = saved.iframe.width;
-              ifr.style.pointerEvents = saved.iframe.pointerEvents;
-              ifr.style.maxHeight = saved.iframe.maxHeight;
-              ifr.style.maxWidth = saved.iframe.maxWidth;
-            }
-          }catch(e){}
-
-          try{
-            const modalEl = host.closest('.modal');
-            if(modalEl){
-              modalEl.style.display = saved.modal.display;
-              modalEl.style.width = saved.modal.width;
-              modalEl.style.maxWidth = saved.modal.maxWidth;
-              modalEl.style.position = saved.modal.position;
-              modalEl.style.zIndex = saved.modal.zIndex;
-            }
-          }catch(e){}
-
-          try{
-            const backdrop = document.getElementById('modal-backdrop');
-            if(backdrop){
-              backdrop.style.display = saved.backdrop.display;
-              backdrop.style.zIndex = saved.backdrop.zIndex;
-            }
-          }catch(e){}
-
-          try{
-            const playerWrap = document.getElementById('player-wrap');
-            if(playerWrap){
-              playerWrap.style.display = saved.playerWrap.display;
-              playerWrap.style.position = saved.playerWrap.position;
-              playerWrap.style.zIndex = saved.playerWrap.zIndex;
-            }
-          }catch(e){}
-
-          saved.stored = false;
-        } else {
-          // fallback: ensure mount returns to default height if nothing was saved
-          try{ mount.style.height = '520px'; mount.style.width = '100%'; }catch(e){}
-          try{
-            const ifr = host.querySelector('iframe');
-            if(ifr) ifr.style.pointerEvents = 'none';
-          }catch(e){}
-        }
-
-        if(state.fsResizeHandler){
-          window.removeEventListener('resize', state.fsResizeHandler);
-          state.fsResizeHandler = null;
-        }
-      }
-    }
-    document.addEventListener('fullscreenchange', onFSChange);
-    document.addEventListener('webkitfullscreenchange', onFSChange);
-    document.addEventListener('mozfullscreenchange', onFSChange);
-    document.addEventListener('MSFullscreenChange', onFSChange);
-
-    // load YT and mount player
-    return loadYTApi().then(()=> new Promise((resolve,reject)=>{
-      if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
-
-      state.player = new YT.Player(mount.id, {
-        videoId: videoId,
-        width: '100%',
-        height: '100%',
-        playerVars: {
-          controls: 0,
-          disablekb: 1,
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          iv_load_policy: 3,
-          origin: location.origin
-        },
-        events: {
-          onReady: function(evt){
-            // after YT creates the iframe, ensure we set attributes and default pointer behavior
-            disableIframeClicks(host);
-            try{ evt.target.playVideo(); }catch(e){}
-            // set initial height
-            const fs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
-            mount.style.height = (fs === host) ? window.innerHeight + 'px' : mount.style.height || '520px';
-            // poll updates
-            if(state.updateInterval) clearInterval(state.updateInterval);
-            state.updateInterval = setInterval(()=>{
-              try{
-                if(!state.player) return;
-                const dur = state.player.getDuration ? state.player.getDuration() : 0;
-                const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
-                curEl.textContent = fmtTime(cur);
-                durEl.textContent = (dur && isFinite(dur)) ? fmtTime(dur) : '0:00';
-                if(!seekEl._drag && dur && isFinite(dur)) seekEl.value = (cur / Math.max(1,dur)) * 100;
-                const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
-                playBtn.innerHTML = (st === 1) ? pauseSVG() : playSVG();
-              }catch(e){}
-            }, 160);
-
-            // observe host for iframe replacements and re-disable clicks (will keep attributes updated)
-            if(state.mo) state.mo.disconnect();
-            state.mo = new MutationObserver(()=> disableIframeClicks(host));
-            state.mo.observe(host, { childList:true, subtree:true });
-
-            resolve(state.player);
-          },
-          onError: function(err){ console.error('YT player error', err); reject(err); }
-        }
-      });
-    }));
-  }
-
-  function destroyPlayer(){
-    try{
-      if(state.updateInterval){ clearInterval(state.updateInterval); state.updateInterval = null; }
-      if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
-      if(state.player){ try{ state.player.destroy(); }catch(e){} state.player = null; }
-      if(state.mo){ try{ state.mo.disconnect(); }catch(e){} state.mo = null; }
-      if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
-      // remove fullscreen listeners (no-op if already removed)
-      document.removeEventListener('fullscreenchange', onFSChange);
-      document.removeEventListener('webkitfullscreenchange', onFSChange);
-      document.removeEventListener('mozfullscreenchange', onFSChange);
-      document.removeEventListener('MSFullscreenChange', onFSChange);
-      if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
-    }catch(e){ console.warn('destroyPlayer err', e); }
-  }
-
-  // keep a reference to onFSChange for removeEventListener in destroyPlayer
-  function onFSChange(){ /* placeholder, replaced when createPlayer runs */ }
-
-  // Public API
-  window.showViduPlayer = function(videoId){
-    // rebind onFSChange reference from closure inside createPlayer — small wrapper:
-    return createPlayer(videoId).catch(err => { console.error('createPlayer failed', err); throw err; });
-  };
-  window.destroyViduPlayer = function(){
-    destroyPlayer();
-    const w = document.getElementById('player-wrap'); if(w) w.innerHTML = '';
-  };
-
-  // cleanup on unload
-  window.addEventListener('beforeunload', ()=> { try{ window.destroyViduPlayer(); }catch(e){} }, {passive:true});
-})();
-</script>
-
-<!-- =========================
-     End of player block
-     ========================= -->
-
-<script>
-/*************************************************************************
- * Playlist/Modal/Password & UI (preserved, unchanged layout)
- * The page calls window.showViduPlayer(videoId) to mount the player safely
- *************************************************************************/
-const playlists = [
-  {
-    id: 0,
-    name: 'SUBJECTS',
-    thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg',
-    videos: [
-      {
-        id: 1,
-        name: 'ET',
-        thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg',
-        videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiHFvj6Q-p04TgdZj_tv0eI3&si=pAyX-6SJILH6QSg2"), passB64: btoa("vidu123et") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiFcYCAzfcyI0cz8cOfyWlTc&si=nZ224kprFgDGTG9Z"), passB64: btoa("vidu123et") }
-        ]
-      },
-      {
-        id: 2,
-        name: 'SFT',
-        thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg',
-        videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiG94fMjA7v-6nw55htWj6LH&si=PUXqK2wlIin_tUZm"), passB64: btoa("vidu123sft") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiEmn6j0O870XYlFRasYABD2&si=vjOY0tK0Em5LZvsf"), passB64: btoa("vidu123sft") }
-        ]
-      },
-      {
-        id: 3,
-        name: 'ICT',
-        thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg',
-        videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiFUhYSDfiEVVMuBbc2AiwpC&si=1g80otmZOXdp1hE_"), passB64: btoa("vidu123ict") }
-        ]
-      }
-    ]
-  }
-];
-
-function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
-function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
-
-function renderPlaylists(){
-  const ul = document.getElementById('playlist-list');
-  if(!ul) return;
-  ul.innerHTML = '';
-  if(!playlists || playlists.length === 0){ ul.innerHTML = '<li class="muted">No playlists available.</li>'; return; }
-  playlists.forEach(pl=>{
-    const li = document.createElement('li'); li.className='list-item ripple';
-    li.innerHTML = `<img src="${escapeHtml(pl.thumbnail)}" alt="${escapeHtml(pl.name)}" /><span class="title">${escapeHtml(pl.name)}</span>`;
-    li.addEventListener('click', (ev)=>{ spawnRipple(ev, li); showPlaylistVideos(pl); });
-    attachTilt(li);
-    ul.appendChild(li);
-  });
-  ul.style.display = 'flex';
-}
-
-function showPlaylistVideos(pl, skipPush){
-  const ul = document.getElementById('playlist-list');
-  const container = document.getElementById('playlist-videos');
-  if(!container || !ul) return;
-  if(!window.__viduGlobal) window.__viduGlobal = {};
-  if(!window.__viduGlobal.playlistStack) window.__viduGlobal.playlistStack = [];
-  if(!skipPush){ window.__viduGlobal.playlistStack.push(window.__viduGlobal.currentPl || null); }
-  window.__viduGlobal.currentPl = pl;
-  ul.style.display = 'none';
-  container.style.display = 'block';
-  container.innerHTML = `<h3 style="text-align:center;color:#fff;">${escapeHtml(pl.name)}</h3>`;
-  const vids = document.createElement('ul'); vids.className='list-container';
-  (pl.videos||[]).forEach(v=>{
-    const vli = document.createElement('li'); vli.className='list-item ripple';
-    const thumb = v.thumbnail || '';
-    vli.innerHTML = `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.name)}" /><span class="title">${escapeHtml(v.name)}</span>`;
-    if(v && Array.isArray(v.videos)){ vli.addEventListener('click',(ev)=>{ spawnRipple(ev, vli); showPlaylistVideos(v); }); }
-    else { vli.addEventListener('click',(ev)=>{ spawnRipple(ev, vli); openPasswordModal(v); }); }
-    attachTilt(vli); vids.appendChild(vli);
-  });
-  const back = document.createElement('div'); back.style.textAlign='center'; back.style.marginTop='16px';
-  back.innerHTML = `<button id="back-to-playlists" class="btn secondary">Back</button>`;
-  container.appendChild(vids); container.appendChild(back);
-  document.getElementById('back-to-playlists').onclick = ()=>{
-    const prev = (window.__viduGlobal.playlistStack && window.__viduGlobal.playlistStack.length) ? window.__viduGlobal.playlistStack.pop() : null;
-    if(prev === null){ ul.style.display='flex'; container.style.display='none'; window.__viduGlobal.currentPl = null; }
-    else { showPlaylistVideos(prev, true); }
-  };
-}
-
-function spawnRipple(ev,target){ const rect = target.getBoundingClientRect(); const drop = document.createElement('div'); drop.className = 'drop'; drop.style.left = (ev.clientX - rect.left) + 'px'; drop.style.top = (ev.clientY - rect.top) + 'px'; target.appendChild(drop); setTimeout(()=> drop.remove(),700); }
-function attachTilt(card){ if(!card) return; const img = card.querySelector('img'); function onMove(e){ if(window.__viduGlobal && window.__viduGlobal.visualsPaused) return; const r = card.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width; const py = (e.clientY - r.top) / r.height; const rx = (py - 0.5) * 10; const ry = (px - 0.5) * -10; card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(6px)`; if(img) img.style.transform = `translateZ(26px) scale(1.06) translateY(${(0.5-py)*6}px)`; } function onLeave(){ card.style.transform = ''; if(img) img.style.transform = ''; } card.addEventListener('pointermove', onMove, {passive:true}); card.addEventListener('pointerleave', onLeave, {passive:true}); }
-
-// Modal + password + player mount logic
-let currentItem = null;
-function createModal(){
-  const root = document.getElementById('modal-root');
-  root.innerHTML = `
-    <div class="modal-backdrop" id="modal-backdrop">
-      <div class="modal" role="dialog" aria-modal="true">
-        <div class="controls">
-          <div>
-            <strong id="modal-title">Locked</strong>
-            <div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div>
-          </div>
-          <div>
-            <button id="modal-close" class="btn secondary">Close</button>
-          </div>
-        </div>
-
-        <div id="modal-body">
-          <div id="password-block">
-            <div style="color:#bbb;margin-bottom:8px;">This item is password-protected. Enter password to unlock and play.</div>
-            <div class="password-row">
-              <input id="password-input" type="password" placeholder="Enter password" />
-              <button id="password-submit" class="btn">Unlock</button>
+  /*************************************************************************
+   * Modal creation
+   *************************************************************************/
+  function createModal() {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+      <div class="modal-backdrop" id="modal-backdrop">
+        <div class="modal" role="dialog" aria-modal="true">
+          <div class="controls">
+            <div>
+              <strong id="modal-title">Locked</strong>
+              <div class="muted" id="modal-subtitle"></div>
             </div>
-            <div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div>
+            <div><button id="modal-close" class="btn secondary">Close</button></div>
           </div>
+          <div id="modal-content">
+            <div id="password-block">
+              <div class="muted">This item is password-protected. Enter the password to unlock and play.</div>
+              <div class="password-row" style="margin-top:10px;">
+                <input id="password-input" type="password" placeholder="Enter password" />
+                <button id="password-submit" class="btn">Unlock</button>
+              </div>
+              <div id="password-error" class="muted" style="margin-top:8px;color:#f66;display:none;"></div>
+            </div>
 
-          <div id="player-block" style="display:none;margin-top:12px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <div style="color:#bbb" id="now-playing-label">Now playing</div>
-              <div>
-                <button id="close-player" class="btn">Close</button>
+            <div id="player-block" style="display:none; margin-top:10px;">
+              <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                <div id="now-playing-label" class="muted">Now playing</div>
+                <div>
+                  <button id="close-player" class="btn">Close Player</button>
+                </div>
+              </div>
+
+              <div id="player-wrap"></div>
+
+              <div id="playlist-list-wrap" style="display:none; margin-top:12px;">
+                <div class="muted">Playlist contents</div>
+                <div class="playlist-list" id="playlist-video-list" style="max-height:260px; overflow:auto;"></div>
               </div>
             </div>
-
-            <!-- Player mount point (do not rename) -->
-            <div id="player-wrap"></div>
-
-            <div id="playlist-list-wrap" style="display:none;margin-top:12px;">
-              <div class="muted">Playlist contents</div>
-              <div class="playlist-list" id="playlist-video-list"></div>
-            </div>
           </div>
         </div>
-      </div>
-    </div>
-  `;
-  document.getElementById('modal-close').onclick = closeModal;
-  document.getElementById('close-player').onclick = closeModal;
-  document.getElementById('password-submit').onclick = onPasswordSubmit;
-  document.getElementById('password-input').onkeydown = (e)=>{ if(e.key === 'Enter') onPasswordSubmit(); };
-  document.getElementById('modal-backdrop').onclick = function(e){ if(e.target === this) closeModal(); };
-}
-
-function openPasswordModal(item){
-  currentItem = item;
-  const root = document.getElementById('modal-root');
-  root.style.display = 'block';
-  document.getElementById('modal-title').textContent = item.name || 'Protected';
-  document.getElementById('modal-subtitle').textContent = (item.type || 'video') + ' — password required';
-  document.getElementById('password-input').value = '';
-  document.getElementById('password-error').style.display = 'none';
-  document.getElementById('password-block').style.display = 'block';
-  document.getElementById('player-block').style.display = 'none';
-  const plwrap = document.getElementById('playlist-list-wrap'); if(plwrap) plwrap.style.display = 'none';
-  setTimeout(()=>document.getElementById('password-input').focus(), 50);
-  if(!window.__viduGlobal) window.__viduGlobal = {};
-  window.__viduGlobal.visualsPaused = true;
-  window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'modal-open' } }));
-}
-
-function closeModal(){
-  const root = document.getElementById('modal-root'); if(root) root.style.display = 'none';
-  const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = '';
-  const plwrap = document.getElementById('playlist-video-list'); if(plwrap) plwrap.innerHTML = '';
-  currentItem = null;
-  if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
-  window.__viduGlobal.visualsPaused = false;
-  window.dispatchEvent(new CustomEvent('vidu:visuals:resume', { detail:{ reason:'modal-closed' } }));
-}
-
-function onPasswordSubmit(){
-  const val = (document.getElementById('password-input').value || '').trim();
-  if(!currentItem) return;
-  const expected = b64decode(currentItem.passB64 || '');
-  if(val === expected){
-    document.getElementById('password-block').style.display = 'none';
-    document.getElementById('password-error').style.display = 'none';
-    document.getElementById('player-block').style.display = 'block';
-    if(currentItem.type === 'playlist'){
-      showPlaylistInsideModal(currentItem);
-    } else {
-      const id = b64decode(currentItem.idB64 || '');
-      document.getElementById('now-playing-label').textContent = currentItem.name || 'Now playing';
-      if(window.showViduPlayer) window.showViduPlayer(id).catch(err => {
-        console.error('showViduPlayer failed', err);
-        const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player.</div>`;
-      });
-    }
-  } else {
-    const err = document.getElementById('password-error'); err.style.display = 'block'; err.textContent = 'Incorrect password — try again.';
+      </div>`;
+    document.getElementById('modal-close').onclick = closeModal;
+    document.getElementById('close-player').onclick = closeModal;
+    document.getElementById('password-submit').onclick = onPasswordSubmit;
+    document.getElementById('password-input').onkeydown = (e)=>{ if(e.key === 'Enter') onPasswordSubmit(); };
+    document.getElementById('modal-backdrop').onclick = function(e){ if(e.target === this) closeModal(); };
   }
-}
 
-// Playlist fetching (unchanged)
-const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI';
-async function fetchPlaylistVideos(playlistId){
-  if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
-  const items=[]; let pageToken='';
-  do{
-    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}` + (pageToken?`&pageToken=${pageToken}`:'');
-    const res = await fetch(url);
-    if(!res.ok){ const txt = await res.text().catch(()=>null); throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||'')); }
-    const data = await res.json();
-    (data.items||[]).forEach(it=>{
-      const sn = it.snippet || {};
-      if(sn.resourceId && sn.resourceId.videoId){
-        const thumb = (sn.thumbnails && (sn.thumbnails.high||sn.thumbnails.medium||sn.thumbnails.default))||{};
-        items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
+  function openPasswordModal(idx) {
+    currentItemIndex = idx;
+    const item = globalVideos[idx];
+    const title = item.title || 'Protected item';
+    const subtitle = (item.type === 'playlist') ? 'Playlist' : 'Video';
+    const root = document.getElementById('modal-root');
+    root.style.display = 'block';
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-subtitle').textContent = subtitle + ' — password required';
+    document.getElementById('password-input').value = '';
+    document.getElementById('password-error').style.display = 'none';
+    document.getElementById('password-block').style.display = 'block';
+    document.getElementById('player-block').style.display = 'none';
+    setTimeout(()=>document.getElementById('password-input').focus(), 50);
+  }
+
+  function closeModal() {
+    const root = document.getElementById('modal-root');
+    root.style.display = 'none';
+    const wrap = document.getElementById('player-wrap');
+    if (wrap) wrap.innerHTML = '';
+    const pl = document.getElementById('playlist-video-list'); if(pl) pl.innerHTML = '';
+    currentItemIndex = null;
+  }
+
+  function onPasswordSubmit() {
+    const val = (document.getElementById('password-input').value || '').trim();
+    const item = globalVideos[currentItemIndex];
+    const expected = b64decode((item.passB64 || '').trim());
+    if (val === expected) {
+      document.getElementById('password-block').style.display = 'none';
+      document.getElementById('password-error').style.display = 'none';
+      showPlayerForItem(item);
+    } else {
+      const err = document.getElementById('password-error');
+      err.style.display = 'block';
+      err.textContent = 'Incorrect password — try again.';
+    }
+  }
+
+  function showPlayerForVideo(videoId, title){
+    const wrap = document.getElementById('player-wrap');
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('src', `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?rel=0&autoplay=1`);
+    iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.style.width = '100%';
+    iframe.style.height = '520px';
+    wrap.innerHTML = '';
+    wrap.appendChild(iframe);
+    document.getElementById('player-block').style.display = 'block';
+    const now = document.getElementById('now-playing-label');
+    if(now) now.textContent = title ? `Now playing — ${title}` : 'Now playing';
+  }
+
+  async function fetchPlaylistVideos(playlistId){
+    const items = []; let pageToken = '';
+    do{
+      let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}`;
+      const headers = {};
+      if(oauthToken) headers['Authorization'] = 'Bearer ' + oauthToken;
+      else if(YT_API_KEY && YT_API_KEY !== 'YOUR_API_KEY_HERE') url += `&key=${encodeURIComponent(YT_API_KEY)}`;
+      else throw new Error('No OAuth token and no API key configured. Sign in or set an API key.');
+
+      if(pageToken) url += `&pageToken=${pageToken}`;
+      const res = await fetch(url, { headers });
+      if(!res.ok){
+        const txt = await res.text().catch(()=>null);
+        throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||''));
+      }
+      const data = await res.json();
+      (data.items||[]).forEach(it => {
+        const sn = it.snippet || {};
+        if(sn.resourceId && sn.resourceId.videoId){
+          const thumb = (sn.thumbnails && (sn.thumbnails.medium||sn.thumbnails.high||sn.thumbnails.default))||{};
+          items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
+        }
+      });
+      pageToken = data.nextPageToken || '';
+    } while(pageToken);
+    return items;
+  }
+
+  async function showPlaylistInsideModal(item){
+    const rawId = b64decode(item.idB64), playlistId = rawId.split('&')[0];
+    try{
+      const videos = await fetchPlaylistVideos(playlistId);
+      if(!videos.length){ document.getElementById('player-wrap').innerHTML = `<div class="muted">No videos found or playlist is private.</div>`; document.getElementById('player-block').style.display='block'; return; }
+
+      const listWrap = document.getElementById('playlist-video-list');
+      listWrap.innerHTML = '';
+
+      // Build rows with thumbnail + full title (wrapping)
+      videos.forEach(v=>{
+        const li = document.createElement('div');
+        li.className = 'list-item';
+        li.setAttribute('data-video-id', v.videoId);
+        const thumb = escapeHtml(v.thumb || `https://img.youtube.com/vi/${v.videoId}/hqdefault.jpg`);
+        const titleHtml = `<div class="title-wrap"><div class="playlist-title">${escapeHtml(v.title)}</div></div>`;
+        li.innerHTML = `<img src="${thumb}" alt="${escapeHtml(v.title)}" loading="lazy" />` + titleHtml;
+        li.onclick = ()=> showPlayerForVideo(v.videoId, v.title);
+        listWrap.appendChild(li);
+      });
+
+      document.getElementById('player-block').style.display='block';
+      document.getElementById('playlist-list-wrap').style.display='block';
+      // Play first video immediately
+      showPlayerForVideo(videos[0].videoId, videos[0].title);
+    } catch(err){
+      console.error('Playlist fetch error', err);
+      document.getElementById('player-wrap').innerHTML = `<div class="muted">Failed to load playlist: ${escapeHtml(err.message||'')}</div>`;
+      document.getElementById('player-block').style.display='block';
+    }
+  }
+
+  function showPlayerForItem(item){ if(item.type==='video'){ const id=b64decode(item.idB64); showPlayerForVideo(id, item.title||item.name); } else showPlaylistInsideModal(item); }
+
+  /*************************************************************************
+   * Render main list
+   *************************************************************************/
+  function getThumb(item) {
+    if (item.thumb && item.thumb.trim().length) return item.thumb;
+    try {
+      const id = b64decode(item.idB64);
+      if (item.type === 'video') return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+      return 'https://i.imgur.com/8Km9tLL.png';
+    } catch(e) { return 'https://i.imgur.com/8Km9tLL.png'; }
+  }
+
+  function renderList() {
+    const ul = document.getElementById('global-video-list');
+    ul.innerHTML = '';
+    globalVideos.forEach((v, i) => {
+      const li = document.createElement('li');
+      li.className = 'list-item ripple';
+      const thumb = getThumb(v);
+      li.innerHTML = `
+        <img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.title)}" loading="lazy" />
+        <span class="title">${escapeHtml(v.title)}</span>
+      `;
+      li.onclick = ()=> openPasswordModal(i);
+      ul.appendChild(li);
+    });
+  }
+
+  /*************************************************************************
+   * Google OAuth (GSI) init & UI wiring (unchanged)
+   *************************************************************************/
+  function initGoogleOAuth(){
+    if (isFileProtocol) { return; }
+    if(!OAUTH_CLIENT_ID || OAUTH_CLIENT_ID === 'YOUR_OAUTH_CLIENT_ID_HERE'){ console.warn('OAUTH_CLIENT_ID not set.'); return; }
+    if(!window.google){ setTimeout(initGoogleOAuth, 300); return; }
+    if(tokenClient) return;
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: OAUTH_CLIENT_ID,
+      scope: 'openid email profile https://www.googleapis.com/auth/youtube.readonly',
+      callback: (resp) => {
+        if(resp.error){ console.error('OAuth failed', resp); alert('Google sign-in failed: ' + (resp.error || 'unknown')); return; }
+        oauthToken = resp.access_token;
+        fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + oauthToken } })
+          .then(r=>r.json()).then(profile => {
+            profileInfo = profile;
+            const auth = document.getElementById('auth-area');
+            auth.classList.add('logged-in');
+            auth.innerHTML = `<div class="avatar"><img src="${profile.picture||''}" alt="avatar"/></div><div style="display:flex;align-items:center;gap:8px;"><button id="signout-btn" class="btn">Sign out</button></div>`;
+            document.getElementById('signout-btn').onclick = signOutGoogle;
+          }).catch(err => { console.warn('userinfo fetch failed', err); });
       }
     });
-    pageToken = data.nextPageToken || '';
-  } while(pageToken);
-  return items;
-}
-
-async function showPlaylistInsideModal(item){
-  const rawId = b64decode(item.idB64);
-  const playlistId = rawId.split('&')[0];
-  window.__viduGlobal.visualsPaused = true;
-  window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'playlist-load' } }));
-
-  try{
-    const videos = await fetchPlaylistVideos(playlistId);
-    if(!videos.length){
-      const wrap = document.getElementById('player-wrap');
-      if(wrap) wrap.innerHTML = `<div class="muted">No videos found or playlist is private.</div>`;
-      document.getElementById('player-block').style.display='block';
-      return;
-    }
-
-    let listWrap = document.getElementById('playlist-video-list');
-    if(!listWrap){
-      const wrapper = document.createElement('div');
-      wrapper.id = 'playlist-list-wrap';
-      wrapper.style.marginTop = '12px';
-      wrapper.innerHTML = `<div class="muted">Playlist contents</div><div class="playlist-list" id="playlist-video-list"></div>`;
-      const playerBlock = document.getElementById('player-block');
-      if(playerBlock) playerBlock.appendChild(wrapper);
-      listWrap = document.getElementById('playlist-video-list');
-    }
-
-    if(listWrap) listWrap.innerHTML = '';
-    videos.forEach(v=>{
-      const li = document.createElement('div'); li.className = 'list-item';
-      li.setAttribute('data-video-id', v.videoId);
-      li.style.display='flex'; li.style.alignItems='center'; li.style.gap='12px'; li.style.padding='8px';
-      li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;" /><div style="flex:1;"><div class="title" style="font-size:13px;">${escapeHtml(v.title)}</div></div>`;
-      li.onclick = ()=> {
-        document.getElementById('now-playing-label').textContent = v.title || 'Now playing';
-        if(window.showViduPlayer) window.showViduPlayer(v.videoId).catch(err => {
-          console.error('showViduPlayer failed', err);
-          const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player.</div>`;
-        });
-      };
-      listWrap.appendChild(li);
-    });
-
-    document.getElementById('player-block').style.display='block';
-    const outer = document.getElementById('playlist-list-wrap'); if(outer) outer.style.display='block';
-    document.getElementById('now-playing-label').textContent = videos[0].title || 'Now playing';
-    if(window.showViduPlayer) window.showViduPlayer(videos[0].videoId).catch(err => {
-      console.error('showViduPlayer failed', err);
-      const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player.</div>`;
-    });
-  } catch(err){
-    console.error('Playlist fetch error', err);
-    const wrap = document.getElementById('player-wrap');
-    if(wrap) wrap.innerHTML = `<div class="muted">Failed to load playlist: ${escapeHtml(err.message || '')}</div>`;
-    document.getElementById('player-block').style.display='block';
   }
-}
 
-// Visual helpers & init
-function pauseVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = true; window.dispatchEvent(new CustomEvent('vidu:visuals:pause',{detail:{reason}})); }
-function resumeVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = false; window.dispatchEvent(new CustomEvent('vidu:visuals:resume',{detail:{reason}})); }
+  function signInWithGoogle(){
+    if(isFileProtocol){ showServeHint(); return; }
+    if(!tokenClient){ initGoogleOAuth(); setTimeout(signInWithGoogle, 300); return; }
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
 
-document.addEventListener('DOMContentLoaded', function(){
-  createModal();
-  renderPlaylists();
-  const navHome = document.getElementById('nav-home');
-  if(navHome) navHome.addEventListener('click', ()=>{ document.getElementById('playlist-list').style.display='flex'; document.getElementById('playlist-videos').style.display='none'; });
-  document.querySelectorAll('.list-item').forEach(el=>attachTilt(el));
-  (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
-});
+  function signOutGoogle(){
+    if(oauthToken){
+      const revokeUrl = 'https://oauth2.googleapis.com/revoke?token=' + encodeURIComponent(oauthToken);
+      fetch(revokeUrl, { method:'POST', headers:{ 'Content-type':'application/x-www-form-urlencoded' } }).catch(()=>{}).finally(()=>{
+        oauthToken = null; profileInfo = null;
+        const auth = document.getElementById('auth-area');
+        auth.classList.remove('logged-in');
+        auth.innerHTML = `<button id="signin-fallback" class="btn">Sign in with Google</button>`;
+        document.getElementById('signin-fallback').addEventListener('click', ()=> {
+          if(isFileProtocol){ showServeHint(); return; }
+          initGoogleOAuth(); setTimeout(signInWithGoogle, 250);
+        });
+      });
+    } else { profileInfo = null; }
+  }
 
-// deterrents (kept)
-document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, false);
-document.addEventListener('keydown', function(e){ if ((e.ctrlKey && e.shiftKey && (e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')) || (e.ctrlKey && (e.key==='U'||e.key==='u')) || (e.key==='F12')) { e.preventDefault(); return false; } });
-document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { const root=document.getElementById('modal-root'); if(root) root.style.display='none'; resumeVisuals('esc'); } });
+  // fallback hookup for initial visible button
+  document.addEventListener('DOMContentLoaded', ()=>{
+    createModal();
+    renderList();
+    attachHeaderInteractions();
+    if(!isFileProtocol) initGoogleOAuth();
+    // entrance delays
+    const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms');
 
-(function modalWatcher(){ const root=document.getElementById('modal-root'); if(!root) return; const obs = new MutationObserver(()=>{ const isVisible = (root.style.display !== 'none' && root.style.display !== ''); if(!isVisible){ setTimeout(()=> { if(!document.querySelector('.modal-backdrop') || document.querySelectorAll('.modal-backdrop').length === 0) resumeVisuals('modalWatcher'); }, 60); } }); obs.observe(root, { attributes: true, attributeFilter: ['style', 'class'] }); window.addEventListener('beforeunload', ()=> obs.disconnect(), {passive:true}); })();
-</script>
+    const fb = document.getElementById('signin-fallback');
+    if(fb) fb.addEventListener('click', ()=> {
+      if(isFileProtocol){ showServeHint(); return; }
+      initGoogleOAuth(); setTimeout(signInWithGoogle, 250);
+    });
+  });
 
-<script src="assets/js/jquery.min.js"></script>
-<script src="assets/js/browser.min.js"></script>
-<script src="assets/js/breakpoints.min.js"></script>
-<script src="assets/js/util.js"></script>
-<script src="assets/js/main.js"></script>
+  /*************************************************************************
+   * Particles overlay (unchanged)
+   *************************************************************************/
+  (function createParticles(){
+    try {
+      const canvas=document.createElement('canvas'); canvas.id='fx-canvas'; canvas.style.position='fixed'; canvas.style.left='0'; canvas.style.top='0'; canvas.style.width='100%'; canvas.style.height='100%'; canvas.style.zIndex='1'; canvas.style.pointerEvents='none'; document.body.appendChild(canvas);
+      const ctx=canvas.getContext('2d'); let dpr=Math.min(2, window.devicePixelRatio || 1);
+      function resize(){ canvas.width=innerWidth*dpr; canvas.height=innerHeight*dpr; canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); }
+      window.addEventListener('resize', resize, {passive:true}); resize();
+      const stars=[]; for(let i=0;i<80;i++){ stars.push({ x:Math.random()*innerWidth, y:Math.random()*innerHeight, r:Math.random()*1.8+0.3, vx:(Math.random()-0.5)*0.12, vy:(Math.random()-0.5)*0.06, hue:200+Math.random()*120, alpha:Math.random()*0.22+0.06 }); }
+      function draw(){ ctx.clearRect(0,0,innerWidth,innerHeight); const g=ctx.createRadialGradient(innerWidth*0.7, innerHeight*0.35, 0, innerWidth*0.4, innerHeight*0.6, Math.max(innerWidth,innerHeight)); g.addColorStop(0,'rgba(123,97,255,0.05)'); g.addColorStop(0.45,'rgba(57,255,20,0.02)'); g.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,innerWidth,innerHeight);
+
+        for(const s of stars){ s.x+=s.vx; s.y+=s.vy; if(s.x<-10) s.x=innerWidth+10; if(s.x>innerWidth+10) s.x=-10; if(s.y<-10) s.y=innerHeight+10; if(s.y>innerHeight+10) s.y=-10; ctx.beginPath(); ctx.fillStyle=`hsla(${s.hue},85%,70%,${s.alpha})`; ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); }
+
+        for(let i=0;i<stars.length;i++){ const a=stars[i]; for(let j=i+1;j<stars.length;j++){ const b=stars[j]; const dx=a.x-b.x, dy=a.y-b.y; const d=Math.sqrt(dx*dx+dy*dy); if(d<140){ ctx.beginPath(); ctx.strokeStyle=`rgba(120,150,255,${(1-d/140)*0.03})`; ctx.lineWidth=1; ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); } } }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    } catch(e){ console.warn('particles failed', e); }
+  })();
+
+  /* header neon interactions (unchanged) */
+  function attachHeaderInteractions(){
+    const selector = 'header nav ul li a, header .logo';
+    const els = Array.from(document.querySelectorAll(selector));
+    if(els.length === 0){ setTimeout(attachHeaderInteractions, 200); return; }
+
+    function onPointerEnter(e){ if(e.pointerType === 'touch') return; e.currentTarget.classList.add('hover-strong'); }
+    function onPointerLeave(e){ e.currentTarget.classList.remove('hover-strong'); }
+    function onPointerDown(e){ const el = e.currentTarget; el.classList.add('touch-active'); el.classList.add('pulse'); setTimeout(()=> el.classList.remove('pulse'), 480); setTimeout(()=> el.classList.remove('touch-active'), 420); }
+    function onTouchStart(e){ const el = e.currentTarget; el.classList.add('touch-active'); setTimeout(()=> el.classList.remove('touch-active'), 420); }
+
+    els.forEach(el=>{
+      if(getComputedStyle(el).position === 'static') el.style.position = 'relative';
+      el.addEventListener('pointerenter', onPointerEnter, {passive:true});
+      el.addEventListener('pointerleave', onPointerLeave, {passive:true});
+      el.addEventListener('pointerdown', onPointerDown, {passive:true});
+      el.addEventListener('touchstart', onTouchStart, {passive:true});
+      el.addEventListener('focus', ()=> el.classList.add('hover-strong'));
+      el.addEventListener('blur', ()=> el.classList.remove('hover-strong'));
+    });
+
+    const mo = new MutationObserver(()=> attachHeaderInteractions());
+    mo.observe(document.body, { childList:true, subtree:true });
+  }
+
+  // small deterrents & keyboard UX
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, false);
+  document.addEventListener('keydown', function(e){
+    if ((e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) ||
+        (e.ctrlKey && (e.key === 'U' || e.key === 'u')) ||
+        (e.key === 'F12')) { e.preventDefault(); return false; }
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { closeModal(); } });
+  </script>
+
+  <!-- HTML5 UP Scripts kept as before -->
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/js/browser.min.js"></script>
+  <script src="assets/js/breakpoints.min.js"></script>
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/main.js"></script>
 </body>
 </html>
