@@ -4,6 +4,12 @@
   <title>VIDU</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+
+  <!-- Favicon (32x32 PNG) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon.png" />
+  <link rel="shortcut icon" href="assets/images/favicon.png" />
+  <meta name="theme-color" content="#39ff14" />
+
   <link rel="stylesheet" href="assets/css/main.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
@@ -375,10 +381,7 @@
   function loadYTApi(){
     if(window.YT && window.YT.Player) return Promise.resolve();
     if(window._vidu_loading_yt){
-      return new Promise((res, rej)=>{
-        const t = setInterval(()=>{ if(window.YT && window.YT.Player){ clearInterval(t); res(); } },80);
-        setTimeout(()=>{ clearInterval(t); rej(new Error('YT load timeout')); },20000);
-      });
+      return new Promise((res, rej)=>{const t = setInterval(()=>{ if(window.YT && window.YT.Player){ clearInterval(t); res(); } },80); setTimeout(()=>{ clearInterval(t); rej(new Error('YT load timeout')); },20000);});
     }
     window._vidu_loading_yt = true;
     return new Promise((resolve,reject)=>{
