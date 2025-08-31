@@ -26,7 +26,7 @@
 
     .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;align-items:start}
     @media (min-width:900px){ .tiles{grid-template-columns:repeat(4,1fr)} }
-    @media (max-width:640px){ .tiles{grid-template-columns:1fr;gap:14px; justify-items:center;} .card{width:100%;max-width:360px;} }
+    @media (max-width:640px){ .tiles{grid-template-columns:1fr;gap:14px; justify-items:center;} .card{width:100%;max-width:420px;} }
 
     .card{display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.45));border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:transform .22s,box-shadow .22s;box-shadow:0 14px 30px rgba(0,0,0,0.55);min-height:300px}
     .card:hover{transform:translateY(-8px);box-shadow:0 34px 60px rgba(0,0,0,0.65)}
@@ -34,7 +34,7 @@
     /* responsive neon text: clamp so it doesn't overflow on small screens */
     .neon{font-weight:900;letter-spacing:6px;color:#00ff3a;text-shadow:0 0 6px rgba(0,255,120,0.95),0 0 18px rgba(0,255,120,0.45),0 18px 28px rgba(0,0,0,0.6);mix-blend-mode:screen;line-height:0.9;transform:translateY(-6px);pointer-events:none;user-select:none;white-space:nowrap; font-size: clamp(48px, 14vw, 94px); }
     .neon.small{font-size: clamp(36px, 12vw, 60px); letter-spacing:4px;}
-    .neon-reflect{position:absolute;left:0;right:0;text-align:center;transform:scaleY(-1);opacity:0.22;filter:blur(4px);font-weight:900;font-size: clamp(36px, 14vw, 94px);color:#00ff3a;mix-blend-mode:screen;pointer-events:none;white-space:nowrap}
+    .neon-reflect{position:relative;text-align:center;transform:scaleY(-1);opacity:0.22;filter:blur(4px);font-weight:900;font-size: clamp(36px, 14vw, 94px);color:#00ff3a;mix-blend-mode:screen;pointer-events:none;white-space:nowrap}
     .card-caption{padding:14px 12px 18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));display:flex;flex-direction:column;align-items:center;gap:6px}
     .card-title{font-weight:800;color:#eaf8ea;font-size:14px;text-align:center}
     .card-type{font-size:11px;color:rgba(170,255,190,0.92);font-weight:700;text-transform:uppercase}
@@ -126,11 +126,11 @@
       .now-playing .title{font-size:13px}
     }
 
-    /* ===== small-screen centering fixes (NEW) ===== */
+    /* ===== small-screen centering & clipping fixes (NEW) ===== */
     @media (max-width:640px){
       /* Center the internals of each card on small screens */
       .card { align-items: center; background: rgba(0,0,0,0.66); }
-      .card-media { justify-content: center; align-items: center; position:relative; width:100%; overflow:hidden; border-radius:8px; }
+      .card-media { justify-content: center; align-items: center; position:relative; width:100%; overflow:visible; border-radius:8px; padding:24px 0; }
 
       /* full black fill behind the neon on mobile */
       .card-media::before{
@@ -143,27 +143,46 @@
         opacity: 0.98;
       }
 
-      /* ensure neon and reflect are full width blocks centered */
+      /* the new inner wrapper that limits neon width and clips glow */
+      .neon-wrap{
+        position:relative;
+        z-index:1;
+        width:68%;
+        max-width:68%;
+        display:block;
+        margin:0 auto;
+        overflow:hidden; /* critical: clip glow/reflection */
+        text-align:center;
+        pointer-events:none;
+      }
+
+      /* neon and reflection are contained inside the wrapper */
       .neon, .neon-reflect {
-        position: relative;
-        z-index: 1;
-        display: block;
-        width: 100%;
-        text-align: center;
-        margin: 0 auto;
-        white-space: nowrap;
-        overflow: hidden;
+        display:block;
+        width:100%;
+        text-align:center;
+        white-space:nowrap;
+        overflow:hidden;
+        margin:0 auto;
+        position:relative;
       }
 
-      /* make reflect slightly closer and less impactful so it won't offset layout */
-      .neon-reflect {
-        bottom: 2px;
-        transform: translateY(8px) scaleY(-1);
-        opacity: 0.18;
-        filter: blur(6px);
+      /* reflection inside wrapper (clipped) */
+      .neon-reflect{
+        transform:translateY(8px) scaleY(-1);
+        opacity:0.16;
+        filter:blur(6px);
       }
 
-      .card-caption { align-items: center; text-align: center; padding-top: 12px; padding-bottom: 14px; z-index: 1; }
+      /* slightly reduce neon spread on mobile so edges aren't too bright */
+      .neon{ text-shadow:0 0 4px rgba(0,255,120,0.85),0 0 10px rgba(0,255,120,0.35); }
+
+      .card-caption { align-items: center; text-align: center; padding-top: 12px; padding-bottom: 14px; z-index: 1; width:100% }
+    }
+
+    /* In case you want a slightly narrower central area on very narrow phones */
+    @media (max-width:360px){
+      .neon-wrap{ width:82%; max-width:82%; }
     }
   </style>
 </head>
@@ -261,7 +280,7 @@
       try { return atob(idB64 || '').split('&')[0]; } catch(e){ console.warn('Invalid idB64', idB64, e); return ''; }
     }
 
-    /* ---------- render tiles ---------- */
+    /* ---------- render tiles (UPDATED - adds neon-wrap) ---------- */
     function buildTiles(){
       const tiles = document.getElementById('tiles');
       tiles.innerHTML = '';
@@ -276,8 +295,10 @@
         const small = neon.length > 6 ? ' small' : '';
         card.innerHTML = `
           <div class="card-media" role="img" aria-label="${escapeHtml(it.title)} thumbnail">
-            <div class="neon${small}">${escapeHtml(neon)}</div>
-            <div class="neon-reflect${small}" aria-hidden="true">${escapeHtml(neon)}</div>
+            <div class="neon-wrap">
+              <div class="neon${small}">${escapeHtml(neon)}</div>
+              <div class="neon-reflect${small}" aria-hidden="true">${escapeHtml(neon)}</div>
+            </div>
           </div>
           <div class="card-caption">
             <div class="card-title">${escapeHtml(it.title)}</div>
