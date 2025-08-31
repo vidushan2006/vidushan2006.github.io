@@ -196,7 +196,7 @@
     .vidu-range::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent-2); box-shadow:0 2px 8px rgba(0,0,0,0.5); border:2px solid rgba(0,0,0,0.18); margin-top:-4px; }
     .vidu-range::-moz-range-thumb{ width:16px; height:16px; border-radius:50%; background:var(--accent-2); border:2px solid rgba(0,0,0,0.18); }
 
-    .vidu-time { min-width:56px; font-size:14px; font-weight:800; color:#cbd5ff; text-align:center; }
+    .vidu-time { min-width:90px; font-size:14px; font-weight:800; color:#cbd5ff; text-align:center; letter-spacing:1px; }
 
     /* Volume control (replaces quality selector) */
     .vidu-volume {
@@ -264,6 +264,7 @@
       .vidu-mount{ height:320px; }
       .vidu-overlay{ left:8px; right:8px; bottom:8px; }
       .vidu-controls-bg { height:56px; }
+      .vidu-time { min-width:76px; font-size:12px; }
     }
   </style>
 </head>
@@ -324,31 +325,18 @@
     lastVolume: 100
   };
 
-  function loadYTApi(){
-    if(window.YT && window.YT.Player) return Promise.resolve();
-    if(window._vidu_loading_yt){
-      return new Promise((res, rej)=>{
-        const t=setInterval(()=>{ if(window.YT && window.YT.Player){ clearInterval(t); res(); } },80);
-        setTimeout(()=>{ clearInterval(t); rej(new Error('YT load timeout')); },20000);
-      });
-    }
-    window._vidu_loading_yt = true;
-    return new Promise((resolve,reject)=>{
-      const s=document.createElement('script');
-      s.src='https://www.youtube.com/iframe_api';
-      s.async=true;
-      s.onerror = ()=> reject(new Error('YT API failed to load'));
-      document.head.appendChild(s);
-      window.onYouTubeIframeAPIReady = function(){ resolve(); };
-      setTimeout(()=>{ if(window.YT && window.YT.Player) resolve(); },1200);
-      setTimeout(()=>{ if(!(window.YT && window.YT.Player)) reject(new Error('YT API timed out')); },20000);
-    });
+  function pad2(n){
+    n = Math.max(0, Math.floor(n||0));
+    return (n < 10 ? '0' + n : String(n));
   }
 
+  // new time format: HH : MM : SS with leading zeros (e.g. 02 : 30 : 05)
   function fmtTime(s){
     s = Math.max(0, Math.floor(s||0));
-    const mm = Math.floor(s/60), ss = s%60;
-    return mm + ':' + (ss<10?('0'+ss):ss);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return pad2(h) + ' : ' + pad2(m) + ' : ' + pad2(sec);
   }
 
   function playSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4.5v15l12-7.5L6 4.5z" fill="#fff"/></svg>`; }
@@ -377,9 +365,9 @@
     overlay.innerHTML = `
       <div class="inner-bg" aria-hidden="true"></div>
       <button class="vidu-btn" id="vidu_playbtn">${playSVG()}</button>
-      <div class="vidu-time" id="vidu_cur">0:00</div>
+      <div class="vidu-time" id="vidu_cur">` + fmtTime(0) + `</div>
       <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
-      <div class="vidu-time" id="vidu_dur">0:00</div>
+      <div class="vidu-time" id="vidu_dur">` + fmtTime(0) + `</div>
       <!-- volume control placed here (replaces quality selector) -->
       <input id="vidu_vol" class="vidu-volume" type="range" min="0" max="100" step="1" value="100" aria-label="Volume" />
       <button class="vidu-btn" id="vidu_fullbtn">⤢</button>
@@ -430,6 +418,10 @@
     const seekEl = overlay.querySelector('#vidu_seek');
     const fullBtn = overlay.querySelector('#vidu_fullbtn');
     const volEl = overlay.querySelector('#vidu_vol');
+
+    // ensure initial time text uses new format
+    try{ if(curEl) curEl.textContent = fmtTime(0); }catch(e){}
+    try{ if(durEl) durEl.textContent = fmtTime(0); }catch(e){}
 
     function getFullscreenElement(){
       return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
@@ -498,7 +490,7 @@
     seekEl.addEventListener('input', ()=>{ 
       if(seekEl._drag && state.player){
         const dur = state.player.getDuration ? state.player.getDuration() : 0;
-        if(dur) curEl.textContent = fmtTime(dur * (parseFloat(seekEl.value)/100));
+        if(dur) curEl.textContent = fmtTime(Math.floor(dur * (parseFloat(seekEl.value)/100)));
         updateSeekBackground(seekEl);
       }
     }, {passive:true});
@@ -839,8 +831,8 @@
                 if(!state.player) return;
                 const dur = state.player.getDuration ? state.player.getDuration() : 0;
                 const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
-                curEl.textContent = fmtTime(cur);
-                durEl.textContent = (dur && isFinite(dur)) ? fmtTime(dur) : '0:00';
+                curEl.textContent = fmtTime(Math.floor(cur));
+                durEl.textContent = (dur && isFinite(dur)) ? fmtTime(Math.floor(dur)) : fmtTime(0);
                 if(!seekEl._drag && dur && isFinite(dur)) {
                   seekEl.value = (cur / Math.max(1,dur)) * 100;
                   updateSeekBackground(seekEl);
