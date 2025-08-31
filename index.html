@@ -219,7 +219,7 @@
 
     .vidu-time { min-width:90px; font-size:14px; font-weight:800; color:#cbd5ff; text-align:center; letter-spacing:1px; }
 
-    /* QUALITY menu (kept but not opened by the visible "720p" button) */
+    /* QUALITY menu (internal; hidden from visible UI) */
     .vidu-quality-menu {
       position:absolute;
       z-index:10004;
@@ -308,23 +308,6 @@
       .vidu-range{ min-width:72px; }
       .vidu-btn{ width:36px; height:36px; }
     }
-
-    /* ---- Specific override to remove circular look from the visible 720p button ---- */
-    #vidu_720_btn {
-      background: transparent !important;
-      border-radius: 8px !important;
-      width: auto !important;
-      height: auto !important;
-      padding: 6px 10px !important;
-      min-width: 40px !important;
-      border: 1px solid rgba(255,255,255,0.06) !important;
-      font-weight:800;
-      color: #fff !important;
-      display:inline-flex !important;
-      align-items:center !important;
-      justify-content:center !important;
-    }
-    #vidu_720_btn:active { transform: none !important; } /* keep tactile animation handled in JS only */
   </style>
 </head>
 <body class="landing is-preload">
@@ -461,18 +444,15 @@
       <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
       <div class="vidu-time" id="vidu_dur">` + fmtHHMMSS(0) + `</div>
 
-      <!-- 720p inert button (replaces previous HQ/volume spot). It's intentionally inert. -->
-      <button id="vidu_720_btn" class="vidu-btn" aria-label="Pretend 720p">720p</button>
-
       <button class="vidu-btn" id="vidu_fullbtn">⤢</button>
     `;
     host.appendChild(overlay);
 
-    // quality menu (kept but not opened by the visible "720p" button)
+    // quality menu (internal; hidden from visible UI)
     const qmenu = document.createElement('div');
     qmenu.className = 'vidu-quality-menu';
     qmenu.id = 'vidu_quality_menu';
-    // append to host so it sits above everything; we populate it internally for consistency, but it won't be opened by the 720p button.
+    // append to host so it sits above everything; we populate it internally for consistency.
     host.appendChild(qmenu);
 
     const closeBtn = document.createElement('button');
@@ -493,7 +473,7 @@
     host.appendChild(closeBtn);
 
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, btn720: overlay.querySelector('#vidu_720_btn'), qmenu, loadingDiv };
+    return { host, mount, overlay, ctrlBg, closeBtn, qmenu, loadingDiv };
   }
 
   function disableIframeClicks(host){
@@ -551,7 +531,7 @@
   }
 
   function createPlayer(videoId){
-    const { host, mount, overlay, ctrlBg, closeBtn, btn720, qmenu, loadingDiv } = createHostElements();
+    const { host, mount, overlay, ctrlBg, closeBtn, qmenu, loadingDiv } = createHostElements();
     state.host = host; state.mount = mount;
 
     const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -583,13 +563,11 @@
         overlay.classList.add('hidden');
         ctrlBg.classList.add('hidden');
         if(closeBtn) closeBtn.classList.add('hidden');
-        if(btn720) btn720.classList.add('hidden');
         if(qmenu) qmenu.classList.remove('open');
       } else {
         overlay.classList.remove('hidden');
         ctrlBg.classList.remove('hidden');
         if(closeBtn) closeBtn.classList.remove('hidden');
-        if(btn720) btn720.classList.remove('hidden');
       }
     }
 
@@ -612,23 +590,7 @@
       }catch(e){}
     }
 
-    // The visible 720p button is intentionally inert: clicking it will not open the internal quality menu
-    // to ensure YouTube always controls the real quality selection (auto). We still populate the internal
-    // quality menu for consistency but it is not exposed via this button.
-    if(btn720){
-      // provide a small tactile feedback (visual only) on click, but do not change quality
-      btn720.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        try{
-          btn720.animate([{ transform: 'scale(0.98)' }, { transform: 'scale(1)' }], { duration: 140, easing: 'ease-out' });
-        }catch(_){}
-        // intentionally do nothing else — quality remains managed by YouTube (auto)
-        // reset inactivity so controls remain visible briefly
-        resetInactivityTimer();
-      }, {passive:true});
-    }
-
-    // quality menu handling (not triggered by 720p button)
+    // quality menu handling (internal only)
     let qualityMenuOpen = false;
     // keep a simple doc click to close any menus if opened programmatically elsewhere
     document.addEventListener('click', function docClick(e){
