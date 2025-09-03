@@ -623,6 +623,7 @@
 
     // quality menu handling (internal only)
     let qualityMenuOpen = false;
+
     // keep a simple doc click to close any menus if opened programmatically elsewhere
     document.addEventListener('click', function docClick(e){
       const now = Date.now();
@@ -632,9 +633,9 @@
         if(qmenu.contains(e.target)) return;
         qmenu.classList.remove('open'); qualityMenuOpen = false;
       }
-      // close playback menu if click outside
+      // close playback menu if click outside (this will gracefully no-op if our playback menu is closed)
       if(playbackMenuOpen){
-        if(playbackMenu && (playbackMenu.contains(e.target) || playbackBtn.contains(e.target))) return;
+        if(playbackMenu && (playbackMenu.contains(e.target) || (playbackBtn && playbackBtn.contains(e.target)))) return;
         closePlaybackMenu();
       }
     }, {passive:true});
@@ -874,27 +875,33 @@
     }
     attachActivityListeners();
 
-    // Playback menu implementation (gear button)
+    //
+    // Playback menu implementation (robust & fixed)
+    //
     let playbackMenu = null;
     let playbackMenuOpen = false;
+    let docClickPlaybackCloseHandler = null;
 
     function closePlaybackMenu(){
       if(!playbackMenu) return;
       try{ playbackMenu.remove(); }catch(e){}
       playbackMenu = null;
       playbackMenuOpen = false;
-      document.removeEventListener('click', docClickPlaybackClose);
+      if(docClickPlaybackCloseHandler) { document.removeEventListener('click', docClickPlaybackCloseHandler); docClickPlaybackCloseHandler = null; }
     }
     function docClickPlaybackClose(e){
       if(!playbackMenu) return;
-      if(playbackMenu.contains(e.target) || playbackBtn.contains(e.target)) return;
+      if(playbackMenu.contains(e.target) || (playbackBtn && playbackBtn.contains(e.target))) return;
       closePlaybackMenu();
     }
 
     function formatRateLabel(r){ return (Math.round(r*100)/100) + '×'; }
 
     function openPlaybackMenu(){
+      // toggle
       if(playbackMenuOpen){ closePlaybackMenu(); return; }
+
+      // create menu element
       playbackMenu = document.createElement('div');
       playbackMenu.className = 'vidu-playback-menu';
       playbackMenu.setAttribute('role','menu');
@@ -928,32 +935,40 @@
             if(state.player && typeof state.player.setPlaybackRate === 'function'){
               state.player.setPlaybackRate(Number(r));
             }
-            closePlaybackMenu();
-            // update button title to reflect selection (for screen readers / tooltip)
+            // reflect change on playback button title
             try{ playbackBtn.title = 'Playback speed: ' + formatRateLabel(r); playbackBtn.setAttribute('aria-label','Playback speed ' + formatRateLabel(r)); }catch(e){}
+            closePlaybackMenu();
           }catch(e){ console.warn('setPlaybackRate err', e); }
         });
         playbackMenu.appendChild(btn);
       });
 
-      // position it above the playbackBtn
-      host.appendChild(playbackMenu);
-      // compute left offset so it aligns with the button
+      // append the menu into the overlay to make relative positioning easier and ensure it sits above controls
+      overlay.appendChild(playbackMenu);
+
+      // compute position relative to overlay
       try{
-        const hostRect = host.getBoundingClientRect();
+        const overlayRect = overlay.getBoundingClientRect();
         const btnRect = playbackBtn.getBoundingClientRect();
-        const left = Math.max(8, (btnRect.left - hostRect.left) + (btnRect.width/2) - 44); // center menu above button (menu ~88px)
+        // left coordinate relative to overlay
+        const left = Math.max(6, (btnRect.left - overlayRect.left) + (btnRect.width/2) - (playbackMenu.offsetWidth/2 || 44));
         playbackMenu.style.left = left + 'px';
-        playbackMenu.style.bottom = (hostRect.bottom - hostRect.top + 8) + 'px'; // place above host bottom
+        // place menu above the overlay controls
+        playbackMenu.style.bottom = (overlayRect.bottom - overlayRect.top + 8) + 'px';
       }catch(e){
-        // fallback: right-align near the full button area
+        // fallback: attach to host and align right
         playbackMenu.style.right = '72px';
         playbackMenu.style.bottom = '72px';
+        try{ host.appendChild(playbackMenu); }catch(e){}
       }
 
       playbackMenuOpen = true;
       state._menuOpenTs = Date.now();
-      setTimeout(()=> document.addEventListener('click', docClickPlaybackClose));
+
+      // ensure clicks outside close the menu
+      docClickPlaybackCloseHandler = function(e){ docClickPlaybackClose(e); };
+      // add listener on next tick so the click that opened the menu doesn't immediately close it
+      setTimeout(()=> document.addEventListener('click', docClickPlaybackCloseHandler));
     }
 
     // attach to playback button
