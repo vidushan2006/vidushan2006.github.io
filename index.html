@@ -1365,7 +1365,7 @@ function onPasswordSubmit(){
 }
 
 // YouTube playlist fetching
-const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI';
+const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
 async function fetchPlaylistVideos(playlistId){
   if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
   const items=[]; let pageToken='';
@@ -1472,3 +1472,4 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { cons
 <script src="assets/js/main.js"></script>
 </body>
 </html>
+
