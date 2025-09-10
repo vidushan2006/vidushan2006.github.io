@@ -454,7 +454,7 @@
     }
 
     /* ---------- Player module (advanced-player only) ----------
-       (unchanged from previous working implementation)
+       (unchanged from previous working implementation, except for spacebar key handling fix)
     */
     (function playerModule(){
       if(window.__viduPlayerLoaded) return;
@@ -654,7 +654,7 @@
             const btnRect = playbackBtn.getBoundingClientRect();
             const left = Math.max(8, (btnRect.left - overlayRect.left) + (btnRect.width/2) - 44); // center menu above button (menu ~88px)
             playbackMenu.style.left = left + 'px';
-            playbackMenu.style.bottom = (overlayRect.bottom - overlayRect.top + 8) + 'px'; // place above overlay bottom
+            playbackMenu.style.bottom = (overlayRect.bottom - overlayRect.top + 8) + 'px';
           }catch(e){
             // fallback: right-align near the full button area
             playbackMenu.style.right = '72px';
@@ -681,6 +681,7 @@
           else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); }
         }
 
+        // === FIXED spacebar / key handling: keeps desiredPlaying in sync to avoid race ===
         state.keyHandler = function(e){
           const active = document.activeElement;
           if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
@@ -689,8 +690,22 @@
           if(e.code === 'Space' || e.key === ' '){
             e.preventDefault();
             if(state.player){
-              const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
-              if(st === 1) try{ state.player.pauseVideo(); }catch(e){} else try{ state.player.playVideo(); }catch(e){}
+              let st = -1;
+              try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){}
+              const wantPlay = !(st === 1);
+              // keep internal desiredPlaying in sync so the update loop doesn't race and flip it back
+              state.desiredPlaying = wantPlay;
+              // update UI immediately
+              try{ playBtn.innerHTML = wantPlay ? pauseSVG() : playSVG(); }catch(e){}
+              // call YT API
+              try{
+                if(wantPlay){
+                  if(typeof state.player.playVideo === 'function') state.player.playVideo();
+                } else {
+                  if(typeof state.player.pauseVideo === 'function') state.player.pauseVideo();
+                }
+              }catch(err){ console.warn('space toggle err', err); }
+              resetInactivityTimer();
             }
           } else if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){
             e.preventDefault();
@@ -1039,7 +1054,7 @@
             if(np) np.textContent = v.title || 'Now playing';
             if(window.showViduPlayer){
               try{ window.destroyViduPlayer(); }catch(e){}
-              mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Loading advanced player...</div>`;
+              mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Loading advanced player.</div>`;
               window.showViduPlayer(v.videoId, 'player-wrap').catch(err=>{
                 mountRoot.innerHTML = '';
                 const errBlock = document.createElement('div');
@@ -1102,7 +1117,7 @@
         retryBtn.className = 'btn'; retryBtn.textContent = 'Retry Advanced Player';
         retryBtn.addEventListener('click', ()=> {
           resetYTLoader();
-          playlistContainer.innerHTML = `<div style="padding:18px;color:#ddd;">Retrying advanced player...</div>`;
+          playlistContainer.innerHTML = `<div style="padding:18px;color:#ddd;">Retrying advanced player.</div>`;
           fetchPlaylistVideos(playlistId).then(videos=>{
             if(!videos || !videos.length) throw new Error('No videos found on retry');
             window.showViduPlayer(videos[0].videoId, 'player-wrap').catch(e2=>{
@@ -1216,4 +1231,3 @@
   </script>
 </body>
 </html>
-
