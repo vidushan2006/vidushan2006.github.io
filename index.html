@@ -353,6 +353,16 @@
         <li><a id="nav-home">Classes</a></li>
         <li><a href="videos.html">Private</a></li>
         <li><a href="about.html">About</a></li>
+        <!-- ADDED Tools button (minimal change) -->
+        <li>
+          <a href="Tools.html" id="nav-tools" title="Tools" aria-label="Tools" style="display:flex;align-items:center;gap:8px;">
+            <!-- small tools/wrench icon inline SVG -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M22 14.6v2.8a1 1 0 0 1-1.42.91 9 9 0 0 1-7.98-1.73 1 1 0 0 1 .1-1.66l2-1.2a1 1 0 0 0 .3-1.46l-1.2-1.94a9 9 0 0 1 1.74-7.98A1 1 0 0 1 13.6 3H16.4a1 1 0 0 1 .98.78l.22 1.2a1 1 0 0 0 1.4.75l1.7-.7a1 1 0 0 1 1.28.49l.88 1.76a1 1 0 0 1-.46 1.33l-1.1.66a1 1 0 0 0-.38 1.41l.7 1.8a1 1 0 0 1-.76 1.39l-1.16.17a1 1 0 0 0-.69.45l-.86 1.34a1 1 0 0 1-1.22.36l-1.84-.7a1 1 0 0 0-1.06.2l-1.2 1.2a9 9 0 0 1 7.98 1.73 1 1 0 0 1 .22.23z" fill="#bfc8dd"/>
+            </svg>
+            Tools
+          </a>
+        </li>
       </ul>
     </nav>
   </header>
@@ -396,10 +406,6 @@
     _menuOpenTs: 0
   };
 
-  /**
-   * Load YouTube iframe API. Exposed on window as well (defensive).
-   * Returns a Promise that resolves when API ready.
-   */
   function loadYTApi(){
     if(window.YT && window.YT.Player) return Promise.resolve();
     if(window._vidu_loading_yt){
@@ -415,22 +421,17 @@
       s.async=true;
       s.onerror = ()=> reject(new Error('YT API failed to load'));
       document.head.appendChild(s);
-      // YouTube will call this global when ready
       window.onYouTubeIframeAPIReady = function(){ resolve(); };
-      // small fallbacks
       setTimeout(()=>{ if(window.YT && window.YT.Player) resolve(); },1200);
       setTimeout(()=>{ if(!(window.YT && window.YT.Player)) reject(new Error('YT API timed out')); },20000);
     });
   }
-  // make available globally so other modules/callbacks can call it safely
-  try{ window.loadYTApi = loadYTApi; }catch(e){ /* ignore */ }
+  try{ window.loadYTApi = loadYTApi; }catch(e){}
 
   function pad2(n){
     n = Math.max(0, Math.floor(n||0));
     return (n < 10 ? '0' + n : String(n));
   }
-
-  // Time formatting rules: both current time and duration are always HH : MM : SS
   function fmtHHMMSS(s){
     s = Math.max(0, Math.floor(s||0));
     const h = Math.floor(s / 3600);
@@ -456,7 +457,6 @@
     mount.style.background = '#000';
     host.appendChild(mount);
 
-    // Loading overlay - shows header.png while YT hasn't started playing
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'vidu-loading';
     loadingDiv.id = 'vidu_loading';
@@ -478,11 +478,9 @@
     `;
     host.appendChild(overlay);
 
-    // quality menu (internal; hidden from visible UI)
     const qmenu = document.createElement('div');
     qmenu.className = 'vidu-quality-menu';
     qmenu.id = 'vidu_quality_menu';
-    // append to host so it sits above everything; we populate it internally for consistency.
     host.appendChild(qmenu);
 
     const closeBtn = document.createElement('button');
@@ -602,7 +600,6 @@
       }
     }
 
-    // Loading overlay show/hide helpers
     function showLoading(){
       try{
         if(loadingDiv){
@@ -615,31 +612,28 @@
       try{
         if(loadingDiv){
           loadingDiv.classList.add('hidden');
-          // keep it in DOM to allow CSS transition; remove after transition to fully free resources
           setTimeout(()=> { try{ loadingDiv.style.display = 'none'; }catch(e){} }, 320);
         }
       }catch(e){}
     }
 
-    // quality menu handling (internal only)
     let qualityMenuOpen = false;
 
-    // keep a simple doc click to close any menus if opened programmatically elsewhere
     document.addEventListener('click', function docClick(e){
       const now = Date.now();
-      if(now - state._menuOpenTs < 250) return; // small guard to avoid immediate close races
+      if(now - state._menuOpenTs < 250) return;
       if(qualityMenuOpen){
         if(!qmenu) return;
         if(qmenu.contains(e.target)) return;
         qmenu.classList.remove('open'); qualityMenuOpen = false;
       }
-      // close playback menu if click outside (this will gracefully no-op if our playback menu is closed)
       if(playbackMenuOpen){
         if(playbackMenu && (playbackMenu.contains(e.target) || (playbackBtn && playbackBtn.contains(e.target)))) return;
         closePlaybackMenu();
       }
     }, {passive:true});
 
+    // *** UPDATED keyHandler: ensure spacebar toggles update the same desiredPlaying state the play button uses
     state.keyHandler = function(e){
       const active = document.activeElement;
       if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
@@ -648,12 +642,22 @@
       if(e.code === 'Space' || e.key === ' '){
         e.preventDefault();
         if(state.player){
-          const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
-          if(st === 1) {
-            try{ state.player.pauseVideo(); }catch(e){}
-          } else {
-            try{ state.player.playVideo(); }catch(e){}
-          }
+          let st = -1;
+          try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){}
+          const wantPlay = !(st === 1);
+          // keep internal desiredPlaying in sync so the update loop doesn't race and flip it back
+          state.desiredPlaying = wantPlay;
+          // update UI immediately
+          try{ playBtn.innerHTML = wantPlay ? pauseSVG() : playSVG(); }catch(e){}
+          // call YT API
+          try{
+            if(wantPlay){
+              if(typeof state.player.playVideo === 'function') state.player.playVideo();
+            } else {
+              if(typeof state.player.pauseVideo === 'function') state.player.pauseVideo();
+            }
+          }catch(err){ console.warn('space toggle err', err); }
+          resetInactivityTimer();
         }
       } else if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){
         e.preventDefault();
@@ -898,16 +902,13 @@
     function formatRateLabel(r){ return (Math.round(r*100)/100) + '×'; }
 
     function openPlaybackMenu(){
-      // toggle
       if(playbackMenuOpen){ closePlaybackMenu(); return; }
 
-      // create menu element
       playbackMenu = document.createElement('div');
       playbackMenu.className = 'vidu-playback-menu';
       playbackMenu.setAttribute('role','menu');
       playbackMenu.setAttribute('aria-label','Playback speed menu');
 
-      // default rates
       let rates = [0.25,0.5,0.75,1,1.25,1.5,1.75,2];
       try{
         if(state.player && typeof state.player.getAvailablePlaybackRates === 'function'){
@@ -915,7 +916,6 @@
           if(Array.isArray(avail) && avail.length) rates = avail.slice();
         }
       }catch(e){}
-      // ensure 1 is included & unique sorted
       const set = {};
       rates.forEach(r=> set[Number(r)] = true);
       if(!set[1]) rates.push(1);
@@ -935,7 +935,6 @@
             if(state.player && typeof state.player.setPlaybackRate === 'function'){
               state.player.setPlaybackRate(Number(r));
             }
-            // reflect change on playback button title
             try{ playbackBtn.title = 'Playback speed: ' + formatRateLabel(r); playbackBtn.setAttribute('aria-label','Playback speed ' + formatRateLabel(r)); }catch(e){}
             closePlaybackMenu();
           }catch(e){ console.warn('setPlaybackRate err', e); }
@@ -943,20 +942,15 @@
         playbackMenu.appendChild(btn);
       });
 
-      // append the menu into the overlay to make relative positioning easier and ensure it sits above controls
       overlay.appendChild(playbackMenu);
 
-      // compute position relative to overlay
       try{
         const overlayRect = overlay.getBoundingClientRect();
         const btnRect = playbackBtn.getBoundingClientRect();
-        // left coordinate relative to overlay
         const left = Math.max(6, (btnRect.left - overlayRect.left) + (btnRect.width/2) - (playbackMenu.offsetWidth/2 || 44));
         playbackMenu.style.left = left + 'px';
-        // place menu above the overlay controls
         playbackMenu.style.bottom = (overlayRect.bottom - overlayRect.top + 8) + 'px';
       }catch(e){
-        // fallback: attach to host and align right
         playbackMenu.style.right = '72px';
         playbackMenu.style.bottom = '72px';
         try{ host.appendChild(playbackMenu); }catch(e){}
@@ -965,13 +959,10 @@
       playbackMenuOpen = true;
       state._menuOpenTs = Date.now();
 
-      // ensure clicks outside close the menu
       docClickPlaybackCloseHandler = function(e){ docClickPlaybackClose(e); };
-      // add listener on next tick so the click that opened the menu doesn't immediately close it
       setTimeout(()=> document.addEventListener('click', docClickPlaybackCloseHandler));
     }
 
-    // attach to playback button
     if(playbackBtn){
       playbackBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
@@ -979,7 +970,6 @@
       });
     }
 
-    // ensure menu closes when host is removed/destroyed
     const playbackMenuObserver = new MutationObserver(()=> {
       if(playbackMenuOpen && (!document.body.contains(playbackBtn) || !document.body.contains(host))) closePlaybackMenu();
     });
@@ -989,7 +979,6 @@
     return loadYTApi().then(()=> new Promise((resolve,reject)=>{
       if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
 
-      // create YT player
       try{
         state.player = new YT.Player(mount.id, {
           videoId: videoId,
@@ -1008,10 +997,8 @@
             onReady: function(evt){
               disableIframeClicks(host);
 
-              // show loading overlay initially
               showLoading();
 
-              // apply volume (keep lastVolume state, but there is no UI to change it here)
               try{
                 if(typeof evt.target.setVolume === 'function'){
                   const v = Math.max(0, Math.min(100, state.lastVolume || 100));
@@ -1021,13 +1008,11 @@
                 }
               }catch(e){}
 
-              // request default quality (let YT pick) and populate internal quality menu for consistency
               try{
                 let avail = [];
                 if(typeof evt.target.getAvailableQualityLevels === 'function') avail = evt.target.getAvailableQualityLevels() || [];
                 const curQ = (typeof evt.target.getPlaybackQuality === 'function') ? evt.target.getPlaybackQuality() : 'default';
                 populateQualityMenu(qmenu, avail, curQ, evt.target);
-                // explicitly set default (auto) so YouTube chooses the best quality
                 if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 800); }
               }catch(e){}
 
@@ -1067,7 +1052,6 @@
                     }, 600);
                   }
 
-                  // refresh internal quality menu dynamically if available levels change (menu remains hidden to user)
                   try{
                     if(typeof state.player.getAvailableQualityLevels === 'function'){
                       const levels = state.player.getAvailableQualityLevels() || [];
@@ -1076,7 +1060,6 @@
                     }
                   }catch(e){}
 
-                  // update playback button tooltip/title to reflect current rate
                   try{
                     if(playbackBtn && state.player && typeof state.player.getPlaybackRate === 'function'){
                       const curRate = state.player.getPlaybackRate ? state.player.getPlaybackRate() : 1;
@@ -1096,16 +1079,13 @@
               resolve(state.player);
             },
             onStateChange: function(e){
-              // e.data === 1 means playing — hide loading overlay
               try{
                 if(e && e.data === 1){
                   try{ hideLoading(); }catch(e){/*ignore*/ }
                 }
-                // if video ends or errors, we keep the loading hidden; only show until play
               }catch(err){}
             },
             onError: function(err){
-              // hide loading on error so user can see error message / black screen replaced
               try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){}
               console.error('YT player error', err);
             }
@@ -1148,9 +1128,7 @@
     }catch(e){ console.warn('destroyPlayer err', e); }
   }
 
-  // Public API
   window.showViduPlayer = function(videoId){
-    // defensive: ensure loader exists globally before calling (so other callers won't hit "loadYTApi is not defined")
     if(typeof window.loadYTApi !== 'function') {
       window.loadYTApi = loadYTApi;
     }
@@ -1161,9 +1139,9 @@
     const w = document.getElementById('player-wrap'); if(w) w.innerHTML = '';
   };
 
-  // cleanup on unload
   window.addEventListener('beforeunload', ()=> { try{ window.destroyViduPlayer(); }catch(e){} }, {passive:true});
 })();
+
 </script>
 
 <!-- =========================
@@ -1364,87 +1342,20 @@ function onPasswordSubmit(){
   }
 }
 
-// YouTube playlist fetching
-const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
-async function fetchPlaylistVideos(playlistId){
-  if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
-  const items=[]; let pageToken='';
-  do{
-    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}` + (pageToken?`&pageToken=${pageToken}`:'');
-    const res = await fetch(url);
-    if(!res.ok){ const txt = await res.text().catch(()=>null); throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||'')); }
-    const data = await res.json();
-    (data.items||[]).forEach(it=>{
-      const sn = it.snippet || {};
-      if(sn.resourceId && sn.resourceId.videoId){
-        const thumb = (sn.thumbnails && (sn.thumbnails.high||sn.thumbnails.medium||sn.thumbnails.default))||{};
-        items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
-      }
-    });
-    pageToken = data.nextPageToken || '';
-  } while(pageToken);
-  return items;
+function showPlaylistInsideModal(pl){
+  const listWrap = document.getElementById('playlist-list-wrap');
+  const dest = document.getElementById('playlist-video-list'); if(!dest) return;
+  listWrap.style.display='block';
+  dest.innerHTML = '';
+  (pl.videos||[]).forEach(v=>{
+    const el = document.createElement('div'); el.className='list-item ripple';
+    el.style.display='flex'; el.style.justifyContent='space-between'; el.style.alignItems='center';
+    el.innerHTML = `<div style="display:flex;gap:10px;align-items:center"><img src="${escapeHtml(v.thumbnail||'')}" style="width:100px;height:56px;object-fit:cover;border-radius:6px"/><div style="font-weight:800">${escapeHtml(v.name)}</div></div><div><button class="btn" data-id="${escapeHtml(b64decode(v.idB64||''))}">Play</button></div>`;
+    dest.appendChild(el);
+    el.querySelector('button').addEventListener('click', function(){ const vid = this.dataset.id; if(window.showViduPlayer) window.showViduPlayer(vid); });
+  });
 }
 
-async function showPlaylistInsideModal(item){
-  const rawId = b64decode(item.idB64);
-  const playlistId = rawId.split('&')[0];
-  window.__viduGlobal.visualsPaused = true;
-  window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'playlist-load' } }));
-
-  try{
-    const videos = await fetchPlaylistVideos(playlistId);
-    if(!videos.length){
-      const wrap = document.getElementById('player-wrap');
-      if(wrap) wrap.innerHTML = `<div class="muted">No videos found or playlist is private.</div>`;
-      document.getElementById('player-block').style.display='block';
-      return;
-    }
-
-    let listWrap = document.getElementById('playlist-video-list');
-    if(!listWrap){
-      const wrapper = document.createElement('div');
-      wrapper.id = 'playlist-list-wrap';
-      wrapper.style.marginTop = '12px';
-      wrapper.innerHTML = `<div class="muted">Playlist contents</div><div class="playlist-list" id="playlist-video-list"></div>`;
-      const playerBlock = document.getElementById('player-block');
-      if(playerBlock) playerBlock.appendChild(wrapper);
-      listWrap = document.getElementById('playlist-video-list');
-    }
-
-    if(listWrap) listWrap.innerHTML = '';
-    videos.forEach(v=>{
-      const li = document.createElement('div'); li.className = 'list-item';
-      li.setAttribute('data-video-id', v.videoId);
-      li.style.display='flex'; li.style.alignItems='center'; li.style.gap='12px'; li.style.padding='8px';
-      li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;" /><div style="flex:1;"><div class="title" style="font-size:13px;">${escapeHtml(v.title)}</div></div>`;
-      li.onclick = ()=> {
-        document.getElementById('now-playing-label').textContent = v.title || 'Now playing';
-        if(window.showViduPlayer) window.showViduPlayer(v.videoId).catch(err => {
-          console.error('showViduPlayer failed', err);
-          const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
-        });
-      };
-      listWrap.appendChild(li);
-    });
-
-    document.getElementById('player-block').style.display='block';
-    const outer = document.getElementById('playlist-list-wrap'); if(outer) outer.style.display='block';
-    document.getElementById('now-playing-label').textContent = videos[0].title || 'Now playing';
-    if(window.showViduPlayer) window.showViduPlayer(videos[0].videoId).catch(err => {
-      console.error('showViduPlayer failed', err);
-      const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
-    });
-  } catch(err){
-    console.error('Playlist fetch error', err);
-    const wrap = document.getElementById('player-wrap');
-    if(wrap) wrap.innerHTML = `<div class="muted">Failed to load playlist: ${escapeHtml(err.message || '')}</div>`;
-    document.getElementById('player-block').style.display='block';
-  }
-}
-
-// Visual helpers & init
-function pauseVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = true; window.dispatchEvent(new CustomEvent('vidu:visuals:pause',{detail:{reason}})); }
 function resumeVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = false; window.dispatchEvent(new CustomEvent('vidu:visuals:resume',{detail:{reason}})); }
 
 document.addEventListener('DOMContentLoaded', function(){
@@ -1472,4 +1383,3 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { cons
 <script src="assets/js/main.js"></script>
 </body>
 </html>
-
