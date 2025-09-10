@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Link Converter</title>
+    <!-- Google Fonts: Inter for a clean, modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS Reset & Base Styling --- */
+        :root {
+            --primary-color: #007BFF; /* A vibrant blue for interaction */
+            --primary-hover: #0056b3;
+            --success-color: #28a745;
+            --light-gray: #f8f9fa;
+            --gray: #e9ecef;
+            --dark-gray: #6c757d;
+            --background-color: #f0f2f5; /* Fallback background color */
+            --card-background: rgba(255, 255, 255, 0.95); /* Slightly transparent for a frosted glass effect */
+            --text-color: #343a40;
+            --border-radius: 12px; /* Consistent rounded corners */
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            
+            /* --- FIX: Changed backslashes to forward slashes for web compatibility --- */
+            background-image: url('assets/images/background.gif');
+            
+            background-size: cover; /* Ensures the image covers the entire background */
+            background-position: center; /* Centers the image */
+            background-attachment: fixed; /* Makes the background static when scrolling */
+            background-color: var(--background-color); /* Fallback color if the image fails */
+
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* --- Main Container --- */
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--card-background); /* Using the semi-transparent background */
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            text-align: center;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px); /* This creates the frosted glass effect */
+            -webkit-backdrop-filter: blur(10px); /* For Safari compatibility */
+        }
+
+        /* --- Header & Subheader --- */
+        .header h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: var(--dark-gray);
+            margin-bottom: 30px;
+        }
+        
+        /* --- Input & Output Textareas --- */
+        .textarea-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--gray);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        /* --- Action Buttons --- */
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: var(--gray);
+            color: var(--text-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #d3d9df;
+        }
+
+        /* --- Results Section --- */
+        #results-section {
+            display: none; /* Initially hidden */
+        }
+        
+        #results-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--text-color);
+            text-align: left;
+        }
+
+        /* --- Notification Pop-up --- */
+        #notification {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--success-color);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transition: transform 0.4s ease, opacity 0.4s ease, visibility 0.4s;
+            z-index: 1000;
+        }
+
+        #notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <h1>VIDU</h1>
+            <h1>YT Link Converter</h1>
+            <p>Paste one or more YouTube URLs to convert them to short youtu.be links.</p>
+        </header>
+
+        <!-- Input Area -->
+        <div class="textarea-container">
+            <textarea id="input-links" placeholder="Paste YouTube links here, one per line...&#10;e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ"></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="actions">
+            <button id="convert-btn" class="btn btn-primary">
+                <!-- SVG icon for conversion -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg>
+                Convert Links
+            </button>
+            <button id="clear-btn" class="btn btn-secondary">Clear</button>
+        </div>
+
+        <!-- Results Area -->
+        <div id="results-section">
+            <h2>Converted Links:</h2>
+            <div class="textarea-container">
+                <textarea id="output-links" readonly></textarea>
+            </div>
+            <div class="actions">
+                <button id="copy-btn" class="btn btn-secondary">
+                    <!-- SVG icon for copy -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification element -->
+    <div id="notification"></div>
+
+    <script>
+        // DOM element references
+        const convertBtn = document.getElementById('convert-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const inputLinks = document.getElementById('input-links');
+        const outputLinks = document.getElementById('output-links');
+        const resultsSection = document.getElementById('results-section');
+        const notification = document.getElementById('notification');
+
+        /**
+         * Extracts the YouTube video ID from various URL formats.
+         * @param {string} url - The YouTube URL.
+         * @returns {string|null} The video ID or null if not found.
+         */
+        function getYouTubeId(url) {
+            // This regex handles standard, mobile, short, and embed URLs.
+            const regex = /(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|shorts\/|v\/|)([\w-]{11})(?:\S+)?/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+        
+        /**
+         * Displays a notification message.
+         * @param {string} message - The message to show.
+         * @param {string} type - 'success' (default) or 'error'.
+         */
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.style.backgroundColor = type === 'success' ? 'var(--success-color)' : '#dc3545';
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2500); // Notification disappears after 2.5 seconds
+        }
+
+        // --- Event Listeners ---
+
+        convertBtn.addEventListener('click', () => {
+            const urls = inputLinks.value.trim().split('\n');
+            if (urls.length === 0 || urls[0] === '') {
+                showNotification('Please paste at least one YouTube link.', 'error');
+                return;
+            }
+
+            const converted = urls
+                .map(url => {
+                    const videoId = getYouTubeId(url);
+                    return videoId ? `https://youtu.be/${videoId}` : null;
+                })
+                .filter(url => url !== null); // Filter out any invalid lines
+
+            if (converted.length > 0) {
+                outputLinks.value = converted.join('\n');
+                resultsSection.style.display = 'block';
+                // Scroll to the results for better UX on mobile
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                showNotification('No valid YouTube links were found.', 'error');
+                resultsSection.style.display = 'none';
+            }
+        });
+
+        copyBtn.addEventListener('click', () => {
+            if (outputLinks.value === '') {
+                showNotification('Nothing to copy!', 'error');
+                return;
+            }
+            outputLinks.select();
+            // Using document.execCommand for broader browser compatibility in this environment
+            document.execCommand('copy');
+            showNotification('Copied to clipboard!');
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => {
+                 copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy to Clipboard`;
+            }, 2000);
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            inputLinks.value = '';
+            outputLinks.value = '';
+            resultsSection.style.display = 'none';
+        });
+
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <!-- Google Fonts: Inter for a clean, modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS Reset & Global Styling --- */
+        :root {
+            --primary-color: #007aff;
+            --primary-hover: #0056b3;
+            --success-color: #34c759;
+            --background-color: #1c1c1e;
+            --card-background: rgba(44, 44, 46, 0.85); /* Dark, semi-transparent background */
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-color: #f2f2f7;
+            --text-secondary: #8e8e93;
+            --border-radius: 16px; /* Increased for a softer, more modern look */
+            --shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: url('assets/images/background.gif');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top to better handle scrolling */
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-y: scroll;
+        }
+
+        /* --- Main Container --- */
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            transition: all 0.3s ease;
+        }
+
+        /* --- Header & Subheader --- */
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: -webkit-linear-gradient(45deg, #34c759, #007aff, #af52de);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 35px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* --- Input Textarea --- */
+        textarea {
+            width: 100%;
+            min-height: 160px;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background-color: rgba(28, 28, 30, 0.7);
+            color: var(--text-color);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
+        }
+        
+        textarea::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* --- Action Buttons --- */
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 14px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary-color), #0056b3);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* --- Loader Animation --- */
+        .loader {
+            display: none; /* Hidden by default */
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--text-color);
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+            margin: 30px auto;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- Results Section --- */
+        #results-container {
+            margin-top: 40px;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .video-card {
+            display: flex;
+            gap: 20px;
+            background-color: rgba(28, 28, 30, 0.7);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+            align-items: center;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .video-card img {
+            width: 120px;
+            height: 90px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        
+        .video-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+            min-width: 0; /* Prevents text overflow issues */
+        }
+
+        .video-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .video-info p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .video-card .btn-download {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            text-decoration: none;
+            color: white;
+            background-color: var(--success-color);
+        }
+        
+         .video-card .btn-download:hover {
+            background-color: #28a745;
+        }
+        
+        /* --- Responsive Design --- */
+        @media (max-width: 600px) {
+            .video-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .video-card .btn-download {
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <h1>VIDU</h1>
+            <h1>YT Downloader</h1>
+            <p>Paste one or more YouTube links below. The tool will prepare the download for each video.</p>
+        </header>
+
+        <textarea id="input-links" placeholder="e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ&#10;https://youtu.be/xvFZjo5PgG0"></textarea>
+
+        <div class="actions">
+            <button id="fetch-btn" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Fetch Videos
+            </button>
+            <button id="clear-btn" class="btn btn-secondary">Clear</button>
+        </div>
+
+        <div id="loader" class="loader"></div>
+        <div id="results-container"></div>
+    </div>
+
+    <script>
+        const fetchBtn = document.getElementById('fetch-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const inputLinks = document.getElementById('input-links');
+        const loader = document.getElementById('loader');
+        const resultsContainer = document.getElementById('results-container');
+
+        /**
+         * Extracts the YouTube video ID from various URL formats.
+         * @param {string} url - The YouTube URL.
+         * @returns {string|null} The video ID or null if not found.
+         */
+        function getYouTubeId(url) {
+            const regex = /(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|shorts\/|v\/|)([\w-]{11})(?:\S+)?/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        /**
+         * Simulates fetching video data and displays it.
+         */
+        async function fetchAndDisplayVideos() {
+            const urls = inputLinks.value.trim().split('\n').filter(url => url);
+            
+            if (urls.length === 0) {
+                alert('Please paste at least one YouTube link (VIDU).');
+                return;
+            }
+
+            // --- UI changes for loading state ---
+            fetchBtn.disabled = true;
+            fetchBtn.innerHTML = 'Fetching...';
+            resultsContainer.innerHTML = '';
+            loader.style.display = 'block';
+
+            // --- Simulate API call delay ---
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            const videoData = urls.map((url, index) => {
+                const videoId = getYouTubeId(url);
+                if (!videoId) return null;
+                
+                // In a real app, you'd fetch the title via an API. Here we generate a placeholder.
+                // NOTE: We cannot directly fetch titles due to browser security restrictions (CORS).
+                return {
+                    id: videoId,
+                    title: `Video from link ${index + 1}`,
+                    thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+                    shortLink: `https://youtu.be/${videoId}`
+                };
+            }).filter(video => video !== null);
+
+            // --- Update UI with results ---
+            loader.style.display = 'none';
+            fetchBtn.disabled = false;
+            fetchBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Fetch Videos`;
+            
+            if (videoData.length === 0) {
+                 resultsContainer.innerHTML = '<p style="text-align:center; color: var(--text-secondary);">No valid YouTube links found.</p>';
+                 return;
+            }
+
+            displayVideoCards(videoData);
+        }
+        
+        /**
+         * Renders the video cards in the results container.
+         * @param {Array} videos - An array of video objects.
+         */
+        function displayVideoCards(videos) {
+            videos.forEach((video, index) => {
+                // IMPORTANT: This service is a third-party tool. It handles the actual download.
+                // We are preparing the link and sending the user to it.
+                const downloadServiceUrl = `https://cobalt.tools/en?url=${video.shortLink}`;
+                
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.style.animationDelay = `${index * 100}ms`; // Staggered animation
+                
+                card.innerHTML = `
+                    <img src="${video.thumbnail}" alt="Video thumbnail">
+                    <div class="video-info">
+                        <h3>${video.title}</h3>
+                        <p>${video.shortLink}</p>
+                    </div>
+                    <a href="${downloadServiceUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-download">
+                        Prepare Download
+                    </a>
+                `;
+                resultsContainer.appendChild(card);
+            });
+        }
+        
+        function clearAll() {
+            inputLinks.value = '';
+            resultsContainer.innerHTML = '';
+        }
+
+        // --- Event Listeners ---
+        fetchBtn.addEventListener('click', fetchAndDisplayVideos);
+        clearBtn.addEventListener('click', clearAll);
+    </script>
+</body>
+</html>
