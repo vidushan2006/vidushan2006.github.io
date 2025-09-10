@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Coming Soon — Neon</title>
+<style>
+  :root{
+    --bg:#000814;
+    --neon:#00b7ff; /* neon blue */
+    --neon-2:#0af;
+    --accent: rgba(0,183,255,0.12);
+    --glass: rgba(255,255,255,0.03);
+    --floor:#05060a;
+    --max-width:1200px;
+  }
+
+  /* reset-ish */
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: radial-gradient(1200px 600px at 50% 10%, rgba(0,18,30,0.4), transparent 15%),
+                linear-gradient(180deg, #000814 0%, #00030a 60%), var(--bg);
+    color:#fff;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px;
+  }
+
+  .stage{
+    width:100%;
+    max-width:var(--max-width);
+    min-height:60vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    gap:40px;
+  }
+
+  /* canvas for particles sits behind everything */
+  canvas.bg-canvas{
+    position:absolute;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    opacity:.9;
+    mix-blend-mode:screen;
+  }
+
+  .neon-wrap{
+    position:relative;
+    z-index:2;
+    width:100%;
+    text-align:left;
+    padding: clamp(12px,4vw,30px);
+  }
+
+  /* neon text area */
+  .neon {
+    display:inline-block;
+    position:relative;
+    transform:translateY(-10px);
+    padding-bottom:8px;
+    user-select:none;
+  }
+
+  /* We'll use an SVG for crisp stroked neon + CSS glows */
+  .neon svg { width:100%; height:auto; display:block; }
+  .neon .stroke { stroke:rgba(0,0,0,0.65); stroke-width:6px; stroke-linejoin:round; fill:transparent; }
+  .neon .outline {
+    stroke:var(--neon);
+    stroke-width:4;
+    fill:none;
+    stroke-linejoin:round;
+    filter: drop-shadow(0 0 12px rgba(0,183,255,0.25)) drop-shadow(0 0 20px rgba(10,200,255,0.08));
+    transition: filter .3s ease;
+  }
+  .neon .core {
+    fill:transparent;
+    stroke:var(--neon-2);
+    stroke-width:1.5;
+    filter:
+      drop-shadow(0 0 18px rgba(0,183,255,0.9))
+      drop-shadow(0 0 40px rgba(10,200,255,0.35));
+    mix-blend-mode:screen;
+  }
+
+  /* inner faint glow layer */
+  .glow {
+    position:absolute;
+    left:0; right:0; top:50%;
+    transform:translateY(-40%);
+    height:120px;
+    pointer-events:none;
+    z-index:1;
+    filter:blur(40px) saturate(150%);
+    opacity:.25;
+  }
+
+  /* animated glint sweep */
+  .glint{
+    position:absolute;
+    top:0; left:-30%;
+    width:30%;
+    height:100%;
+    transform:skewX(-20deg);
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0) 100%);
+    mix-blend-mode:screen;
+    animation:glint 4.2s linear infinite;
+    z-index:4;
+    pointer-events:none;
+  }
+  @keyframes glint { 
+    0% { left:-40%; opacity:0 }
+    10% { opacity:0.9 }
+    45% { left:110%; opacity:0.6 }
+    100% { left:110%; opacity:0 }
+  }
+
+  /* subtle flicker for realism */
+  .flicker { animation: flicker 3s linear infinite; }
+  @keyframes flicker{
+    0%, 100% { opacity:1 }
+    8% { opacity:.95 }
+    9% { opacity:.6 }
+    11% { opacity:1 }
+    20% { opacity:.9 }
+    21% { opacity:1 }
+    70% { opacity:.98 }
+  }
+
+  /* bottom reflection / floor */
+  .floor {
+    position:relative;
+    margin-top:18px;
+    height:170px;
+    overflow:hidden;
+    pointer-events:none;
+  }
+  .floor .reflection{
+    transform:translateY(8px) scaleY(-1);
+    opacity:.06;
+    filter:blur(6px) saturate(160%);
+    mix-blend-mode:screen;
+    transition:opacity .3s ease;
+  }
+
+  /* small animated dots for the ellipsis */
+  .dots {
+    display:inline-flex;
+    gap:10px;
+    margin-left:10px;
+    vertical-align:middle;
+    align-items:center;
+  }
+  .dot{
+    width:14px; height:14px; border-radius:50%;
+    background:var(--neon);
+    box-shadow:0 0 8px rgba(0,183,255,0.9), 0 0 20px rgba(10,200,255,0.2);
+    transform:translateY(0);
+    animation:dotMove 1.6s infinite cubic-bezier(.25,.85,.32,1);
+  }
+  .dot:nth-child(2){ animation-delay:.12s }
+  .dot:nth-child(3){ animation-delay:.28s }
+  @keyframes dotMove{
+    0%{ transform:translateY(0); opacity:1 }
+    30% { transform:translateY(-12px); opacity:0.95 }
+    60% { transform:translateY(0); opacity:1 }
+    100% { transform:translateY(0); opacity:1 }
+  }
+
+  /* small tagline and actions */
+  .meta{
+    margin-top:20px;
+    display:flex;
+    gap:18px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .tag {
+    padding:8px 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:10px;
+    color:rgba(255,255,255,0.85);
+    font-size:14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02), 0 6px 24px rgba(0,0,0,0.5);
+    backdrop-filter: blur(6px);
+  }
+  .cta {
+    display:inline-flex;
+    gap:10px;
+    align-items:center;
+  }
+  .btn {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:999px;
+    border:1px solid rgba(0,183,255,0.15);
+    color:var(--neon);
+    background:linear-gradient(180deg, rgba(0,0,0,0.3), rgba(255,255,255,0.01));
+    text-decoration:none;
+    font-weight:600;
+    box-shadow: 0 6px 28px rgba(0,183,255,0.04), inset 0 1px 0 rgba(255,255,255,0.03);
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .btn:hover{ transform:translateY(-3px); box-shadow: 0 16px 40px rgba(0,183,255,0.08) }
+
+  /* subtle progress / loading line */
+  .progress-wrap{
+    margin-top:22px;
+    width:360px;
+    max-width:90%;
+    height:8px;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1));
+    border-radius:99px;
+    overflow:hidden;
+    position:relative;
+    box-shadow: inset 0 0 18px rgba(0,0,0,0.7);
+  }
+  .bar{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, rgba(0,183,255,0.2), rgba(0,183,255,0.6));
+    box-shadow: 0 6px 24px rgba(0,183,255,0.06), 0 0 48px rgba(10,200,255,0.05);
+    animation:progress 6s linear infinite;
+  }
+  @keyframes progress{
+    0% { width:0% }
+    45% { width:68% }
+    70% { width:42% }
+    100% { width:98% }
+  }
+
+  /* responsiveness smaller screens */
+  @media (max-width:720px){
+    .neon svg { transform:scale(.76); transform-origin:left center; }
+    .floor { height:120px }
+    .progress-wrap { width:280px }
+  }
+  @media (max-width:420px){
+    .neon svg { transform:scale(.62) }
+    .dot { width:12px; height:12px }
+    .meta{ gap:10px }
+  }
+
+</style>
+</head>
+<body>
+  <div class="stage" role="main" aria-label="Coming Soon neon announcement">
+    <canvas class="bg-canvas" id="bg"></canvas>
+
+    <div class="neon-wrap">
+      <div class="neon flicker" aria-hidden="false">
+        <!-- SVG text for crisp neon outline -->
+        <svg viewBox="0 0 1600 210" preserveAspectRatio="xMinYMid meet" role="img" aria-label="COMING SOON">
+          <defs>
+            <!-- subtle glow filter -->
+            <filter id="g1" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- background stroke for depth -->
+          <text x="0" y="150" class="stroke" font-family="Inter, Arial" font-size="140" font-weight="800">COMING SOON...</text>
+
+          <!-- luminous outline (neon) -->
+          <text x="0" y="150" class="outline" font-family="Inter, Arial" font-size="140" font-weight="900">COMING SOON...</text>
+
+          <!-- thin inner core for extra glow -->
+          <text x="0" y="150" class="core" font-family="Inter, Arial" font-size="140" font-weight="700">COMING SOON...</text>
+        </svg>
+
+        <!-- HTML dots to animate separately, visually aligned -->
+        <div style="position:absolute; right:6%; top:54%; transform:translateY(-50%);">
+          <div class="dots" aria-hidden="true">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+        </div>
+
+        <!-- Glint sweep -->
+        <div class="glint" aria-hidden="true"></div>
+
+        <!-- soft central glow block -->
+        <div class="glow" style="background: radial-gradient(circle at 50% 50%, var(--accent), transparent 40%);"></div>
+
+      </div>
+
+      <div class="meta" aria-hidden="false">
+        <div class="tag">[VIDU] We are building something new, sharper, faster, cooler.</div>
+        <div class="cta">
+          <a class="btn" href="#" onclick="event.preventDefault()" aria-label="Remind">Remind VIDU</a>
+        </div>
+      </div>
+
+      <div class="progress-wrap" aria-hidden="true">
+        <div class="bar"></div>
+      </div>
+
+      <!-- floor reflection -->
+      <div class="floor" aria-hidden="true">
+        <svg class="reflection" viewBox="0 0 1600 210" preserveAspectRatio="xMinYMid meet">
+          <text x="0" y="150" font-family="Inter, Arial" font-size="140" font-weight="800" fill="white" opacity="0.4">COMING SOON...</text>
+        </svg>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+/* Particle background canvas (tiny, efficient) */
+(function(){
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+  let w = canvas.width = innerWidth;
+  let h = canvas.height = innerHeight;
+  const particles = [];
+  const PARTICLE_COUNT = Math.max(18, Math.floor((w*h)/90000)); // scales by screen
+
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+
+  function create(){
+    for(let i=0;i<PARTICLE_COUNT;i++){
+      particles.push({
+        x: Math.random()*w,
+        y: Math.random()*h*0.6,
+        vx: rand(-0.15,0.15),
+        vy: rand(0.02,0.25),
+        r: rand(0.8,3.2),
+        hue: rand(190,210),
+        life: rand(60,300),
+        alpha: rand(0.06,0.25)
+      });
+    }
+  }
+  function resize(){
+    w = canvas.width = innerWidth;
+    h = canvas.height = innerHeight;
+  }
+  addEventListener('resize', () => { resize(); particles.length=0; create(); });
+  create();
+
+  function render(){
+    ctx.clearRect(0,0,w,h);
+    // faint vignette
+    const g = ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'rgba(0,8,12,0.25)');
+    g.addColorStop(1,'rgba(0,0,0,0.65)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,h);
+
+    for(const p of particles){
+      p.x += p.vx + Math.sin(Date.now()/600 + p.x*p.r)*0.002;
+      p.y += p.vy;
+      p.life--;
+      if(p.y > h || p.life <= 0){
+        p.x = Math.random()*w;
+        p.y = -10;
+        p.life = rand(60,300);
+        p.vx = rand(-0.15,0.15);
+        p.vy = rand(0.02,0.25);
+        p.r = rand(0.8,3.2);
+        p.alpha = rand(0.04,0.2);
+      }
+
+      const rad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r*6);
+      rad.addColorStop(0, `rgba(0,183,255,${p.alpha*1.2})`);
+      rad.addColorStop(0.3, `rgba(0,183,255,${p.alpha*.6})`);
+      rad.addColorStop(1,'rgba(0,183,255,0)');
+      ctx.fillStyle = rad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r*6, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(render);
+  }
+  render();
+})();
+
+/* Make flicker less predictable: small opacity jitter on the text elements */
+(function(){
+  const neon = document.querySelector('.neon');
+  setInterval(()=>{
+    // small random flickers occasionally
+    const chance = Math.random();
+    if(chance < 0.12){
+      neon.style.opacity = (0.86 + Math.random()*0.14).toFixed(2);
+      setTimeout(()=> neon.style.opacity = '', 120 + Math.random()*420);
+    }
+  },160);
+})();
+
+/* Accessibility: keyboard users can press Enter to "Notify" (no-op stub) */
+document.querySelectorAll('.btn').forEach(b=>{
+  b.addEventListener('keydown', e=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); b.click(); }
+  });
+});
+
+/* Ensure the reflection matches the main text size when viewport changes */
+(function syncReflection(){
+  const svgMain = document.querySelector('.neon svg');
+  const reflect = document.querySelector('.reflection text');
+  function copy(){
+    if(!svgMain || !reflect) return;
+    // copy computed font-size and transform if necessary
+    const bbox = svgMain.viewBox.baseVal;
+    reflect.setAttribute('font-size', bbox.height * 0.66);
+  }
+  addEventListener('resize', ()=> setTimeout(copy, 60));
+  copy();
+})();
+</script>
+</body>
+</html>
