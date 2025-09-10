@@ -450,17 +450,14 @@
     let wrap = document.getElementById('player-wrap');
     if(!wrap){
       const root = document.getElementById('modal-root') || document.body;
-      // if modal exists and has .modal element, append inside that modal; otherwise append directly to root
       const modalEl = (root && root.querySelector && root.querySelector('.modal')) ? root.querySelector('.modal') : root;
       wrap = document.createElement('div');
       wrap.id = 'player-wrap';
-      // minimal styling safety: ensure it's empty and visible area for mount
       wrap.style.minWidth = '320px';
       try{
         if(modalEl) modalEl.appendChild(wrap);
         else document.body.appendChild(wrap);
       }catch(e){
-        // last resort - append to body (should never happen)
         try{ document.body.appendChild(wrap); }catch(_){}
       }
     }
@@ -1359,20 +1356,88 @@ function onPasswordSubmit(){
   }
 }
 
-function showPlaylistInsideModal(pl){
-  const listWrap = document.getElementById('playlist-list-wrap');
-  const dest = document.getElementById('playlist-video-list'); if(!dest) return;
-  listWrap.style.display='block';
-  dest.innerHTML = '';
-  (pl.videos||[]).forEach(v=>{
-    const el = document.createElement('div'); el.className='list-item ripple';
-    el.style.display='flex'; el.style.justifyContent='space-between'; el.style.alignItems='center';
-    el.innerHTML = `<div style="display:flex;gap:10px;align-items:center"><img src="${escapeHtml(v.thumbnail||'')}" style="width:100px;height:56px;object-fit:cover;border-radius:6px"/><div style="font-weight:800">${escapeHtml(v.name)}</div></div><div><button class="btn" data-id="${escapeHtml(b64decode(v.idB64||''))}">Play</button></div>`;
-    dest.appendChild(el);
-    el.querySelector('button').addEventListener('click', function(){ const vid = this.dataset.id; if(window.showViduPlayer) window.showViduPlayer(vid); });
-  });
+// YouTube playlist fetching
+// <<-- RESTORED: API key re-added from your original uploaded file -- this fixes playlist loading.
+const YT_API_KEY = 'AIzaSyDFyNxJJ_LbTEwLZkcLZ0wT3bDNfGcHCAI';
+async function fetchPlaylistVideos(playlistId){
+  if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
+  const items=[]; let pageToken='';
+  do{
+    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}` + (pageToken?`&pageToken=${pageToken}`:'');
+    const res = await fetch(url);
+    if(!res.ok){ const txt = await res.text().catch(()=>null); throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||'')); }
+    const data = await res.json();
+    (data.items||[]).forEach(it=>{
+      const sn = it.snippet || {};
+      if(sn.resourceId && sn.resourceId.videoId){
+        const thumb = (sn.thumbnails && (sn.thumbnails.high||sn.thumbnails.medium||sn.thumbnails.default))||{};
+        items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
+      }
+    });
+    pageToken = data.nextPageToken || '';
+  } while(pageToken);
+  return items;
 }
 
+async function showPlaylistInsideModal(item){
+  const rawId = b64decode(item.idB64);
+  const playlistId = rawId.split('&')[0];
+  window.__viduGlobal.visualsPaused = true;
+  window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'playlist-load' } }));
+
+  try{
+    const videos = await fetchPlaylistVideos(playlistId);
+    if(!videos.length){
+      const wrap = document.getElementById('player-wrap');
+      if(wrap) wrap.innerHTML = `<div class="muted">No videos found or playlist is private.</div>`;
+      document.getElementById('player-block').style.display='block';
+      return;
+    }
+
+    let listWrap = document.getElementById('playlist-video-list');
+    if(!listWrap){
+      const wrapper = document.createElement('div');
+      wrapper.id = 'playlist-list-wrap';
+      wrapper.style.marginTop = '12px';
+      wrapper.innerHTML = `<div class="muted">Playlist contents</div><div class="playlist-list" id="playlist-video-list"></div>`;
+      const playerBlock = document.getElementById('player-block');
+      if(playerBlock) playerBlock.appendChild(wrapper);
+      listWrap = document.getElementById('playlist-video-list');
+    }
+
+    if(listWrap) listWrap.innerHTML = '';
+    videos.forEach(v=>{
+      const li = document.createElement('div'); li.className = 'list-item';
+      li.setAttribute('data-video-id', v.videoId);
+      li.style.display='flex'; li.style.alignItems='center'; li.style.gap='12px'; li.style.padding='8px';
+      li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;" /><div style="flex:1;"><div class="title" style="font-size:13px;">${escapeHtml(v.title)}</div></div>`;
+      li.onclick = ()=> {
+        document.getElementById('now-playing-label').textContent = v.title || 'Now playing';
+        if(window.showViduPlayer) window.showViduPlayer(v.videoId).catch(err => {
+          console.error('showViduPlayer failed', err);
+          const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
+        });
+      };
+      listWrap.appendChild(li);
+    });
+
+    document.getElementById('player-block').style.display='block';
+    const outer = document.getElementById('playlist-list-wrap'); if(outer) outer.style.display='block';
+    document.getElementById('now-playing-label').textContent = videos[0].title || 'Now playing';
+    if(window.showViduPlayer) window.showViduPlayer(videos[0].videoId).catch(err => {
+      console.error('showViduPlayer failed', err);
+      const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
+    });
+  } catch(err){
+    console.error('Playlist fetch error', err);
+    const wrap = document.getElementById('player-wrap');
+    if(wrap) wrap.innerHTML = `<div class="muted">Failed to load playlist: ${escapeHtml(err.message || '')}</div>`;
+    document.getElementById('player-block').style.display='block';
+  }
+}
+
+// Visual helpers & init
+function pauseVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = true; window.dispatchEvent(new CustomEvent('vidu:visuals:pause',{detail:{reason}})); }
 function resumeVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = false; window.dispatchEvent(new CustomEvent('vidu:visuals:resume',{detail:{reason}})); }
 
 document.addEventListener('DOMContentLoaded', function(){
