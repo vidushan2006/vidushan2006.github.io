@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool Directory</title>
+    <style>
+        /* --- Basic Setup & Modern Font --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            
+            /* --- Background Image Added --- */
+            background-image: url('assets/images/background.gif');
+            background-size: cover; /* Ensures the image covers the entire background */
+            background-position: center; /* Centers the image */
+            background-attachment: fixed; /* Makes the background static when scrolling */
+            background-color: #f4f7f6; /* Fallback color if the image fails to load */
+
+            color: #333;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- Main Content Container --- */
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: #ffffff; /* Solid background for readability */
+            border-radius: 20px; /* Generous rounded corners for a modern look */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07); /* Soft shadow for a "floating" effect */
+            padding: 40px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* --- Header Styling --- */
+        h1 {
+            font-size: 2.5em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+
+        /* --- Tool List Styling --- */
+        .tool-list {
+            list-style-type: none; /* Removes default bullet points */
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Creates space between the list items */
+        }
+
+        /* --- Individual Tool Item Styling (the clickable link) --- */
+        .tool-list li a {
+            display: block; /* Makes the entire area clickable */
+            background-color: #f8f9fa; /* Light gray background for each item */
+            color: #34495e;
+            text-decoration: none; /* Removes the underline from links */
+            padding: 20px 25px;
+            border-radius: 12px; /* Rounded corners for each item */
+            font-size: 1.1em;
+            text-align: left;
+            font-weight: 500;
+            border: 2px solid transparent; /* Prepare for a border on hover */
+            transition: all 0.3s ease; /* Smooth transition for all properties */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        /* --- Interactive Hover Effect --- */
+        .tool-list li a:hover {
+            background-color: #e9ecef;
+            color: #007bff; /* A nice blue to indicate selection */
+            transform: translateY(-3px) scale(1.02); /* Lifts the item up slightly */
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); /* Stronger shadow on hover */
+        }
+
+        /* --- Footer for extra info --- */
+        .footer {
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>VIDU Tools</h1>
+
+        <!-- This is where the list of tools goes. -->
+        <ul class="tool-list">
+            
+            <!-- 
+            EASY TO CUSTOMIZE:
+            To add a new tool, just copy the entire <li> block below and change two things:
+            1. The `href` value to point to your new HTML file.
+            2. The text inside the <a> tag (e.g., "Image Compressor") to what you want to display.
+            -->
+
+            <li>
+                <a href="assets/Tools/YT link converter.html">YT Link Converter</a>
+            </li>
+
+            <li>
+                <a href="assets/Tools/YT Downloader.html">YT Video Downloader</a>
+            </li>
+            
+
+            <!-- Add new tools here by copying the format above -->
+            <!-- Example: <li><a href="assets/Tools/your-new-tool.html">Your New Tool Name</a></li> -->
+
+        </ul>
+
+        <p class="footer">Click on any tool to open it.</p>
+    </div>
+
+</body>
+</html>
