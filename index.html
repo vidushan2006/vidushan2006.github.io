@@ -445,8 +445,25 @@
   function gearSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.4-3.5c0-.4-.03-.78-.09-1.15l1.86-1.44a.5.5 0 0 0 .12-.65l-1.76-3.05a.5.5 0 0 0-.6-.22l-2.2.88a7.72 7.72 0 0 0-1.9-1.1l-.33-2.33A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.5.42l-.33 2.33c-.69.25-1.35.6-1.95 1.02l-2.2-.88a.5.5 0 0 0-.6.22L2.7 6.96a.5.5 0 0 0 .12.65l1.86 1.44c-.06.37-.09.75-.09 1.15s.03.78.09 1.15L2.82 14.95a.5.5 0 0 0-.12.65l1.76 3.05c.14.24.4.34.64.28l2.2-.88c.6.42 1.26.77 1.95 1.02l.33 2.33c.03.25.25.42.5.42h3.8c.25 0 .47-.17.5-.42l.33-2.33c.69-.25 1.35-.6 1.95-1.02l2.2.88c.24.09.5-.04.64-.28l1.76-3.05a.5.5 0 0 0-.12-.65l-1.86-1.44c.06-.37.09-.75.09-1.15z" fill="#fff"/></svg>`; }
 
   function createHostElements(){
-    const wrap = document.getElementById('player-wrap');
-    if(!wrap) throw new Error('#player-wrap not found');
+    // Small robustness fix: some page states can call player creation before the #player-wrap exists.
+    // Instead of throwing, fall back to creating #player-wrap inside modal-root or document.body.
+    let wrap = document.getElementById('player-wrap');
+    if(!wrap){
+      const root = document.getElementById('modal-root') || document.body;
+      // if modal exists and has .modal element, append inside that modal; otherwise append directly to root
+      const modalEl = (root && root.querySelector && root.querySelector('.modal')) ? root.querySelector('.modal') : root;
+      wrap = document.createElement('div');
+      wrap.id = 'player-wrap';
+      // minimal styling safety: ensure it's empty and visible area for mount
+      wrap.style.minWidth = '320px';
+      try{
+        if(modalEl) modalEl.appendChild(wrap);
+        else document.body.appendChild(wrap);
+      }catch(e){
+        // last resort - append to body (should never happen)
+        try{ document.body.appendChild(wrap); }catch(_){}
+      }
+    }
 
     const prev = wrap.querySelector('.vidu-player-host');
     if(prev) prev.remove();
