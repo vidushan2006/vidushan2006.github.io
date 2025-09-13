@@ -374,10 +374,8 @@
   </footer>
  </div>
 
- <!-- Modal root -->
  <div id="modal-root" style="display:none;"></div>
 
- <!-- VIDU player script -->
  <script>
 (function(){
   if(window.__viduPlayerLoaded) return;
@@ -1152,9 +1150,6 @@
 
 </script>
 
-<!-- =========================
-     Playlist/Modal/Password & UI
-     ========================= -->
 <script>
 /*************************************************************************
  * Playlist data + UI + modal + YouTube playlist fetching
@@ -1170,8 +1165,8 @@ const playlists = [
         name: 'ET',
         thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiHFvj6Q-p04TgdZj_tv0eI3&si=pAyX-6SJILH6QSg2"), passB64: btoa("vidu123et") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiFcYCAzfcyI0cz8cOfyWlTc&si=nZ224kprFgDGTG9Z"), passB64: btoa("vidu123et") }
+          { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiHFvj6Q-p04TgdZj_tv0eI3&si=pAyX-6SJILH6QSg2"), passB64: btoa("") },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiFcYCAzfcyI0cz8cOfyWlTc&si=nZ224kprFgDGTG9Z"), passB64: btoa("") }
         ]
       },
       {
@@ -1179,8 +1174,9 @@ const playlists = [
         name: 'SFT',
         thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiG94fMjA7v-6nw55htWj6LH&si=PUXqK2wlIin_tUZm"), passB64: btoa("vidu123sft") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiEmn6j0O870XYlFRasYABD2&si=vjOY0tK0Em5LZvsf"), passB64: btoa("vidu123sft") }
+          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiG94fMjA7v-6nw55htWj6LH&si=PUXqK2wlIin_tUZm"), passB64: btoa("") },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiEmn6j0O870XYlFRasYABD2&si=vjOY0tK0Em5LZvsf"), passB64: btoa("") },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiGt19HZ9wzIwC-VQ_AN0z9K&si=0jJc5HTa68Weq851"), passB64: btoa("") } 
         ]
       },
       {
@@ -1188,7 +1184,7 @@ const playlists = [
         name: 'ICT',
         thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiFUhYSDfiEVVMuBbc2AiwpC&si=1g80otmZOXdp1hE_"), passB64: btoa("vidu123ict") }
+          { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiFUhYSDfiEVVMuBbc2AiwpC&si=1g80otmZOXdp1hE_"), passB64: btoa("") }
         ]
       }
     ]
@@ -1229,8 +1225,22 @@ function showPlaylistVideos(pl, skipPush){
     const vli = document.createElement('li'); vli.className='list-item ripple';
     const thumb = v.thumbnail || '';
     vli.innerHTML = `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.name)}" /><span class="title">${escapeHtml(v.name)}</span>`;
-    if(v && Array.isArray(v.videos)){ vli.addEventListener('click',(ev)=>{ spawnRipple(ev, vli); showPlaylistVideos(v); }); }
-    else { vli.addEventListener('click',(ev)=>{ spawnRipple(ev, vli); openPasswordModal(v); }); }
+    if(v && Array.isArray(v.videos)){
+      vli.addEventListener('click',(ev)=>{ spawnRipple(ev, vli); showPlaylistVideos(v); });
+    } else {
+      vli.addEventListener('click',(ev)=>{
+        spawnRipple(ev, vli);
+        const expectedPassword = b64decode(v.passB64 || '');
+        if (expectedPassword === '') {
+          // No password, open player directly
+          currentItem = v;
+          showUnlockedItem(v);
+        } else {
+          // Password required, show modal
+          openPasswordModal(v);
+        }
+      });
+    }
     attachTilt(vli); vids.appendChild(vli);
   });
   const back = document.createElement('div'); back.style.textAlign='center'; back.style.marginTop='16px';
@@ -1281,7 +1291,6 @@ function createModal(){
               </div>
             </div>
 
-            <!-- Player mount point (do not rename) -->
             <div id="player-wrap"></div>
 
             <div id="playlist-list-wrap" style="display:none;margin-top:12px;">
@@ -1298,6 +1307,37 @@ function createModal(){
   document.getElementById('password-submit').onclick = onPasswordSubmit;
   document.getElementById('password-input').onkeydown = (e)=>{ if(e.key === 'Enter') onPasswordSubmit(); };
   document.getElementById('modal-backdrop').onclick = function(e){ if(e.target === this) closeModal(); };
+}
+
+function showUnlockedItem(item) {
+  const root = document.getElementById('modal-root');
+  root.style.display = 'block';
+  document.getElementById('modal-title').textContent = item.name || 'Player';
+  document.getElementById('modal-subtitle').textContent = (item.type || 'video');
+
+  document.getElementById('password-block').style.display = 'none';
+  document.getElementById('password-error').style.display = 'none';
+  document.getElementById('player-block').style.display = 'block';
+  const plwrap = document.getElementById('playlist-list-wrap');
+  if(plwrap) plwrap.style.display = 'none';
+
+  if(!window.__viduGlobal) window.__viduGlobal = {};
+  window.__viduGlobal.visualsPaused = true;
+  window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'modal-open' } }));
+
+  if (item.type === 'playlist') {
+    showPlaylistInsideModal(item);
+  } else {
+    const id = b64decode(item.idB64 || '');
+    document.getElementById('now-playing-label').textContent = item.name || 'Now playing';
+    if (window.showViduPlayer) {
+      window.showViduPlayer(id).catch(err => {
+        console.error('showViduPlayer failed', err);
+        const wrap = document.getElementById('player-wrap');
+        if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
+      });
+    }
+  }
 }
 
 function openPasswordModal(item){
@@ -1332,19 +1372,7 @@ function onPasswordSubmit(){
   if(!currentItem) return;
   const expected = b64decode(currentItem.passB64 || '');
   if(val === expected){
-    document.getElementById('password-block').style.display = 'none';
-    document.getElementById('password-error').style.display = 'none';
-    document.getElementById('player-block').style.display = 'block';
-    if(currentItem.type === 'playlist'){
-      showPlaylistInsideModal(currentItem);
-    } else {
-      const id = b64decode(currentItem.idB64 || '');
-      document.getElementById('now-playing-label').textContent = currentItem.name || 'Now playing';
-      if(window.showViduPlayer) window.showViduPlayer(id).catch(err => {
-        console.error('showViduPlayer failed', err);
-        const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
-      });
-    }
+    showUnlockedItem(currentItem);
   } else {
     const err = document.getElementById('password-error'); err.style.display = 'block'; err.textContent = 'Incorrect password — try again.';
   }
@@ -1459,4 +1487,3 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { cons
 <script src="assets/js/main.js"></script>
 </body>
 </html>
-
