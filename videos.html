@@ -787,6 +787,33 @@
         }
 
         state.keyHandler = function(e){
+
+              // ArrowUp / ArrowDown: volume control (+/- 5%)
+              if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+                try{
+                  if(!state.player) return;
+                  e.preventDefault();
+                  // YouTube API volume range is 0-100
+                  let curVol = 100;
+                  try{ curVol = (typeof state.player.getVolume === 'function') ? state.player.getVolume() : (state.lastVolume || 100); }catch(_){ curVol = state.lastVolume || 100; }
+                  const delta = e.key === 'ArrowUp' ? 5 : -5;
+                  let target = Math.max(0, Math.min(100, Math.round(curVol + delta)));
+                  try{ if(typeof state.player.setVolume === 'function') state.player.setVolume(target); }catch(_){}
+                  state.lastVolume = target;
+                  // update any UI volume indicator if present
+                  try{
+                    const volPct = document.getElementById('vidu_vol_pct');
+                    const volEl = document.getElementById('vidu_vol') || document.querySelector('.vidu-volume-overlay');
+                    if(volPct) volPct.textContent = (target) + '%';
+                    if(volEl){
+                      volEl.classList.remove('hidden'); volEl.classList.add('visible');
+                    }
+                    // Also update any small volume UI in controls if exists (not required)
+                  }catch(_){}
+                  return;
+                }catch(err){}
+              }
+
           const active = document.activeElement;
 
         try{
