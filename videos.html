@@ -1040,13 +1040,21 @@
                   resolve(state.player);
                 },
                 onStateChange: function(e){
-                  // hide loading overlay when state becomes PLAYING (1)
                   try{
+                    // hide loading overlay when state becomes PLAYING (1)
                     if(e && e.data === 1){
-                      try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(err){}
+                      try{ const ld = document.getElementById('vidu-loading'); if(ld) { ld.classList.add('hidden'); ld.style.display='none'; } }catch(err){}
                     }
+                    // Keep internal desiredPlaying in sync with actual player state so user actions win.
+                    try{
+                      if(typeof state !== 'undefined' && state !== null && e && typeof e.data === 'number'){
+                        if(e.data === 1){ /* PLAYING */ state.desiredPlaying = true; }
+                        else if(e.data === 2 || e.data === 0){ /* PAUSED or ENDED */ state.desiredPlaying = false; }
+                        // For buffering (3), unstarted (-1) or cued (5) we don't change desiredPlaying here.
+                      }
+                    }catch(syncErr){ /* swallow sync errors */ }
                   }catch(err){}
-                },
+},
                 onError: function(err){ console.error('YT player error', err); try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} reject(err); }
               }
             });
