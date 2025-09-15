@@ -194,39 +194,64 @@
     .vidu-close-btn{position:absolute;top:10px;right:10px;z-index:10002;width:36px;height:36px;padding:6px;border-radius:8px;background:rgba(0,0,0,0.46);border:1px solid rgba(255,255,255,0.06);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.6);transition:opacity .18s ease,transform .18s ease}
     .vidu-close-btn.hidden{opacity:0;transform:translateY(-6px);pointer-events:none}
 
-    /* small responsive tweaks */
+    /* ===== NEW: Centered volume feedback (modern style) ===== */
+    .vidu-volume-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 100010; /* above controls */
+    }
+    .vidu-volume-card {
+      pointer-events: none;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      min-width: 140px;
+      max-width: 320px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(6px) saturate(120%);
+      transform: scale(0.86);
+      opacity: 0;
+      transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .22s ease;
+      color: #f4fff4;
+      font-weight:900;
+      letter-spacing:0.6px;
+    }
+    .vidu-volume-overlay.visible .vidu-volume-card {
+      transform: scale(1);
+      opacity: 1;
+    }
+    .vidu-vol-icon {
+      width: 36px;
+      height: 36px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+      flex: 0 0 36px;
+    }
+    .vidu-vol-percent {
+      font-size:18px;
+      font-weight:900;
+      color: #e8ffe8;
+      min-width:46px;
+      text-align:left;
+    }
+    .vidu-vol-sub { font-size:11px; color: rgba(220,255,220,0.7); font-weight:800; margin-left:6px; }
     @media (max-width:720px){
-      .vidu-time{min-width:76px;font-size:12px}
-      .vidu-mount{height:320px}
-      .iframe-wrap{height:56%}
-      .viewer-playlist{height:44%}
-      .now-playing{font-size:13px;padding:8px 10px}
-      .now-playing .title{font-size:13px}
-    }
-
-    /* mobile visual adjustments: center and keep neon area the same size */
-    @media (max-width:640px){
-      .card { align-items: center; background: rgba(0,0,0,0.66); }
-      .card-media { justify-content: center; align-items: center; position:relative; width:100%; overflow:visible; border-radius:8px; padding:18px 0; }
-      .card-media::before{
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: #000;
-        border-radius: 8px;
-        z-index: 0;
-        opacity: 0.98;
-      }
-      /* Keep the neon-wrap fixed width on mobile as well so five letters are always visible */
-      .neon-wrap { width: 240px; max-width:240px; }
-      .neon, .neon-reflect { font-size:48px !important; }
-      .card-caption { align-items: center; text-align: center; padding-top: 12px; padding-bottom: 14px; z-index: 1; width:100% }
-    }
-
-    @media (max-width:360px){
-      /* very narrow devices: slightly reduce neon area so it still fits comfortably in narrow screens */
-      .neon-wrap { width: 200px; max-width:200px; }
-      .neon, .neon-reflect { font-size:44px !important; }
+      .vidu-volume-card { min-width:120px; padding:10px 14px; }
+      .vidu-vol-percent { font-size:16px; }
     }
 
     /* Lightweight inline styles for the playback menu (kept here so no external changes needed) */
@@ -558,9 +583,7 @@
       try{ delete window.onYouTubeIframeAPIReady; }catch(e){}
     }
 
-    /* ---------- Player module (advanced-player only) ----------
-       (unchanged from previous working implementation)
-    */
+    /* ---------- Player module (advanced-player only) ---------- */
     (function playerModule(){
       if(window.__viduPlayerLoaded) return;
       window.__viduPlayerLoaded = true;
@@ -577,7 +600,8 @@
         inactivityTimer: null,
         lastActivity: Date.now(),
         desiredPlaying: null,
-        lastVolume: 100
+        lastVolume: 100,
+        volumeHideTimer: null
       };
 
       function pad2(n){ n = Math.max(0, Math.floor(n||0)); return (n < 10 ? '0' + n : String(n)); }
@@ -615,6 +639,7 @@
         `;
         host.appendChild(overlay);
 
+        // Close button
         const closeBtn = document.createElement('button');
         closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
         closeBtn.addEventListener('click', ()=> {
@@ -627,8 +652,26 @@
         });
         host.appendChild(closeBtn);
 
+        // -------- Create fresh volume overlay (clean, modern) --------
+        const volWrap = document.createElement('div');
+        volWrap.className = 'vidu-volume-overlay';
+        volWrap.setAttribute('aria-hidden','true');
+        volWrap.innerHTML = `
+          <div class="vidu-volume-card" role="status" aria-live="polite">
+            <div class="vidu-vol-icon" id="vidu_vol_icon">
+              <!-- SVG injected by JS -->
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-start;justify-content:center">
+              <div class="vidu-vol-percent" id="vidu_vol_pct">100%</div>
+              <div class="vidu-vol-sub" id="vidu_vol_sub">Volume</div>
+            </div>
+          </div>
+        `;
+        // ensure overlay sits above content and doesn't block pointer events
+        host.appendChild(volWrap);
+
         wrap.appendChild(host);
-        return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv };
+        return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, volWrap };
       }
 
       function disableIframeClicks(host){
@@ -648,7 +691,7 @@
         await loadYTApi();
 
         // create host + mount now that API is available
-        const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv } = createHostElementsIn(mountRootId);
+        const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, volWrap } = createHostElementsIn(mountRootId);
         state.host = host; state.mount = mount;
 
         // saved styles container so we can restore when exit fullscreen
@@ -660,6 +703,53 @@
         const seekEl = overlay.querySelector('#vidu_seek');
         const playbackBtn = overlay.querySelector('#vidu_playbackbtn');
         const fullBtn = overlay.querySelector('#vidu_fullbtn');
+
+        // -------- volume overlay helpers (fresh implementation) --------
+        function renderVolIcon(vol){
+          // simple speaker icon with waves; muted when vol === 0
+          const muted = (vol === 0);
+          if(muted){
+            return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 6L6 10H3v4h3l5 4V6z" fill="#fff" opacity="0.96"/><path d="M19 9l-1.4-1.4L16 9.2 17.4 10.6 19 9z" fill="#fff"/><line x1="21" y1="3" x2="3" y2="21" stroke="#ff7f7f" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+          } else {
+            return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 6L6 10H3v4h3l5 4V6z" fill="#fff" opacity="0.96"/><path d="M16.5 7.5c.9.9 1.5 2.1 1.5 3.5s-.6 2.6-1.5 3.5" stroke="#bfffbf" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+          }
+        }
+
+        function showVolumeOverlay(volume){
+          try{
+            if(!volWrap) return;
+            const pct = Math.max(0, Math.min(100, Math.round(Number(volume)||0)));
+            const pctEl = volWrap.querySelector('#vidu_vol_pct');
+            const iconEl = volWrap.querySelector('#vidu_vol_icon');
+            const card = volWrap.querySelector('.vidu-volume-card');
+            if(pctEl) pctEl.textContent = pct + '%';
+            if(iconEl) iconEl.innerHTML = renderVolIcon(pct);
+            volWrap.classList.add('visible');
+            volWrap.setAttribute('aria-hidden','false');
+
+            // clear previous timer
+            if(state.volumeHideTimer) { clearTimeout(state.volumeHideTimer); state.volumeHideTimer = null; }
+
+            // hide after 3s
+            state.volumeHideTimer = setTimeout(()=>{
+              try{
+                volWrap.classList.remove('visible');
+                volWrap.setAttribute('aria-hidden','true');
+                state.volumeHideTimer = null;
+              }catch(e){}
+            }, 3000);
+          }catch(e){ console.warn('showVolumeOverlay err', e); }
+        }
+
+        function hideVolumeOverlayImmediate(){
+          try{
+            if(state.volumeHideTimer){ clearTimeout(state.volumeHideTimer); state.volumeHideTimer = null; }
+            if(volWrap){
+              volWrap.classList.remove('visible');
+              volWrap.setAttribute('aria-hidden','true');
+            }
+          }catch(e){}
+        }
 
         function getFullscreenElement(){
           return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
@@ -786,6 +876,7 @@
           else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); }
         }
 
+        // key handler (updated: central volume overlay usage)
         state.keyHandler = function(e){
 
               // ArrowUp / ArrowDown: volume control (+/- 5%)
@@ -800,16 +891,8 @@
                   let target = Math.max(0, Math.min(100, Math.round(curVol + delta)));
                   try{ if(typeof state.player.setVolume === 'function') state.player.setVolume(target); }catch(_){}
                   state.lastVolume = target;
-                  // update any UI volume indicator if present
-                  try{
-                    const volPct = document.getElementById('vidu_vol_pct');
-                    const volEl = document.getElementById('vidu_vol') || document.querySelector('.vidu-volume-overlay');
-                    if(volPct) volPct.textContent = (target) + '%';
-                    if(volEl){
-                      volEl.classList.remove('hidden'); volEl.classList.add('visible');
-                    }
-                    // Also update any small volume UI in controls if exists (not required)
-                  }catch(_){}
+                  // show modern center overlay (fresh logic)
+                  try{ showVolumeOverlay(target); }catch(_){}
                   return;
                 }catch(err){}
               }
@@ -832,11 +915,11 @@
               try{ state.player.seekTo(target, true); }catch(seekErr){ /* ignore */ }
               // update UI immediately if seekEl exists
               try{
-                const seekEl = document.getElementById('vidu_seek') || document.querySelector('input[type=range]');
-                if(seekEl && dur && isFinite(dur)){
-                  seekEl.value = (target / Math.max(1,dur)) * 100;
+                const seekEl2 = document.getElementById('vidu_seek') || document.querySelector('input[type=range]');
+                if(seekEl2 && dur && isFinite(dur)){
+                  seekEl2.value = (target / Math.max(1,dur)) * 100;
                   // update background visually if function exists
-                  if(typeof updateSeekBackground === 'function') try{ updateSeekBackground(seekEl); }catch(_){}
+                  if(typeof updateSeekBackground === 'function') try{ updateSeekBackground(seekEl2); }catch(_){}
                 }
               }catch(_){}
               return;
@@ -866,6 +949,7 @@
             toggleFullscreen();
           }
         };
+
         document.addEventListener('keydown', state.keyHandler);
 
         // seek handling
@@ -1050,6 +1134,8 @@
                       evt.target.setVolume(v);
                       if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute();
                       else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute();
+                      // show overlay initial volume for clarity
+                      try{ showVolumeOverlay(v); }catch(_){}
                     }
                   }catch(e){}
 
@@ -1107,7 +1193,7 @@
                   try{
                     // hide loading overlay when state becomes PLAYING (1)
                     if(e && e.data === 1){
-                      try{ const ld = document.getElementById('vidu_loading') || document.getElementById('vidu_loading') || document.getElementById('vidu-loading') || document.querySelector('.vidu-loading') || document.querySelector('.vidu-loading'); if(ld){ try{ ld.classList.add('hidden'); ld.style.display='none'; }catch(e){} } }catch(err){}
+                      try{ const ld = document.getElementById('vidu_loading') || document.querySelector('.vidu-loading'); if(ld){ try{ ld.classList.add('hidden'); ld.style.display='none'; }catch(e){} } }catch(err){}
                     }
                     // Keep internal desiredPlaying in sync with actual player state so user actions win.
                     try{
@@ -1118,7 +1204,7 @@
                       }
                     }catch(syncErr){ /* swallow sync errors */ }
                   }catch(err){}
-},
+                },
                 onError: function(err){ console.error('YT player error', err); try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} reject(err); }
               }
             });
@@ -1135,6 +1221,7 @@
           if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
           if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); document.removeEventListener('mozfullscreenchange', state.fsListener); document.removeEventListener('MSFullscreenChange', state.fsListener); state.fsListener = null; }
           if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
+          if(state.volumeHideTimer){ clearTimeout(state.volumeHideTimer); state.volumeHideTimer = null; }
           if(state.host){
             try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){}
           }
@@ -1251,144 +1338,64 @@
           try{
             await window.showViduPlayer(first.videoId, 'player-wrap');
           }catch(err){
-            mountRoot.innerHTML = '';
-            const errBlock = document.createElement('div');
-            errBlock.style.padding = '18px'; errBlock.style.color = '#ffdede';
-            errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
-            const retryBtn = document.createElement('button');
-            retryBtn.className = 'btn'; retryBtn.textContent = 'Retry Advanced Player';
-            retryBtn.addEventListener('click', ()=> {
-              resetYTLoader();
-              mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Retrying advanced player...</div>`;
-              window.showViduPlayer(first.videoId, 'player-wrap').catch(e2=>{
-                mountRoot.innerHTML = '';
-                errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(e2 && e2.message ? e2.message : String(e2))}</div>`;
-                mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn);
-              });
-            });
-            mountRoot.appendChild(errBlock); mountRoot.appendChild(retryBtn);
+            mountRoot.innerHTML = `<div style="padding:18px;color:#ffdede;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
           }
         }
       }catch(err){
-        // show error and retry button in playlist area (no iframe fallback)
+        iframeWrap.innerHTML = '';
         playlistContainer.innerHTML = '';
         const errBlock = document.createElement('div');
         errBlock.style.padding = '18px'; errBlock.style.color = '#ffdede';
-        errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load playlist</div><div style="margin-bottom:10px;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
-        const retryBtn = document.createElement('button');
-        retryBtn.className = 'btn'; retryBtn.textContent = 'Retry Advanced Player';
-        retryBtn.addEventListener('click', ()=> {
-          resetYTLoader();
-          playlistContainer.innerHTML = `<div style="padding:18px;color:#ddd;">Retrying advanced player...</div>`;
-          fetchPlaylistVideos(playlistId).then(videos=>{
-            if(!videos || !videos.length) throw new Error('No videos found on retry');
-            window.showViduPlayer(videos[0].videoId, 'player-wrap').catch(e2=>{
-              playlistContainer.innerHTML = '';
-              errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(e2 && e2.message ? e2.message : String(e2))}</div>`;
-              playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
-            });
-          }).catch(e3=>{
-            playlistContainer.innerHTML = '';
-            errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load playlist</div><div style="margin-bottom:10px;">${escapeHtml(e3 && e3.message ? e3.message : String(e3))}</div>`;
-            playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
-          });
-        });
-        playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
+        errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load playlist</div><div>${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
+        iframeWrap.appendChild(errBlock);
       }
     }
 
-    /* ---------- show single video (advanced only) ---------- */
-    async function showVideoInViewer(item){
-      const vid = normalizeIdFromB64(item.idB64);
-      if(!vid){ alert('Unable to load the selected item.'); return; }
-      const iframeWrap = document.getElementById('iframe-wrap');
-      iframeWrap.innerHTML = '';
-
-      // hide playlist area and let the iframe-wrap expand
-      const playlistContainer = document.getElementById('viewer-playlist');
-      playlistContainer.innerHTML = '';
-      playlistContainer.style.display = 'none';
-      // allow iframe-wrap to grow and occupy remaining area
-      iframeWrap.style.flex = '1 1 100%';
-
-      const mountRoot = document.createElement('div'); mountRoot.id = 'player-wrap'; mountRoot.style.width='100%'; mountRoot.style.height='100%';
-      iframeWrap.appendChild(mountRoot);
-
-      // set now playing title
-      const np = document.getElementById('now-playing-title');
-      if(np) np.textContent = item.title || 'Now playing';
-
-      // attempt advanced player - if fails, show clear error and a retry button in the playlist area
-      try{
-        await window.showViduPlayer(vid, 'player-wrap');
-      }catch(err){
-        mountRoot.innerHTML = '';
-        // restore playlist container so user can see error + retry
-        playlistContainer.style.display = '';
-        // set back default split
-        iframeWrap.style.flex = '0 0 62%';
-        playlistContainer.style.flex = '0 0 38%';
-        playlistContainer.innerHTML = '';
-        const errBlock = document.createElement('div');
-        errBlock.style.padding = '18px'; errBlock.style.color = '#ffdede';
-        errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
-        const retryBtn = document.createElement('button');
-        retryBtn.className = 'btn'; retryBtn.textContent = 'Retry Advanced Player';
-        retryBtn.addEventListener('click', ()=> {
-          resetYTLoader();
-          mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Retrying advanced player...</div>`;
-          window.showViduPlayer(vid, 'player-wrap').catch(e2=>{
-            mountRoot.innerHTML = '';
-            errBlock.innerHTML = `<div style="font-weight:800;margin-bottom:10px;">Failed to load advanced player</div><div style="margin-bottom:10px;">${escapeHtml(e2 && e2.message ? e2.message : String(e2))}</div>`;
-            playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
-          });
-        });
-        playlistContainer.appendChild(errBlock); playlistContainer.appendChild(retryBtn);
-      }
-    }
-
-    /* ---------- viewer open/close wiring ---------- */
-    const viewer = document.getElementById('viewer');
-    const viewerClose = document.getElementById('viewer-close');
-
+    /* ---------- open viewer helper (decides video vs playlist) ---------- */
     function openViewer(item){
-      // ensure default playlist area visible (will be hidden by showVideoInViewer if needed)
-      const iframeWrap = document.getElementById('iframe-wrap');
-      const playlistContainer = document.getElementById('viewer-playlist');
-      playlistContainer.style.display = '';
-      iframeWrap.style.flex = '0 0 62%';
-      playlistContainer.style.flex = '0 0 38%';
-      playlistContainer.innerHTML = '';
+      try{
+        const viewer = document.getElementById('viewer');
+        if(!viewer) return;
+        const iframeWrap = document.getElementById('iframe-wrap');
+        iframeWrap.innerHTML = '';
+        // update now playing title
+        const np = document.getElementById('now-playing-title');
+        if(np) np.textContent = item.title || 'Now playing';
 
-      viewer.classList.remove('hidden'); viewer.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
-      if(item.type === 'video') showVideoInViewer(item); else showPlaylistInsideViewer(item);
+        // show viewer
+        viewer.classList.remove('hidden');
+        viewer.setAttribute('aria-hidden','false');
+        document.body.style.overflow = 'hidden';
+
+        if(item.type === 'playlist'){
+          showPlaylistInsideViewer(item);
+        } else {
+          // single video
+          const mountRoot = document.createElement('div'); mountRoot.id = 'player-wrap'; mountRoot.style.width='100%'; mountRoot.style.height='100%';
+          iframeWrap.appendChild(mountRoot);
+          window.showViduPlayer(normalizeIdFromB64(item.idB64), 'player-wrap').catch(err=>{
+            mountRoot.innerHTML = `<div style="padding:18px;color:#ffdede;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
+          });
+        }
+      }catch(e){ console.warn('openViewer err', e); }
     }
-    function closeViewer(){
-      if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
-      const iframeWrap = document.getElementById('iframe-wrap'); if(iframeWrap) iframeWrap.innerHTML = '';
-      const playlistContainer = document.getElementById('viewer-playlist'); if(playlistContainer){ playlistContainer.innerHTML = ''; playlistContainer.style.display = ''; playlistContainer.style.flex = '0 0 38%'; }
-      // reset iframe split default
-      const iframeWrapEl = document.getElementById('iframe-wrap');
-      if(iframeWrapEl) iframeWrapEl.style.flex = '0 0 62%';
-      // clear now playing title
-      const np = document.getElementById('now-playing-title'); if(np) np.textContent = '—';
-      viewer.classList.add('hidden'); viewer.setAttribute('aria-hidden','true'); document.body.style.overflow='';
-    }
-    viewerClose.addEventListener('click', closeViewer);
-    viewer.addEventListener('click', (e)=> { if(e.target === viewer){ closeViewer(); } });
-    document.addEventListener('keydown', (e)=> { if(e.key === 'Escape'){ if(!pwModal.classList.contains('hidden')) closeModal(pwModal); if(!viewer.classList.contains('hidden')) closeViewer(); } });
 
-    /* ---------- small page interactions ---------- */
-    document.getElementById('nav-private').addEventListener('click', ()=> location.reload());
-
-    /* ---------- init ---------- */
-    document.addEventListener('DOMContentLoaded', ()=>{
-      try{ buildTiles(); }catch(err){ console.error('buildTiles error', err); document.getElementById('js-fail-note').style.display='block'; }
-      setTimeout(()=>{ const t = document.getElementById('tiles'); if(!t || !t.children || t.children.length===0) document.getElementById('js-fail-note').style.display='block'; }, 1200);
+    // viewer close
+    document.getElementById('viewer-close').addEventListener('click', ()=>{
+      try{
+        const v = document.getElementById('viewer'); if(v){ v.classList.add('hidden'); v.setAttribute('aria-hidden','true'); }
+        if(window.destroyViduPlayer) window.destroyViduPlayer();
+        const wrap = document.getElementById('iframe-wrap'); if(wrap) wrap.innerHTML = '';
+        document.body.style.overflow = '';
+      }catch(e){}
     });
 
-    // expose reset helper for retry logic (used above)
-    window.resetYTLoader = resetYTLoader;
+    // initial render
+    buildTiles();
+
+    // expose openViewer globally for other use
+    window.openViewer = openViewer;
+
   })();
   </script>
 </body>
