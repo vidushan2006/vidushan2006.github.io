@@ -1440,7 +1440,7 @@ async function fetchPlaylistVideos(playlistId){
   // This bypasses any potential issues with the obfuscation logic for the key.
   // NOTE: If the error persists, the problem is with the API key's configuration
   // in your Google Cloud Console (e.g., HTTP referrer restrictions).
-  const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
+  const apiKey = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
 
   if(!apiKey) throw new Error('API key is missing.');
   const items=[]; let pageToken='';
