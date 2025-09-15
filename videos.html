@@ -788,7 +788,44 @@
 
         state.keyHandler = function(e){
           const active = document.activeElement;
-          if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+
+        try{
+          // Allow keyboard seeks even if the seek input is focused.
+          // If user presses ArrowLeft/ArrowRight we seek -10s/+10s.
+          if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
+            try{
+              if(!state.player) return;
+              // Prevent default scrolling
+              e.preventDefault();
+              const cur = (state.player.getCurrentTime && typeof state.player.getCurrentTime === 'function') ? state.player.getCurrentTime() : 0;
+              const dur = (state.player.getDuration && typeof state.player.getDuration === 'function') ? state.player.getDuration() : null;
+              const delta = e.key === 'ArrowRight' ? 10 : -10;
+              let target = Math.max(0, cur + delta);
+              if(dur !== null && isFinite(dur)) target = Math.min(target, dur);
+              try{ state.player.seekTo(target, true); }catch(seekErr){ /* ignore */ }
+              // update UI immediately if seekEl exists
+              try{
+                const seekEl = document.getElementById('vidu_seek') || document.querySelector('input[type=range]');
+                if(seekEl && dur && isFinite(dur)){
+                  seekEl.value = (target / Math.max(1,dur)) * 100;
+                  // update background visually if function exists
+                  if(typeof updateSeekBackground === 'function') try{ updateSeekBackground(seekEl); }catch(_){}
+                }
+              }catch(_){}
+              return;
+            }catch(err){}
+          }
+        }catch(err){}
+          if(active){
+            try{
+              const tag = active.tagName || '';
+              const atype = (active.getAttribute && active.getAttribute('type')) || '';
+              const isRange = (tag.toUpperCase() === 'INPUT' && String(atype).toLowerCase() === 'range');
+              const isSeek = (typeof seekEl !== 'undefined' && active === seekEl);
+              // Allow spacebar to control playback when focus is on the seek slider (range) or the known seekEl.
+              if(!isRange && !isSeek && (tag.toUpperCase() === 'INPUT' || tag.toUpperCase() === 'TEXTAREA' || active.isContentEditable)) return;
+            }catch(err){ /* if inspection of active fails, fall back to conservative behavior */ }
+          }
           const modal = document.getElementById('viewer');
           if(!modal || modal.classList.contains('hidden')) return;
           if(e.code === 'Space' || e.key === ' '){
