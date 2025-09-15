@@ -468,6 +468,14 @@
     loadingDiv.id = 'vidu_loading';
     host.appendChild(loadingDiv);
 
+        // Volume overlay (visual feedback for up/down keys)
+        const volOverlay = document.createElement('div');
+        volOverlay.className = 'vidu-volume-overlay hidden';
+        volOverlay.id = 'vidu_vol';
+        volOverlay.innerHTML = `<div class="vol-inner" aria-hidden="true"><div class="vol-icon">🔊</div><div class="vol-bar-wrap"><div id="vidu_vol_pct" class="vol-percent">100%</div></div></div>`;
+        host.appendChild(volOverlay);
+
+
     const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
     host.appendChild(ctrlBg);
 
@@ -599,7 +607,8 @@
         ctrlBg.classList.add('hidden');
         if(closeBtn) closeBtn.classList.add('hidden');
         if(qmenu) qmenu.classList.remove('open');
-      } else {
+      try{ const vol = document.getElementById('vidu_vol'); if(vol){ if(hidden) { vol.classList.add('hidden'); vol.classList.remove('visible'); } else { vol.classList.remove('hidden'); } } }catch(e){}
+    } else {
         overlay.classList.remove('hidden');
         ctrlBg.classList.remove('hidden');
         if(closeBtn) closeBtn.classList.remove('hidden');
@@ -642,10 +651,65 @@
     // *** UPDATED keyHandler: ensure spacebar toggles update the same desiredPlaying state the play button uses
     state.keyHandler = function(e){
       const active = document.activeElement;
-      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+      try{
+        if(active){
+          const tag = (active.tagName || '').toUpperCase();
+          const atype = (active.getAttribute && active.getAttribute('type')) || '';
+          const isRange = (tag === 'INPUT' && String(atype).toLowerCase() === 'range');
+          const isSeek = (typeof seekEl !== 'undefined' && active === seekEl);
+          // Allow spacebar and arrow keys to control playback/seek when focus is on the seek slider.
+          if(!isRange && !isSeek && (tag === 'INPUT' || tag === 'TEXTAREA' || active.isContentEditable)) return;
+        }
+      }catch(err){ /* safe fallback - if we can't inspect active element, don't block */ }
       const root = document.getElementById('modal-root');
       if(!root || root.style.display === 'none') return;
-      if(e.code === 'Space' || e.key === ' '){
+      
+
+      // ArrowLeft / ArrowRight: seek -/+ 10s
+      try{
+        if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
+          if(!state.player) return;
+          e.preventDefault();
+          const cur = (state.player.getCurrentTime && typeof state.player.getCurrentTime === 'function') ? state.player.getCurrentTime() : 0;
+          const dur = (state.player.getDuration && typeof state.player.getDuration === 'function') ? state.player.getDuration() : null;
+          const delta = e.key === 'ArrowRight' ? 10 : -10;
+          let target = Math.max(0, cur + delta);
+          if(dur !== null && isFinite(dur)) target = Math.min(target, dur);
+          try{ state.player.seekTo(target, true); }catch(_){}
+          try{
+            const seekElLocal = document.getElementById('vidu_seek') || (typeof seekEl !== 'undefined' ? seekEl : null);
+            if(seekElLocal && dur && isFinite(dur)){
+              seekElLocal.value = (target / Math.max(1,dur)) * 100;
+              if(typeof updateSeekBackground === 'function') try{ updateSeekBackground(seekElLocal); }catch(_){}
+            }
+          }catch(_){}
+          return;
+        }
+      }catch(_){}
+
+      // ArrowUp / ArrowDown: volume +/-5%
+      try{
+        if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+          if(!state.player) return;
+          e.preventDefault();
+          let curVol = 100;
+          try{ curVol = (typeof state.player.getVolume === 'function') ? state.player.getVolume() : (state.lastVolume || 100); }catch(_){ curVol = state.lastVolume || 100; }
+          const deltaV = e.key === 'ArrowUp' ? 5 : -5;
+          let targetV = Math.max(0, Math.min(100, Math.round(curVol + deltaV)));
+          try{ if(typeof state.player.setVolume === 'function') state.player.setVolume(targetV); }catch(_){}
+          state.lastVolume = targetV;
+          try{
+            const volPct = document.getElementById('vidu_vol_pct');
+            const volEl = document.getElementById('vidu_vol') || document.querySelector('.vidu-volume-overlay');
+            if(volPct) volPct.textContent = (targetV) + '%';
+            if(volEl){
+              volEl.classList.remove('hidden'); volEl.classList.add('visible');
+            }
+          }catch(_){}
+          return;
+        }
+      }catch(_){}
+if(e.code === 'Space' || e.key === ' '){
         e.preventDefault();
         if(state.player){
           let st = -1;
@@ -1085,12 +1149,19 @@
               resolve(state.player);
             },
             onStateChange: function(e){
-              try{
-                if(e && e.data === 1){
-                  try{ hideLoading(); }catch(e){/*ignore*/ }
-                }
-              }catch(err){}
-            },
+                              try{
+                                if(e && typeof e.data !== 'undefined'){
+                                  // sync desiredPlaying with actual player state to respect user-driven pauses/play actions
+                                  if(e.data === 1){
+                                    state.desiredPlaying = true;
+                                    try{ hideLoading(); }catch(e){}
+                                  } else if(e.data === 2 || e.data === 0){
+                                    state.desiredPlaying = false;
+                                  }
+                                  // leave desiredPlaying unchanged for buffering (3) or cued (5)
+                                }
+                              }catch(err){}
+                            },,
             onError: function(err){
               try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){}
               console.error('YT player error', err);
