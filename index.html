@@ -1165,8 +1165,8 @@ const playlists = [
         name: 'ET',
         thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', encodedId: "MmdTUTZITElKUy1YeUFwPWlzJjNJZTB2dF9qWmRnVDQwLVF2dkhpa01OYlYwWHo5TFA=", passB64: btoa("") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', encodedId: "WkRUR0ZkcnByazIyWm49aXMmY1dsV3ZvYzBjMDlNbVYwWHo5TFA=", passB64: btoa("") }
+          { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" }
         ]
       },
       {
@@ -1174,9 +1174,9 @@ const playlists = [
         name: 'SFT',
         thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', encodedId: "bVpfdF9uaUtsd0syS1F1UD1pcyZISjZ3andpa01OYlYwWHo5TFA=", passB64: btoa("") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', encodedId: "ZmRzdk01b0UwTll2YTA4MFcwbmVFa01OYlYwWHo5TFA=", passB64: btoa("") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', encodedId: "MThxZThhNVRDSWM1MGlzJlo5ek5BX1FId3pJMlYwWHo5TFA=", passB64: btoa("") } 
+          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } 
         ]
       },
       {
@@ -1184,7 +1184,7 @@ const playlists = [
         name: 'ICT',
         thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', encodedId: "X0VwaWRwbzBtMGcxPWlzJkNwMWEyYkF1VmZIS01OYlYwWHo5TFA=", passB64: btoa("") }
+          { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" }
         ]
       }
     ]
@@ -1192,6 +1192,30 @@ const playlists = [
 ];
 
 function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
+
+// Decryption helper — obfuscated IDs (keeps key inside closure)
+const decodeEnc = (function(){
+  const key = new TextEncoder().encode('vidu_secret_2025'); // small XOR key stored only inside this closure
+  function xorDecode(bytes){
+    const out = new Uint8Array(bytes.length);
+    for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length];
+    return out;
+  }
+  return function(encStr){
+    try{
+      if(!encStr) return '';
+      const raw = atob(encStr);
+      // convert raw string to bytes
+      const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0)));
+      const dec = xorDecode(bytes);
+      // convert bytes to string
+      return new TextDecoder().decode(dec);
+    }catch(e){
+      return '';
+    }
+  };
+})();
+
 function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
 function renderPlaylists(){
@@ -1230,7 +1254,7 @@ function showPlaylistVideos(pl, skipPush){
     } else {
       vli.addEventListener('click',(ev)=>{
         spawnRipple(ev, vli);
-        const expectedPassword = b64decode(v.passB64 || '');
+        const expectedPassword = b64decode(v.passEnc || '');
         if (expectedPassword === '') {
           // No password, open player directly
           currentItem = v;
@@ -1328,8 +1352,7 @@ function showUnlockedItem(item) {
   if (item.type === 'playlist') {
     showPlaylistInsideModal(item);
   } else {
-    // MODIFIED: Decode the obfuscated ID before showing the player
-    const id = b64decode(item.encodedId || '').split('').reverse().join('');
+    const id = decodeEnc(item.idEnc || '');
     document.getElementById('now-playing-label').textContent = item.name || 'Now playing';
     if (window.showViduPlayer) {
       window.showViduPlayer(id).catch(err => {
@@ -1371,7 +1394,7 @@ function closeModal(){
 function onPasswordSubmit(){
   const val = (document.getElementById('password-input').value || '').trim();
   if(!currentItem) return;
-  const expected = b64decode(currentItem.passB64 || '');
+  const expected = b64decode(currentItem.passEnc || '');
   if(val === expected){
     showUnlockedItem(currentItem);
   } else {
@@ -1403,8 +1426,7 @@ async function fetchPlaylistVideos(playlistId){
 }
 
 async function showPlaylistInsideModal(item){
-  // MODIFIED: Decode the obfuscated ID before fetching the playlist
-  const rawId = b64decode(item.encodedId).split('').reverse().join('');
+  const rawId = decodeEnc(item.idEnc);
   const playlistId = rawId.split('&')[0];
   window.__viduGlobal.visualsPaused = true;
   window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'playlist-load' } }));
@@ -1432,7 +1454,7 @@ async function showPlaylistInsideModal(item){
     if(listWrap) listWrap.innerHTML = '';
     videos.forEach(v=>{
       const li = document.createElement('div'); li.className = 'list-item';
-      li.setAttribute('data-video-id', v.videoId);
+      
       li.style.display='flex'; li.style.alignItems='center'; li.style.gap='12px'; li.style.padding='8px';
       li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;" /><div style="flex:1;"><div class="title" style="font-size:13px;">${escapeHtml(v.title)}</div></div>`;
       li.onclick = ()=> {
