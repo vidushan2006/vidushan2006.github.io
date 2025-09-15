@@ -1156,23 +1156,63 @@
  *************************************************************************/
 
 // **MODIFICATION**: Obfuscation logic to protect IDs and API keys.
+// This new implementation includes a self-contained Base64 decoder to prevent
+// conflicts with other scripts on the page that might interfere with atob().
 const _k = 'ViduSuperSecretKey!@#'; // The secret key for obfuscation
+
+/**
+ * A self-contained, reliable Base64 decoder.
+ * @param {string} str The Base64 string to decode.
+ * @returns {string} The decoded string.
+ */
+function b64_decode(str) {
+    const B64_MAP = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+    let output = "";
+    let chr1, chr2, chr3;
+    let enc1, enc2, enc3, enc4;
+    let i = 0;
+    str = str.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+    while (i < str.length) {
+        enc1 = B64_MAP.indexOf(str.charAt(i++));
+        enc2 = B64_MAP.indexOf(str.charAt(i++));
+        enc3 = B64_MAP.indexOf(str.charAt(i++));
+        enc4 = B64_MAP.indexOf(str.charAt(i++));
+        chr1 = (enc1 << 2) | (enc2 >> 4);
+        chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+        chr3 = ((enc3 & 3) << 6) | enc4;
+        output = output + String.fromCharCode(chr1);
+        if (enc3 != 64) {
+            output = output + String.fromCharCode(chr2);
+        }
+        if (enc4 != 64) {
+            output = output + String.fromCharCode(chr3);
+        }
+    }
+    return output;
+}
+
+/**
+ * Deobfuscates a string using the self-contained decoder and XOR cipher.
+ * @param {string} data The obfuscated data string.
+ * @returns {string} The original, plain-text string.
+ */
 function _d(data) {
     if (!data) return '';
     try {
-        const decodedB64 = atob(data);
+        const decodedB64 = b64_decode(data); // Use the self-contained decoder
         let result = '';
         for (let i = 0; i < decodedB64.length; i++) {
             result += String.fromCharCode(decodedB64.charCodeAt(i) ^ _k.charCodeAt(i % _k.length));
         }
         return result;
     } catch (e) {
-        // This can fail if the input is not valid Base64, which is expected for empty passwords.
+        console.error("Failed to deobfuscate data:", e);
         return '';
     }
 }
 
-// **MODIFICATION**: Playlist data with obfuscated IDs.
+
+// Playlist data with obfuscated IDs.
 const playlists = [
   {
     id: 0,
@@ -1248,7 +1288,6 @@ function showPlaylistVideos(pl, skipPush){
     } else {
       vli.addEventListener('click',(ev)=>{
         spawnRipple(ev, vli);
-        // **MODIFICATION**: Use the new deobfuscation function `_d`.
         const expectedPassword = _d(v.passB64 || '');
         if (expectedPassword === '') {
           // No password, open player directly
@@ -1347,7 +1386,6 @@ function showUnlockedItem(item) {
   if (item.type === 'playlist') {
     showPlaylistInsideModal(item);
   } else {
-    // **MODIFICATION**: Use the new deobfuscation function `_d`.
     const id = _d(item.idB64 || '');
     document.getElementById('now-playing-label').textContent = item.name || 'Now playing';
     if (window.showViduPlayer) {
@@ -1390,7 +1428,6 @@ function closeModal(){
 function onPasswordSubmit(){
   const val = (document.getElementById('password-input').value || '').trim();
   if(!currentItem) return;
-  // **MODIFICATION**: Use the new deobfuscation function `_d`.
   const expected = _d(currentItem.passB64 || '');
   if(val === expected){
     showUnlockedItem(currentItem);
@@ -1400,17 +1437,17 @@ function onPasswordSubmit(){
 }
 
 // YouTube playlist fetching
-// **MODIFICATION**: Obfuscated API key.
+// Obfuscated API key.
 const _obfuscatedApiKey = 'LTo4HiN5fT9VdDoGFDsxSThsdTlvDggxPz05LWh0Kx0=';
 async function fetchPlaylistVideos(playlistId){
-  // **MODIFICATION**: De-obfuscate API key right before use.
+  // De-obfuscate API key right before use.
   const apiKey = _d(_obfuscatedApiKey);
-  if(!apiKey) throw new Error('API key is missing or invalid.');
+  if(!apiKey) throw new Error('API key is missing or could not be deobfuscated.');
   const items=[]; let pageToken='';
   do{
     const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(apiKey)}` + (pageToken?`&pageToken=${pageToken}`:'');
     const res = await fetch(url);
-    if(!res.ok){ const txt = await res.text().catch(()=>null); throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||'')); }
+    if(!res.ok){ const txt = await res.text().catch(()=>''); throw new Error('YouTube API error: '+res.status+' '+txt); }
     const data = await res.json();
     (data.items||[]).forEach(it=>{
       const sn = it.snippet || {};
@@ -1425,7 +1462,6 @@ async function fetchPlaylistVideos(playlistId){
 }
 
 async function showPlaylistInsideModal(item){
-  // **MODIFICATION**: Use the new deobfuscation function `_d`.
   const rawId = _d(item.idB64);
   const playlistId = rawId.split('&')[0];
   window.__viduGlobal.visualsPaused = true;
