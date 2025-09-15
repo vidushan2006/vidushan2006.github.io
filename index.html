@@ -336,6 +336,34 @@
     }
     .vidu-playback-item:hover { background:rgba(255,255,255,0.03); }
     .vidu-playback-item.active { background:rgba(57,255,20,0.12); color:#dfffd6; }
+
+    /* OSD (on-screen display) for volume/seek feedback */
+    .vidu-osd {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(.98);
+      z-index:10003;
+      pointer-events: none;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      background: rgba(3,6,10,0.6);
+      border: 1px solid rgba(255,255,255,0.04);
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+      backdrop-filter: blur(6px) saturate(120%);
+      transition: opacity .18s ease, transform .18s ease;
+      opacity: 0;
+      white-space: nowrap;
+    }
+    .vidu-osd.show { opacity: 1; transform: translate(-50%, -50%) scale(1); display:flex; }
+    .vidu-osd .osd-icon { font-size:20px; opacity:0.95; }
+    .vidu-osd .osd-text { font-weight:900; font-size:16px; letter-spacing:0.6px; color:#eafceb; }
+
   </style>
 </head>
 <body class="landing is-preload">
@@ -401,7 +429,7 @@
   function loadYTApi(){
     if(window.YT && window.YT.Player) return Promise.resolve();
     if(window._vidu_loading_yt){
-      return new Promise((res, rej)=>{
+      return new Promise((res, rej)=>{ 
         const t = setInterval(()=>{ if(window.YT && window.YT.Player){ clearInterval(t); res(); } },80);
         setTimeout(()=>{ clearInterval(t); rej(new Error('YT load timeout')); },20000);
       });
@@ -468,14 +496,6 @@
     loadingDiv.id = 'vidu_loading';
     host.appendChild(loadingDiv);
 
-        // Volume overlay (visual feedback for up/down keys)
-        const volOverlay = document.createElement('div');
-        volOverlay.className = 'vidu-volume-overlay hidden';
-        volOverlay.id = 'vidu_vol';
-        volOverlay.innerHTML = `<div class="vol-inner" aria-hidden="true"><div class="vol-icon">🔊</div><div class="vol-bar-wrap"><div id="vidu_vol_pct" class="vol-percent">100%</div></div></div>`;
-        host.appendChild(volOverlay);
-
-
     const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
     host.appendChild(ctrlBg);
 
@@ -514,8 +534,16 @@
     });
     host.appendChild(closeBtn);
 
+    // OSD element for volume/seek feedback
+    const osd = document.createElement('div');
+    osd.className = 'vidu-osd';
+    osd.id = 'vidu_osd';
+    osd.setAttribute('aria-hidden','true');
+    osd.style.pointerEvents = 'none';
+    host.appendChild(osd);
+
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, qmenu, loadingDiv };
+    return { host, mount, overlay, ctrlBg, closeBtn, qmenu, loadingDiv, osd };
   }
 
   function disableIframeClicks(host){
@@ -573,7 +601,7 @@
   }
 
   function createPlayer(videoId){
-    const { host, mount, overlay, ctrlBg, closeBtn, qmenu, loadingDiv } = createHostElements();
+    const { host, mount, overlay, ctrlBg, closeBtn, qmenu, loadingDiv, osd } = createHostElements();
     state.host = host; state.mount = mount;
 
     const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -607,11 +635,21 @@
         ctrlBg.classList.add('hidden');
         if(closeBtn) closeBtn.classList.add('hidden');
         if(qmenu) qmenu.classList.remove('open');
-      try{ const vol = document.getElementById('vidu_vol'); if(vol){ if(hidden) { vol.classList.add('hidden'); vol.classList.remove('visible'); } else { vol.classList.remove('hidden'); } } }catch(e){}
-    } else {
+        // hide OSD together with controls
+        try{
+          if(osd){ osd.classList.remove('show'); setTimeout(()=>{ if(osd) osd.style.display='none'; }, 220); }
+        }catch(e){}
+      } else {
         overlay.classList.remove('hidden');
         ctrlBg.classList.remove('hidden');
         if(closeBtn) closeBtn.classList.remove('hidden');
+        // if OSD has content, show it (we don't force it visible otherwise)
+        try{
+          if(osd && osd.innerHTML && osd.innerHTML.trim() !== ''){
+            osd.style.display = 'flex';
+            requestAnimationFrame(()=> osd.classList.add('show'));
+          }
+        }catch(e){}
       }
     }
 
@@ -648,70 +686,48 @@
       }
     }, {passive:true});
 
+    // OSD helper functions
+    function showOSD(html){
+      try{
+        if(!osd) return;
+        osd.innerHTML = html || '';
+        osd.style.display = 'flex';
+        // align with controls visibility (only show if controls visible)
+        if(!overlay.classList.contains('hidden')){
+          requestAnimationFrame(()=> osd.classList.add('show'));
+        } else {
+          // controls hidden -> show only visually but it will be hidden with controls
+          requestAnimationFrame(()=> osd.classList.add('show'));
+        }
+      }catch(e){}
+    }
+    function hideOSD(){
+      try{
+        if(!osd) return;
+        osd.classList.remove('show');
+        setTimeout(()=> { try{ osd.style.display='none'; osd.innerHTML=''; }catch(e){} }, 200);
+      }catch(e){}
+    }
+
     // *** UPDATED keyHandler: ensure spacebar toggles update the same desiredPlaying state the play button uses
     state.keyHandler = function(e){
       const active = document.activeElement;
-      try{
-        if(active){
-          const tag = (active.tagName || '').toUpperCase();
-          const atype = (active.getAttribute && active.getAttribute('type')) || '';
-          const isRange = (tag === 'INPUT' && String(atype).toLowerCase() === 'range');
-          const isSeek = (typeof seekEl !== 'undefined' && active === seekEl);
-          // Allow spacebar and arrow keys to control playback/seek when focus is on the seek slider.
-          if(!isRange && !isSeek && (tag === 'INPUT' || tag === 'TEXTAREA' || active.isContentEditable)) return;
-        }
-      }catch(err){ /* safe fallback - if we can't inspect active element, don't block */ }
+      // If something is focused that is an input/textarea/contentEditable and it's NOT the seek range, do nothing (so typing works)
+      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
+        // allow keyboard control when the active element is the seek range
+        if(active !== seekEl) return;
+      }
       const root = document.getElementById('modal-root');
       if(!root || root.style.display === 'none') return;
-      
 
-      // ArrowLeft / ArrowRight: seek -/+ 10s
-      try{
-        if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
-          if(!state.player) return;
-          e.preventDefault();
-          const cur = (state.player.getCurrentTime && typeof state.player.getCurrentTime === 'function') ? state.player.getCurrentTime() : 0;
-          const dur = (state.player.getDuration && typeof state.player.getDuration === 'function') ? state.player.getDuration() : null;
-          const delta = e.key === 'ArrowRight' ? 10 : -10;
-          let target = Math.max(0, cur + delta);
-          if(dur !== null && isFinite(dur)) target = Math.min(target, dur);
-          try{ state.player.seekTo(target, true); }catch(_){}
-          try{
-            const seekElLocal = document.getElementById('vidu_seek') || (typeof seekEl !== 'undefined' ? seekEl : null);
-            if(seekElLocal && dur && isFinite(dur)){
-              seekElLocal.value = (target / Math.max(1,dur)) * 100;
-              if(typeof updateSeekBackground === 'function') try{ updateSeekBackground(seekElLocal); }catch(_){}
-            }
-          }catch(_){}
-          return;
-        }
-      }catch(_){}
-
-      // ArrowUp / ArrowDown: volume +/-5%
-      try{
-        if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){
-          if(!state.player) return;
-          e.preventDefault();
-          let curVol = 100;
-          try{ curVol = (typeof state.player.getVolume === 'function') ? state.player.getVolume() : (state.lastVolume || 100); }catch(_){ curVol = state.lastVolume || 100; }
-          const deltaV = e.key === 'ArrowUp' ? 5 : -5;
-          let targetV = Math.max(0, Math.min(100, Math.round(curVol + deltaV)));
-          try{ if(typeof state.player.setVolume === 'function') state.player.setVolume(targetV); }catch(_){}
-          state.lastVolume = targetV;
-          try{
-            const volPct = document.getElementById('vidu_vol_pct');
-            const volEl = document.getElementById('vidu_vol') || document.querySelector('.vidu-volume-overlay');
-            if(volPct) volPct.textContent = (targetV) + '%';
-            if(volEl){
-              volEl.classList.remove('hidden'); volEl.classList.add('visible');
-            }
-          }catch(_){}
-          return;
-        }
-      }catch(_){}
-if(e.code === 'Space' || e.key === ' '){
+      // SPACE toggles play/pause
+      if(e.code === 'Space' || e.key === ' '){
+        // prevent default so the range/other elements don't take the event
         e.preventDefault();
         if(state.player){
+          // If the seek range had focus, blur it so it doesn't keep stealing keyboard events
+          try{ if(document.activeElement === seekEl) seekEl.blur(); }catch(e){}
+
           let st = -1;
           try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){}
           const wantPlay = !(st === 1);
@@ -729,9 +745,82 @@ if(e.code === 'Space' || e.key === ' '){
           }catch(err){ console.warn('space toggle err', err); }
           resetInactivityTimer();
         }
-      } else if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){
+        return;
+      }
+
+      // Fullscreen shortcut
+      if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){
         e.preventDefault();
         toggleFullscreen();
+        return;
+      }
+
+      // Arrow right: forward 10s
+      if(e.code === 'ArrowRight' || e.key === 'ArrowRight'){
+        e.preventDefault();
+        if(state.player){
+          try{
+            const dur = state.player.getDuration ? state.player.getDuration() : 0;
+            const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+            const target = (isFinite(dur) && dur > 0) ? Math.min(cur + 10, dur) : (cur + 10);
+            if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true);
+            // show OSD feedback
+            showOSD(`<span class="osd-icon">⏩</span><span class="osd-text">${Math.round(target)}s</span>`);
+            resetInactivityTimer();
+          }catch(e){ console.warn('arrow right err', e); }
+        }
+        return;
+      }
+
+      // Arrow left: back 10s
+      if(e.code === 'ArrowLeft' || e.key === 'ArrowLeft'){
+        e.preventDefault();
+        if(state.player){
+          try{
+            const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+            const target = Math.max(0, cur - 10);
+            if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true);
+            showOSD(`<span class="osd-icon">⏪</span><span class="osd-text">${Math.round(target)}s</span>`);
+            resetInactivityTimer();
+          }catch(e){ console.warn('arrow left err', e); }
+        }
+        return;
+      }
+
+      // Arrow up: increase volume by 5%
+      if(e.code === 'ArrowUp' || e.key === 'ArrowUp'){
+        e.preventDefault();
+        if(state.player && typeof state.player.getVolume === 'function' && typeof state.player.setVolume === 'function'){
+          try{
+            let v = state.player.getVolume();
+            if(typeof v !== 'number' || isNaN(v)) v = state.lastVolume || 100;
+            v = Math.max(0, Math.min(100, Math.round(v + 5)));
+            state.player.setVolume(v);
+            state.lastVolume = v;
+            try{ if(v === 0 && typeof state.player.mute === 'function') state.player.mute(); else if(typeof state.player.unMute === 'function') state.player.unMute(); }catch(_){}
+            showOSD(`<span class="osd-icon">🔊</span><span class="osd-text">${v}%</span>`);
+            resetInactivityTimer();
+          }catch(e){ console.warn('volume up err', e); }
+        }
+        return;
+      }
+
+      // Arrow down: decrease volume by 5%
+      if(e.code === 'ArrowDown' || e.key === 'ArrowDown'){
+        e.preventDefault();
+        if(state.player && typeof state.player.getVolume === 'function' && typeof state.player.setVolume === 'function'){
+          try{
+            let v = state.player.getVolume();
+            if(typeof v !== 'number' || isNaN(v)) v = state.lastVolume || 100;
+            v = Math.max(0, Math.min(100, Math.round(v - 5)));
+            state.player.setVolume(v);
+            state.lastVolume = v;
+            try{ if(v === 0 && typeof state.player.mute === 'function') state.player.mute(); else if(typeof state.player.unMute === 'function') state.player.unMute(); }catch(_){}
+            showOSD(`<span class="osd-icon">${v === 0 ? '🔇' : '🔉'}</span><span class="osd-text">${v}%</span>`);
+            resetInactivityTimer();
+          }catch(e){ console.warn('volume down err', e); }
+        }
+        return;
       }
     };
     document.addEventListener('keydown', state.keyHandler);
@@ -804,7 +893,6 @@ if(e.code === 'Space' || e.key === ' '){
             saved.iframe.maxHeight = ifr.style.maxHeight || '';
             saved.iframe.maxWidth = ifr.style.maxWidth || '';
           } else saved.iframe = {};
-
           saved.stored = true;
         }
 
@@ -1149,19 +1237,12 @@ if(e.code === 'Space' || e.key === ' '){
               resolve(state.player);
             },
             onStateChange: function(e){
-                              try{
-                                if(e && typeof e.data !== 'undefined'){
-                                  // sync desiredPlaying with actual player state to respect user-driven pauses/play actions
-                                  if(e.data === 1){
-                                    state.desiredPlaying = true;
-                                    try{ hideLoading(); }catch(e){}
-                                  } else if(e.data === 2 || e.data === 0){
-                                    state.desiredPlaying = false;
-                                  }
-                                  // leave desiredPlaying unchanged for buffering (3) or cued (5)
-                                }
-                              }catch(err){}
-                            },,
+              try{
+                if(e && e.data === 1){
+                  try{ hideLoading(); }catch(e){/*ignore*/ }
+                }
+              }catch(err){}
+            },
             onError: function(err){
               try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){}
               console.error('YT player error', err);
@@ -1447,138 +1528,11 @@ function openPasswordModal(item){
   document.getElementById('player-block').style.display = 'none';
   const plwrap = document.getElementById('playlist-list-wrap'); if(plwrap) plwrap.style.display = 'none';
   setTimeout(()=>document.getElementById('password-input').focus(), 50);
-  if(!window.__viduGlobal) window.__viduGlobal = {};
-  window.__viduGlobal.visualsPaused = true;
-  window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'modal-open' } }));
 }
 
-function closeModal(){
-  const root = document.getElementById('modal-root'); if(root) root.style.display = 'none';
-  const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = '';
-  const plwrap = document.getElementById('playlist-video-list'); if(plwrap) plwrap.innerHTML = '';
-  currentItem = null;
-  if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
-  window.__viduGlobal.visualsPaused = false;
-  window.dispatchEvent(new CustomEvent('vidu:visuals:resume', { detail:{ reason:'modal-closed' } }));
-}
-
-function onPasswordSubmit(){
-  const val = (document.getElementById('password-input').value || '').trim();
-  if(!currentItem) return;
-  const expected = b64decode(currentItem.passEnc || '');
-  if(val === expected){
-    showUnlockedItem(currentItem);
-  } else {
-    const err = document.getElementById('password-error'); err.style.display = 'block'; err.textContent = 'Incorrect password — try again.';
-  }
-}
-
-// YouTube playlist fetching
-// <<-- RESTORED: API key re-added from your original uploaded file -- this fixes playlist loading.
-const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
-async function fetchPlaylistVideos(playlistId){
-  if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
-  const items=[]; let pageToken='';
-  do{
-    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}` + (pageToken?`&pageToken=${pageToken}`:'');
-    const res = await fetch(url);
-    if(!res.ok){ const txt = await res.text().catch(()=>null); throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||'')); }
-    const data = await res.json();
-    (data.items||[]).forEach(it=>{
-      const sn = it.snippet || {};
-      if(sn.resourceId && sn.resourceId.videoId){
-        const thumb = (sn.thumbnails && (sn.thumbnails.high||sn.thumbnails.medium||sn.thumbnails.default))||{};
-        items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
-      }
-    });
-    pageToken = data.nextPageToken || '';
-  } while(pageToken);
-  return items;
-}
-
-async function showPlaylistInsideModal(item){
-  const rawId = decodeEnc(item.idEnc);
-  const playlistId = rawId.split('&')[0];
-  window.__viduGlobal.visualsPaused = true;
-  window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'playlist-load' } }));
-
-  try{
-    const videos = await fetchPlaylistVideos(playlistId);
-    if(!videos.length){
-      const wrap = document.getElementById('player-wrap');
-      if(wrap) wrap.innerHTML = `<div class="muted">No videos found or playlist is private.</div>`;
-      document.getElementById('player-block').style.display='block';
-      return;
-    }
-
-    let listWrap = document.getElementById('playlist-video-list');
-    if(!listWrap){
-      const wrapper = document.createElement('div');
-      wrapper.id = 'playlist-list-wrap';
-      wrapper.style.marginTop = '12px';
-      wrapper.innerHTML = `<div class="muted">Playlist contents</div><div class="playlist-list" id="playlist-video-list"></div>`;
-      const playerBlock = document.getElementById('player-block');
-      if(playerBlock) playerBlock.appendChild(wrapper);
-      listWrap = document.getElementById('playlist-video-list');
-    }
-
-    if(listWrap) listWrap.innerHTML = '';
-    videos.forEach(v=>{
-      const li = document.createElement('div'); li.className = 'list-item';
-      
-      li.style.display='flex'; li.style.alignItems='center'; li.style.gap='12px'; li.style.padding='8px';
-      li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;" /><div style="flex:1;"><div class="title" style="font-size:13px;">${escapeHtml(v.title)}</div></div>`;
-      li.onclick = ()=> {
-        document.getElementById('now-playing-label').textContent = v.title || 'Now playing';
-        if(window.showViduPlayer) window.showViduPlayer(v.videoId).catch(err => {
-          console.error('showViduPlayer failed', err);
-          const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
-        });
-      };
-      listWrap.appendChild(li);
-    });
-
-    document.getElementById('player-block').style.display='block';
-    const outer = document.getElementById('playlist-list-wrap'); if(outer) outer.style.display='block';
-    document.getElementById('now-playing-label').textContent = videos[0].title || 'Now playing';
-    if(window.showViduPlayer) window.showViduPlayer(videos[0].videoId).catch(err => {
-      console.error('showViduPlayer failed', err);
-      const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
-    });
-  } catch(err){
-    console.error('Playlist fetch error', err);
-    const wrap = document.getElementById('player-wrap');
-    if(wrap) wrap.innerHTML = `<div class="muted">Failed to load playlist: ${escapeHtml(err.message || '')}</div>`;
-    document.getElementById('player-block').style.display='block';
-  }
-}
-
-// Visual helpers & init
-function pauseVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = true; window.dispatchEvent(new CustomEvent('vidu:visuals:pause',{detail:{reason}})); }
-function resumeVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = false; window.dispatchEvent(new CustomEvent('vidu:visuals:resume',{detail:{reason}})); }
-
-document.addEventListener('DOMContentLoaded', function(){
-  createModal();
-  renderPlaylists();
-  const navHome = document.getElementById('nav-home');
-  if(navHome) navHome.addEventListener('click', ()=>{ document.getElementById('playlist-list').style.display='flex'; document.getElementById('playlist-videos').style.display='none'; });
-  document.querySelectorAll('.list-item').forEach(el=>attachTilt(el));
-  (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
-});
-
-
-// deterrents
-document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, false);
-document.addEventListener('keydown', function(e){ if ((e.ctrlKey && e.shiftKey && (e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')) || (e.ctrlKey && (e.key==='U'||e.key==='u')) || (e.key==='F12')) { e.preventDefault(); return false; } });
-document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { const root=document.getElementById('modal-root'); if(root) root.style.display='none'; resumeVisuals('esc'); } });
-
-(function modalWatcher(){ const root=document.getElementById('modal-root'); if(!root) return; const obs = new MutationObserver(()=>{ const isVisible = (root.style.display !== 'none' && root.style.display !== ''); if(!isVisible){ setTimeout(()=> { if(!document.querySelector('.modal-backdrop') || document.querySelectorAll('.modal-backdrop').length === 0) resumeVisuals('modalWatcher'); }, 60); } }); obs.observe(root, { attributes: true, attributeFilter: ['style', 'class'] }); window.addEventListener('beforeunload', ()=> obs.disconnect(), {passive:true}); })();
+renderPlaylists();
+createModal();
 </script>
 
-<script src="assets/js/jquery.min.js"></script>
-<script src="assets/js/browser.min.js"></script>
-<script src="assets/js/breakpoints.min.js"></script>
-<script src="assets/js/util.js"></script>
-<script src="assets/js/main.js"></script>
 </body>
 </html>
