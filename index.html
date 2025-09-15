@@ -1154,6 +1154,25 @@
 /*************************************************************************
  * Playlist data + UI + modal + YouTube playlist fetching
  *************************************************************************/
+
+// **MODIFICATION**: Obfuscation logic to protect IDs and API keys.
+const _k = 'ViduSuperSecretKey!@#'; // The secret key for obfuscation
+function _d(data) {
+    if (!data) return '';
+    try {
+        const decodedB64 = atob(data);
+        let result = '';
+        for (let i = 0; i < decodedB64.length; i++) {
+            result += String.fromCharCode(decodedB64.charCodeAt(i) ^ _k.charCodeAt(i % _k.length));
+        }
+        return result;
+    } catch (e) {
+        // This can fail if the input is not valid Base64, which is expected for empty passwords.
+        return '';
+    }
+}
+
+// **MODIFICATION**: Playlist data with obfuscated IDs.
 const playlists = [
   {
     id: 0,
@@ -1165,8 +1184,8 @@ const playlists = [
         name: 'ET',
         thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiHFvj6Q-p04TgdZj_tv0eI3&si=pAyX-6SJILH6QSg2"), passB64: btoa("") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiFcYCAzfcyI0cz8cOfyWlTc&si=nZ224kprFgDGTG9Z"), passB64: btoa("") }
+          { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcDh4fTshSCJ1fT4vLhE1NCY0K2R0LwdqKnEnJxcGLC0nPQcwNgs=", passB64: "" },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcCh8fSMhSiN/fTgvLhYyMiY0K2R0KAxqKnA0MBIDNCs0PQM3JVE=", passB64: "" }
         ]
       },
       {
@@ -1174,9 +1193,9 @@ const playlists = [
         name: 'SFT',
         thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiG94fMjA7v-6nw55htWj6LH&si=PUXqK2wlIin_tUZm"), passB64: btoa("") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiEmn6j0O870XYlFRasYABD2&si=vjOY0tK0Em5LZvsf"), passB64: btoa("") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiGt19HZ9wzIwC-VQ_AN0z9K&si=0jJc5HTa68Weq851"), passB64: btoa("") } 
+          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcDR4fSMpQSN/fT4vLhIyNCd0K2R0LghqKnY+JwAGMSs0NQUyJ1Q=", passB64: "" },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcCh8fSAqQyJ1fTgvLhMyMiY0K2R0KQhqKnYjMhgDNCs+PQM+JVA=", passB64: "" },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcDR4fSMpQSN/fT4vLhYyMiY0K2R0KghqKnYnJxgDMCw+NQEwN1k=", passB64: "" } 
         ]
       },
       {
@@ -1184,14 +1203,13 @@ const playlists = [
         name: 'ICT',
         thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiFUhYSDfiEVVMuBbc2AiwpC&si=1g80otmZOXdp1hE_"), passB64: btoa("") }
+          { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcCh8fSMqQSN/fT4vLhIyMiY0K2R0Lg5qKnImMhwDNCs+PQUzJVE=", passB64: "" }
         ]
       }
     ]
   }
 ];
 
-function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
 function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
 function renderPlaylists(){
@@ -1230,7 +1248,8 @@ function showPlaylistVideos(pl, skipPush){
     } else {
       vli.addEventListener('click',(ev)=>{
         spawnRipple(ev, vli);
-        const expectedPassword = b64decode(v.passB64 || '');
+        // **MODIFICATION**: Use the new deobfuscation function `_d`.
+        const expectedPassword = _d(v.passB64 || '');
         if (expectedPassword === '') {
           // No password, open player directly
           currentItem = v;
@@ -1328,7 +1347,8 @@ function showUnlockedItem(item) {
   if (item.type === 'playlist') {
     showPlaylistInsideModal(item);
   } else {
-    const id = b64decode(item.idB64 || '');
+    // **MODIFICATION**: Use the new deobfuscation function `_d`.
+    const id = _d(item.idB64 || '');
     document.getElementById('now-playing-label').textContent = item.name || 'Now playing';
     if (window.showViduPlayer) {
       window.showViduPlayer(id).catch(err => {
@@ -1370,7 +1390,8 @@ function closeModal(){
 function onPasswordSubmit(){
   const val = (document.getElementById('password-input').value || '').trim();
   if(!currentItem) return;
-  const expected = b64decode(currentItem.passB64 || '');
+  // **MODIFICATION**: Use the new deobfuscation function `_d`.
+  const expected = _d(currentItem.passB64 || '');
   if(val === expected){
     showUnlockedItem(currentItem);
   } else {
@@ -1379,13 +1400,15 @@ function onPasswordSubmit(){
 }
 
 // YouTube playlist fetching
-// <<-- RESTORED: API key re-added from your original uploaded file -- this fixes playlist loading.
-const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
+// **MODIFICATION**: Obfuscated API key.
+const _obfuscatedApiKey = 'LTo4HiN5fT9VdDoGFDsxSThsdTlvDggxPz05LWh0Kx0=';
 async function fetchPlaylistVideos(playlistId){
-  if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
+  // **MODIFICATION**: De-obfuscate API key right before use.
+  const apiKey = _d(_obfuscatedApiKey);
+  if(!apiKey) throw new Error('API key is missing or invalid.');
   const items=[]; let pageToken='';
   do{
-    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}` + (pageToken?`&pageToken=${pageToken}`:'');
+    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(apiKey)}` + (pageToken?`&pageToken=${pageToken}`:'');
     const res = await fetch(url);
     if(!res.ok){ const txt = await res.text().catch(()=>null); throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||'')); }
     const data = await res.json();
@@ -1402,7 +1425,8 @@ async function fetchPlaylistVideos(playlistId){
 }
 
 async function showPlaylistInsideModal(item){
-  const rawId = b64decode(item.idB64);
+  // **MODIFICATION**: Use the new deobfuscation function `_d`.
+  const rawId = _d(item.idB64);
   const playlistId = rawId.split('&')[0];
   window.__viduGlobal.visualsPaused = true;
   window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'playlist-load' } }));
