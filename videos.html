@@ -1043,7 +1043,7 @@
                   try{
                     // hide loading overlay when state becomes PLAYING (1)
                     if(e && e.data === 1){
-                      try{ const ld = document.getElementById('vidu-loading'); if(ld) { ld.classList.add('hidden'); ld.style.display='none'; } }catch(err){}
+                      try{ const ld = document.getElementById('vidu_loading') || document.getElementById('vidu_loading') || document.getElementById('vidu-loading') || document.querySelector('.vidu-loading') || document.querySelector('.vidu-loading'); if(ld){ try{ ld.classList.add('hidden'); ld.style.display='none'; }catch(e){} } }catch(err){}
                     }
                     // Keep internal desiredPlaying in sync with actual player state so user actions win.
                     try{
