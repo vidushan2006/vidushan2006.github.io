@@ -1155,62 +1155,25 @@
  * Playlist data + UI + modal + YouTube playlist fetching
  *************************************************************************/
 
-// Obfuscation logic for playlist IDs.
-const _k = 'ViduSuperSecretKey!@#'; // The secret key for obfuscation
+// --- START: OBFUSCATION LOGIC ---
+const XOR_KEY = 'v!du-s3cr3t'; // This key is used to hide the IDs.
 
 /**
- * A self-contained, reliable Base64 decoder.
- * @param {string} str The Base64 string to decode.
- * @returns {string} The decoded string.
+ * A simple XOR cipher function.
+ * @param {string} str The string to process.
+ * @param {string} key The key to use for the cipher.
+ * @returns {string} The processed string.
  */
-function b64_decode(str) {
-    const B64_MAP = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-    let output = "";
-    let chr1, chr2, chr3;
-    let enc1, enc2, enc3, enc4;
-    let i = 0;
-    str = str.replace(/[^A-Za-z0-9\+\/\=]/g, "");
-    while (i < str.length) {
-        enc1 = B64_MAP.indexOf(str.charAt(i++));
-        enc2 = B64_MAP.indexOf(str.charAt(i++));
-        enc3 = B64_MAP.indexOf(str.charAt(i++));
-        enc4 = B64_MAP.indexOf(str.charAt(i++));
-        chr1 = (enc1 << 2) | (enc2 >> 4);
-        chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-        chr3 = ((enc3 & 3) << 6) | enc4;
-        output = output + String.fromCharCode(chr1);
-        if (enc3 != 64) {
-            output = output + String.fromCharCode(chr2);
-        }
-        if (enc4 != 64) {
-            output = output + String.fromCharCode(chr3);
-        }
-    }
-    return output;
+function xorCipher(str, key) {
+  let result = '';
+  for (let i = 0; i < str.length; i++) {
+    result += String.fromCharCode(str.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return result;
 }
-
-/**
- * Deobfuscates a string using the self-contained decoder and XOR cipher.
- * @param {string} data The obfuscated data string.
- * @returns {string} The original, plain-text string.
- */
-function _d(data) {
-    if (!data) return '';
-    try {
-        const decodedB64 = b64_decode(data); // Use the self-contained decoder
-        let result = '';
-        for (let i = 0; i < decodedB64.length; i++) {
-            result += String.fromCharCode(decodedB64.charCodeAt(i) ^ _k.charCodeAt(i % _k.length));
-        }
-        return result;
-    } catch (e) {
-        console.error("Failed to deobfuscate data:", e);
-        return '';
-    }
-}
+// --- END: OBFUSCATION LOGIC ---
 
 
-// Playlist data with obfuscated IDs.
 const playlists = [
   {
     id: 0,
@@ -1222,8 +1185,8 @@ const playlists = [
         name: 'ET',
         thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcDh4fTshSCJ1fT4vLhE1NCY0K2R0LwdqKnEnJxcGLC0nPQcwNgs=", passB64: "" },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcCh8fSMhSiN/fTgvLhYyMiY0K2R0KAxqKnA0MBIDNCs0PQM3JVE=", passB64: "" }
+          { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', obfuscatedId: "LUBnQxIIHxISCV4GFhYdClwUFAkFEQ8bEw4SXBYVFQ8XQyUqPxwSDE0rFhIHBx4JExQAGw==", passB64: btoa("") },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', obfuscatedId: "LUBnQxIIHxISCVoXAgUbHAgWDRYBGAsVHQYaAxgFG1AdQy0qLgYABUwrFhIHBx4JExQAGw==", passB64: btoa("") }
         ]
       },
       {
@@ -1231,9 +1194,9 @@ const playlists = [
         name: 'SFT',
         thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcDR4fSMpQSN/fT4vLhIyNCd0K2R0LghqKnY+JwAGMSs0NQUyJ1Q=", passB64: "" },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcCh8fSAqQyJ1fTgvLhMyMiY0K2R0KQhqKnYjMhgDNCs+PQM+JVA=", passB64: "" },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcDR4fSMpQSN/fT4vLhYyMiY0K2R0KghqKnYnJxgDMCw+NQEwN1k=", passB64: "" } 
+          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', obfuscatedId: "LUBnQxIIHxISCUMXERcWGgkWDRYBGAsVHQYaAxgFG1AdQyUlOwcHDEErFhIHBx4JExQAGw==", passB64: btoa("") },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', obfuscatedId: "LUBnQxIIHxISCEQWDx0IGwkVDRYBGAsVHQYaAxgFG1AdQyEnNRcDCB0rFhIHBx4JExQAGw==", passB64: btoa("") },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', obfuscatedId: "LUBnQxIIHxISCUYXBwsQDAYWDRYBGAsVHQYaAxgFG1AdQyUxOwoSBk8rFhIHBx4JExQAGw==", passB64: btoa("") } 
         ]
       },
       {
@@ -1241,13 +1204,14 @@ const playlists = [
         name: 'ICT',
         thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idB64: "OTs+LgN7fj5WcCh8fSMqQSN/fT4vLhIyMiY0K2R0Lg5qKnImMhwDNCs+PQUzJVE=", passB64: "" }
+          { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', obfuscatedId: "LUBnQxIIHxISCV4fEh4IGwkWDRYBGAsVHQYaAxgFG1AdQzUqPhwVDBErFhIHBx4JExQAGw==", passB64: btoa("") }
         ]
       }
     ]
   }
 ];
 
+function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
 function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
 function renderPlaylists(){
@@ -1286,7 +1250,7 @@ function showPlaylistVideos(pl, skipPush){
     } else {
       vli.addEventListener('click',(ev)=>{
         spawnRipple(ev, vli);
-        const expectedPassword = _d(v.passB64 || '');
+        const expectedPassword = b64decode(v.passB64 || '');
         if (expectedPassword === '') {
           // No password, open player directly
           currentItem = v;
@@ -1384,7 +1348,8 @@ function showUnlockedItem(item) {
   if (item.type === 'playlist') {
     showPlaylistInsideModal(item);
   } else {
-    const id = _d(item.idB64 || '');
+    // MODIFIED: Decode the obfuscated ID before showing the player
+    const id = xorCipher(b64decode(item.obfuscatedId || ''), XOR_KEY);
     document.getElementById('now-playing-label').textContent = item.name || 'Now playing';
     if (window.showViduPlayer) {
       window.showViduPlayer(id).catch(err => {
@@ -1426,7 +1391,7 @@ function closeModal(){
 function onPasswordSubmit(){
   const val = (document.getElementById('password-input').value || '').trim();
   if(!currentItem) return;
-  const expected = _d(currentItem.passB64 || '');
+  const expected = b64decode(currentItem.passB64 || '');
   if(val === expected){
     showUnlockedItem(currentItem);
   } else {
@@ -1435,19 +1400,15 @@ function onPasswordSubmit(){
 }
 
 // YouTube playlist fetching
+// <<-- RESTORED: API key re-added from your original uploaded file -- this fixes playlist loading.
+const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
 async function fetchPlaylistVideos(playlistId){
-  // **FIX**: Using the API key in plain text to ensure it is correct.
-  // This bypasses any potential issues with the obfuscation logic for the key.
-  // NOTE: If the error persists, the problem is with the API key's configuration
-  // in your Google Cloud Console (e.g., HTTP referrer restrictions).
-  const apiKey = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
-
-  if(!apiKey) throw new Error('API key is missing.');
+  if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
   const items=[]; let pageToken='';
   do{
-    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(apiKey)}` + (pageToken?`&pageToken=${pageToken}`:'');
+    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}` + (pageToken?`&pageToken=${pageToken}`:'');
     const res = await fetch(url);
-    if(!res.ok){ const txt = await res.text().catch(()=>''); throw new Error('YouTube API error: '+res.status+' '+txt); }
+    if(!res.ok){ const txt = await res.text().catch(()=>null); throw new Error('YouTube API error: '+res.status+' '+res.statusText+' '+(txt||'')); }
     const data = await res.json();
     (data.items||[]).forEach(it=>{
       const sn = it.snippet || {};
@@ -1462,7 +1423,8 @@ async function fetchPlaylistVideos(playlistId){
 }
 
 async function showPlaylistInsideModal(item){
-  const rawId = _d(item.idB64);
+  // MODIFIED: Decode the obfuscated ID before fetching the playlist
+  const rawId = xorCipher(b64decode(item.obfuscatedId), XOR_KEY);
   const playlistId = rawId.split('&')[0];
   window.__viduGlobal.visualsPaused = true;
   window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'playlist-load' } }));
