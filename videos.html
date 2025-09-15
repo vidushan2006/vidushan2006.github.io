@@ -340,12 +340,6 @@
 
   <script>
   (function(){
-    // --- BEGIN: client-side obfuscation helpers (added to hide raw IDs from quick DevTools scraping) ---
-    // Decodes strings produced by server-side obfuscation (xor 27 + base64).
-    function _decodeEnc(s){ try{ const raw = atob(s||''); let out=''; for(let i=0;i<raw.length;i++){ out += String.fromCharCode(raw.charCodeAt(i) ^ 27); } return out; }catch(e){ return s || ''; } }
-    function _decodePass(s){ return _decodeEnc(s); }
-    // --- END helpers ---
-    
     /* ---------- configuration ---------- */
     const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c'; // keep your key here (used for playlist fetching)
     const YT_API_LOAD_TIMEOUT = 18000; // ms - how long to wait for YT API before showing error
@@ -360,10 +354,10 @@
 
     /* ---------- sample items (unchanged layout) ---------- */
     const items = [
-      { type: 'video', title: 'PHONK', idEnc: "dit9VitpWVUseEo=", passEnc: ""},
-      { type: 'video', title: 'TEST', idEnc: "V35jdHAtUyl4KWg=", passEnc: ""},
-      { type: 'playlist', title: 'ICT', idEnc: "S1ciYUMrTXlVdlByXXdjf3ouS1hPdS9Ec1pELHJQcV56Wj1ociYidV1ELGprWmFQby94QkF/", passEnc: "LSsrKW1yf24=" },
-      { type: 'playlist', title: 'ET', idEnc: "S1ciYUMrTXlVdlByXTZKLHl1dlYqbURfaU8oRFR3NlR9Lj1ociZ+fVFTS2FMSTZwQXhcbEJs", passEnc: "enZyd3p+bw==" }
+      { type: 'video', title: 'PHONK', idB64: btoa("m0fM0rBN7cQ"), passB64: btoa("")},
+      { type: 'video', title: 'TEST', idB64: btoa("Lexok6H2c2s"), passB64: btoa("")},
+      { type: 'playlist', title: 'ICT', idB64: btoa("PL9zX0VbNmKiFlxda5PCTn4_hA_7iKjEaA&si=9nF_7qpAzKt4cYZd"), passB64: btoa("6002vidu") },
+      { type: 'playlist', title: 'ET', idB64: btoa("PL9zX0VbNmKiF-Q7bnmM1v_DrT3_Ol-Of5&si=efJHPzWR-kZcGwYw"), passB64: btoa("amilaet") }
     ];
 
     /* ---------- utilities ---------- */
@@ -375,20 +369,8 @@
       if(words.length === 1) return words[0].toUpperCase().slice(0, 6);
       return words[0].toUpperCase();
     }
-    function normalizeIdFromB64(x){
-      try{
-        // accept either the raw base64 string or an object with .idEnc (preferred)
-        if(x && typeof x === 'object' && x.idEnc) return _decodeEnc(x.idEnc).split('&')[0];
-        if(typeof x === 'string' && x.trim() !== ''){
-          // legacy support: was stored as btoa("...")
-          try{ return atob(x).split('&')[0]; }catch(e){ return x.split('&')[0]; }
-        }
-        return '';
-      }catch(e){
-        console.warn('normalizeIdFromB64 error', e);
-        return '';
-      }
-    } catch(e){ console.warn('Invalid idB64', idB64, e); return ''; }
+    function normalizeIdFromB64(idB64){
+      try { return atob(idB64 || '').split('&')[0]; } catch(e){ console.warn('Invalid idB64', idB64, e); return ''; }
     }
 
     /* ---------- render tiles (neon-wrap fixed-size approach) ---------- */
@@ -497,7 +479,7 @@
       // This function is now effectively bypassed by `handleTileClick`
       // but is kept in case direct calls are ever needed.
       try{
-        const decoded = item && typeof item.passB64 === 'string' ? _decodePass(item.passEnc) : '';
+        const decoded = item && typeof item.passB64 === 'string' ? atob(item.passB64) : '';
         if(!decoded || decoded.trim() === ''){
           openViewer(item);
           return;
@@ -518,7 +500,7 @@
       if(!currentItem) return;
       const entered = (pwInput.value || '').trim();
       try{
-        const expected = _decodePass(currentItem.passEnc || '');
+        const expected = atob(currentItem.passB64 || '');
         if(entered === expected){
           closeModal(pwModal);
           openViewer(currentItem);
@@ -1123,7 +1105,7 @@
 
     /* ---------- show playlist (advanced only) ---------- */
     async function showPlaylistInsideViewer(item){
-      const rawId = normalizeIdFromB64(item);
+      const rawId = normalizeIdFromB64(item.idB64);
       const playlistId = rawId.split('&')[0];
       const iframeWrap = document.getElementById('iframe-wrap');
       iframeWrap.innerHTML = '';
@@ -1245,7 +1227,7 @@
 
     /* ---------- show single video (advanced only) ---------- */
     async function showVideoInViewer(item){
-      const vid = normalizeIdFromB64(item);
+      const vid = normalizeIdFromB64(item.idB64);
       if(!vid){ alert('Unable to load the selected item.'); return; }
       const iframeWrap = document.getElementById('iframe-wrap');
       iframeWrap.innerHTML = '';
