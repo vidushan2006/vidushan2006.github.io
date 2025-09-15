@@ -1165,8 +1165,8 @@ const playlists = [
         name: 'ET',
         thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiHFvj6Q-p04TgdZj_tv0eI3&si=pAyX-6SJILH6QSg2"), passB64: btoa("") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiFcYCAzfcyI0cz8cOfyWlTc&si=nZ224kprFgDGTG9Z"), passB64: btoa("") }
+          { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', encodedId: "MmdTUTZITElKUy1YeUFwPWlzJjNJZTB2dF9qWmRnVDQwLVF2dkhpa01OYlYwWHo5TFA=", passB64: btoa("") },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', encodedId: "WkRUR0ZkcnByazIyWm49aXMmY1dsV3ZvYzBjMDlNbVYwWHo5TFA=", passB64: btoa("") }
         ]
       },
       {
@@ -1174,9 +1174,9 @@ const playlists = [
         name: 'SFT',
         thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiG94fMjA7v-6nw55htWj6LH&si=PUXqK2wlIin_tUZm"), passB64: btoa("") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiEmn6j0O870XYlFRasYABD2&si=vjOY0tK0Em5LZvsf"), passB64: btoa("") },
-          { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiGt19HZ9wzIwC-VQ_AN0z9K&si=0jJc5HTa68Weq851"), passB64: btoa("") } 
+          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', encodedId: "bVpfdF9uaUtsd0syS1F1UD1pcyZISjZ3andpa01OYlYwWHo5TFA=", passB64: btoa("") },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', encodedId: "ZmRzdk01b0UwTll2YTA4MFcwbmVFa01OYlYwWHo5TFA=", passB64: btoa("") },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', encodedId: "MThxZThhNVRDSWM1MGlzJlo5ek5BX1FId3pJMlYwWHo5TFA=", passB64: btoa("") } 
         ]
       },
       {
@@ -1184,7 +1184,7 @@ const playlists = [
         name: 'ICT',
         thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idB64: btoa("PL9zX0VbNmKiFUhYSDfiEVVMuBbc2AiwpC&si=1g80otmZOXdp1hE_"), passB64: btoa("") }
+          { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', encodedId: "X0VwaWRwbzBtMGcxPWlzJkNwMWEyYkF1VmZIS01OYlYwWHo5TFA=", passB64: btoa("") }
         ]
       }
     ]
@@ -1328,7 +1328,8 @@ function showUnlockedItem(item) {
   if (item.type === 'playlist') {
     showPlaylistInsideModal(item);
   } else {
-    const id = b64decode(item.idB64 || '');
+    // MODIFIED: Decode the obfuscated ID before showing the player
+    const id = b64decode(item.encodedId || '').split('').reverse().join('');
     document.getElementById('now-playing-label').textContent = item.name || 'Now playing';
     if (window.showViduPlayer) {
       window.showViduPlayer(id).catch(err => {
@@ -1402,7 +1403,8 @@ async function fetchPlaylistVideos(playlistId){
 }
 
 async function showPlaylistInsideModal(item){
-  const rawId = b64decode(item.idB64);
+  // MODIFIED: Decode the obfuscated ID before fetching the playlist
+  const rawId = b64decode(item.encodedId).split('').reverse().join('');
   const playlistId = rawId.split('&')[0];
   window.__viduGlobal.visualsPaused = true;
   window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'playlist-load' } }));
