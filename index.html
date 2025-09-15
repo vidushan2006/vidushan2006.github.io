@@ -1155,9 +1155,7 @@
  * Playlist data + UI + modal + YouTube playlist fetching
  *************************************************************************/
 
-// **MODIFICATION**: Obfuscation logic to protect IDs and API keys.
-// This new implementation includes a self-contained Base64 decoder to prevent
-// conflicts with other scripts on the page that might interfere with atob().
+// Obfuscation logic for playlist IDs.
 const _k = 'ViduSuperSecretKey!@#'; // The secret key for obfuscation
 
 /**
@@ -1437,12 +1435,14 @@ function onPasswordSubmit(){
 }
 
 // YouTube playlist fetching
-// Obfuscated API key.
-const _obfuscatedApiKey = 'LTo4HiN5fT9VdDoGFDsxSThsdTlvDggxPz05LWh0Kx0=';
 async function fetchPlaylistVideos(playlistId){
-  // De-obfuscate API key right before use.
-  const apiKey = _d(_obfuscatedApiKey);
-  if(!apiKey) throw new Error('API key is missing or could not be deobfuscated.');
+  // **FIX**: Using the API key in plain text to ensure it is correct.
+  // This bypasses any potential issues with the obfuscation logic for the key.
+  // NOTE: If the error persists, the problem is with the API key's configuration
+  // in your Google Cloud Console (e.g., HTTP referrer restrictions).
+  const apiKey = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
+
+  if(!apiKey) throw new Error('API key is missing.');
   const items=[]; let pageToken='';
   do{
     const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(apiKey)}` + (pageToken?`&pageToken=${pageToken}`:'');
