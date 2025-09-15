@@ -70,9 +70,25 @@
     .logo-circle img{width:100%;height:100%;object-fit:cover;object-position:center center;display:block;transform: translateZ(0);}
 
     nav ul{list-style:none;margin:0;padding:0;display:flex;gap:10px;align-items:center;}
-    nav ul li a{font-weight:700;font-size:14px;position:relative;padding:8px 12px;color:var(--muted);text-decoration:none;border-radius:8px;transition:all .18s var(--ease);display:inline-block;border: none;box-shadow: none;outline: none;background: transparent;}
+    nav ul li a{
+      font-weight:700;
+      font-size:14px;
+      position:relative;
+      padding:8px 12px;
+      color:var(--muted);
+      text-decoration:none;
+      border-radius:8px;
+      transition:all .18s var(--ease);
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      border: none;
+      box-shadow: none;
+      outline: none;
+      background: transparent;
+    }
     nav ul li a:hover{color:var(--text);transform: translateY(-3px) scale(1.02);box-shadow:0 10px 30px rgba(66,44,145,0.12);}
-
+    
     /* Neon green effect for header nav items & logo */
     header nav ul li a::before,
     .logo::before{
@@ -168,7 +184,7 @@
     .vidu-mount { width:100%; height:520px; background:#000; display:block; }
     .vidu-mount iframe{ width:100%; height:100%; display:block; border:0; pointer-events:none; }
 
-    /* Loading overlay (shows header.png until the video actually starts playing) */
+    /* Loading overlay */
     .vidu-loading {
       position:absolute;
       inset:0;
@@ -205,29 +221,24 @@
     }
     .vidu-controls-bg.hidden { opacity:0; transform: translateY(6px); }
 
-    /* IMPORTANT: allow wrap so controls don't overflow on narrow devices */
     .vidu-overlay { position:absolute; left:12px; right:12px; bottom:12px; z-index:9999; display:flex; gap:12px; align-items:center;
                     padding:8px 12px; border-radius:10px; box-sizing:border-box; transition:opacity .18s ease,transform .18s ease;
-                    /* make controls wrap when there's not enough horizontal space */
                     flex-wrap:wrap; justify-content:flex-start; }
     .vidu-overlay.hidden { opacity:0; transform: translateY(6px); pointer-events:none; }
 
     .vidu-overlay .inner-bg{ position:absolute; inset:0; border-radius:10px; pointer-events:none; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); z-index:-1; }
 
-    /* More rounded control buttons */
     .vidu-btn { background: rgba(255,255,255,0.06); color:#fff; padding:8px; border-radius:22px; cursor:pointer; font-weight:700;
                user-select:none; border:1px solid rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center;
                width:46px; height:46px; transition:transform .12s ease; }
     .vidu-btn:active{ transform: scale(.96); }
 
-    /* Seek slider styles (green fill via inline background updates) */
     .vidu-range { flex:1; -webkit-appearance:none; height:8px; border-radius:8px; background: rgba(255,255,255,0.06); min-width:120px; }
     .vidu-range::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent-2); box-shadow:0 2px 8px rgba(0,0,0,0.5); border:2px solid rgba(0,0,0,0.18); margin-top:-4px; }
     .vidu-range::-moz-range-thumb{ width:16px; height:16px; border-radius:50%; background:var(--accent-2); border:2px solid rgba(0,0,0,0.18); }
 
     .vidu-time { min-width:90px; font-size:14px; font-weight:800; color:#cbd5ff; text-align:center; letter-spacing:1px; }
 
-    /* QUALITY menu (internal; hidden from visible UI) */
     .vidu-quality-menu {
       position:absolute;
       z-index:10004;
@@ -246,7 +257,6 @@
     .vidu-quality-menu button:hover { background:rgba(255,255,255,0.02); color:#fff; }
     .vidu-quality-menu button.active { color: var(--accent-2); background: rgba(255,255,255,0.02); }
 
-    /* close button inside player (top-right) */
     .vidu-close-btn {
       position:absolute;
       top:10px;
@@ -268,7 +278,6 @@
       transition: opacity .18s ease, transform .18s ease;
     }
 
-    /* when hidden, fade out and disable pointer events */
     .vidu-close-btn.hidden { opacity:0; transform: translateY(-6px); pointer-events:none; }
 
     #close-player { display:none !important; }
@@ -294,7 +303,6 @@
       left:0 !important; right:0 !important; bottom:18px !important; width:100% !important; justify-content:center !important; padding:18px !important;
     }
 
-    /* mobile adjustments so controls never overflow */
     @media (max-width:720px){
       .vidu-mount{ height:320px; }
       .vidu-overlay{ left:8px; right:8px; bottom:8px; gap:8px; padding:8px; }
@@ -317,7 +325,6 @@
       .vidu-btn{ width:36px; height:36px; }
     }
 
-    /* Playback menu styling (added for gear button) */
     .vidu-playback-menu {
       position:absolute;
       z-index:10005;
@@ -342,7 +349,7 @@
     }
     .vidu-playback-item:hover { background:rgba(255,255,255,0.03); }
     .vidu-playback-item.active { background:rgba(57,255,20,0.12); color:#dfffd6; }
-    /* Volume feedback centered in player */
+    
     .vidu-vol-feedback{
       position:absolute;
       left:50%;
@@ -366,8 +373,8 @@
       text-align:center;
     }
     
-    /* Notification Button & Panel Styles */
-    .notification-btn {
+    /* Header Icon Button Styles (for Download & Notification) */
+    .header-icon-btn {
       background: transparent;
       border: none;
       color: var(--muted);
@@ -379,16 +386,24 @@
       justify-content: center;
       transition: all .18s var(--ease);
       position: relative;
+      width: 38px;
+      height: 38px;
     }
-    .notification-btn:hover {
+    .header-icon-btn:hover {
       color: var(--text);
       background: var(--glass);
       transform: scale(1.1);
     }
+    .header-icon-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
 
+    /* Notification Panel Styles */
     .notification-panel {
       position: fixed;
-      top: 80px; /* Adjusted for header height */
+      top: 80px;
       right: 22px;
       width: 340px;
       max-width: 90vw;
@@ -402,14 +417,13 @@
       opacity: 0;
       transform: translateY(-10px) scale(0.98);
       transition: opacity .25s var(--ease), transform .25s var(--ease);
-      pointer-events: none; /* Hidden by default */
+      pointer-events: none;
     }
     .notification-panel.show {
       opacity: 1;
       transform: translateY(0) scale(1);
       pointer-events: auto;
     }
-
     .notification-header {
       display: flex;
       justify-content: space-between;
@@ -446,6 +460,55 @@
       margin: 0;
       line-height: 1.6;
     }
+
+    /* Loading Popup Styles */
+    .loading-popup-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(4, 6, 12, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 20000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s var(--ease);
+    }
+    .loading-popup-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .loading-popup-content {
+        background: linear-gradient(180deg, rgba(28, 28, 32, 0.97), rgba(18, 18, 20, 0.98));
+        padding: 28px 35px;
+        border-radius: var(--card-radius);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 12px 50px rgba(0,0,0,0.6);
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        color: var(--text);
+    }
+    .loading-popup-content p {
+        margin: 0 0 18px 0;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.6;
+    }
+    .loading-bar-container {
+        width: 100%;
+        height: 8px;
+        background: var(--glass-strong);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .loading-bar-fill {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+        border-radius: 8px;
+    }
   </style>
 </head>
 <body class="landing is-preload">
@@ -459,11 +522,14 @@
     </a>
     
     <div class="header-right-controls">
+        <button id="download-btn-header" class="header-icon-btn" data-link="YOUR_EXTERNAL_LINK_HERE" aria-label="Download" title="Download">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+        </button>
         <nav>
           <ul>
             <li><a href="videos.html">🔒Private</a></li>
             <li>
-              <a href="Tools.html" id="nav-tools" title="Tools" aria-label="Tools" style="display:flex;align-items:center;gap:8px;">
+              <a href="Tools.html" id="nav-tools" title="Tools" aria-label="Tools">
                 🤖Tools
               </a>
             </li>
@@ -471,10 +537,8 @@
           </ul>
         </nav>
 
-        <button id="notification-btn" class="notification-btn" aria-label="Notifications" title="Notifications">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-            </svg>
+        <button id="notification-btn" class="header-icon-btn" aria-label="Notifications" title="Notifications">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
         </button>
     </div>
   </header>
@@ -504,6 +568,16 @@
         <p style="margin-top:12px; font-size:12px; color: var(--muted);"><em>September 15, 2025</em></p>
     </div>
  </div>
+ 
+ <div id="loading-popup-overlay" class="loading-popup-overlay">
+  <div class="loading-popup-content">
+    <p id="loading-popup-message">Preparing your content, please wait...</p>
+    <div class="loading-bar-container">
+      <div id="loading-bar-fill" class="loading-bar-fill"></div>
+    </div>
+  </div>
+</div>
+
 
  <script>
 (function(){
@@ -566,8 +640,6 @@
   function gearSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.4-3.5c0-.4-.03-.78-.09-1.15l1.86-1.44a.5.5 0 0 0 .12-.65l-1.76-3.05a.5.5 0 0 0-.6-.22l-2.2.88a7.72 7.72 0 0 0-1.9-1.1l-.33-2.33A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.5.42l-.33 2.33c-.69.25-1.35.6-1.95 1.02l-2.2-.88a.5.5 0 0 0-.6.22L2.7 6.96a.5.5 0 0 0 .12.65l1.86 1.44c-.06.37-.09.75-.09 1.15s.03.78.09 1.15L2.82 14.95a.5.5 0 0 0-.12.65l1.76 3.05c.14.24.4.34.64.28l2.2-.88c.6.42 1.26.77 1.95 1.02l.33 2.33c.03.25.25.42.5.42h3.8c.25 0 .47-.17.5-.42l.33-2.33c.69-.25 1.35-.6 1.95-1.02l2.2.88c.24.09.5-.04.64-.28l1.76-3.05a.5.5 0 0 0-.12-.65l-1.86-1.44c.06-.37.09-.75.09-1.15z" fill="#fff"/></svg>`; }
 
   function createHostElements(){
-    // Small robustness fix: some page states can call player creation before the #player-wrap exists.
-    // Instead of throwing, fall back to creating #player-wrap inside modal-root or document.body.
     let wrap = document.getElementById('player-wrap');
     if(!wrap){
       const root = document.getElementById('modal-root') || document.body;
@@ -635,16 +707,13 @@
     });
     host.appendChild(closeBtn);
 
-    
-
-    // volume feedback element (shown briefly when volume changes)
     const volFeedback = document.createElement('div');
     volFeedback.id = 'vidu_vol_feedback';
     volFeedback.className = 'vidu-vol-feedback';
     volFeedback.style.display = 'none';
     host.appendChild(volFeedback);
 
-wrap.appendChild(host);
+    wrap.appendChild(host);
     return { host, mount, overlay, ctrlBg, closeBtn, qmenu, loadingDiv };
   }
 
@@ -713,7 +782,6 @@ wrap.appendChild(host);
     const fullBtn = overlay.querySelector('#vidu_fullbtn');
     const playbackBtn = overlay.querySelector('#vidu_playbackbtn');
 
-    // volume feedback helper (attached to host earlier as #vidu_vol_feedback)
     const volFeedbackEl = host.querySelector('#vidu_vol_feedback');
     function showVolumeFeedback(pct){
       try{
@@ -721,7 +789,6 @@ wrap.appendChild(host);
         const n = Math.max(0, Math.min(100, Math.round(pct||0)));
         volFeedbackEl.textContent = n + '%';
         volFeedbackEl.style.display = 'block';
-        // force visible
         volFeedbackEl.style.opacity = '1';
         if(host._volFeedbackTimeout) clearTimeout(host._volFeedbackTimeout);
         host._volFeedbackTimeout = setTimeout(()=>{
@@ -732,8 +799,6 @@ wrap.appendChild(host);
         }, 3000);
       }catch(e){ console.warn('showVolumeFeedback err', e); }
     }
-
-    
 
     function getFullscreenElement(){
       return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
@@ -799,16 +864,13 @@ wrap.appendChild(host);
       }
     }, {passive:true});
 
-    // *** UPDATED keyHandler: ensure spacebar toggles update the same desiredPlaying state the play button uses
     state.keyHandler = function(e){
       const active = document.activeElement;
-      // allow handling when focus is on seek slider (so space/arrow keys still control playback)
       const seekIsActive = (active && active.id === 'vidu_seek');
       if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
       const root = document.getElementById('modal-root');
       if(!root || root.style.display === 'none') return;
 
-      // SPACE: toggle play/pause
       if(e.code === 'Space' || e.key === ' '){
         e.preventDefault();
         if(state.player){
@@ -829,14 +891,12 @@ wrap.appendChild(host);
         return;
       }
 
-      // Fullscreen shortcut (F)
       if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){
         e.preventDefault();
         toggleFullscreen();
         return;
       }
 
-      // Seek forward/back with arrows (10s)
       if(e.key === 'ArrowRight' || e.code === 'ArrowRight' || e.key === 'Right'){
         e.preventDefault();
         try{
@@ -863,7 +923,6 @@ wrap.appendChild(host);
         return;
       }
 
-      // Volume up/down with arrows (5% steps) and show feedback
       if(e.key === 'ArrowUp' || e.code === 'ArrowUp' || e.key === 'Up'){
         e.preventDefault();
         try{
@@ -893,7 +952,6 @@ wrap.appendChild(host);
     };
     document.addEventListener('keydown', state.keyHandler);
 
-    // seek handling
     seekEl.addEventListener('pointerdown', ()=> seekEl._drag=true, {passive:true});
     seekEl.addEventListener('pointerup', ()=>{ 
       seekEl._drag=false;
@@ -917,7 +975,6 @@ wrap.appendChild(host);
     }
     updateSeekBackground(seekEl);
 
-    // play/pause with immediate UI response
     playBtn.addEventListener('click', ()=>{
       if(!state.player) return;
       let st = -1;
@@ -947,12 +1004,10 @@ wrap.appendChild(host);
           saved.host.height = host.style.height || '';
           saved.host.zIndex = host.style.zIndex || '';
           saved.host.borderRadius = host.style.borderRadius || '';
-
           saved.mount.height = mount.style.height || '';
           saved.mount.width = mount.style.width || '';
           saved.mount.maxHeight = mount.style.maxHeight || '';
           saved.mount.maxWidth = mount.style.maxWidth || '';
-
           const ifr = host.querySelector('iframe');
           if(ifr){
             saved.iframe.height = ifr.style.height || '';
@@ -961,34 +1016,23 @@ wrap.appendChild(host);
             saved.iframe.maxHeight = ifr.style.maxHeight || '';
             saved.iframe.maxWidth = ifr.style.maxWidth || '';
           } else saved.iframe = {};
-
           saved.stored = true;
         }
 
         try{
-          host.style.position = 'fixed';
-          host.style.top = '0';
-          host.style.left = '0';
-          host.style.width = '100vw';
-          host.style.height = '100vh';
-          host.style.zIndex = '2147483647';
-          host.style.borderRadius = '0';
+          host.style.position = 'fixed'; host.style.top = '0'; host.style.left = '0';
+          host.style.width = '100vw'; host.style.height = '100vh';
+          host.style.zIndex = '2147483647'; host.style.borderRadius = '0';
         }catch(e){}
-
         try{
-          mount.style.width = '100%';
-          mount.style.height = '100%';
-          mount.style.maxHeight = 'none';
-          mount.style.maxWidth = 'none';
+          mount.style.width = '100%'; mount.style.height = '100%';
+          mount.style.maxHeight = 'none'; mount.style.maxWidth = 'none';
         }catch(e){}
-
         try{
           const ifr = host.querySelector('iframe');
           if(ifr){
-            ifr.style.width = '100%';
-            ifr.style.height = '100%';
-            ifr.style.maxHeight = 'none';
-            ifr.style.maxWidth = 'none';
+            ifr.style.width = '100%'; ifr.style.height = '100%';
+            ifr.style.maxHeight = 'none'; ifr.style.maxWidth = 'none';
             ifr.style.pointerEvents = 'auto';
           }
         }catch(e){}
@@ -1012,37 +1056,26 @@ wrap.appendChild(host);
           };
           window.addEventListener('resize', state.fsResizeHandler);
         }
-
       } else {
         if(saved.stored){
           try{
-            host.style.position = saved.host.position;
-            host.style.top = saved.host.top;
-            host.style.left = saved.host.left;
-            host.style.width = saved.host.width;
-            host.style.height = saved.host.height;
-            host.style.zIndex = saved.host.zIndex;
+            host.style.position = saved.host.position; host.style.top = saved.host.top;
+            host.style.left = saved.host.left; host.style.width = saved.host.width;
+            host.style.height = saved.host.height; host.style.zIndex = saved.host.zIndex;
             host.style.borderRadius = saved.host.borderRadius;
           }catch(e){}
-
           try{
-            mount.style.height = saved.mount.height;
-            mount.style.width = saved.mount.width;
-            mount.style.maxHeight = saved.mount.maxHeight;
-            mount.style.maxWidth = saved.mount.maxWidth;
+            mount.style.height = saved.mount.height; mount.style.width = saved.mount.width;
+            mount.style.maxHeight = saved.mount.maxHeight; mount.style.maxWidth = saved.mount.maxWidth;
           }catch(e){}
-
           try{
             const ifr = host.querySelector('iframe');
             if(ifr){
-              ifr.style.height = saved.iframe.height;
-              ifr.style.width = saved.iframe.width;
+              ifr.style.height = saved.iframe.height; ifr.style.width = saved.iframe.width;
               ifr.style.pointerEvents = saved.iframe.pointerEvents;
-              ifr.style.maxHeight = saved.iframe.maxHeight;
-              ifr.style.maxWidth = saved.iframe.maxWidth;
+              ifr.style.maxHeight = saved.iframe.maxHeight; ifr.style.maxWidth = saved.iframe.maxWidth;
             }
           }catch(e){}
-
           saved.stored = false;
         } else {
           try{ mount.style.height = '520px'; mount.style.width = '100%'; }catch(e){}
@@ -1096,19 +1129,8 @@ wrap.appendChild(host);
         });
       }catch(e){}
     }
-    function detachActivityListeners(){
-      try{
-        ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{
-          host.removeEventListener(ev, resetInactivityTimer);
-          document.removeEventListener(ev, resetInactivityTimer);
-        });
-      }catch(e){}
-    }
     attachActivityListeners();
 
-    //
-    // Playback menu implementation (robust & fixed)
-    //
     let playbackMenu = null;
     let playbackMenuOpen = false;
     let docClickPlaybackCloseHandler = null;
@@ -1119,11 +1141,6 @@ wrap.appendChild(host);
       playbackMenu = null;
       playbackMenuOpen = false;
       if(docClickPlaybackCloseHandler) { document.removeEventListener('click', docClickPlaybackCloseHandler); docClickPlaybackCloseHandler = null; }
-    }
-    function docClickPlaybackClose(e){
-      if(!playbackMenu) return;
-      if(playbackMenu.contains(e.target) || (playbackBtn && playbackBtn.contains(e.target))) return;
-      closePlaybackMenu();
     }
 
     function formatRateLabel(r){ return (Math.round(r*100)/100) + '×'; }
@@ -1186,7 +1203,7 @@ wrap.appendChild(host);
       playbackMenuOpen = true;
       state._menuOpenTs = Date.now();
 
-      docClickPlaybackCloseHandler = function(e){ docClickPlaybackClose(e); };
+      docClickPlaybackCloseHandler = function(e){ if(!playbackMenu) return; if(playbackMenu.contains(e.target) || (playbackBtn && playbackBtn.contains(e.target))) return; closePlaybackMenu(); };
       setTimeout(()=> document.addEventListener('click', docClickPlaybackCloseHandler));
     }
 
@@ -1202,7 +1219,6 @@ wrap.appendChild(host);
     });
     playbackMenuObserver.observe(document.body, { childList: true, subtree: true });
 
-    // load YT and mount player
     return loadYTApi().then(()=> new Promise((resolve,reject)=>{
       if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
 
@@ -1212,20 +1228,13 @@ wrap.appendChild(host);
           width: '100%',
           height: '100%',
           playerVars: {
-            controls: 0,
-            disablekb: 1,
-            rel: 0,
-            modestbranding: 1,
-            playsinline: 1,
-            iv_load_policy: 3,
-            origin: location.origin
+            controls: 0, disablekb: 1, rel: 0, modestbranding: 1,
+            playsinline: 1, iv_load_policy: 3, origin: location.origin
           },
           events: {
             onReady: function(evt){
               disableIframeClicks(host);
-
               showLoading();
-
               try{
                 if(typeof evt.target.setVolume === 'function'){
                   const v = Math.max(0, Math.min(100, state.lastVolume || 100));
@@ -1234,7 +1243,6 @@ wrap.appendChild(host);
                   else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute();
                 }
               }catch(e){}
-
               try{
                 let avail = [];
                 if(typeof evt.target.getAvailableQualityLevels === 'function') avail = evt.target.getAvailableQualityLevels() || [];
@@ -1242,11 +1250,8 @@ wrap.appendChild(host);
                 populateQualityMenu(qmenu, avail, curQ, evt.target);
                 if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 800); }
               }catch(e){}
-
               try{ evt.target.playVideo(); }catch(e){}
-
               mount.style.height = mount.style.height || '520px';
-
               if(state.updateInterval) clearInterval(state.updateInterval);
               state.updateInterval = setInterval(()=>{
                 try{
@@ -1278,7 +1283,6 @@ wrap.appendChild(host);
                       }catch(e){}
                     }, 600);
                   }
-
                   try{
                     if(typeof state.player.getAvailableQualityLevels === 'function'){
                       const levels = state.player.getAvailableQualityLevels() || [];
@@ -1286,7 +1290,6 @@ wrap.appendChild(host);
                       populateQualityMenu(qmenu, levels, curQ, state.player);
                     }
                   }catch(e){}
-
                   try{
                     if(playbackBtn && state.player && typeof state.player.getPlaybackRate === 'function'){
                       const curRate = state.player.getPlaybackRate ? state.player.getPlaybackRate() : 1;
@@ -1296,21 +1299,14 @@ wrap.appendChild(host);
                   }catch(e){}
                 }catch(e){}
               }, 160);
-
               if(state.mo) state.mo.disconnect();
               state.mo = new MutationObserver(()=> disableIframeClicks(host));
               state.mo.observe(host, { childList:true, subtree:true });
-
               resetInactivityTimer();
-
               resolve(state.player);
             },
             onStateChange: function(e){
-              try{
-                if(e && e.data === 1){
-                  try{ hideLoading(); }catch(e){/*ignore*/ }
-                }
-              }catch(err){}
+              try{ if(e && e.data === 1){ try{ hideLoading(); }catch(e){} } }catch(err){}
             },
             onError: function(err){
               try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){}
@@ -1395,7 +1391,7 @@ const playlists = [
         name: 'SFT',
         thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg',
         videos: [
-          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" },
+          { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d/9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" },
           { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" },
           { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } 
         ]
@@ -1414,9 +1410,8 @@ const playlists = [
 
 function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
 
-// Decryption helper — obfuscated IDs (keeps key inside closure)
 const decodeEnc = (function(){
-  const key = new TextEncoder().encode('vidu_secret_2025'); // small XOR key stored only inside this closure
+  const key = new TextEncoder().encode('vidu_secret_2025');
   function xorDecode(bytes){
     const out = new Uint8Array(bytes.length);
     for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length];
@@ -1426,10 +1421,8 @@ const decodeEnc = (function(){
     try{
       if(!encStr) return '';
       const raw = atob(encStr);
-      // convert raw string to bytes
       const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0)));
       const dec = xorDecode(bytes);
-      // convert bytes to string
       return new TextDecoder().decode(dec);
     }catch(e){
       return '';
@@ -1477,11 +1470,9 @@ function showPlaylistVideos(pl, skipPush){
         spawnRipple(ev, vli);
         const expectedPassword = b64decode(v.passEnc || '');
         if (expectedPassword === '') {
-          // No password, open player directly
           currentItem = v;
           showUnlockedItem(v);
         } else {
-          // Password required, show modal
           openPasswordModal(v);
         }
       });
@@ -1501,7 +1492,6 @@ function showPlaylistVideos(pl, skipPush){
 function spawnRipple(ev,target){ const rect = target.getBoundingClientRect(); const drop = document.createElement('div'); drop.className = 'drop'; drop.style.left = (ev.clientX - rect.left) + 'px'; drop.style.top = (ev.clientY - rect.top) + 'px'; target.appendChild(drop); setTimeout(()=> drop.remove(),700); }
 function attachTilt(card){ if(!card) return; const img = card.querySelector('img'); function onMove(e){ if(window.__viduGlobal && window.__viduGlobal.visualsPaused) return; const r = card.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width; const py = (e.clientY - r.top) / r.height; const rx = (py - 0.5) * 10; const ry = (px - 0.5) * -10; card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(6px)`; if(img) img.style.transform = `translateZ(26px) scale(1.06) translateY(${(0.5-py)*6}px)`; } function onLeave(){ card.style.transform = ''; if(img) img.style.transform = ''; } card.addEventListener('pointermove', onMove, {passive:true}); card.addEventListener('pointerleave', onLeave, {passive:true}); }
 
- // Modal + password + player mount logic
 let currentItem = null;
 function createModal(){
   const root = document.getElementById('modal-root');
@@ -1509,35 +1499,24 @@ function createModal(){
     <div class="modal-backdrop" id="modal-backdrop">
       <div class="modal" role="dialog" aria-modal="true">
         <div class="controls">
-          <div>
-            <strong id="modal-title">Locked</strong>
-            <div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div>
-          </div>
-          <div>
-            <button id="modal-close" class="btn secondary">Close</button>
-          </div>
+          <div><strong id="modal-title">Locked</strong><div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div></div>
+          <div><button id="modal-close" class="btn secondary">Close</button></div>
         </div>
-
         <div id="modal-body">
           <div id="password-block">
-            <div style="color:#bbb;margin-bottom:8px;">This item is password-protected. Enter password to unlock and play.</div>
+            <div style="color:#bbb;margin-bottom:8px;">This item is password-protected. Enter password to unlock.</div>
             <div class="password-row">
               <input id="password-input" type="password" placeholder="Enter password" />
               <button id="password-submit" class="btn">Unlock</button>
             </div>
             <div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div>
           </div>
-
           <div id="player-block" style="display:none;margin-top:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
               <div style="color:#bbb" id="now-playing-label">Now playing</div>
-              <div>
-                <button id="close-player" class="btn">Close</button>
-              </div>
+              <div><button id="close-player" class="btn">Close</button></div>
             </div>
-
             <div id="player-wrap"></div>
-
             <div id="playlist-list-wrap" style="display:none;margin-top:12px;">
               <div class="muted">Playlist contents</div>
               <div class="playlist-list" id="playlist-video-list"></div>
@@ -1623,8 +1602,6 @@ function onPasswordSubmit(){
   }
 }
 
-// YouTube playlist fetching
-// <<-- RESTORED: API key re-added from your original uploaded file -- this fixes playlist loading.
 const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
 async function fetchPlaylistVideos(playlistId){
   if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
@@ -1675,7 +1652,6 @@ async function showPlaylistInsideModal(item){
     if(listWrap) listWrap.innerHTML = '';
     videos.forEach(v=>{
       const li = document.createElement('div'); li.className = 'list-item';
-      
       li.style.display='flex'; li.style.alignItems='center'; li.style.gap='12px'; li.style.padding='8px';
       li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;" /><div style="flex:1;"><div class="title" style="font-size:13px;">${escapeHtml(v.title)}</div></div>`;
       li.onclick = ()=> {
@@ -1703,21 +1679,16 @@ async function showPlaylistInsideModal(item){
   }
 }
 
-// Visual helpers & init
 function pauseVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = true; window.dispatchEvent(new CustomEvent('vidu:visuals:pause',{detail:{reason}})); }
 function resumeVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = false; window.dispatchEvent(new CustomEvent('vidu:visuals:resume',{detail:{reason}})); }
 
 document.addEventListener('DOMContentLoaded', function(){
   createModal();
   renderPlaylists();
-  const navHome = document.getElementById('nav-home');
-  if(navHome) navHome.addEventListener('click', ()=>{ document.getElementById('playlist-list').style.display='flex'; document.getElementById('playlist-videos').style.display='none'; });
   document.querySelectorAll('.list-item').forEach(el=>attachTilt(el));
   (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
 });
 
-
-// deterrents
 document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, false);
 document.addEventListener('keydown', function(e){ if ((e.ctrlKey && e.shiftKey && (e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')) || (e.ctrlKey && (e.key==='U'||e.key==='u')) || (e.key==='F12')) { e.preventDefault(); return false; } });
 document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { const root=document.getElementById('modal-root'); if(root) root.style.display='none'; resumeVisuals('esc'); } });
@@ -1733,55 +1704,84 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { cons
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Notification Panel Logic
     const notificationBtn = document.getElementById('notification-btn');
     const notificationPanel = document.getElementById('notification-panel');
     const notificationCloseBtn = document.getElementById('notification-close-btn');
 
-    if (!notificationBtn || !notificationPanel || !notificationCloseBtn) {
-        console.error('Notification elements could not be found in the DOM.');
-        return;
+    if (notificationBtn && notificationPanel && notificationCloseBtn) {
+        function showPanel() {
+            notificationPanel.classList.add('show');
+            notificationPanel.setAttribute('aria-hidden', 'false');
+        }
+        function hidePanel() {
+            notificationPanel.classList.remove('show');
+            notificationPanel.setAttribute('aria-hidden', 'true');
+        }
+        notificationBtn.addEventListener('click', function(event) {
+            event.stopPropagation();
+            notificationPanel.classList.contains('show') ? hidePanel() : showPanel();
+        });
+        notificationCloseBtn.addEventListener('click', hidePanel);
+        document.addEventListener('click', function(event) {
+            if (notificationPanel.classList.contains('show') && !notificationPanel.contains(event.target) && !notificationBtn.contains(event.target)) {
+                hidePanel();
+            }
+        });
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && notificationPanel.classList.contains('show')) {
+                hidePanel();
+            }
+        });
     }
 
-    // Function to show the panel
-    function showPanel() {
-        notificationPanel.classList.add('show');
-        notificationPanel.setAttribute('aria-hidden', 'false');
+    // Download loading popup logic
+    const downloadBtn = document.getElementById('download-btn-header');
+    const loadingPopup = document.getElementById('loading-popup-overlay');
+    const loadingBar = document.getElementById('loading-bar-fill');
+    const loadingMsg = document.getElementById('loading-popup-message');
+
+    if (downloadBtn && loadingPopup && loadingBar && loadingMsg) {
+        downloadBtn.addEventListener('click', () => {
+            const url = downloadBtn.dataset.link;
+            const originalMsg = "Preparing your content, please wait...";
+
+            // Check if the link is properly configured
+            if (!url || url === 'https://www.youtube.com') {
+                loadingMsg.textContent = "Download link is not configured.";
+                loadingBar.style.width = '0%';
+                loadingPopup.classList.add('show');
+                setTimeout(() => {
+                    loadingPopup.classList.remove('show');
+                    // Reset message after a delay
+                    setTimeout(() => { loadingMsg.textContent = originalMsg; }, 300);
+                }, 2500);
+                return;
+            }
+
+            // 1. Reset bar state and show popup
+            loadingBar.style.transition = 'none';
+            loadingBar.style.width = '0%';
+            loadingPopup.classList.add('show');
+
+            // 2. Start the loading animation shortly after
+            setTimeout(() => {
+                loadingBar.style.transition = 'width 3s linear';
+                loadingBar.style.width = '100%';
+            }, 50);
+
+            // 3. After 3 seconds, open link and hide popup
+            setTimeout(() => {
+                window.open(url, '_blank', 'noopener,noreferrer');
+                loadingPopup.classList.remove('show');
+                // Reset bar for the next click after the popup fades out
+                setTimeout(() => {
+                    loadingBar.style.transition = 'none';
+                    loadingBar.style.width = '0%';
+                }, 300); // 300ms matches the fade-out duration
+            }, 3000);
+        });
     }
-
-    // Function to hide the panel
-    function hidePanel() {
-        notificationPanel.classList.remove('show');
-        notificationPanel.setAttribute('aria-hidden', 'true');
-    }
-
-    // Toggle panel on bell icon click
-    notificationBtn.addEventListener('click', function(event) {
-        event.stopPropagation(); // Prevents the document click listener from firing immediately
-        if (notificationPanel.classList.contains('show')) {
-            hidePanel();
-        } else {
-            showPanel();
-        }
-    });
-
-    // Hide panel on close button click
-    notificationCloseBtn.addEventListener('click', function() {
-        hidePanel();
-    });
-
-    // Hide panel when clicking outside of it
-    document.addEventListener('click', function(event) {
-        if (notificationPanel.classList.contains('show') && !notificationPanel.contains(event.target) && !notificationBtn.contains(event.target)) {
-            hidePanel();
-        }
-    });
-
-    // Hide panel on 'Escape' key press
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && notificationPanel.classList.contains('show')) {
-            hidePanel();
-        }
-    });
 });
 </script>
 </body>
