@@ -22,7 +22,7 @@
 
     body{
       /* PERFORMANCE: Replaced heavy GIF background with a static image */
-      background: url('assets/images/header.png') no-repeat center center fixed;
+      background: url('assets/images/background.png') no-repeat center center fixed;
       background-size: cover;
       background-color: #04060c; /* Fallback color */
       font-family:"Inter","Helvetica Neue",Arial,sans-serif;
@@ -186,7 +186,6 @@
 
     .vidu-vol-feedback{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003; padding:12px 18px; border-radius:12px; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.06); font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5); pointer-events:none; opacity:0; transition:opacity .28s ease; display:none; min-width:72px; text-align:center; }
     
-    /* NEW: Playback Speed Menu */
     .vidu-playback-menu {
         position: absolute;
         bottom: 78px;
@@ -258,10 +257,29 @@
     .fs-playlist-close-btn { margin-left: auto; background: none; border: none; color: var(--muted); font-size: 32px; line-height: 1; cursor: pointer; transition: color .2s ease, transform .2s ease; }
     .fs-playlist-close-btn:hover { color: var(--text); transform: scale(1.1) rotate(90deg); }
     .fs-playlist-content { flex: 1; overflow-y: auto; padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; align-content: start; }
-    .fs-playlist-item { background: rgba(255,255,255,0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--card-radius); padding: 12px; cursor: pointer; transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), background 0.25s var(--ease); will-change: transform; }
+    .fs-playlist-item { position: relative; background: rgba(255,255,255,0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--card-radius); padding: 12px; cursor: pointer; transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), background 0.25s var(--ease); will-change: transform; }
     .fs-playlist-item:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); background: var(--glass-strong); }
     .fs-playlist-item img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; margin-bottom: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
     .fs-playlist-item .title { font-weight: 700; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+    
+    /* NEW: Playlist video number badge */
+    .fs-playlist-item-number {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 2;
+        background: rgba(12, 14, 20, 0.8);
+        color: var(--text);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+        pointer-events: none;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
     .fs-playlist-loader { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(8, 9, 14, 0.7); }
     .fs-playlist-loader .spinner { width: 50px; height: 50px; border: 4px solid var(--glass-strong); border-top-color: var(--accent-2); border-radius: 50%; animation: spin 1s linear infinite; }
     .fs-playlist-loader p { margin-top: 16px; font-weight: 600; color: var(--muted); }
@@ -344,7 +362,7 @@
 </div>
 
 <script>
-// UPDATED PLAYER SCRIPT
+// PLAYER SCRIPT
 (function(){
   if(window.__viduPlayerLoaded) return;
   window.__viduPlayerLoaded = true;
@@ -363,7 +381,7 @@
     lastActivity: Date.now(),
     desiredPlaying: null,
     lastVolume: 100,
-    volumeFeedbackTimer: null, // New state for volume OSD
+    volumeFeedbackTimer: null,
     _menuOpenTs: 0
   };
 
@@ -430,7 +448,6 @@
     overlay.innerHTML = `<div class="inner-bg" aria-hidden="true"></div><button class="vidu-btn" id="vidu_playbtn">${playSVG()}</button><div class="vidu-time" id="vidu_cur">`+fmtHHMMSS(0)+`</div><input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" /><div class="vidu-time" id="vidu_dur">`+fmtHHMMSS(0)+`</div><button class="vidu-btn" id="vidu_playbackbtn" title="Playback speed" aria-label="Playback speed">`+gearSVG()+`</button><button class="vidu-btn" id="vidu_fullbtn">⤢</button>`;
     host.appendChild(overlay);
     
-    // New: Playback Speed Menu
     const playbackMenu = document.createElement('div');
     playbackMenu.className = 'vidu-playback-menu';
     playbackMenu.id = 'vidu_playback_menu';
@@ -459,7 +476,6 @@
     const playbackBtn = overlay.querySelector('#vidu_playbackbtn');
     const volFeedbackEl = host.querySelector('#vidu_vol_feedback');
 
-    // New: Playback Speed Menu Logic
     playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); });
     playbackMenu.addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON' && e.target.dataset.speed) {
@@ -472,7 +488,6 @@
             }
         }
     });
-    // New: Close menu when clicking outside
     state.docClickHandler = (e) => {
       if (playbackMenu.classList.contains('open') && !playbackMenu.contains(e.target) && !playbackBtn.contains(e.target)) {
         playbackMenu.classList.remove('open');
@@ -487,7 +502,6 @@
     function showLoading(){ try{ if(loadingDiv){ loadingDiv.classList.remove('hidden'); loadingDiv.style.display = 'flex'; } }catch(e){} }
     function hideLoading(){ try{ if(loadingDiv){ loadingDiv.classList.add('hidden'); setTimeout(()=> { try{ loadingDiv.style.display = 'none'; }catch(e){} }, 320); } }catch(e){} }
 
-    // New: Volume OSD Feedback Function
     function showVolumeFeedback(volume) {
         if (state.volumeFeedbackTimer) clearTimeout(state.volumeFeedbackTimer);
         volFeedbackEl.textContent = `${Math.round(volume)}%`;
@@ -507,7 +521,6 @@
       if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){ e.preventDefault(); toggleFullscreen(); return; }
       if(e.key === 'ArrowRight' || e.code === 'ArrowRight' || e.key === 'Right'){ e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek forward err', err); } return; }
       if(e.key === 'ArrowLeft' || e.code === 'ArrowLeft' || e.key === 'Left'){ e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek back err', err); } return; }
-      // New: Volume control with arrow keys
       if (e.key === 'ArrowUp' || e.code === 'ArrowUp') {
             e.preventDefault();
             if (state.player && typeof state.player.getVolume === 'function') {
@@ -792,6 +805,7 @@ async function openFullScreenPlaylist(item) {
   }
 }
 
+// UPDATED: Function to render playlist with numbers
 function renderFullScreenPlaylist(videos, title) {
   const titleEl = document.getElementById('fs-playlist-title');
   const countEl = document.getElementById('fs-playlist-count');
@@ -800,10 +814,14 @@ function renderFullScreenPlaylist(videos, title) {
   countEl.textContent = `${videos.length} Videos`;
   contentEl.innerHTML = '';
   const fragment = document.createDocumentFragment();
-  videos.forEach(video => {
+  videos.forEach((video, index) => {
     const li = document.createElement('div');
     li.className = 'fs-playlist-item';
-    li.innerHTML = `<img src="${escapeHtml(video.thumb)}" alt="${escapeHtml(video.title)}" loading="lazy" /><div class="title">${escapeHtml(video.title)}</div>`;
+    li.innerHTML = `
+        <div class="fs-playlist-item-number">${index + 1}</div>
+        <img src="${escapeHtml(video.thumb)}" alt="${escapeHtml(video.title)}" loading="lazy" />
+        <div class="title">${escapeHtml(video.title)}</div>
+    `;
     li.onclick = () => playVideoWithLoading({ videoId: video.videoId, title: video.title });
     fragment.appendChild(li);
   });
