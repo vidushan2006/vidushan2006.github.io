@@ -510,7 +510,9 @@
       { type: 'video', title: 'PHONK', idB64: btoa("m0fM0rBN7cQ"), passB64: btoa("")},
       { type: 'video', title: 'TEST', idB64: btoa("Lexok6H2c2s"), passB64: btoa("")},
       { type: 'playlist', title: 'ICT', idB64: btoa("PL9zX0VbNmKiFlxda5PCTn4_hA_7iKjEaA&si=9nF_7qpAzKt4cYZd"), passB64: btoa("6002vidu") },
-      { type: 'playlist', title: 'ET', idB64: btoa("PL9zX0VbNmKiF-Q7bnmM1v_DrT3_Ol-Of5&si=efJHPzWR-kZcGwYw"), passB64: btoa("amilaet") }
+      { type: 'playlist', title: 'ET Speed Revision', idB64: btoa("PL9zX0VbNmKiF-Q7bnmM1v_DrT3_Ol-Of5&si=efJHPzWR-kZcGwYw"), passB64: btoa("amilaet") },
+      { type: 'playlist', title: 'ET Theory', idB64: btoa("PL9zX0VbNmKiFKQ388JcZsq18mlyIe7BeI&si=cn4rwat6rsqC8kH_"), passB64: btoa("amilaet") }
+      
     ];
 
     /* ---------- utilities ---------- */
@@ -1560,8 +1562,11 @@
         const wrap = document.getElementById('iframe-wrap'); if(wrap) wrap.innerHTML = '';
         document.body.style.overflow = '';
         
-        // MODIFIED: Do not re-open the playlist. Clear the state.
-        lastOpenedPlaylistItem = null;
+        // MODIFIED: If we had a last opened playlist, reopen it.
+        if(lastOpenedPlaylistItem){
+          // tiny delay so close animations finish
+          setTimeout(()=> openPlaylistPopup(lastOpenedPlaylistItem), 120);
+        }
         
       }catch(e){}
     });
@@ -1579,8 +1584,10 @@
             document.body.style.overflow = '';
           }catch(e){}
 
-          // MODIFIED: Do not re-open the playlist. Clear the state.
-          lastOpenedPlaylistItem = null;
+          // MODIFIED: If we had a last opened playlist, reopen it.
+          if(lastOpenedPlaylistItem){
+            setTimeout(()=> openPlaylistPopup(lastOpenedPlaylistItem), 120);
+          }
 
         };
       } else {
