@@ -6,128 +6,385 @@
   <title>Private Classes — VIDU</title>
 
   <style>
-    /* ---- page layout & visuals (performance-optimized) ---- */
+    /* ---- page layout & visuals (self-contained) ---- */
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-    /* 1) Static background (no GIF, no fixed attachment) */
-    body{
-      background-image: url('assets/images/background.png');
-      background-position: center;
-      background-size: cover;
-      background-repeat: no-repeat;
-      background-attachment: scroll; /* less expensive than fixed */
-      color:#eaf7ea;
-      line-height:1.35;
-      -webkit-font-smoothing:antialiased;
-    }
+    /* MODIFIED: Changed background from GIF to static PNG */
+    body{background-image:url('assets/images/background.png'); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat; color:#eaf7ea; line-height:1.35}
 
-    /* topbar: remove heavy backdrop-filter and large shadows */
-    .topbar{position:fixed;left:0;right:0;top:0;z-index:120;
-      background:linear-gradient(180deg, rgba(8,10,10,0.6), rgba(8,10,10,0.25));
-      border-bottom:1px solid rgba(255,255,255,0.03);
-      box-shadow:0 6px 18px rgba(0,0,0,0.35)}
+    .topbar{position:fixed;left:0;right:0;top:0;z-index:120;background:linear-gradient(180deg, rgba(8,10,10,0.45), rgba(8,10,10,0.18));backdrop-filter:blur(6px) saturate(120%);border-bottom:1px solid rgba(255,255,255,0.03);box-shadow:0 6px 20px rgba(0,0,0,0.6)}
     .topbar-inner{max-width:1200px;margin:0 auto;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
     .left{display:flex;align-items:center;gap:14px}
-    .logo-btn{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:6px;background:linear-gradient(180deg,#07110a,#06200b);text-decoration:none}
+    .logo-btn{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:6px;background:linear-gradient(180deg,#07110a,#06200b);box-shadow:0 8px 26px rgba(0,0,0,0.6);text-decoration:none}
     .nav{display:flex;gap:12px;align-items:center}
     .nav a,.nav button{color:#dfeee1;text-decoration:none;padding:8px 10px;font-weight:700;border-radius:6px;font-size:14px;background:transparent;border:0;cursor:pointer}
-    /* remove small hover translate to avoid composite layers thrash */
-    .nav a:hover,.nav button:hover{opacity:0.95;transition:opacity .12s ease}
+    .nav a:hover,.nav button:hover{transform:translateY(-2px);transition:transform .18s ease}
 
     .page{margin-top:100px;min-height:calc(100vh - 120px)}
     .container{max-width:1200px;margin:0 auto;padding:28px}
-    .title{font-size:42px;color:#fff;margin-bottom:8px;font-weight:900;text-shadow:0 6px 18px rgba(0,0,0,0.45)}
+    .title{font-size:42px;color:#fff;text-shadow:0 8px 36px rgba(0,0,0,0.65);margin-bottom:8px;font-weight:900}
     .subtitle{color:rgba(230,240,230,0.78);margin-bottom:32px;font-size:15px}
 
     .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;align-items:start}
     @media (min-width:900px){ .tiles{grid-template-columns:repeat(4,1fr)} }
     @media (max-width:640px){ .tiles{grid-template-columns:1fr;gap:14px; justify-items:center;} .card{width:100%;max-width:420px;} }
 
-    /* unified card styling (reduced shadows / removed transform animations) */
-    .card{display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.45));border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.45);min-height:300px}
-    /* removed hover translate & heavy shadow to reduce repaints */
+    /* unified card styling */
+    .card{display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.45));border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:transform .22s,box-shadow .22s;box-shadow:0 14px 30px rgba(0,0,0,0.55);min-height:300px}
+    .card:hover{transform:translateY(-8px);box-shadow:0 34px 60px rgba(0,0,0,0.65)}
     .card-media{position:relative;height:220px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.95), rgba(0,0,0,0.75));border-bottom:1px solid rgba(255,255,255,0.03);overflow:visible}
 
-    /* neon text: reduced glow and removed mix-blend (expensive) */
-    .neon-wrap{position:relative;z-index:1;width:240px;max-width:240px;display:block;margin:0 auto;overflow:hidden;text-align:center;pointer-events:none}
-    .neon{font-weight:900;letter-spacing:6px;color:#00ff3a;text-shadow:0 0 6px rgba(0,255,120,0.45);line-height:0.9;transform:translateY(-6px);pointer-events:none;user-select:none;white-space:nowrap;font-size:48px !important;}
-    .neon.small{font-size:48px !important;letter-spacing:4px}
-    .neon-reflect{position:relative;text-align:center;transform:scaleY(-1);opacity:0.16;filter:blur(2px);font-weight:900;color:#00ff3a;pointer-events:none;white-space:nowrap;font-size:48px !important;margin-top:6px}
+    /*
+      Fixed neon area logic:
+      - .neon-wrap has a fixed width that is wide enough to show five characters with .neon size.
+      - .neon has a single fixed font-size so no JS resizing needed.
+      - This ensures consistency across all thumbnails and avoids getting clipped or hidden.
+    */
+    .neon-wrap{
+      position:relative;
+      z-index:1;
+      /* fixed width chosen so five typical uppercase letters will fit */
+      width: 240px;
+      max-width: 240px;
+      display:block;
+      margin:0 auto;
+      overflow:hidden; /* clip glow/reflection */
+      text-align:center;
+      pointer-events:none;
+    }
 
-    .card-caption{padding:14px 12px 18px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.01));display:flex;flex-direction:column;align-items:center;gap:6px}
+    .neon{
+      font-weight:900;
+      letter-spacing:6px;
+      color:#00ff3a;
+      text-shadow:0 0 6px rgba(0,255,120,0.95),0 0 18px rgba(0,255,120,0.45),0 18px 28px rgba(0,0,0,0.6);
+      mix-blend-mode:screen;
+      line-height:0.9;
+      transform:translateY(-6px);
+      pointer-events:none;
+      user-select:none;
+      white-space:nowrap;
+      /* fixed font-size to guarantee 5 letters fit inside 240px neon-wrap */
+      font-size:48px !important;
+    }
+
+    /* smaller variant when the neon text is intentionally shorter */
+    .neon.small{
+      font-size:48px !important;
+      letter-spacing:4px;
+    }
+
+    .neon-reflect{
+      position:relative;
+      text-align:center;
+      transform:scaleY(-1);
+      opacity:0.22;
+      filter:blur(4px);
+      font-weight:900;
+      color:#00ff3a;
+      mix-blend-mode:screen;
+      pointer-events:none;
+      white-space:nowrap;
+      font-size:48px !important;
+      margin-top:6px;
+    }
+
+    .card-caption{padding:14px 12px 18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));display:flex;flex-direction:column;align-items:center;gap:6px}
     .card-title{font-weight:800;color:#eaf8ea;font-size:14px;text-align:center}
     .card-type{font-size:11px;color:rgba(170,255,190,0.92);font-weight:700;text-transform:uppercase}
 
     .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.62);z-index:300;padding:18px}
     .modal.hidden{display:none}
-    .modal-box{max-width:420px;width:100%;background:linear-gradient(180deg, rgba(8,10,8,0.98), rgba(6,8,6,0.95));border-radius:12px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,0.5);color:#fff;text-align:center;position:relative}
+    .modal-box{max-width:420px;width:100%;background:linear-gradient(180deg, rgba(8,10,8,0.98), rgba(6,8,6,0.95));border-radius:12px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.7);color:#fff;text-align:center;position:relative}
     .modal-close{position:absolute;right:10px;top:10px;background:transparent;border:none;color:#ddd;font-size:18px;cursor:pointer}
     .modal-preview{height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
-
-    .pw-input, .login-input{width:100%;padding:12px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;margin-top:10px;font-size:15px;}
+    
+    .pw-input, .login-input{width:100%;padding:12px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#fff;margin-top:10px;font-size:15px;}
     .pw-actions, .login-actions{display:flex;gap:8px;margin-top:16px;justify-content:center}
-    .btn{padding:10px 18px;border-radius:8px;border:none;font-weight:700;cursor:pointer;background:linear-gradient(180deg,#00c85f,#00a955);color:white;font-size:15px}
+    .btn{padding:10px 18px;border-radius:8px;border:none;font-weight:700;cursor:pointer;background:linear-gradient(180deg,#00c85f,#00a955);color:white;font-size:15px;transition: transform 0.18s ease;}
+    .btn:hover{transform: translateY(-2px);}
     .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#dfeee1}
 
-    .login-btn-top{background: linear-gradient(180deg, #00b86a, #008f55);color: white;font-weight:700;font-size:14px;padding:10px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);cursor:pointer}
-    .login-btn-top:disabled { background: linear-gradient(180deg, #073a1e, #06200b); cursor: default; opacity: 0.85; }
+    /* NEW LOGIN BUTTON STYLE */
+    .login-btn-top{
+        background: linear-gradient(180deg, #00b86a, #008f55);
+        color: white;
+        font-weight: 700;
+        font-size: 14px;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.05);
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    .login-btn-top:hover{
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .login-btn-top:disabled {
+        background: linear-gradient(180deg, #073a1e, #06200b);
+        cursor: default;
+        opacity: 0.8;
+        transform: none;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
 
-    /* Viewer area: make player use full space by default; playlist is hidden unless explicitly shown */
     .viewer{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.78);z-index:400;padding:22px}
     .viewer.hidden{display:none}
-    .viewer-inner{width:100%;max-width:1100px;height:72vh;border-radius:12px;overflow:hidden;background:rgba(2,2,2,0.85);position:relative;box-shadow:0 14px 40px rgba(0,0,0,0.6);display:flex;flex-direction:column}
+    .viewer-inner{width:100%;max-width:1100px;height:72vh;border-radius:12px;overflow:hidden;background:rgba(2,2,2,0.75);position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.8);display:flex;flex-direction:column}
     .viewer-close{position:absolute;top:10px;right:10px;background:transparent;border:none;color:#ddd;font-size:20px;cursor:pointer;z-index:5}
 
-    .now-playing { width:100%; padding:10px 16px; box-sizing:border-box; background:linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.45)); color:#e8f7e8; font-weight:900; font-size:15px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,255,255,0.03); z-index:8; }
+    /* Now playing title (new): sits above the player */
+    .now-playing {
+      width:100%;
+      padding:10px 16px;
+      box-sizing:border-box;
+      background:linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.45));
+      color:#e8f7e8;
+      font-weight:900;
+      letter-spacing:0.6px;
+      font-size:15px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      border-bottom:1px solid rgba(255,255,255,0.03);
+      z-index:8;
+    }
     .now-playing .label { color:rgba(200,255,190,0.85); font-weight:800; font-size:13px; opacity:0.95; text-transform:uppercase; }
     .now-playing .title { color:#fff; font-size:15px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    /* make iframe-wrap take all available space by default */
-    .iframe-wrap{width:100%;flex:1;display:block;background:#000;position:relative;border-bottom:1px solid rgba(255,255,255,0.03)}
-    /* playlist hidden unless explicitly shown */
-    .viewer-playlist{width:100%;display:none;box-sizing:border-box;overflow:auto;padding:10px;background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.08));}
-    .viewer-playlist .list-item{display:flex;align-items:center;gap:12px;padding:8px;border-radius:8px;cursor:pointer;background:transparent}
+    /* MODIFIED: Player wrap now takes 100% height */
+    .iframe-wrap{width:100%;height:100%;display:block;background:#000;position:relative;border-bottom:1px solid rgba(255,255,255,0.03)}
+    /* MODIFIED: Playlist area inside player is now hidden */
+    .viewer-playlist{width:100%;height:0;display:none;box-sizing:border-box;overflow:auto;padding:0;background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.08));}
+    .viewer-playlist .list-item{display:flex;align-items:center;gap:12px;padding:8px;border-radius:8px;cursor:pointer;background:transparent;transition:background .12s}
     .viewer-playlist .list-item:hover{background:rgba(255,255,255,0.02)}
-    .viewer-playlist img{width:120px;height:68px;object-fit:cover;border-radius:6px;flex:0 0 120px}
+    .viewer-playlist img{width:120px;height:68px;object-fit:cover;border-radius:6px;flex:0 0 120px;}
     .playlist-meta{flex:1;display:flex;flex-direction:column;gap:6px}
     .playlist-title{font-size:14px;font-weight:700;color:#fff}
     .playlist-sub{font-size:12px;color:rgba(220,220,220,0.7)}
 
-    /* player UI: keep but simplified */
+/* ===== player UI styles (must match JS expectations) ===== */
     .vidu-player-host{position:relative;width:100%;height:100%;overflow:hidden;border-radius:8px;background:#000}
     .vidu-mount{width:100%;height:100%;background:#000}
     .vidu-mount iframe{width:100%;height:100%;border:0;display:block}
 
-    .vidu-loading{position:absolute;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background-image: url('assets/images/header.png');background-repeat:no-repeat;background-position:center;background-size:cover;pointer-events:none}
-    .vidu-loading.hidden{opacity:0;display:none}
+/* loading overlay (shows header.png until playback begins) */
+    .vidu-loading{position:absolute;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background-image: url('assets/images/header.png');background-repeat:no-repeat;background-position:center;background-size:cover;transition:opacity .28s ease;pointer-events:none}
+    .vidu-loading.hidden{opacity:0;transform:scale(1.02);pointer-events:none;display:none}
 
-    .vidu-controls-bg{position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.75));pointer-events:none;z-index:9996}
+    .vidu-controls-bg{position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.75));pointer-events:none;z-index:9996;opacity:1;transition:opacity .22s ease, transform .22s ease;backdrop-filter:blur(4px)}
+    .vidu-controls-bg.hidden{opacity:0;transform:translateY(6px)}
+
     .vidu-overlay{position:absolute;left:12px;right:12px;bottom:12px;z-index:9999;display:flex;gap:12px;align-items:center;padding:8px 12px;border-radius:10px;box-sizing:border-box;pointer-events:auto}
-    .vidu-btn{background:rgba(255,255,255,0.06);color:#fff;padding:8px;border-radius:22px;cursor:pointer;font-weight:700;border:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;width:46px;height:46px}
+    .vidu-overlay.hidden{opacity:0;transform:translateY(6px);pointer-events:none}
+
+    .vidu-overlay .inner-bg{position:absolute;inset:0;border-radius:10px;pointer-events:none;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));z-index:-1}
+
+    .vidu-btn{background:rgba(255,255,255,0.06);color:#fff;padding:8px;border-radius:22px;cursor:pointer;font-weight:700;user-select:none;border:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;width:46px;height:46px;transition:transform .12s ease}
+    .vidu-btn:active{transform:scale(.96)}
+
     .vidu-range{flex:1;-webkit-appearance:none;height:8px;border-radius:8px;background:rgba(255,255,255,0.06)}
+    .vidu-range::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#39ff14;box-shadow:0 2px 8px rgba(0,0,0,0.5);border:2px solid rgba(0,0,0,0.18);margin-top:-4px}
+    .vidu-range::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#39ff14;border:2px solid rgba(0,0,0,0.18)}
+
     .vidu-time{min-width:90px;font-size:14px;font-weight:800;color:#cbd5ff;text-align:center;letter-spacing:1px}
 
-    .vidu-close-btn{position:absolute;top:10px;right:10px;z-index:10002;width:36px;height:36px;padding:6px;border-radius:8px;background:rgba(0,0,0,0.46);border:1px solid rgba(255,255,255,0.06);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,0.45)}
+    .vidu-close-btn{position:absolute;top:10px;right:10px;z-index:10002;width:36px;height:36px;padding:6px;border-radius:8px;background:rgba(0,0,0,0.46);border:1px solid rgba(255,255,255,0.06);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.6);transition:opacity .18s ease,transform .18s ease}
+    .vidu-close-btn.hidden{opacity:0;transform:translateY(-6px);pointer-events:none}
 
-    /* lighter volume overlay */
-    .vidu-volume-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 100010; }
-    .vidu-volume-card { pointer-events: none; display: flex; gap: 12px; align-items: center; justify-content: center; min-width: 140px; padding: 10px 14px; border-radius: 12px; background: rgba(8,10,8,0.96); box-shadow: 0 8px 28px rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.04); transform: scale(0.96); opacity: 0; transition: transform .16s ease, opacity .16s ease; color: #f4fff4; font-weight:900; letter-spacing:0.6px; }
-    .vidu-volume-overlay.visible .vidu-volume-card { transform: scale(1); opacity: 1; }
-    .vidu-vol-icon { width: 36px; height: 36px; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius: 8px; border: 1px solid rgba(255,255,255,0.03); }
-    .vidu-vol-percent { font-size:18px; font-weight:900; color: #e8ffe8; min-width:46px; text-align:left; }
+    /* ===== NEW: Centered volume feedback (modern style) ===== */
+    .vidu-volume-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 100010; /* above controls */
+    }
+    .vidu-volume-card {
+      pointer-events: none;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      min-width: 140px;
+      max-width: 320px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      /* CHANGED: opaque dark background so it remains visible on white videos */
+      background: linear-gradient(180deg, rgba(8,10,8,0.98), rgba(12,14,12,0.96));
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(6px) saturate(120%);
+      transform: scale(0.86);
+      opacity: 0;
+      transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .22s ease;
+      color: #f4fff4;
+      font-weight:900;
+      letter-spacing:0.6px;
+    }
+    .vidu-volume-overlay.visible .vidu-volume-card {
+      transform: scale(1);
+      opacity: 1;
+    }
+    .vidu-vol-icon {
+      width: 36px;
+      height: 36px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+      flex: 0 0 36px;
+    }
+    .vidu-vol-percent {
+      font-size:18px;
+      font-weight:900;
+      color: #e8ffe8;
+      min-width:46px;
+      text-align:left;
+    }
+    .vidu-vol-sub { font-size:11px; color: rgba(220,255,220,0.7); font-weight:800; margin-left:6px; }
+    @media (max-width:720px){
+      .vidu-volume-card { min-width:120px; padding:10px 14px; }
+      .vidu-vol-percent { font-size:16px; }
+    }
 
-    /* Playlist popup & loading popup: unchanged except lighter shadows */
-    .playlist-popup { position: fixed; inset: 12px; z-index: 600; display: none; align-items: center; justify-content: center; pointer-events: auto; }
+    /* Lightweight inline styles for the playback menu (kept here so no external changes needed) */
+    .vidu-playback-menu {
+      position:absolute;
+      z-index:100005;
+      background:linear-gradient(180deg,#111,#0b0b0b);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:8px;
+      padding:6px;
+      box-shadow:0 12px 30px rgba(0,0,0,0.6);
+      min-width:88px;
+    }
+    .vidu-playback-item {
+      display:block;
+      padding:8px 10px;
+      color:#e6f7e6;
+      text-align:center;
+      font-weight:800;
+      cursor:pointer;
+      border-radius:6px;
+      margin:4px 0;
+      background:transparent;
+      font-size:13px;
+    }
+    .vidu-playback-item:hover { background:rgba(255,255,255,0.03); }
+    .vidu-playback-item.active { background:rgba(57,255,20,0.12); color:#dfffd6; }
+
+    /* ===== NEW: Playlist full-screen popup UI ===== */
+    .playlist-popup {
+      position: fixed;
+      inset: 12px;
+      z-index: 600;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
     .playlist-popup.visible { display:flex; }
-    .playlist-popup-inner { width: 100%; height: 100%; background: linear-gradient(180deg, rgba(8,10,8,0.98), rgba(6,8,6,0.95)); border-radius: 14px; box-shadow: 0 20px 80px rgba(0,0,0,0.6); padding: 18px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; }
-    .loading-popup { position: fixed; inset: 0; z-index: 800; display:none; align-items:center; justify-content:center; pointer-events: none; }
+    .playlist-popup-inner {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(8,10,8,0.98), rgba(6,8,6,0.95));
+      border-radius: 14px;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.8);
+      padding: 18px;
+      box-sizing: border-box;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .playlist-popup-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .playlist-popup-count {
+      font-weight:900;
+      color:#eaf7ea;
+      background: linear-gradient(90deg, rgba(0,255,140,0.08), rgba(255,255,255,0.01));
+      padding:8px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      box-shadow: 0 6px 22px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .playlist-popup-title {
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+      flex:1;
+      text-align:left;
+      margin-left:16px;
+    }
+    .playlist-popup-close {
+      border:0;
+      background:transparent;
+      color:#ddd;
+      font-weight:800;
+      font-size:20px;
+      cursor:pointer;
+    }
+    .playlist-popup-body {
+      overflow:auto;
+      border-radius:10px;
+      padding:8px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.01));
+      flex:1;
+    }
+    .playlist-item {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:12px;
+      border-radius:10px;
+      transition: background .12s, transform .08s;
+      cursor:pointer;
+      margin-bottom:8px;
+      background:transparent;
+    }
+    .playlist-item:hover { background: rgba(255,255,255,0.02); transform: translateY(-2px); }
+    .playlist-item img { width:140px; height:78px; object-fit:cover; border-radius:8px; flex:0 0 140px; }
+    .playlist-item .meta { display:flex; flex-direction:column; gap:6px; }
+    .playlist-item .meta .t { font-weight:800; color:#fff; font-size:14px; }
+    .playlist-item .meta .s { color: rgba(220,220,220,0.75); font-size:12px; }
+
+    /* ===== NEW: Loading popup with rounded progress bar ===== */
+    .loading-popup {
+      position: fixed;
+      inset: 0;
+      z-index: 800;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      pointer-events: none;
+    }
     .loading-popup.visible { display:flex; pointer-events:auto; }
-    .loading-card { width: min(540px, 90%); background: linear-gradient(180deg, rgba(10,12,10,0.95), rgba(6,8,6,0.96)); padding: 18px; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); text-align:center; color:#eaf7ea; border: 1px solid rgba(255,255,255,0.03); }
+    .loading-card {
+      width: min(540px, 90%);
+      background: linear-gradient(180deg, rgba(10,12,10,0.95), rgba(6,8,6,0.96));
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+      text-align:center;
+      color:#eaf7ea;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .loading-label { font-weight:900; margin-bottom:12px; font-size:16px; }
     .loading-bar-wrap { background: rgba(255,255,255,0.04); border-radius: 999px; height: 14px; overflow:hidden; }
     .loading-bar { height:100%; width:0%; border-radius:999px; background: linear-gradient(90deg,#00ff8a,#00b86a); transition: width 2s linear; }
-
-    /* remove global transitions which cause paint churn */
-    * { transition: none !important; -webkit-transition: none !important; -moz-transition: none !important; }
 
     .copyright{text-align:center;margin-top:28px;color:rgba(255,255,255,0.85);font-size:13px}
   </style>
@@ -212,7 +469,6 @@
     </div>
   </div>
 
-  <!-- playlist popup -->
   <div id="playlist-popup" class="playlist-popup" aria-hidden="true">
     <div class="playlist-popup-inner" role="dialog" aria-modal="true" aria-label="Playlist">
       <div class="playlist-popup-header">
@@ -239,8 +495,9 @@
   (function(){
     /* ---------- configuration ---------- */
     const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c'; // keep your key here (used for playlist fetching)
-    const YT_API_LOAD_TIMEOUT = 18000; // ms
+    const YT_API_LOAD_TIMEOUT = 18000; // ms - how long to wait for YT API before showing error
 
+    /* NEW: User Credentials - Configure usernames and passwords here */
     const userCredentials = {
       'vidu': 'vidu123',
       'Imal': '123',
@@ -248,6 +505,7 @@
     };
     let isLoggedIn = false;
 
+    /* ---------- sample items (unchanged layout) ---------- */
     const items = [
       { type: 'video', title: 'PHONK', idB64: btoa("m0fM0rBN7cQ"), passB64: btoa("")},
       { type: 'video', title: 'TEST', idB64: btoa("Lexok6H2c2s"), passB64: btoa("")},
@@ -255,6 +513,7 @@
       { type: 'playlist', title: 'ET', idB64: btoa("PL9zX0VbNmKiF-Q7bnmM1v_DrT3_Ol-Of5&si=efJHPzWR-kZcGwYw"), passB64: btoa("amilaet") }
     ];
 
+    /* ---------- utilities ---------- */
     function escapeHtml(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function neonTextFor(title){
       if(!title) return '';
@@ -267,6 +526,7 @@
       try { return atob(idB64 || '').split('&')[0]; } catch(e){ console.warn('Invalid idB64', idB64, e); return ''; }
     }
 
+    /* ---------- render tiles (neon-wrap fixed-size approach) ---------- */
     function buildTiles(){
       const tiles = document.getElementById('tiles');
       tiles.innerHTML = '';
@@ -291,16 +551,18 @@
             <div class="card-type">${escapeHtml(it.type)}</div>
           </div>
         `;
+        // Click handler now checks type: open playlist-popup or viewer.
         card.addEventListener('click', ()=> handleTileClick(it));
         tiles.appendChild(card);
       });
     }
 
+    /* ---------- modal helpers ---------- */
     function showModal(el){ el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
     function closeModal(el){ el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
 
-    /* playlist popup state (kept) */
-    let lastOpenedPlaylistItem = null;
+    /* ---------- NEW: Playlist popup helpers & state ---------- */
+    let lastOpenedPlaylistItem = null; // remember playlist so we can re-open after closing player
 
     const playlistPopup = document.getElementById('playlist-popup');
     const playlistBody = document.getElementById('playlist-popup-body');
@@ -311,6 +573,7 @@
     const loadingBar = document.getElementById('loading-bar');
 
     function openPlaylistPopup(item){
+      // item = {type:'playlist', title, idB64, ...}
       lastOpenedPlaylistItem = item;
       playlistTitleEl.textContent = item.title || 'Playlist';
       playlistCountEl.textContent = 'Loading...';
@@ -318,6 +581,7 @@
       playlistPopup.classList.add('visible');
       playlistPopup.setAttribute('aria-hidden','false');
       document.body.style.overflow = 'hidden';
+      // fetch playlist items
       (async ()=>{
         try{
           const rawId = normalizeIdFromB64(item.idB64 || '');
@@ -341,6 +605,7 @@
             `;
             node.tabIndex = 0;
             function clickHandler(){
+              // close playlist, show loading progress, then open player for this video
               closePlaylistPopup();
               showLoadingPopupThenPlay(v);
             }
@@ -348,6 +613,7 @@
             node.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key === ' ') { e.preventDefault(); clickHandler(); }});
             playlistBody.appendChild(node);
           });
+          // scroll to top
           playlistBody.scrollTop = 0;
         }catch(err){
           playlistBody.innerHTML = `<div style="padding:18px;color:#ffdede">Failed to load playlist: ${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
@@ -366,31 +632,38 @@
     playlistPopup.addEventListener('click', (e)=> { if(e.target === playlistPopup) closePlaylistPopup(); });
 
     function showLoadingPopupThenPlay(v){
+      // show loading popup with bar filling for 2 seconds, then open player
       loadingBar.style.transition = 'none';
       loadingBar.style.width = '0%';
       loadingPopup.classList.add('visible');
       loadingPopup.setAttribute('aria-hidden','false');
       document.body.style.overflow = 'hidden';
+      // ensure transition kicks in
       setTimeout(()=>{
         loadingBar.style.transition = 'width 2s linear';
         loadingBar.style.width = '100%';
       }, 20);
       setTimeout(()=>{
+        // hide loading, then open viewer with this video
         loadingPopup.classList.remove('visible');
         loadingPopup.setAttribute('aria-hidden','true');
         loadingBar.style.transition = 'none';
         loadingBar.style.width = '0%';
         document.body.style.overflow = '';
+        // construct a video item and open viewer
         const videoItem = { type: 'video', title: v.title, idB64: btoa(v.videoId) };
         openViewer(videoItem);
-      }, 2000);
+      }, 2000); // exactly 2 seconds as requested
     }
 
+    /* ---------- NEW: Adjust handleTileClick so playlists open popup instead of the mixed viewer auto-play ---------- */
     function handleTileClick(item) {
         if (isLoggedIn) {
             if(item && item.type === 'playlist'){
               openPlaylistPopup(item);
             } else {
+              // Clear this in case a playlist was opened previously
+              lastOpenedPlaylistItem = null;
               openViewer(item);
             }
         } else {
@@ -398,6 +671,7 @@
         }
     }
 
+    /* ---------- (Original) password modal - kept for integrity ---------- */
     let currentItem = null;
     const pwModal = document.getElementById('pw-modal');
     const pwTitleEl = document.getElementById('pw-title');
@@ -450,6 +724,7 @@
     pwClose.addEventListener('click', ()=> closeModal(pwModal));
     pwModal.addEventListener('click', (e)=> { if(e.target === pwModal) closeModal(pwModal); });
 
+    /* ---------- YT API loader (no iframe fallback) ---------- */
     function loadYTApi(){
       if(window.YT && window.YT.Player) return Promise.resolve();
       if(window._vidu_loading_yt_promise) return window._vidu_loading_yt_promise;
@@ -525,6 +800,7 @@
         mount.style.height = '100%'; mount.style.background = '#000';
         host.appendChild(mount);
 
+        // Loading overlay - show header.png until playback begins
         const loadingDiv = document.createElement('div');
         loadingDiv.className = 'vidu-loading';
         loadingDiv.id = 'vidu_loading';
@@ -543,6 +819,7 @@
         `;
         host.appendChild(overlay);
 
+        // Close button
         const closeBtn = document.createElement('button');
         closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
         closeBtn.addEventListener('click', ()=> {
@@ -555,18 +832,21 @@
         });
         host.appendChild(closeBtn);
 
+        // -------- Create fresh volume overlay (clean, modern) --------
         const volWrap = document.createElement('div');
         volWrap.className = 'vidu-volume-overlay';
         volWrap.setAttribute('aria-hidden','true');
         volWrap.innerHTML = `
           <div class="vidu-volume-card" role="status" aria-live="polite">
-            <div class="vidu-vol-icon" id="vidu_vol_icon"></div>
+            <div class="vidu-vol-icon" id="vidu_vol_icon">
+              </div>
             <div style="display:flex;flex-direction:column;align-items:flex-start;justify-content:center">
               <div class="vidu-vol-percent" id="vidu_vol_pct">100%</div>
               <div class="vidu-vol-sub" id="vidu_vol_sub">Volume</div>
             </div>
           </div>
         `;
+        // ensure overlay sits above content and doesn't block pointer events
         host.appendChild(volWrap);
 
         wrap.appendChild(host);
@@ -586,11 +866,14 @@
       }
 
       async function createYTPlayer(videoId, mountRootId='player-wrap'){
+        // ensure YT API loaded (throws if not)
         await loadYTApi();
 
+        // create host + mount now that API is available
         const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, volWrap } = createHostElementsIn(mountRootId);
         state.host = host; state.mount = mount;
 
+        // saved styles container so we can restore when exit fullscreen
         const saved = { stored:false, host:{}, mount:{}, iframe:{} };
 
         const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -600,7 +883,9 @@
         const playbackBtn = overlay.querySelector('#vidu_playbackbtn');
         const fullBtn = overlay.querySelector('#vidu_fullbtn');
 
+        // -------- volume overlay helpers (fresh implementation) --------
         function renderVolIcon(vol){
+          // simple speaker icon with waves; muted when vol === 0
           const muted = (vol === 0);
           if(muted){
             return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 6L6 10H3v4h3l5 4V6z" fill="#fff" opacity="0.96"/><path d="M19 9l-1.4-1.4L16 9.2 17.4 10.6 19 9z" fill="#fff"/><line x1="21" y1="3" x2="3" y2="21" stroke="#ff7f7f" stroke-width="1.6" stroke-linecap="round"/></svg>`;
@@ -620,23 +905,46 @@
             if(iconEl) iconEl.innerHTML = renderVolIcon(pct);
             volWrap.classList.add('visible');
             volWrap.setAttribute('aria-hidden','false');
+
+            // clear previous timer
             if(state.volumeHideTimer) { clearTimeout(state.volumeHideTimer); state.volumeHideTimer = null; }
+
+            // hide after 3s
             state.volumeHideTimer = setTimeout(()=>{
-              try{ volWrap.classList.remove('visible'); volWrap.setAttribute('aria-hidden','true'); state.volumeHideTimer = null; }catch(e){}
-            }, 2500);
+              try{
+                volWrap.classList.remove('visible');
+                volWrap.setAttribute('aria-hidden','true');
+                state.volumeHideTimer = null;
+              }catch(e){}
+            }, 3000);
           }catch(e){ console.warn('showVolumeOverlay err', e); }
         }
 
         function hideVolumeOverlayImmediate(){
           try{
             if(state.volumeHideTimer){ clearTimeout(state.volumeHideTimer); state.volumeHideTimer = null; }
-            if(volWrap){ volWrap.classList.remove('visible'); volWrap.setAttribute('aria-hidden','true'); }
+            if(volWrap){
+              volWrap.classList.remove('visible');
+              volWrap.setAttribute('aria-hidden','true');
+            }
           }catch(e){}
         }
 
         function getFullscreenElement(){
           return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
         }
+
+        const savedResizeHandler = ()=> {
+          try{
+            const curFS = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
+            const stillOurFS = !!(curFS && (curFS === host || host.contains(curFS) || (curFS.contains && curFS.contains(host))));
+            if(stillOurFS){
+              try{ host.style.width = window.innerWidth + 'px'; host.style.height = window.innerHeight + 'px'; }catch(e){}
+              try{ mount.style.height = window.innerHeight + 'px'; }catch(e){}
+              try{ const ifr = host.querySelector('iframe'); if(ifr) ifr.style.height = window.innerHeight + 'px'; }catch(e){}
+            }
+          }catch(e){}
+        };
 
         function toggleFullscreen(){
           const fs = getFullscreenElement();
@@ -650,11 +958,22 @@
         }
         fullBtn.addEventListener('click', toggleFullscreen);
 
-        // playback menu simplified
+        // Playback menu implementation
         let playbackMenu = null;
         let menuOpen = false;
-        function closePlaybackMenu(){ if(!playbackMenu) return; try{ playbackMenu.remove(); }catch(e){} playbackMenu = null; menuOpen=false; document.removeEventListener('click', docClickCloseHandler); }
-        function docClickCloseHandler(e){ if(!playbackMenu) return; if(playbackMenu.contains(e.target) || playbackBtn.contains(e.target)) return; closePlaybackMenu(); }
+
+        function closePlaybackMenu(){
+          if(!playbackMenu) return;
+          try{ playbackMenu.remove(); }catch(e){}
+          playbackMenu = null;
+          menuOpen = false;
+          document.removeEventListener('click', docClickCloseHandler);
+        }
+        function docClickCloseHandler(e){
+          if(!playbackMenu) return;
+          if(playbackMenu.contains(e.target) || playbackBtn.contains(e.target)) return;
+          closePlaybackMenu();
+        }
 
         function formatRateLabel(r){ return (Math.round(r*100)/100) + '×'; }
 
@@ -665,9 +984,20 @@
           playbackMenu.setAttribute('role','menu');
           playbackMenu.setAttribute('aria-label','Playback speed menu');
 
+          // get available rates from player if possible
           let rates = [0.25,0.5,0.75,1,1.25,1.5,1.75,2];
-          try{ if(state.player && typeof state.player.getAvailablePlaybackRates === 'function'){ const avail = state.player.getAvailablePlaybackRates() || []; if(Array.isArray(avail) && avail.length) rates = avail.slice(); } }catch(e){}
-          const set = {}; rates.forEach(r=> set[Number(r)] = true); if(!set[1]) rates.push(1); rates = Object.keys(set).map(Number).sort((a,b)=>a-b);
+          try{
+            if(state.player && typeof state.player.getAvailablePlaybackRates === 'function'){
+              const avail = state.player.getAvailablePlaybackRates() || [];
+              if(Array.isArray(avail) && avail.length) rates = avail.slice();
+            }
+          }catch(e){}
+          // ensure 1 is included & unique sorted
+          const set = {};
+          rates.forEach(r=> set[Number(r)] = true);
+          if(!set[1]) rates.push(1);
+          rates = Object.keys(set).map(Number).sort((a,b)=>a-b);
+
           const curRate = (state.player && typeof state.player.getPlaybackRate === 'function') ? (state.player.getPlaybackRate()||1) : 1;
 
           rates.forEach(r=>{
@@ -678,26 +1008,46 @@
             btn.textContent = formatRateLabel(r);
             btn.addEventListener('click', (ev)=>{
               ev.stopPropagation();
-              try{ if(state.player && typeof state.player.setPlaybackRate === 'function'){ state.player.setPlaybackRate(Number(r)); } closePlaybackMenu(); try{ playbackBtn.title = 'Playback speed: ' + formatRateLabel(r); playbackBtn.setAttribute('aria-label','Playback speed ' + formatRateLabel(r)); }catch(e){} }catch(e){ console.warn('setPlaybackRate err', e); }
+              try{
+                if(state.player && typeof state.player.setPlaybackRate === 'function'){
+                  state.player.setPlaybackRate(Number(r));
+                }
+                closePlaybackMenu();
+                // update button title to reflect selection (for screen readers / tooltip)
+                try{ playbackBtn.title = 'Playback speed: ' + formatRateLabel(r); playbackBtn.setAttribute('aria-label','Playback speed ' + formatRateLabel(r)); }catch(e){}
+              }catch(e){ console.warn('setPlaybackRate err', e); }
             });
             playbackMenu.appendChild(btn);
           });
 
+          // position it above the playbackBtn
           overlay.appendChild(playbackMenu);
+          // compute left offset so it aligns with the button
           try{
             const overlayRect = overlay.getBoundingClientRect();
             const btnRect = playbackBtn.getBoundingClientRect();
-            const left = Math.max(8, (btnRect.left - overlayRect.left) + (btnRect.width/2) - 44);
+            const left = Math.max(8, (btnRect.left - overlayRect.left) + (btnRect.width/2) - 44); // center menu above button (menu ~88px)
             playbackMenu.style.left = left + 'px';
-            playbackMenu.style.bottom = (overlayRect.bottom - overlayRect.top + 8) + 'px';
-          }catch(e){ playbackMenu.style.right = '72px'; playbackMenu.style.bottom = '72px'; }
+            playbackMenu.style.bottom = (overlayRect.bottom - overlayRect.top + 8) + 'px'; // place above overlay bottom
+          }catch(e){
+            // fallback: right-align near the full button area
+            playbackMenu.style.right = '72px';
+            playbackMenu.style.bottom = '72px';
+          }
+
           menuOpen = true;
           setTimeout(()=> document.addEventListener('click', docClickCloseHandler));
         }
 
-        playbackBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openPlaybackMenu(); });
+        playbackBtn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          openPlaybackMenu();
+        });
 
-        const playbackMenuObserver = new MutationObserver(()=> { if(menuOpen && (!document.body.contains(playbackBtn) || !document.body.contains(overlay))) closePlaybackMenu(); });
+        // ensure menu closes when host is removed/destroyed
+        const playbackMenuObserver = new MutationObserver(()=> {
+          if(menuOpen && (!document.body.contains(playbackBtn) || !document.body.contains(overlay))) closePlaybackMenu();
+        });
         playbackMenuObserver.observe(document.body, { childList: true, subtree: true });
 
         function setOverlayHidden(hidden){
@@ -705,53 +1055,65 @@
           else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); }
         }
 
+        // key handler (updated: central volume overlay usage)
         state.keyHandler = function(e){
-          if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+
+              // ArrowUp / ArrowDown: volume control (+/- 5%)
+              if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+                try{
+                  if(!state.player) return;
+                  e.preventDefault();
+                  // YouTube API volume range is 0-100
+                  let curVol = 100;
+                  try{ curVol = (typeof state.player.getVolume === 'function') ? state.player.getVolume() : (state.lastVolume || 100); }catch(_){ curVol = state.lastVolume || 100; }
+                  const delta = e.key === 'ArrowUp' ? 5 : -5;
+                  let target = Math.max(0, Math.min(100, Math.round(curVol + delta)));
+                  try{ if(typeof state.player.setVolume === 'function') state.player.setVolume(target); }catch(_){}
+                  state.lastVolume = target;
+                  // show modern center overlay (fresh logic)
+                  try{ showVolumeOverlay(target); }catch(_){}
+                  return;
+                }catch(err){}
+              }
+
+          const active = document.activeElement;
+
+        try{
+          // Allow keyboard seeks even if the seek input is focused.
+          // If user presses ArrowLeft/ArrowRight we seek -10s/+10s.
+          if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
             try{
               if(!state.player) return;
+              // Prevent default scrolling
               e.preventDefault();
-              let curVol = 100;
-              try{ curVol = (typeof state.player.getVolume === 'function') ? state.player.getVolume() : (state.lastVolume || 100); }catch(_){ curVol = state.lastVolume || 100; }
-              const delta = e.key === 'ArrowUp' ? 5 : -5;
-              let target = Math.max(0, Math.min(100, Math.round(curVol + delta)));
-              try{ if(typeof state.player.setVolume === 'function') state.player.setVolume(target); }catch(_){}
-              state.lastVolume = target;
-              try{ showVolumeOverlay(target); }catch(_){}
+              const cur = (state.player.getCurrentTime && typeof state.player.getCurrentTime === 'function') ? state.player.getCurrentTime() : 0;
+              const dur = (state.player.getDuration && typeof state.player.getDuration === 'function') ? state.player.getDuration() : null;
+              const delta = e.key === 'ArrowRight' ? 10 : -10;
+              let target = Math.max(0, cur + delta);
+              if(dur !== null && isFinite(dur)) target = Math.min(target, dur);
+              try{ state.player.seekTo(target, true); }catch(seekErr){ /* ignore */ }
+              // update UI immediately if seekEl exists
+              try{
+                const seekEl2 = document.getElementById('vidu_seek') || document.querySelector('input[type=range]');
+                if(seekEl2 && dur && isFinite(dur)){
+                  seekEl2.value = (target / Math.max(1,dur)) * 100;
+                  // update background visually if function exists
+                  if(typeof updateSeekBackground === 'function') try{ updateSeekBackground(seekEl2); }catch(_){}
+                }
+              }catch(_){}
               return;
             }catch(err){}
           }
-
-          const active = document.activeElement;
-          try{
-            if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
-              try{
-                if(!state.player) return;
-                e.preventDefault();
-                const cur = (state.player.getCurrentTime && typeof state.player.getCurrentTime === 'function') ? state.player.getCurrentTime() : 0;
-                const dur = (state.player.getDuration && typeof state.player.getDuration === 'function') ? state.player.getDuration() : null;
-                const delta = e.key === 'ArrowRight' ? 10 : -10;
-                let target = Math.max(0, cur + delta);
-                if(dur !== null && isFinite(dur)) target = Math.min(target, dur);
-                try{ state.player.seekTo(target, true); }catch(seekErr){}
-                try{
-                  const seekEl2 = document.getElementById('vidu_seek') || document.querySelector('input[type=range]');
-                  if(seekEl2 && dur && isFinite(dur)){
-                    seekEl2.value = (target / Math.max(1,dur)) * 100;
-                    if(typeof updateSeekBackground === 'function') try{ updateSeekBackground(seekEl2); }catch(_){}
-                  }
-                }catch(_){}
-                return;
-              }catch(err){}
-            }
-          }catch(err){}
+        }catch(err){}
           if(active){
             try{
               const tag = active.tagName || '';
               const atype = (active.getAttribute && active.getAttribute('type')) || '';
               const isRange = (tag.toUpperCase() === 'INPUT' && String(atype).toLowerCase() === 'range');
               const isSeek = (typeof seekEl !== 'undefined' && active === seekEl);
+              // Allow spacebar to control playback when focus is on the seek slider (range) or the known seekEl.
               if(!isRange && !isSeek && (tag.toUpperCase() === 'INPUT' || tag.toUpperCase() === 'TEXTAREA' || active.isContentEditable)) return;
-            }catch(err){}
+            }catch(err){ /* if inspection of active fails, fall back to conservative behavior */ }
           }
           const modal = document.getElementById('viewer');
           if(!modal || modal.classList.contains('hidden')) return;
@@ -769,6 +1131,7 @@
 
         document.addEventListener('keydown', state.keyHandler);
 
+        // seek handling
         seekEl.addEventListener('pointerdown', ()=> seekEl._drag=true, {passive:true});
         seekEl.addEventListener('pointerup', ()=>{ seekEl._drag=false; if(!state.player) return; const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) state.player.seekTo(dur * (parseFloat(seekEl.value)/100), true); }, {passive:true});
         seekEl.addEventListener('input', ()=>{ if(seekEl._drag && state.player){ const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) curEl.textContent = fmtTime(Math.floor(dur * (parseFloat(seekEl.value)/100))); updateSeekBackground(seekEl); } }, {passive:true});
@@ -778,6 +1141,7 @@
         }
         updateSeekBackground(seekEl);
 
+        // play/pause UI
         playBtn.addEventListener('click', ()=> {
           if(!state.player) return;
           let st = -1;
@@ -786,22 +1150,247 @@
           state.desiredPlaying = wantPlay;
           playBtn.innerHTML = wantPlay ? pauseSVG() : playSVG();
           try{ if(wantPlay){ if(typeof state.player.playVideo === 'function') state.player.playVideo(); } else { if(typeof state.player.pauseVideo === 'function') state.player.pauseVideo(); } }catch(e){ console.warn('play/pause toggle err', e); }
+          resetInactivityTimer();
         });
 
-        // ... (YT player instantiation and event wiring) ...
-        // For brevity: use same YT Player creation wiring as original file (kept intact).
-        // The YT player will hide vidu-loading when it starts playing (original logic preserved).
+        function onFSChange(){
+          const fs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
+          const isOurFullscreen = !!(fs && (fs === host || host.contains(fs) || (fs.contains && fs.contains(host))));
+          if(isOurFullscreen){
+            // entering fullscreen: save inline styles and adjust to viewport
+            try{
+              if(!saved.stored){
+                saved.host.position = host.style.position || '';
+                saved.host.top = host.style.top || '';
+                saved.host.left = host.style.left || '';
+                saved.host.width = host.style.width || '';
+                saved.host.height = host.style.height || '';
+                saved.host.zIndex = host.style.zIndex || '';
+                saved.host.borderRadius = host.style.borderRadius || '';
 
-        // Mutation observer to protect iframe pointer events
-        if(state.mo) state.mo.disconnect();
-        state.mo = new MutationObserver(()=> disableIframeClicks(host));
-        state.mo.observe(host, { childList:true, subtree:true });
+                saved.mount.height = mount.style.height || '';
+                saved.mount.width = mount.style.width || '';
+                saved.mount.maxHeight = mount.style.maxHeight || '';
+                saved.mount.maxWidth = mount.style.maxWidth || '';
 
-        // Resolve with a placeholder - actual YT creation handled below by original code path
-        // (This block kept to integrate with original create player logic below)
+                const ifr = host.querySelector('iframe');
+                if(ifr){
+                  saved.iframe.height = ifr.style.height || '';
+                  saved.iframe.width = ifr.style.width || '';
+                  saved.iframe.pointerEvents = ifr.style.pointerEvents || '';
+                  saved.iframe.maxHeight = ifr.style.maxHeight || '';
+                  saved.iframe.maxWidth = ifr.style.maxWidth || '';
+                } else {
+                  saved.iframe = {};
+                }
+
+                saved.stored = true;
+              }
+
+              host.style.position = 'fixed';
+              host.style.top = '0';
+              host.style.left = '0';
+              host.style.width = '100vw';
+              host.style.height = '100vh';
+              host.style.zIndex = '2147483647';
+              host.style.borderRadius = '0';
+
+              mount.style.width = '100%';
+              mount.style.height = '100%';
+              mount.style.maxHeight = 'none';
+              mount.style.maxWidth = 'none';
+
+              const ifr = host.querySelector('iframe');
+              if(ifr){
+                ifr.style.width = '100%';
+                ifr.style.height = '100%';
+                ifr.style.maxHeight = 'none';
+                ifr.style.maxWidth = 'none';
+                ifr.style.pointerEvents = 'auto';
+              }
+            }catch(e){}
+
+            ctrlBg.classList.remove('hidden');
+            overlay.classList.remove('hidden');
+            if(closeBtn) closeBtn.classList.remove('hidden');
+
+            // attach resize handler while in fullscreen so host keeps viewport size
+            if(!state.fsResizeHandler){
+              state.fsResizeHandler = savedResizeHandler;
+              window.addEventListener('resize', state.fsResizeHandler);
+            }
+          } else {
+            // exiting fullscreen: restore saved inline styles
+            try{
+              if(saved.stored){
+                host.style.position = saved.host.position;
+                host.style.top = saved.host.top;
+                host.style.left = saved.host.left;
+                host.style.width = saved.host.width;
+                host.style.height = saved.host.height;
+                host.style.zIndex = saved.host.zIndex;
+                host.style.borderRadius = saved.host.borderRadius;
+
+                mount.style.height = saved.mount.height;
+                mount.style.width = saved.mount.width;
+                mount.style.maxHeight = saved.mount.maxHeight;
+                mount.style.maxWidth = saved.mount.maxWidth;
+
+                const ifr = host.querySelector('iframe');
+                if(ifr){
+                  ifr.style.height = saved.iframe.height;
+                  ifr.style.width = saved.iframe.width;
+                  ifr.style.pointerEvents = saved.iframe.pointerEvents;
+                  ifr.style.maxHeight = saved.iframe.maxHeight;
+                  ifr.style.maxWidth = saved.iframe.maxWidth;
+                }
+                saved.stored = false;
+              } else {
+                // fallback restore: ensure mount has sensible defaults
+                try{ mount.style.height = '100%'; mount.style.width = '100%'; }catch(e){}
+                try{ const ifr = host.querySelector('iframe'); if(ifr) ifr.style.pointerEvents = 'none'; }catch(e){}
+              }
+            }catch(e){}
+
+            if(state.fsResizeHandler){
+              window.removeEventListener('resize', state.fsResizeHandler);
+              state.fsResizeHandler = null;
+            }
+
+            if(overlay.classList.contains('hidden')){
+              ctrlBg.classList.add('hidden');
+              if(closeBtn) closeBtn.classList.add('hidden');
+            } else {
+              ctrlBg.classList.remove('hidden');
+              if(closeBtn) closeBtn.classList.remove('hidden');
+            }
+          }
+        }
+
+        state.fsListener = onFSChange;
+        document.addEventListener('fullscreenchange', state.fsListener);
+        document.addEventListener('webkitfullscreenchange', state.fsListener);
+        document.addEventListener('mozfullscreenchange', state.fsListener);
+        document.addEventListener('MSFullscreenChange', state.fsListener);
+
+        function resetInactivityTimer(){
+          state.lastActivity = Date.now();
+          setOverlayHidden(false);
+          if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
+          state.inactivityTimer = setTimeout(()=>{ 
+            try{
+              const st = state.player && typeof state.player.getPlayerState === 'function' ? state.player.getPlayerState() : -1;
+              if(st === 1 || st === 3 || st === -1 || st === 0 || st === 5){
+                setOverlayHidden(true);
+              }
+            }catch(e){}
+          }, 5000);
+        }
+
+        function attachActivityListeners(){
+          try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); }); }catch(e){}
+        }
+        attachActivityListeners();
+
+        // instantiate YT.Player
+        return new Promise((resolve,reject)=>{
+          try{
+            state.player = new YT.Player(mount.id, {
+              videoId: videoId,
+              width: '100%',
+              height: '100%',
+              playerVars: { controls: 0, disablekb: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, origin: location.origin },
+              events: {
+                onReady: function(evt){
+                  disableIframeClicks(host);
+
+                  // ensure loading overlay visible until playback begins
+                  try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.remove('hidden'); ld.style.display='flex'; } }catch(e){}
+
+                  try{
+                    if(typeof evt.target.setVolume === 'function'){
+                      const v = Math.max(0, Math.min(100, state.lastVolume || 100));
+                      evt.target.setVolume(v);
+                      if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute();
+                      else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute();
+                      // show overlay initial volume for clarity
+                      try{ showVolumeOverlay(v); }catch(_){}
+                    }
+                  }catch(e){}
+
+                  // explicitly set default (auto) so YouTube chooses the best quality
+                  try{
+                    if(typeof evt.target.setPlaybackQuality === 'function'){
+                      evt.target.setPlaybackQuality('default');
+                      setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 800);
+                      setTimeout(()=> { try{ evt.target.setPlaybackQuality('default'); }catch(e){} }, 2200);
+                    }
+                  }catch(e){}
+
+                  try{ evt.target.playVideo(); }catch(e){}
+
+                  if(state.updateInterval) clearInterval(state.updateInterval);
+                  state.updateInterval = setInterval(()=>{
+                    try{
+                      if(!state.player) return;
+                      const dur = state.player.getDuration ? state.player.getDuration() : 0;
+                      const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+                      const curElLocal = document.getElementById('vidu_cur');
+                      const durElLocal = document.getElementById('vidu_dur');
+                      if(curElLocal) curElLocal.textContent = fmtTime(Math.floor(cur));
+                      if(durElLocal) durElLocal.textContent = (dur && isFinite(dur)) ? fmtTime(Math.floor(dur)) : fmtTime(0);
+                      if(!seekEl._drag && dur && isFinite(dur)) {
+                        seekEl.value = (cur / Math.max(1,dur)) * 100;
+                        updateSeekBackground(seekEl);
+                      }
+                      const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
+                      if(state.desiredPlaying !== null){
+                        if(state.desiredPlaying && st !== 1) try{ state.player.playVideo(); }catch(e){}
+                        else if(!state.desiredPlaying && st === 1) try{ state.player.pauseVideo(); }catch(e){}
+                      }
+                      const currentIcon = (st === 1) ? pauseSVG() : playSVG();
+                      if(Date.now() - state.lastActivity > 300) playBtn.innerHTML = currentIcon;
+                      else setTimeout(()=> { try{ const check = state.player.getPlayerState ? state.player.getPlayerState() : -1; if(check === 1) playBtn.innerHTML = pauseSVG(); else playBtn.innerHTML = playSVG(); }catch(e){} }, 600);
+                    }catch(e){}
+                  }, 160);
+
+                  if(state.mo) state.mo.disconnect();
+                  state.mo = new MutationObserver(()=> disableIframeClicks(host));
+                  state.mo.observe(host, { childList:true, subtree:true });
+
+                  resetInactivityTimer();
+
+                  // set default playback button title / aria attributes to current rate
+                  try{
+                    const curRate = (state.player && typeof state.player.getPlaybackRate === 'function') ? (state.player.getPlaybackRate() || 1) : 1;
+                    try{ playbackBtn.title = 'Playback speed: ' + (Math.round(curRate*100)/100) + '×'; playbackBtn.setAttribute('aria-label','Playback speed ' + (Math.round(curRate*100)/100) + '×'); }catch(e){}
+                  }catch(e){}
+
+                  resolve(state.player);
+                },
+                onStateChange: function(e){
+                  try{
+                    // hide loading overlay when state becomes PLAYING (1)
+                    if(e && e.data === 1){
+                      try{ const ld = document.getElementById('vidu_loading') || document.querySelector('.vidu-loading'); if(ld){ try{ ld.classList.add('hidden'); ld.style.display='none'; }catch(e){} } }catch(err){}
+                    }
+                    // Keep internal desiredPlaying in sync with actual player state so user actions win.
+                    try{
+                      if(typeof state !== 'undefined' && state !== null && e && typeof e.data === 'number'){
+                        if(e.data === 1){ /* PLAYING */ state.desiredPlaying = true; }
+                        else if(e.data === 2 || e.data === 0){ /* PAUSED or ENDED */ state.desiredPlaying = false; }
+                        // For buffering (3), unstarted (-1) or cued (5) we don't change desiredPlaying here.
+                      }
+                    }catch(syncErr){ /* swallow sync errors */ }
+                  }catch(err){}
+                },
+                onError: function(err){ console.error('YT player error', err); try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} reject(err); }
+              }
+            });
+          }catch(err){ reject(err || new Error('YT player creation failed')); }
+        });
       }
 
-      // destroy player (keep cleanup but no playlist reopening)
       function destroyPlayer(){
         try{
           if(state.updateInterval){ clearInterval(state.updateInterval); state.updateInterval = null; }
@@ -810,21 +1399,28 @@
           if(state.mo){ try{ state.mo.disconnect(); }catch(e){} state.mo = null; }
           if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
           if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); document.removeEventListener('mozfullscreenchange', state.fsListener); document.removeEventListener('MSFullscreenChange', state.fsListener); state.fsListener = null; }
+          if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
+          if(state.volumeHideTimer){ clearTimeout(state.volumeHideTimer); state.volumeHideTimer = null; }
+          if(state.host){
+            try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){}
+          }
           if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
         }catch(e){ console.warn('destroyPlayer err', e); }
       }
 
       // expose
       window.showViduPlayer = async function(videoId, mountRootId='player-wrap'){
-        // Use the existing createYTPlayer flow (original detailed implementation is preserved in file).
-        // For performance: ensure player created only when needed.
         return createYTPlayer(videoId, mountRootId);
       };
       window.destroyViduPlayer = function(){ destroyPlayer(); const w = document.getElementById('player-wrap'); if(w) w.innerHTML = ''; };
 
       window.addEventListener('beforeunload', ()=> { try{ window.destroyViduPlayer(); }catch(e){} }, {passive:true});
+
+      // helper used in destroyPlayer closure
+      function resetInactivityTimer(){ /* placeholder for removeEventListener binding */ }
     })(); // end playerModule
 
+    /* ---------- Playlist fetcher (YouTube Data API) ---------- */
     async function fetchPlaylistVideos(playlistId){
       if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
       const results = []; let pageToken = '';
@@ -845,23 +1441,29 @@
       return results;
     }
 
+    /* ---------- show playlist (legacy) - kept but not used for initial playlist open ---------- */
     async function showPlaylistInsideViewer(item){
+      // This function is left intact for backward compatibility but we no longer auto-play the first video.
+      // Current logic: show player + playlist in viewer when explicitly required.
       const rawId = normalizeIdFromB64(item.idB64);
       const playlistId = rawId.split('&')[0];
       const iframeWrap = document.getElementById('iframe-wrap');
       iframeWrap.innerHTML = '';
 
+      // ensure playlist area is visible and set split sizes
       const playlistContainer = document.getElementById('viewer-playlist');
-      playlistContainer.style.display = ''; // show playlist area
-      playlistContainer.style.height = '38%';
+      playlistContainer.style.display = '';
+      // set explicit flex split: player top 62%, playlist bottom 38%
       iframeWrap.style.flex = '0 0 62%';
-      iframeWrap.style.height = '62%';
+      playlistContainer.style.flex = '0 0 38%';
       playlistContainer.innerHTML = '';
       playlistContainer.scrollTop = 0;
 
+      // create mount inside the iframe-wrap for the advanced player
       const mountRoot = document.createElement('div'); mountRoot.id = 'player-wrap'; mountRoot.style.width='100%'; mountRoot.style.height='100%';
       iframeWrap.appendChild(mountRoot);
 
+      // update now playing title (temporary while loading)
       const nowPlayingEl = document.getElementById('now-playing-title');
       if(nowPlayingEl) nowPlayingEl.textContent = item.title || 'Playlist';
 
@@ -869,6 +1471,7 @@
         const videos = await fetchPlaylistVideos(playlistId);
         if(!videos.length) throw new Error('No videos found or playlist is private.');
 
+        // populate playlistContainer (below player)
         playlistContainer.innerHTML = '';
         videos.forEach(v=>{
           const li = document.createElement('div');
@@ -877,6 +1480,7 @@
           li.tabIndex = 0;
           li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" /><div class="playlist-meta"><div class="playlist-title">${escapeHtml(v.title)}</div><div class="playlist-sub">Click to play</div></div>`;
           function playThis(){
+            // update now playing title
             const np = document.getElementById('now-playing-title');
             if(np) np.textContent = v.title || 'Now playing';
             if(window.showViduPlayer){
@@ -906,6 +1510,8 @@
           li.addEventListener('keydown', (e)=> { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playThis(); } });
           playlistContainer.appendChild(li);
         });
+
+        // Do not autoplay first video here anymore. User must click item to play (or use separate flow).
       }catch(err){
         iframeWrap.innerHTML = '';
         playlistContainer.innerHTML = '';
@@ -916,28 +1522,27 @@
       }
     }
 
+    /* ---------- open viewer helper (decides video vs playlist) ---------- */
     function openViewer(item){
       try{
         const viewer = document.getElementById('viewer');
         if(!viewer) return;
         const iframeWrap = document.getElementById('iframe-wrap');
         iframeWrap.innerHTML = '';
-        // hide bottom playlist by default when opening viewer for single video
-        const playlistContainer = document.getElementById('viewer-playlist');
-        if(playlistContainer) { playlistContainer.style.display = 'none'; playlistContainer.innerHTML = ''; }
-        iframeWrap.style.flex = '1';
-        iframeWrap.style.height = '';
         // update now playing title
         const np = document.getElementById('now-playing-title');
         if(np) np.textContent = item.title || 'Now playing';
 
+        // show viewer
         viewer.classList.remove('hidden');
         viewer.setAttribute('aria-hidden','false');
         document.body.style.overflow = 'hidden';
 
         if(item.type === 'playlist'){
+          // fallback legacy: if somehow asked to show playlist inside viewer, use legacy method
           showPlaylistInsideViewer(item);
         } else {
+          // single video
           const mountRoot = document.createElement('div'); mountRoot.id = 'player-wrap'; mountRoot.style.width='100%'; mountRoot.style.height='100%';
           iframeWrap.appendChild(mountRoot);
           window.showViduPlayer(normalizeIdFromB64(item.idB64), 'player-wrap').catch(err=>{
@@ -947,38 +1552,50 @@
       }catch(e){ console.warn('openViewer err', e); }
     }
 
-    // viewer close (header close button) - NO playlist reopen after close
+    // viewer close (header close button)
     document.getElementById('viewer-close').addEventListener('click', ()=>{
       try{
         const v = document.getElementById('viewer'); if(v){ v.classList.add('hidden'); v.setAttribute('aria-hidden','true'); }
         if(window.destroyViduPlayer) window.destroyViduPlayer();
         const wrap = document.getElementById('iframe-wrap'); if(wrap) wrap.innerHTML = '';
         document.body.style.overflow = '';
+        
+        // MODIFIED: Do not re-open the playlist. Clear the state.
+        lastOpenedPlaylistItem = null;
+        
       }catch(e){}
     });
 
-    // Wrap existing destroy function WITHOUT reopening playlist popup
+    // Wrap existing destroy function so any programmatic destroys also handle state correctly
     (function wrapDestroy(){
       const orig = window.destroyViduPlayer;
       if(typeof orig === 'function'){
         window.destroyViduPlayer = function(){
           try{ orig(); }catch(e){ console.warn('wrapped destroy error', e); }
           try{
+            // if viewer already hidden, ensure it's hidden
             const v = document.getElementById('viewer'); if(v){ v.classList.add('hidden'); v.setAttribute('aria-hidden','true'); }
             const wrap = document.getElementById('iframe-wrap'); if(wrap) wrap.innerHTML = '';
             document.body.style.overflow = '';
           }catch(e){}
+
+          // MODIFIED: Do not re-open the playlist. Clear the state.
+          lastOpenedPlaylistItem = null;
+
         };
       } else {
+        // if not defined yet, polyfill a small wrapper to be safe: try again later
         setTimeout(wrapDestroy, 400);
       }
     })();
 
+    // initial render
     buildTiles();
 
+    // expose openViewer globally for other use
     window.openViewer = openViewer;
 
-    /* ---------- Login UI wiring ---------- */
+    /* ---------- NEW: Login & access UI wiring (kept the same) ---------- */
     const loginBtnTop = document.getElementById('login-btn-top');
     const loginModal = document.getElementById('login-modal');
     const loginClose = document.getElementById('login-close');
@@ -1015,9 +1632,10 @@
     loginClose.addEventListener('click', () => closeModal(loginModal));
     loginModal.addEventListener('click', (e) => { if (e.target === loginModal) closeModal(loginModal); });
     loginSubmit.addEventListener('click', handleLogin);
-    loginPasswordInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') handleLogin(); });
+    loginPasswordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
 
-    accessClose.addEventListener('click', ()=> closeModal(accessModal));
+    accessClose.addEventListener('click', () => closeModal(accessModal));
+    accessModal.addEventListener('click', (e) => { if (e.target === accessModal) closeModal(accessModal); });
 
   })();
   </script>
