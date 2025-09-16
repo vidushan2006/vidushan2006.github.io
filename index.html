@@ -22,7 +22,7 @@
 
     body{
       /* PERFORMANCE: Replaced heavy GIF background with a static image */
-      background: url('assets/images/background.png') no-repeat center center fixed;
+      background: url('assets/images/header.png') no-repeat center center fixed;
       background-size: cover;
       background-color: #04060c; /* Fallback color */
       font-family:"Inter","Helvetica Neue",Arial,sans-serif;
@@ -153,7 +153,7 @@
     .vidu-mount { width:100%; height:520px; background:#000; display:block; }
     .vidu-mount iframe{ width:100%; height:100%; display:block; border:0; pointer-events:none; }
 
-    .vidu-loading { position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center; background-image: url('assets/images/background.png'); background-repeat: no-repeat; background-position: center; background-size: cover; transition: opacity .28s ease; }
+    .vidu-loading { position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center; background-image: url('assets/images/header.png'); background-repeat: no-repeat; background-position: center; background-size: cover; transition: opacity .28s ease; }
     .vidu-loading.hidden { opacity:0; pointer-events:none; }
 
     .vidu-controls-bg { position:absolute; left:0; right:0; bottom:0; height:64px; background:linear-gradient(180deg, transparent, rgba(0,0,0,0.75)); pointer-events:none; z-index:9996; transition:opacity .22s ease; will-change:opacity; }
@@ -186,6 +186,50 @@
 
     .vidu-vol-feedback{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003; padding:12px 18px; border-radius:12px; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.06); font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5); pointer-events:none; opacity:0; transition:opacity .28s ease; display:none; min-width:72px; text-align:center; }
     
+    /* NEW: Playback Speed Menu */
+    .vidu-playback-menu {
+        position: absolute;
+        bottom: 78px;
+        right: 68px;
+        z-index: 10001;
+        background: rgba(20, 22, 28, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column-reverse;
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+        transition: opacity .2s var(--ease), transform .2s var(--ease);
+        pointer-events: none;
+        will-change: opacity, transform;
+    }
+    .vidu-playback-menu.open {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    .vidu-playback-menu button {
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        padding: 10px 18px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        width: 100%;
+        text-align: left;
+        transition: background .18s ease, color .18s ease;
+    }
+    .vidu-playback-menu button:hover {
+        background: var(--glass-strong);
+        color: var(--text);
+    }
+    .vidu-playback-menu button.active {
+        color: var(--accent-2);
+        font-weight: 800;
+    }
+
     .header-icon-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .18s var(--ease); position: relative; width: 38px; height: 38px; }
     .header-icon-btn:hover { color: var(--text); background: var(--glass); transform: scale(1.1); }
     .header-icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
@@ -300,7 +344,7 @@
 </div>
 
 <script>
-// FIX: Restored the full, readable, and optimized player script to ensure functionality.
+// UPDATED PLAYER SCRIPT
 (function(){
   if(window.__viduPlayerLoaded) return;
   window.__viduPlayerLoaded = true;
@@ -319,6 +363,7 @@
     lastActivity: Date.now(),
     desiredPlaying: null,
     lastVolume: 100,
+    volumeFeedbackTimer: null, // New state for volume OSD
     _menuOpenTs: 0
   };
 
@@ -384,35 +429,75 @@
     const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
     overlay.innerHTML = `<div class="inner-bg" aria-hidden="true"></div><button class="vidu-btn" id="vidu_playbtn">${playSVG()}</button><div class="vidu-time" id="vidu_cur">`+fmtHHMMSS(0)+`</div><input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" /><div class="vidu-time" id="vidu_dur">`+fmtHHMMSS(0)+`</div><button class="vidu-btn" id="vidu_playbackbtn" title="Playback speed" aria-label="Playback speed">`+gearSVG()+`</button><button class="vidu-btn" id="vidu_fullbtn">⤢</button>`;
     host.appendChild(overlay);
-    const qmenu = document.createElement('div'); qmenu.className = 'vidu-quality-menu'; qmenu.id = 'vidu_quality_menu';
-    host.appendChild(qmenu);
+    
+    // New: Playback Speed Menu
+    const playbackMenu = document.createElement('div');
+    playbackMenu.className = 'vidu-playback-menu';
+    playbackMenu.id = 'vidu_playback_menu';
+    playbackMenu.innerHTML = `<button data-speed="2">2x</button><button data-speed="1.5">1.5x</button><button data-speed="1" class="active">1x (Normal)</button><button data-speed="0.5">0.5x</button>`;
+    host.appendChild(playbackMenu);
+
     const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
     closeBtn.addEventListener('click', ()=> { try{ if(typeof window.closeModal === 'function') window.closeModal(); else { const root = document.getElementById('modal-root'); if(root) root.style.display='none'; if(window.destroyViduPlayer) window.destroyViduPlayer(); } }catch(e){ console.warn('closeBtn error', e); } });
     host.appendChild(closeBtn);
     const volFeedback = document.createElement('div'); volFeedback.id = 'vidu_vol_feedback'; volFeedback.className = 'vidu-vol-feedback'; volFeedback.style.display = 'none';
     host.appendChild(volFeedback);
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, qmenu, loadingDiv };
+    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
-  function mapYTQualityToLabel(q){ if(!q) return ''; const map = { small:'144p', medium:'360p', large:'480p', hd720:'720p', hd1080:'1080p', highres:'Highres', default:'Auto' }; return map[q] || q; }
 
   function createPlayer(videoId){
-    const { host, mount, overlay, ctrlBg, closeBtn, qmenu, loadingDiv } = createHostElements();
+    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
     state.host = host; state.mount = mount;
     const playBtn = overlay.querySelector('#vidu_playbtn');
     const curEl = overlay.querySelector('#vidu_cur');
     const durEl = overlay.querySelector('#vidu_dur');
     const seekEl = overlay.querySelector('#vidu_seek');
     const fullBtn = overlay.querySelector('#vidu_fullbtn');
+    const playbackBtn = overlay.querySelector('#vidu_playbackbtn');
     const volFeedbackEl = host.querySelector('#vidu_vol_feedback');
+
+    // New: Playback Speed Menu Logic
+    playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); });
+    playbackMenu.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON' && e.target.dataset.speed) {
+            const speed = parseFloat(e.target.dataset.speed);
+            if (state.player && typeof state.player.setPlaybackRate === 'function') {
+                state.player.setPlaybackRate(speed);
+                playbackMenu.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                playbackMenu.classList.remove('open');
+            }
+        }
+    });
+    // New: Close menu when clicking outside
+    state.docClickHandler = (e) => {
+      if (playbackMenu.classList.contains('open') && !playbackMenu.contains(e.target) && !playbackBtn.contains(e.target)) {
+        playbackMenu.classList.remove('open');
+      }
+    };
+    document.addEventListener('click', state.docClickHandler);
+
     function getFullscreenElement(){ return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null; }
     function toggleFullscreen(){ const fs = getFullscreenElement(); if(fs === host){ const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen; if(exit) exit.call(document); } else { const req = host.requestFullscreen || host.webkitRequestFullscreen || host.mozRequestFullScreen || host.msRequestFullscreen; if(req) req.call(host); } }
     fullBtn.addEventListener('click', toggleFullscreen);
-    function setOverlayHidden(hidden){ if(hidden){ overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); if(closeBtn) closeBtn.classList.add('hidden'); if(qmenu) qmenu.classList.remove('open'); } else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); } }
+    function setOverlayHidden(hidden){ if(hidden){ overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); if(closeBtn) closeBtn.classList.add('hidden'); if(playbackMenu) playbackMenu.classList.remove('open'); } else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); } }
     function showLoading(){ try{ if(loadingDiv){ loadingDiv.classList.remove('hidden'); loadingDiv.style.display = 'flex'; } }catch(e){} }
     function hideLoading(){ try{ if(loadingDiv){ loadingDiv.classList.add('hidden'); setTimeout(()=> { try{ loadingDiv.style.display = 'none'; }catch(e){} }, 320); } }catch(e){} }
+
+    // New: Volume OSD Feedback Function
+    function showVolumeFeedback(volume) {
+        if (state.volumeFeedbackTimer) clearTimeout(state.volumeFeedbackTimer);
+        volFeedbackEl.textContent = `${Math.round(volume)}%`;
+        volFeedbackEl.style.display = 'block';
+        setTimeout(() => { volFeedbackEl.style.opacity = 1; }, 10);
+        state.volumeFeedbackTimer = setTimeout(() => {
+            volFeedbackEl.style.opacity = 0;
+            setTimeout(() => { volFeedbackEl.style.display = 'none'; }, 280);
+        }, 3000);
+    }
 
     state.keyHandler = function(e){
       const active = document.activeElement; const seekIsActive = (active && active.id === 'vidu_seek');
@@ -422,6 +507,33 @@
       if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){ e.preventDefault(); toggleFullscreen(); return; }
       if(e.key === 'ArrowRight' || e.code === 'ArrowRight' || e.key === 'Right'){ e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek forward err', err); } return; }
       if(e.key === 'ArrowLeft' || e.code === 'ArrowLeft' || e.key === 'Left'){ e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek back err', err); } return; }
+      // New: Volume control with arrow keys
+      if (e.key === 'ArrowUp' || e.code === 'ArrowUp') {
+            e.preventDefault();
+            if (state.player && typeof state.player.getVolume === 'function') {
+                const currentVolume = state.player.getVolume();
+                const newVolume = Math.min(100, currentVolume + 5);
+                state.player.setVolume(newVolume);
+                state.lastVolume = newVolume;
+                if (newVolume > 0 && typeof state.player.unMute === 'function') state.player.unMute();
+                showVolumeFeedback(newVolume);
+                resetInactivityTimer();
+            }
+            return;
+        }
+        if (e.key === 'ArrowDown' || e.code === 'ArrowDown') {
+            e.preventDefault();
+            if (state.player && typeof state.player.getVolume === 'function') {
+                const currentVolume = state.player.getVolume();
+                const newVolume = Math.max(0, currentVolume - 5);
+                state.player.setVolume(newVolume);
+                state.lastVolume = newVolume;
+                if (newVolume === 0 && typeof state.player.mute === 'function') state.player.mute();
+                showVolumeFeedback(newVolume);
+                resetInactivityTimer();
+            }
+            return;
+        }
     };
     document.addEventListener('keydown', state.keyHandler);
 
@@ -491,6 +603,7 @@
       if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
       if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); document.removeEventListener('mozfullscreenchange', state.fsListener); document.removeEventListener('MSFullscreenChange', state.fsListener); state.fsListener = null; }
       if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
+      if(state.volumeFeedbackTimer){ clearTimeout(state.volumeFeedbackTimer); state.volumeFeedbackTimer = null; }
       if(state.host){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){} }
       if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
     }catch(e){ console.warn('destroyPlayer err', e); }
