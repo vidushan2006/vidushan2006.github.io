@@ -509,6 +509,126 @@
         background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
         border-radius: 8px;
     }
+
+    /* === NEW: Fullscreen Playlist Popup Styles === */
+    .fs-playlist-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 9, 14, 0.8);
+        backdrop-filter: blur(16px) saturate(180%);
+        z-index: 15000;
+        display: none;
+        flex-direction: column;
+        color: var(--text);
+        opacity: 0;
+        transform: scale(1.02);
+        transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+    }
+    .fs-playlist-overlay.show {
+        display: flex;
+        opacity: 1;
+        transform: scale(1);
+    }
+    .fs-playlist-header {
+        display: flex;
+        align-items: center;
+        padding: 18px 24px;
+        background: rgba(255, 255, 255, 0.03);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
+    }
+    .fs-playlist-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+    }
+    .fs-playlist-count {
+        margin-left: 16px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--muted);
+        background: var(--glass-strong);
+        padding: 4px 10px;
+        border-radius: 16px;
+    }
+    .fs-playlist-close-btn {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-size: 32px;
+        line-height: 1;
+        cursor: pointer;
+        transition: color .2s ease, transform .2s ease;
+    }
+    .fs-playlist-close-btn:hover {
+        color: var(--text);
+        transform: scale(1.1) rotate(90deg);
+    }
+    .fs-playlist-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        align-content: start;
+    }
+    .fs-playlist-item {
+        background: linear-gradient(180deg, rgba(255,255,255,0.025), transparent);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: var(--card-radius);
+        padding: 12px;
+        cursor: pointer;
+        transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), background 0.25s var(--ease);
+    }
+    .fs-playlist-item:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+        background: var(--glass-strong);
+    }
+    .fs-playlist-item img {
+        width: 100%;
+        aspect-ratio: 16/9;
+        object-fit: cover;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    .fs-playlist-item .title {
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .fs-playlist-loader {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(8, 9, 14, 0.7);
+    }
+    .fs-playlist-loader .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid var(--glass-strong);
+        border-top-color: var(--accent-2);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    .fs-playlist-loader p {
+        margin-top: 16px;
+        font-weight: 600;
+        color: var(--muted);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
   </style>
 </head>
 <body class="landing is-preload">
@@ -575,6 +695,29 @@
     <p id="loading-popup-message">Preparing your content, please wait...</p>
     <div class="loading-bar-container">
       <div id="loading-bar-fill" class="loading-bar-fill"></div>
+    </div>
+  </div>
+</div>
+
+<div id="fullscreen-playlist-overlay" class="fs-playlist-overlay">
+  <div class="fs-playlist-header">
+    <h3 id="fs-playlist-title">Playlist</h3>
+    <span id="fs-playlist-count" class="fs-playlist-count">0 Videos</span>
+    <button id="fs-playlist-close-btn" class="fs-playlist-close-btn" aria-label="Close Playlist">&times;</button>
+  </div>
+  <div id="fs-playlist-content" class="fs-playlist-content">
+    </div>
+  <div id="fs-playlist-loader" class="fs-playlist-loader" style="display: none;">
+    <div class="spinner"></div>
+    <p>Loading playlist...</p>
+  </div>
+</div>
+
+<div id="player-loading-overlay" class="loading-popup-overlay">
+  <div class="loading-popup-content">
+    <p>Loading VIDU Player</p>
+    <div class="loading-bar-container">
+      <div id="player-loading-bar-fill" class="loading-bar-fill"></div>
     </div>
   </div>
 </div>
@@ -1494,6 +1637,8 @@ function spawnRipple(ev,target){ const rect = target.getBoundingClientRect(); co
 function attachTilt(card){ if(!card) return; const img = card.querySelector('img'); function onMove(e){ if(window.__viduGlobal && window.__viduGlobal.visualsPaused) return; const r = card.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width; const py = (e.clientY - r.top) / r.height; const rx = (py - 0.5) * 10; const ry = (px - 0.5) * -10; card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(6px)`; if(img) img.style.transform = `translateZ(26px) scale(1.06) translateY(${(0.5-py)*6}px)`; } function onLeave(){ card.style.transform = ''; if(img) img.style.transform = ''; } card.addEventListener('pointermove', onMove, {passive:true}); card.addEventListener('pointerleave', onLeave, {passive:true}); }
 
 let currentItem = null;
+let currentPlaylistCache = {}; // Cache for fetched playlist videos
+
 function createModal(){
   const root = document.getElementById('modal-root');
   root.innerHTML = `
@@ -1513,55 +1658,29 @@ function createModal(){
             <div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div>
           </div>
           <div id="player-block" style="display:none;margin-top:12px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <div style="color:#bbb" id="now-playing-label">Now playing</div>
-              <div><button id="close-player" class="btn">Close</button></div>
-            </div>
-            <div id="player-wrap"></div>
-            <div id="playlist-list-wrap" style="display:none;margin-top:12px;">
-              <div class="muted">Playlist contents</div>
-              <div class="playlist-list" id="playlist-video-list"></div>
-            </div>
+             <div id="player-wrap"></div>
           </div>
         </div>
       </div>
     </div>
   `;
   document.getElementById('modal-close').onclick = closeModal;
-  document.getElementById('close-player').onclick = closeModal;
   document.getElementById('password-submit').onclick = onPasswordSubmit;
   document.getElementById('password-input').onkeydown = (e)=>{ if(e.key === 'Enter') onPasswordSubmit(); };
   document.getElementById('modal-backdrop').onclick = function(e){ if(e.target === this) closeModal(); };
 }
 
 function showUnlockedItem(item) {
-  const root = document.getElementById('modal-root');
-  root.style.display = 'block';
-  document.getElementById('modal-title').textContent = item.name || 'Player';
-  document.getElementById('modal-subtitle').textContent = (item.type || 'video');
-
-  document.getElementById('password-block').style.display = 'none';
-  document.getElementById('password-error').style.display = 'none';
-  document.getElementById('player-block').style.display = 'block';
-  const plwrap = document.getElementById('playlist-list-wrap');
-  if(plwrap) plwrap.style.display = 'none';
-
   if(!window.__viduGlobal) window.__viduGlobal = {};
   window.__viduGlobal.visualsPaused = true;
   window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'modal-open' } }));
 
   if (item.type === 'playlist') {
-    showPlaylistInsideModal(item);
+    openFullScreenPlaylist(item);
   } else {
+    // This logic is for single videos which are not part of this flow
     const id = decodeEnc(item.idEnc || '');
-    document.getElementById('now-playing-label').textContent = item.name || 'Now playing';
-    if (window.showViduPlayer) {
-      window.showViduPlayer(id).catch(err => {
-        console.error('showViduPlayer failed', err);
-        const wrap = document.getElementById('player-wrap');
-        if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
-      });
-    }
+    playVideoWithLoading({ videoId: id, title: item.name || 'Video' });
   }
 }
 
@@ -1575,7 +1694,6 @@ function openPasswordModal(item){
   document.getElementById('password-error').style.display = 'none';
   document.getElementById('password-block').style.display = 'block';
   document.getElementById('player-block').style.display = 'none';
-  const plwrap = document.getElementById('playlist-list-wrap'); if(plwrap) plwrap.style.display = 'none';
   setTimeout(()=>document.getElementById('password-input').focus(), 50);
   if(!window.__viduGlobal) window.__viduGlobal = {};
   window.__viduGlobal.visualsPaused = true;
@@ -1583,13 +1701,23 @@ function openPasswordModal(item){
 }
 
 function closeModal(){
-  const root = document.getElementById('modal-root'); if(root) root.style.display = 'none';
-  const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = '';
-  const plwrap = document.getElementById('playlist-video-list'); if(plwrap) plwrap.innerHTML = '';
-  currentItem = null;
+  const root = document.getElementById('modal-root');
+  if(root) root.style.display = 'none';
+  
   if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
-  window.__viduGlobal.visualsPaused = false;
-  window.dispatchEvent(new CustomEvent('vidu:visuals:resume', { detail:{ reason:'modal-closed' } }));
+
+  // If the currently active item was a playlist, show the fullscreen playlist again
+  if (currentItem && currentItem.type === 'playlist') {
+    const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
+    if (fsPlaylist) {
+        fsPlaylist.classList.add('show');
+    }
+  } else {
+    // Otherwise, fully close and resume background visuals
+    currentItem = null;
+    window.__viduGlobal.visualsPaused = false;
+    window.dispatchEvent(new CustomEvent('vidu:visuals:resume', { detail:{ reason:'modal-closed' } }));
+  }
 }
 
 function onPasswordSubmit(){
@@ -1597,6 +1725,9 @@ function onPasswordSubmit(){
   if(!currentItem) return;
   const expected = b64decode(currentItem.passEnc || '');
   if(val === expected){
+    // Hide the password modal before showing the next thing
+    const root = document.getElementById('modal-root');
+    if(root) root.style.display = 'none';
     showUnlockedItem(currentItem);
   } else {
     const err = document.getElementById('password-error'); err.style.display = 'block'; err.textContent = 'Incorrect password — try again.';
@@ -1606,6 +1737,9 @@ function onPasswordSubmit(){
 const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
 async function fetchPlaylistVideos(playlistId){
   if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
+  if (currentPlaylistCache[playlistId]) {
+    return currentPlaylistCache[playlistId];
+  }
   const items=[]; let pageToken='';
   do{
     const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}` + (pageToken?`&pageToken=${pageToken}`:'');
@@ -1614,70 +1748,111 @@ async function fetchPlaylistVideos(playlistId){
     const data = await res.json();
     (data.items||[]).forEach(it=>{
       const sn = it.snippet || {};
-      if(sn.resourceId && sn.resourceId.videoId){
+      if(sn.resourceId && sn.resourceId.videoId && sn.title !== 'Private video' && sn.title !== 'Deleted video'){
         const thumb = (sn.thumbnails && (sn.thumbnails.high||sn.thumbnails.medium||sn.thumbnails.default))||{};
         items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
       }
     });
     pageToken = data.nextPageToken || '';
   } while(pageToken);
+  currentPlaylistCache[playlistId] = items;
   return items;
 }
 
-async function showPlaylistInsideModal(item){
+async function openFullScreenPlaylist(item) {
+  const overlay = document.getElementById('fullscreen-playlist-overlay');
+  const titleEl = document.getElementById('fs-playlist-title');
+  const countEl = document.getElementById('fs-playlist-count');
+  const contentEl = document.getElementById('fs-playlist-content');
+  const loaderEl = document.getElementById('fs-playlist-loader');
+  
+  titleEl.textContent = item.name || 'Playlist';
+  countEl.textContent = '... Videos';
+  contentEl.innerHTML = '';
+  loaderEl.style.display = 'flex';
+  overlay.classList.add('show');
+  
   const rawId = decodeEnc(item.idEnc);
   const playlistId = rawId.split('&')[0];
-  window.__viduGlobal.visualsPaused = true;
-  window.dispatchEvent(new CustomEvent('vidu:visuals:pause', { detail:{ reason:'playlist-load' } }));
 
-  try{
+  try {
     const videos = await fetchPlaylistVideos(playlistId);
-    if(!videos.length){
-      const wrap = document.getElementById('player-wrap');
-      if(wrap) wrap.innerHTML = `<div class="muted">No videos found or playlist is private.</div>`;
-      document.getElementById('player-block').style.display='block';
-      return;
-    }
-
-    let listWrap = document.getElementById('playlist-video-list');
-    if(!listWrap){
-      const wrapper = document.createElement('div');
-      wrapper.id = 'playlist-list-wrap';
-      wrapper.style.marginTop = '12px';
-      wrapper.innerHTML = `<div class="muted">Playlist contents</div><div class="playlist-list" id="playlist-video-list"></div>`;
-      const playerBlock = document.getElementById('player-block');
-      if(playerBlock) playerBlock.appendChild(wrapper);
-      listWrap = document.getElementById('playlist-video-list');
-    }
-
-    if(listWrap) listWrap.innerHTML = '';
-    videos.forEach(v=>{
-      const li = document.createElement('div'); li.className = 'list-item';
-      li.style.display='flex'; li.style.alignItems='center'; li.style.gap='12px'; li.style.padding='8px';
-      li.innerHTML = `<img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;" /><div style="flex:1;"><div class="title" style="font-size:13px;">${escapeHtml(v.title)}</div></div>`;
-      li.onclick = ()=> {
-        document.getElementById('now-playing-label').textContent = v.title || 'Now playing';
-        if(window.showViduPlayer) window.showViduPlayer(v.videoId).catch(err => {
-          console.error('showViduPlayer failed', err);
-          const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
-        });
-      };
-      listWrap.appendChild(li);
-    });
-
-    document.getElementById('player-block').style.display='block';
-    const outer = document.getElementById('playlist-list-wrap'); if(outer) outer.style.display='block';
-    document.getElementById('now-playing-label').textContent = videos[0].title || 'Now playing';
-    if(window.showViduPlayer) window.showViduPlayer(videos[0].videoId).catch(err => {
-      console.error('showViduPlayer failed', err);
-      const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
-    });
-  } catch(err){
+    renderFullScreenPlaylist(videos, item.name);
+  } catch (err) {
     console.error('Playlist fetch error', err);
-    const wrap = document.getElementById('player-wrap');
-    if(wrap) wrap.innerHTML = `<div class="muted">Failed to load playlist: ${escapeHtml(err.message || '')}</div>`;
-    document.getElementById('player-block').style.display='block';
+    contentEl.innerHTML = `<p style="text-align:center; color: var(--muted);">Failed to load playlist: ${escapeHtml(err.message)}</p>`;
+  } finally {
+    loaderEl.style.display = 'none';
   }
+}
+
+function renderFullScreenPlaylist(videos, title) {
+  const titleEl = document.getElementById('fs-playlist-title');
+  const countEl = document.getElementById('fs-playlist-count');
+  const contentEl = document.getElementById('fs-playlist-content');
+
+  titleEl.textContent = title || 'Playlist';
+  countEl.textContent = `${videos.length} Videos`;
+  contentEl.innerHTML = '';
+
+  videos.forEach(video => {
+    const li = document.createElement('div');
+    li.className = 'fs-playlist-item';
+    li.innerHTML = `
+      <img src="${escapeHtml(video.thumb)}" alt="${escapeHtml(video.title)}" loading="lazy" />
+      <div class="title">${escapeHtml(video.title)}</div>
+    `;
+    li.onclick = () => {
+      playVideoWithLoading({ videoId: video.videoId, title: video.title });
+    };
+    contentEl.appendChild(li);
+  });
+}
+
+function playVideoWithLoading(videoInfo) {
+  const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
+  const loadingPopup = document.getElementById('player-loading-overlay');
+  const loadingBar = document.getElementById('player-loading-bar-fill');
+
+  fsPlaylist.classList.remove('show');
+  
+  // 1. Reset bar and show popup
+  loadingBar.style.transition = 'none';
+  loadingBar.style.width = '0%';
+  loadingPopup.classList.add('show');
+
+  // 2. Start the loading animation
+  setTimeout(() => {
+    loadingBar.style.transition = 'width 2s cubic-bezier(0.4, 0, 0.2, 1)';
+    loadingBar.style.width = '100%';
+  }, 50);
+
+  // 3. After 2 seconds, show player and hide popup
+  setTimeout(() => {
+    loadingPopup.classList.remove('show');
+
+    // Show the main modal for the player
+    const root = document.getElementById('modal-root');
+    root.style.display = 'block';
+    document.getElementById('modal-title').textContent = videoInfo.title;
+    document.getElementById('modal-subtitle').textContent = 'Now Playing';
+    document.getElementById('password-block').style.display = 'none';
+    document.getElementById('player-block').style.display = 'block';
+    
+    if (window.showViduPlayer) {
+      window.showViduPlayer(videoInfo.videoId).catch(err => {
+        console.error('showViduPlayer failed', err);
+        const wrap = document.getElementById('player-wrap');
+        if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
+      });
+    }
+
+    // Reset bar for next time after fade out
+    setTimeout(() => {
+        loadingBar.style.transition = 'none';
+        loadingBar.style.width = '0%';
+    }, 300);
+  }, 2000);
 }
 
 function pauseVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = true; window.dispatchEvent(new CustomEvent('vidu:visuals:pause',{detail:{reason}})); }
@@ -1688,11 +1863,31 @@ document.addEventListener('DOMContentLoaded', function(){
   renderPlaylists();
   document.querySelectorAll('.list-item').forEach(el=>attachTilt(el));
   (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
+
+  // Close handler for the new fullscreen playlist
+  document.getElementById('fs-playlist-close-btn').addEventListener('click', () => {
+    document.getElementById('fullscreen-playlist-overlay').classList.remove('show');
+    currentItem = null; // Clear current item since we are closing the view entirely
+    resumeVisuals('playlist-closed');
+  });
 });
 
 document.addEventListener('contextmenu', function(e){ e.preventDefault(); }, false);
 document.addEventListener('keydown', function(e){ if ((e.ctrlKey && e.shiftKey && (e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')) || (e.ctrlKey && (e.key==='U'||e.key==='u')) || (e.key==='F12')) { e.preventDefault(); return false; } });
-document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { const root=document.getElementById('modal-root'); if(root) root.style.display='none'; resumeVisuals('esc'); } });
+document.addEventListener('keydown', function(e){ 
+    if (e.key === 'Escape') { 
+        const root = document.getElementById('modal-root'); 
+        const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
+        
+        if (root && root.style.display !== 'none') {
+            closeModal(); // Use the existing close function which handles re-opening the playlist
+        } else if (fsPlaylist && fsPlaylist.classList.contains('show')) {
+            fsPlaylist.classList.remove('show');
+            currentItem = null;
+            resumeVisuals('esc');
+        }
+    } 
+});
 
 (function modalWatcher(){ const root=document.getElementById('modal-root'); if(!root) return; const obs = new MutationObserver(()=>{ const isVisible = (root.style.display !== 'none' && root.style.display !== ''); if(!isVisible){ setTimeout(()=> { if(!document.querySelector('.modal-backdrop') || document.querySelectorAll('.modal-backdrop').length === 0) resumeVisuals('modalWatcher'); }, 60); } }); obs.observe(root, { attributes: true, attributeFilter: ['style', 'class'] }); window.addEventListener('beforeunload', ()=> obs.disconnect(), {passive:true}); })();
 </script>
