@@ -162,15 +162,12 @@
     .playlist-title{font-size:14px;font-weight:700;color:#fff}
     .playlist-sub{font-size:12px;color:rgba(220,220,220,0.7)}
 
-    .playlist-list{max-height:220px;overflow:auto}
-    .copyright{text-align:center;margin-top:28px;color:rgba(255,255,255,0.85);font-size:13px}
-
-    /* ===== player UI styles (must match JS expectations) ===== */
+/* ===== player UI styles (must match JS expectations) ===== */
     .vidu-player-host{position:relative;width:100%;height:100%;overflow:hidden;border-radius:8px;background:#000}
     .vidu-mount{width:100%;height:100%;background:#000}
     .vidu-mount iframe{width:100%;height:100%;border:0;display:block}
 
-    /* loading overlay (shows header.png until playback begins) */
+/* loading overlay (shows header.png until playback begins) */
     .vidu-loading{position:absolute;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background-image: url('assets/images/header.png');background-repeat:no-repeat;background-position:center;background-size:cover;transition:opacity .28s ease;pointer-events:none}
     .vidu-loading.hidden{opacity:0;transform:scale(1.02);pointer-events:none;display:none}
 
@@ -280,6 +277,113 @@
     }
     .vidu-playback-item:hover { background:rgba(255,255,255,0.03); }
     .vidu-playback-item.active { background:rgba(57,255,20,0.12); color:#dfffd6; }
+
+    /* ===== NEW: Playlist full-screen popup UI ===== */
+    .playlist-popup {
+      position: fixed;
+      inset: 12px;
+      z-index: 600;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
+    .playlist-popup.visible { display:flex; }
+    .playlist-popup-inner {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(8,10,8,0.98), rgba(6,8,6,0.95));
+      border-radius: 14px;
+      box-shadow: 0 40px 120px rgba(0,0,0,0.8);
+      padding: 18px;
+      box-sizing: border-box;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .playlist-popup-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .playlist-popup-count {
+      font-weight:900;
+      color:#eaf7ea;
+      background: linear-gradient(90deg, rgba(0,255,140,0.08), rgba(255,255,255,0.01));
+      padding:8px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      box-shadow: 0 6px 22px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .playlist-popup-title {
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+      flex:1;
+      text-align:left;
+      margin-left:16px;
+    }
+    .playlist-popup-close {
+      border:0;
+      background:transparent;
+      color:#ddd;
+      font-weight:800;
+      font-size:20px;
+      cursor:pointer;
+    }
+    .playlist-popup-body {
+      overflow:auto;
+      border-radius:10px;
+      padding:8px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.01));
+      flex:1;
+    }
+    .playlist-item {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:12px;
+      border-radius:10px;
+      transition: background .12s, transform .08s;
+      cursor:pointer;
+      margin-bottom:8px;
+      background:transparent;
+    }
+    .playlist-item:hover { background: rgba(255,255,255,0.02); transform: translateY(-2px); }
+    .playlist-item img { width:140px; height:78px; object-fit:cover; border-radius:8px; flex:0 0 140px; }
+    .playlist-item .meta { display:flex; flex-direction:column; gap:6px; }
+    .playlist-item .meta .t { font-weight:800; color:#fff; font-size:14px; }
+    .playlist-item .meta .s { color: rgba(220,220,220,0.75); font-size:12px; }
+
+    /* ===== NEW: Loading popup with rounded progress bar ===== */
+    .loading-popup {
+      position: fixed;
+      inset: 0;
+      z-index: 800;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      pointer-events: none;
+    }
+    .loading-popup.visible { display:flex; pointer-events:auto; }
+    .loading-card {
+      width: min(540px, 90%);
+      background: linear-gradient(180deg, rgba(10,12,10,0.95), rgba(6,8,6,0.96));
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+      text-align:center;
+      color:#eaf7ea;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .loading-label { font-weight:900; margin-bottom:12px; font-size:16px; }
+    .loading-bar-wrap { background: rgba(255,255,255,0.04); border-radius: 999px; height: 14px; overflow:hidden; }
+    .loading-bar { height:100%; width:0%; border-radius:999px; background: linear-gradient(90deg,#00ff8a,#00b86a); transition: width 2s linear; }
+
+    .copyright{text-align:center;margin-top:28px;color:rgba(255,255,255,0.85);font-size:13px}
   </style>
 </head>
 <body>
@@ -362,6 +466,28 @@
     </div>
   </div>
 
+  <!-- NEW: Full-screen playlist popup (fills screen, scrollable list, shows count) -->
+  <div id="playlist-popup" class="playlist-popup" aria-hidden="true">
+    <div class="playlist-popup-inner" role="dialog" aria-modal="true" aria-label="Playlist">
+      <div class="playlist-popup-header">
+        <div class="playlist-popup-count" id="playlist-count">0 Videos</div>
+        <div class="playlist-popup-title" id="playlist-popup-title">Playlist</div>
+        <button class="playlist-popup-close" id="playlist-popup-close" aria-label="Close playlist">✕</button>
+      </div>
+      <div class="playlist-popup-body" id="playlist-popup-body" tabindex="0"></div>
+    </div>
+  </div>
+
+  <!-- NEW: Loading popup with 2s progress bar -->
+  <div id="loading-popup" class="loading-popup" aria-hidden="true">
+    <div class="loading-card" role="status" aria-live="polite">
+      <div class="loading-label">Loading VIDU Player</div>
+      <div class="loading-bar-wrap" aria-hidden="false">
+        <div id="loading-bar" class="loading-bar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="js-fail-note" style="display:none;position:fixed;right:14px;bottom:14px;background:rgba(255,80,80,0.12);color:#ffdede;border:1px solid rgba(255,80,80,0.2);padding:8px 12px;border-radius:8px;font-size:13px;z-index:9999">Some features may be unavailable — enable JavaScript.</div>
 
   <script>
@@ -424,7 +550,7 @@
             <div class="card-type">${escapeHtml(it.type)}</div>
           </div>
         `;
-        // MODIFIED: Click handler now checks for login status first
+        // Click handler now checks type: open playlist-popup or viewer.
         card.addEventListener('click', ()=> handleTileClick(it));
         tiles.appendChild(card);
       });
@@ -434,63 +560,115 @@
     function showModal(el){ el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
     function closeModal(el){ el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
 
-    /* ---------- NEW: Login and Access Control Logic ---------- */
-    const loginBtnTop = document.getElementById('login-btn-top');
-    const loginModal = document.getElementById('login-modal');
-    const loginClose = document.getElementById('login-close');
-    const loginUsernameInput = document.getElementById('login-username');
-    const loginPasswordInput = document.getElementById('login-password');
-    const loginSubmit = document.getElementById('login-submit');
-    const loginError = document.getElementById('login-error');
+    /* ---------- NEW: Playlist popup helpers & state ---------- */
+    let lastOpenedPlaylistItem = null; // remember playlist so we can re-open after closing player
 
-    const accessModal = document.getElementById('access-modal');
-    const accessClose = document.getElementById('access-close');
+    const playlistPopup = document.getElementById('playlist-popup');
+    const playlistBody = document.getElementById('playlist-popup-body');
+    const playlistCountEl = document.getElementById('playlist-count');
+    const playlistTitleEl = document.getElementById('playlist-popup-title');
+    const playlistCloseBtn = document.getElementById('playlist-popup-close');
+    const loadingPopup = document.getElementById('loading-popup');
+    const loadingBar = document.getElementById('loading-bar');
 
-    function handleLogin() {
-        const username = loginUsernameInput.value.trim();
-        const password = loginPasswordInput.value.trim();
-        loginError.textContent = '';
-
-        if (userCredentials[username] && userCredentials[username] === password) {
-            isLoggedIn = true;
-            alert('✅ Logged in successfully! [VIDU]');
-            closeModal(loginModal);
-            loginBtnTop.textContent = '✅ Logged In';
-            loginBtnTop.disabled = true;
-        } else {
-            loginError.textContent = 'Invalid username or password.';
+    function openPlaylistPopup(item){
+      // item = {type:'playlist', title, idB64, ...}
+      lastOpenedPlaylistItem = item;
+      playlistTitleEl.textContent = item.title || 'Playlist';
+      playlistCountEl.textContent = 'Loading...';
+      playlistBody.innerHTML = `<div style="padding:18px;color:#ddd">Loading playlist...</div>`;
+      playlistPopup.classList.add('visible');
+      playlistPopup.setAttribute('aria-hidden','false');
+      document.body.style.overflow = 'hidden';
+      // fetch playlist items
+      (async ()=>{
+        try{
+          const rawId = normalizeIdFromB64(item.idB64 || '');
+          const playlistId = (rawId||'').split('&')[0];
+          const videos = await fetchPlaylistVideos(playlistId);
+          playlistBody.innerHTML = '';
+          playlistCountEl.textContent = `${videos.length} Videos`;
+          if(!videos.length){
+            playlistBody.innerHTML = `<div style="padding:18px;color:#ffdede">No videos in playlist.</div>`;
+            return;
+          }
+          videos.forEach(v=>{
+            const node = document.createElement('div');
+            node.className = 'playlist-item';
+            node.innerHTML = `
+              <img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" />
+              <div class="meta">
+                <div class="t">${escapeHtml(v.title)}</div>
+                <div class="s">Click to play</div>
+              </div>
+            `;
+            node.tabIndex = 0;
+            function clickHandler(){
+              // close playlist, show loading progress, then open player for this video
+              closePlaylistPopup();
+              showLoadingPopupThenPlay(v);
+            }
+            node.addEventListener('click', clickHandler);
+            node.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key === ' ') { e.preventDefault(); clickHandler(); }});
+            playlistBody.appendChild(node);
+          });
+          // scroll to top
+          playlistBody.scrollTop = 0;
+        }catch(err){
+          playlistBody.innerHTML = `<div style="padding:18px;color:#ffdede">Failed to load playlist: ${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
+          playlistCountEl.textContent = '0 Videos';
         }
+      })();
     }
 
-    // Event listeners for the login modal
-    loginBtnTop.addEventListener('click', () => {
-        loginError.textContent = '';
-        loginUsernameInput.value = '';
-        loginPasswordInput.value = '';
-        showModal(loginModal);
-        setTimeout(() => loginUsernameInput.focus(), 120);
-    });
-    loginClose.addEventListener('click', () => closeModal(loginModal));
-    loginModal.addEventListener('click', (e) => { if (e.target === loginModal) closeModal(loginModal); });
-    loginSubmit.addEventListener('click', handleLogin);
-    loginPasswordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
+    function closePlaylistPopup(){
+      playlistPopup.classList.remove('visible');
+      playlistPopup.setAttribute('aria-hidden','true');
+      document.body.style.overflow = '';
+    }
 
-    // Event listeners for the access denied modal
-    accessClose.addEventListener('click', () => closeModal(accessModal));
-    accessModal.addEventListener('click', (e) => { if (e.target === accessModal) closeModal(accessModal); });
+    playlistCloseBtn.addEventListener('click', ()=> closePlaylistPopup());
+    playlistPopup.addEventListener('click', (e)=> { if(e.target === playlistPopup) closePlaylistPopup(); });
 
-    // NEW: Central click handler for all tiles
+    function showLoadingPopupThenPlay(v){
+      // show loading popup with bar filling for 2 seconds, then open player
+      loadingBar.style.transition = 'none';
+      loadingBar.style.width = '0%';
+      loadingPopup.classList.add('visible');
+      loadingPopup.setAttribute('aria-hidden','false');
+      document.body.style.overflow = 'hidden';
+      // ensure transition kicks in
+      setTimeout(()=>{
+        loadingBar.style.transition = 'width 2s linear';
+        loadingBar.style.width = '100%';
+      }, 20);
+      setTimeout(()=>{
+        // hide loading, then open viewer with this video
+        loadingPopup.classList.remove('visible');
+        loadingPopup.setAttribute('aria-hidden','true');
+        loadingBar.style.transition = 'none';
+        loadingBar.style.width = '0%';
+        document.body.style.overflow = '';
+        // construct a video item and open viewer
+        const videoItem = { type: 'video', title: v.title, idB64: btoa(v.videoId) };
+        openViewer(videoItem);
+      }, 2000); // exactly 2 seconds as requested
+    }
+
+    /* ---------- NEW: Adjust handleTileClick so playlists open popup instead of the mixed viewer auto-play ---------- */
     function handleTileClick(item) {
         if (isLoggedIn) {
-            // If logged in, open the viewer directly, bypassing any password checks.
-            openViewer(item);
+            if(item && item.type === 'playlist'){
+              openPlaylistPopup(item);
+            } else {
+              openViewer(item);
+            }
         } else {
-            // If not logged in, show the 'login required' message.
             showModal(accessModal);
         }
     }
 
-    /* ---------- (Original) password modal - now largely unused but kept for code integrity ---------- */
+    /* ---------- (Original) password modal - kept for integrity ---------- */
     let currentItem = null;
     const pwModal = document.getElementById('pw-modal');
     const pwTitleEl = document.getElementById('pw-title');
@@ -502,8 +680,6 @@
     const modalPreview = document.getElementById('modal-preview');
 
     function openPasswordModal(item){
-      // This function is now effectively bypassed by `handleTileClick`
-      // but is kept in case direct calls are ever needed.
       try{
         const decoded = item && typeof item.passB64 === 'string' ? atob(item.passB64) : '';
         if(!decoded || decoded.trim() === ''){
@@ -1263,8 +1439,10 @@
       return results;
     }
 
-    /* ---------- show playlist (advanced only) ---------- */
+    /* ---------- show playlist (legacy) - kept but not used for initial playlist open ---------- */
     async function showPlaylistInsideViewer(item){
+      // This function is left intact for backward compatibility but we no longer auto-play the first video.
+      // Current logic: show player + playlist in viewer when explicitly required.
       const rawId = normalizeIdFromB64(item.idB64);
       const playlistId = rawId.split('&')[0];
       const iframeWrap = document.getElementById('iframe-wrap');
@@ -1292,6 +1470,7 @@
         if(!videos.length) throw new Error('No videos found or playlist is private.');
 
         // populate playlistContainer (below player)
+        playlistContainer.innerHTML = '';
         videos.forEach(v=>{
           const li = document.createElement('div');
           li.className = 'list-item';
@@ -1304,7 +1483,7 @@
             if(np) np.textContent = v.title || 'Now playing';
             if(window.showViduPlayer){
               try{ window.destroyViduPlayer(); }catch(e){}
-              mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Loading advanced player...</div>`;
+              mountRoot.innerHTML = `<div style="padding:18px;color:#ddd;">Loading advanced player.</div>`;
               window.showViduPlayer(v.videoId, 'player-wrap').catch(err=>{
                 mountRoot.innerHTML = '';
                 const errBlock = document.createElement('div');
@@ -1330,18 +1509,7 @@
           playlistContainer.appendChild(li);
         });
 
-        // autoplay first video using advanced player
-        const first = videos[0];
-        if(first && window.showViduPlayer){
-          // update now playing title to first video
-          const np = document.getElementById('now-playing-title');
-          if(np) np.textContent = first.title || 'Now playing';
-          try{
-            await window.showViduPlayer(first.videoId, 'player-wrap');
-          }catch(err){
-            mountRoot.innerHTML = `<div style="padding:18px;color:#ffdede;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
-          }
-        }
+        // Do not autoplay first video here anymore. User must click item to play (or use separate flow).
       }catch(err){
         iframeWrap.innerHTML = '';
         playlistContainer.innerHTML = '';
@@ -1369,6 +1537,7 @@
         document.body.style.overflow = 'hidden';
 
         if(item.type === 'playlist'){
+          // fallback legacy: if somehow asked to show playlist inside viewer, use legacy method
           showPlaylistInsideViewer(item);
         } else {
           // single video
@@ -1381,21 +1550,90 @@
       }catch(e){ console.warn('openViewer err', e); }
     }
 
-    // viewer close
+    // viewer close (header close button)
     document.getElementById('viewer-close').addEventListener('click', ()=>{
       try{
         const v = document.getElementById('viewer'); if(v){ v.classList.add('hidden'); v.setAttribute('aria-hidden','true'); }
         if(window.destroyViduPlayer) window.destroyViduPlayer();
         const wrap = document.getElementById('iframe-wrap'); if(wrap) wrap.innerHTML = '';
         document.body.style.overflow = '';
+        // if we had a last opened playlist, reopen it
+        if(lastOpenedPlaylistItem){
+          // tiny delay so close animations finish
+          setTimeout(()=> openPlaylistPopup(lastOpenedPlaylistItem), 120);
+        }
       }catch(e){}
     });
+
+    // Wrap existing destroy function so any programmatic destroys also reopen the playlist popup if needed
+    (function wrapDestroy(){
+      const orig = window.destroyViduPlayer;
+      if(typeof orig === 'function'){
+        window.destroyViduPlayer = function(){
+          try{ orig(); }catch(e){ console.warn('wrapped destroy error', e); }
+          try{
+            // if viewer already hidden, ensure it's hidden
+            const v = document.getElementById('viewer'); if(v){ v.classList.add('hidden'); v.setAttribute('aria-hidden','true'); }
+            const wrap = document.getElementById('iframe-wrap'); if(wrap) wrap.innerHTML = '';
+            document.body.style.overflow = '';
+          }catch(e){}
+          if(lastOpenedPlaylistItem){
+            setTimeout(()=> openPlaylistPopup(lastOpenedPlaylistItem), 120);
+          }
+        };
+      } else {
+        // if not defined yet, polyfill a small wrapper to be safe: try again later
+        setTimeout(wrapDestroy, 400);
+      }
+    })();
 
     // initial render
     buildTiles();
 
     // expose openViewer globally for other use
     window.openViewer = openViewer;
+
+    /* ---------- NEW: Login & access UI wiring (kept the same) ---------- */
+    const loginBtnTop = document.getElementById('login-btn-top');
+    const loginModal = document.getElementById('login-modal');
+    const loginClose = document.getElementById('login-close');
+    const loginUsernameInput = document.getElementById('login-username');
+    const loginPasswordInput = document.getElementById('login-password');
+    const loginSubmit = document.getElementById('login-submit');
+    const loginError = document.getElementById('login-error');
+    const accessModal = document.getElementById('access-modal');
+    const accessClose = document.getElementById('access-close');
+
+    function handleLogin() {
+        const username = loginUsernameInput.value.trim();
+        const password = loginPasswordInput.value.trim();
+        loginError.textContent = '';
+
+        if (userCredentials[username] && userCredentials[username] === password) {
+            isLoggedIn = true;
+            alert('✅ Logged in successfully! [VIDU]');
+            closeModal(loginModal);
+            loginBtnTop.textContent = '✅ Logged In';
+            loginBtnTop.disabled = true;
+        } else {
+            loginError.textContent = 'Invalid username or password.';
+        }
+    }
+
+    loginBtnTop.addEventListener('click', () => {
+        loginError.textContent = '';
+        loginUsernameInput.value = '';
+        loginPasswordInput.value = '';
+        showModal(loginModal);
+        setTimeout(() => loginUsernameInput.focus(), 120);
+    });
+    loginClose.addEventListener('click', () => closeModal(loginModal));
+    loginModal.addEventListener('click', (e) => { if (e.target === loginModal) closeModal(loginModal); });
+    loginSubmit.addEventListener('click', handleLogin);
+    loginPasswordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
+
+    accessClose.addEventListener('click', () => closeModal(accessModal));
+    accessModal.addEventListener('click', (e) => { if (e.target === accessModal) closeModal(accessModal); });
 
   })();
   </script>
