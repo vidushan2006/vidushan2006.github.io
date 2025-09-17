@@ -173,6 +173,7 @@
     .vidu-controls-bg.hidden { opacity:0; }
 
     .vidu-overlay { position:absolute; left:12px; right:12px; bottom:12px; z-index:9999; display:flex; gap:12px; align-items:center; padding:8px 12px; border-radius:10px; box-sizing:border-box; transition:opacity .18s ease,transform .18s ease; flex-wrap:wrap; justify-content:flex-start; will-change: opacity, transform; }
+    .vidu-overlay.hidden { opacity:0; transform: translateY(6px); pointer-events:none; }
     .vidu-overlay .inner-bg{ position:absolute; inset:0; border-radius:10px; pointer-events:none; background:rgba(20, 22, 28, 0.6); z-index:-1; border: 1px solid rgba(255,255,255,0.05);}
 
     .vidu-btn { background: rgba(255,255,255,0.08); color:#fff; padding:8px; border-radius:22px; cursor:pointer; user-select:none; border:1px solid rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; width:46px; height:46px; transition:transform .12s ease; }
@@ -426,7 +427,8 @@
     inactivityTimer: null,
     lastActivity: Date.now(),
     desiredPlaying: null,
-    lastVolume: 100,
+    // MODIFIED: Load volume from localStorage, defaulting to 100.
+    lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
     volumeFeedbackTimer: null,
     _menuOpenTs: 0
   };
@@ -574,6 +576,7 @@
                 const newVolume = Math.min(100, currentVolume + 5);
                 state.player.setVolume(newVolume);
                 state.lastVolume = newVolume;
+                try { localStorage.setItem('vidu_player_volume', newVolume); } catch(e){}
                 if (newVolume > 0 && typeof state.player.unMute === 'function') state.player.unMute();
                 showVolumeFeedback(newVolume);
                 resetInactivityTimer();
@@ -587,6 +590,7 @@
                 const newVolume = Math.max(0, currentVolume - 5);
                 state.player.setVolume(newVolume);
                 state.lastVolume = newVolume;
+                try { localStorage.setItem('vidu_player_volume', newVolume); } catch(e){}
                 if (newVolume === 0 && typeof state.player.mute === 'function') state.player.mute();
                 showVolumeFeedback(newVolume);
                 resetInactivityTimer();
@@ -604,7 +608,24 @@
 
     playBtn.addEventListener('click', ()=>{ if(!state.player) return; let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} const wantPlay = !(st === 1); state.desiredPlaying = wantPlay; playBtn.innerHTML = wantPlay ? pauseSVG() : playSVG(); try{ if(wantPlay){ if(typeof state.player.playVideo === 'function') state.player.playVideo(); } else { if(typeof state.player.pauseVideo === 'function') state.player.pauseVideo(); } }catch(e){ console.warn('play/pause toggle err', e); } resetInactivityTimer(); });
 
-    function resetInactivityTimer(){ state.lastActivity = Date.now(); setOverlayHidden(false); if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); state.inactivityTimer = null; } state.inactivityTimer = setTimeout(()=>{ try{ const st = state.player && typeof state.player.getPlayerState === 'function' ? state.player.getPlayerState() : -1; if(st === 1 || st === 3 || st === -1 || st === 0 || st === 5){ setOverlayHidden(true); } }catch(e){} }, 5000); }
+    // MODIFIED: Inactivity timer logic updated to 3 seconds and to work when paused.
+    function resetInactivityTimer(){
+        state.lastActivity = Date.now();
+        setOverlayHidden(false);
+        if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
+        state.inactivityTimer = setTimeout(()=>{
+            try {
+                if (state.player && typeof state.player.getPlayerState === 'function') {
+                    const isMenuOpen = document.getElementById('vidu_playback_menu')?.classList.contains('open');
+                    const isDragging = document.getElementById('vidu_seek')?._drag;
+                    // Only hide if the user isn't interacting with the menu or dragging the seek bar.
+                    if (!isMenuOpen && !isDragging) {
+                        setOverlayHidden(true);
+                    }
+                }
+            } catch(e) { console.warn('Inactivity timer error', e); }
+        }, 3000); // Hide after 3 seconds of inactivity.
+    }
     function attachActivityListeners(){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); }); }catch(e){} }
     attachActivityListeners();
 
