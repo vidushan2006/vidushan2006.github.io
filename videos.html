@@ -376,6 +376,34 @@
     .playlist-item .meta .t { font-weight:800; color:#fff; font-size:14px; }
     .playlist-item .meta .s { color: rgba(220,220,220,0.75); font-size:12px; }
 
+    /* ===== NEW: Playlist Loading Indicator Styles ===== */
+    .playlist-loading-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 18px;
+      user-select: none;
+      text-align: center;
+    }
+    .playlist-loading-indicator .spinner {
+      width: 48px;
+      height: 48px;
+      border: 5px solid rgba(255, 255, 255, 0.12);
+      border-top-color: #00ff8a;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .playlist-loading-indicator .loading-text {
+      font-size: 18px;
+      font-weight: 800;
+      color: rgba(230, 240, 230, 0.85);
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     /* ===== NEW: Loading popup with rounded progress bar ===== */
     .loading-popup {
       position: fixed;
@@ -649,7 +677,13 @@
       } else {
         // CACHE MISS: Prepare the "loading" content BEFORE showing.
         playlistCountEl.textContent = 'Loading...';
-        playlistBody.innerHTML = `<div style="padding:18px;color:#ddd">Initializing VIDU Fetcher...</div>`;
+        // MODIFIED: Replaced the simple text with a centered spinner and larger text.
+        playlistBody.innerHTML = `
+          <div class="playlist-loading-indicator">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading Videos...</div>
+          </div>
+        `;
 
         // Now show the popup in its loading state.
         playlistPopup.classList.add('visible');
