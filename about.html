@@ -102,19 +102,15 @@
     }
 
     /*
-      Narrower neon line + "around the button" glow:
-      - ::before: a narrow (thin) neon line centered above the button (now decreased width)
-      - ::after: a subtle rounded neon inset/glow that wraps around the button edges on hover
+      Narrow neon line centered above the button + wrap glow
     */
-
-    /* narrow neon line centered above the button */
     nav a::before{
       content: "";
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
       top: 8px; /* sits slightly above the button top */
-      width: 40%; /* decreased width (narrower) */
+      width: 40%; /* narrow width */
       height: 6px;
       border-radius: 999px; /* fully rounded */
       background: linear-gradient(90deg, rgba(123,97,255,0.12) 10%, rgba(57,255,20,0.95));
@@ -127,7 +123,6 @@
       z-index: 0;
     }
 
-    /* rounded neon glow that wraps around the button (inset border) */
     nav a::after{
       content: "";
       position: absolute;
@@ -137,9 +132,9 @@
       bottom: 6px;
       border-radius: 10px;
       box-shadow:
-        0 0 18px rgba(57,255,20,0.04), /* outer glow */
-        inset 0 0 10px rgba(57,255,20,0.02); /* faint inner tint */
-      opacity: 0; /* hidden by default, appears on hover */
+        0 0 18px rgba(57,255,20,0.04),
+        inset 0 0 10px rgba(57,255,20,0.02);
+      opacity: 0;
       transition: opacity .12s ease, box-shadow .12s ease;
       pointer-events: none;
       z-index: 0;
@@ -204,33 +199,36 @@
     h1 { font-size:36px; letter-spacing:-0.6px; }
     h2 { font-size:22px; color:var(--text); margin-bottom:6px; }
 
-    /* The scrollable detailed box — set to show exactly 11 lines by default */
+    /* The scrollable detailed box — darker background + better contrast */
     .scrollbox {
-      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      /* darker, high-contrast background to read over wallpaper */
+      background: linear-gradient(180deg, rgba(4,6,10,0.78), rgba(6,8,14,0.78));
       border: 1px solid rgba(255,255,255,0.04);
       border-radius: 12px;
       padding: 16px;
       box-shadow: 0 14px 40px rgba(2,6,18,0.45);
-      color:var(--muted);
+      color: var(--text); /* full contrast text */
       font-size: var(--scrollbox-font-size);
       line-height: var(--scrollbox-line-height);
       overflow-y: auto;
       /* compute height = (font-size * line-height * lines) + vertical padding */
       max-height: calc( (var(--scrollbox-font-size) * var(--scrollbox-line-height) * var(--scrollbox-lines)) + var(--scrollbox-vertical-padding) );
+      backdrop-filter: blur(6px) saturate(120%); /* subtle blur to separate from wallpaper */
+      -webkit-backdrop-filter: blur(6px) saturate(120%);
     }
 
     .scrollbox h3 { margin-top:0; color:var(--text); font-size:18px; }
     .scrollbox h4 { color:var(--text); margin-bottom:6px; }
-    .scrollbox ul, .scrollbox ol { margin:8px 0 12px 20px; color:var(--muted); }
+    .scrollbox ul, .scrollbox ol { margin:8px 0 12px 20px; color:var(--text); }
     .scrollbox strong { color:var(--text); }
 
     /* custom thin scrollbar for WebKit */
     .scrollbox::-webkit-scrollbar { width:10px; }
     .scrollbox::-webkit-scrollbar-track { background: transparent; }
     .scrollbox::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, rgba(123,97,255,0.18), rgba(57,255,20,0.08));
+      background: linear-gradient(180deg, rgba(123,97,255,0.18), rgba(57,255,20,0.12));
       border-radius: 10px;
-      border: 2px solid rgba(0,0,0,0.08);
+      border: 2px solid rgba(0,0,0,0.12);
     }
 
     .panel {
@@ -404,18 +402,10 @@
               YouTube
             </a>
           </div>
-
-          <div style="margin-top:14px; text-align:center;">
-            <p style="margin:0;font-weight:700;color:var(--text);">Created by VIDU</p>
-          </div>
         </div>
 
       </section>
     </main>
-
-    <footer id="footer" role="contentinfo">
-      <small>© <span id="year"></span> VIDU — All rights reserved</small>
-    </footer>
 
   </div>
 
