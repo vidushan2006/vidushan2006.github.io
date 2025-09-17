@@ -356,7 +356,22 @@
       background:transparent;
     }
     .playlist-item:hover { background: rgba(255,255,255,0.02); transform: translateY(-2px); }
-    .playlist-item img { width:140px; height:78px; object-fit:cover; border-radius:8px; flex:0 0 140px; }
+    /* REMOVED IMG STYLING, REPLACED WITH NEW NUMBER THUMBNAIL STYLE */
+    .playlist-item-num-thumb {
+      width: 140px;
+      height: 78px;
+      flex: 0 0 140px;
+      border-radius: 8px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      font-weight: 900;
+      color: #00ff3a;
+      text-shadow: 0 0 6px rgba(0,255,120,0.95), 0 0 18px rgba(0,255,120,0.45);
+      user-select: none;
+    }
     .playlist-item .meta { display:flex; flex-direction:column; gap:6px; }
     .playlist-item .meta .t { font-weight:800; color:#fff; font-size:14px; }
     .playlist-item .meta .s { color: rgba(220,220,220,0.75); font-size:12px; }
@@ -584,11 +599,12 @@
         return;
       }
 
-      videos.forEach(v => {
+      videos.forEach((v, index) => {
         const node = document.createElement('div');
         node.className = 'playlist-item';
+        // MODIFIED: Replaced <img> with a styled div containing the video number.
         node.innerHTML = `
-          <img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" />
+          <div class="playlist-item-num-thumb">${index + 1}</div>
           <div class="meta">
             <div class="t">${escapeHtml(v.title)}</div>
             <div class="s">Click to play</div>
