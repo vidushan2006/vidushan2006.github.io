@@ -211,7 +211,6 @@
       opacity: 0.15;
     }
     
-    /* MODIFIED: Performance fix - disable card animations when viewer is open */
     body.viewer-is-open .card:hover {
         transform: none;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -363,9 +362,8 @@
       border: none;
       font-weight: 700;
       cursor: pointer;
-      /* MODIFIED: Button color toned down for better readability */
       background: linear-gradient(180deg, #00d675, #009d57);
-      color: #FFFFFF; /* Changed to white for max contrast */
+      color: #FFFFFF;
       font-size: 15px;
       transition: transform 0.18s ease, box-shadow .2s ease;
       box-shadow: 0 4px 15px rgba(0, 255, 138, 0.2);
@@ -498,7 +496,6 @@
       white-space: nowrap; 
       overflow: hidden; 
       text-overflow: ellipsis;
-      /* MODIFIED: Added text shadow for better readability */
       text-shadow: 0 1px 4px rgba(0,0,0,0.7);
     }
 
@@ -616,7 +613,8 @@
       font-size: 14px;
       font-weight: 700;
       font-family: var(--font-mono);
-      color: var(--text-secondary);
+      /* MODIFIED: Changed color to white for readability */
+      color: #FFFFFF;
       text-align: center;
       letter-spacing: 1px;
     }
@@ -1046,7 +1044,6 @@
     playlistCloseBtn.addEventListener('click', ()=> closePlaylistPopup());
     playlistPopup.addEventListener('click', (e)=> { if(e.target === playlistPopup) closePlaylistPopup(); });
 
-    /* MODIFIED: Replaced fake loader with a real one tied to player readiness */
     async function showLoadingPopupThenPlay(v) {
       loadingBar.style.transition = 'width 0.5s ease-out';
       loadingBar.style.width = '0%';
@@ -1071,7 +1068,6 @@
         setTimeout(() => {
             loadingPopup.classList.remove('visible');
             loadingPopup.setAttribute('aria-hidden','true');
-            // The viewer is already controlling the body overflow.
             
             setTimeout(() => {
                 loadingBar.style.transition = 'none';
@@ -1096,7 +1092,6 @@
                     openPlaylistPopup(item);
                 } else {
                     lastOpenedPlaylistItem = null;
-                    // For single videos, we can also use the new loading sequence for consistency.
                     const videoDetails = { videoId: normalizeIdFromB64(item.idB64), title: item.title };
                     showLoadingPopupThenPlay(videoDetails);
                 }
@@ -1178,7 +1173,7 @@
       return window._vidu_loading_yt_promise;
     }
 
-    /* ---------- Player module (MODIFIED) ---------- */
+    /* ---------- Player module ---------- */
     (function playerModule(){
       if(window.__viduPlayerLoaded) return;
       window.__viduPlayerLoaded = true;
@@ -1248,12 +1243,10 @@
         playbackBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openPlaybackMenu(); });
         function setOverlayHidden(hidden){ if(hidden){ overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); closeBtn.classList.add('hidden'); } else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); closeBtn.classList.remove('hidden'); } }
         
-        /* MODIFIED: Updated key handler for seeking and focus management */
         state.keyHandler = function(e){
             const modal = document.getElementById('viewer');
             if(!modal || modal.classList.contains('hidden')) return;
 
-            // Handle volume controls first as they are universal
             if (e.key === 'ArrowUp' || e.key === 'ArrowDown'){ 
                 try{ 
                     if(!state.player) return; 
@@ -1269,11 +1262,9 @@
                 return;
             }
 
-            // If any other input field has focus (except our player controls), do nothing.
             const activeEl = document.activeElement;
             if (activeEl && (activeEl.tagName === 'INPUT' && activeEl.type !== 'range') || activeEl.isContentEditable) return;
 
-            // Player-specific controls
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                 e.preventDefault();
                 try {
@@ -1299,7 +1290,7 @@
             if(!state.player) return; 
             const dur = state.player.getDuration ? state.player.getDuration() : 0; 
             if(dur) state.player.seekTo(dur * (parseFloat(seekEl.value)/100), true);
-            seekEl.blur(); // MODIFIED: Remove focus from seekbar after use
+            seekEl.blur();
         }, {passive:true});
         seekEl.addEventListener('input', ()=>{ if(seekEl._drag && state.player){ const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) curEl.textContent = fmtTime(Math.floor(dur * (parseFloat(seekEl.value)/100))); updateSeekBackground(seekEl); } }, {passive:true});
         function updateSeekBackground(el){ try{ const v = Math.max(0, Math.min(100, parseFloat(el.value) || 0)); el.style.background = `linear-gradient(90deg, var(--accent-primary) ${v}%, rgba(255,255,255,0.2) ${v}%)`; }catch(e){} } updateSeekBackground(seekEl);
@@ -1355,13 +1346,12 @@
         viewer.classList.remove('hidden');
         viewer.setAttribute('aria-hidden','false');
         document.body.style.overflow = 'hidden';
-        document.body.classList.add('viewer-is-open'); // MODIFIED: Add class for performance fix
+        document.body.classList.add('viewer-is-open');
         const mountRoot = document.createElement('div');
         mountRoot.id = 'player-wrap';
         mountRoot.style.width='100%';
         mountRoot.style.height='100%';
         iframeWrap.appendChild(mountRoot);
-        // MODIFIED: Return the promise for the new loading sequence
         return window.showViduPlayer(normalizeIdFromB64(item.idB64), 'player-wrap').catch(err=>{
           mountRoot.innerHTML = `<div style="padding:18px;color:#ffdede;">${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
           return Promise.reject(err);
@@ -1380,7 +1370,7 @@
         const wrap = document.getElementById('iframe-wrap');
         if(wrap) wrap.innerHTML = '';
         document.body.style.overflow = '';
-        document.body.classList.remove('viewer-is-open'); // MODIFIED: Remove class for performance fix
+        document.body.classList.remove('viewer-is-open');
         if(lastOpenedPlaylistItem){
           setTimeout(()=> openPlaylistPopup(lastOpenedPlaylistItem), 120);
         }
