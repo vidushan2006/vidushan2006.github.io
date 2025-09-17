@@ -328,13 +328,38 @@
         <button id="notification-close-btn" class="notification-close-btn" aria-label="Close notifications">&times;</button>
     </div>
     <div class="notification-content">
-        <p>Welcome to <strong>VIDU</strong>! I'm constantly working on new features. Stay tuned for exciting updates coming soon! 🚀 Maybe a software 🤔</p>
-        <p style="margin-top:12px; font-size:12px; color: var(--muted);"><em>September 16, 2025</em></p>
-    </div>
- </div>
+  <p><strong>✨ New on VIDU — fresh features & UX upgrades!</strong></p>
+
+  <ul>
+    <li>🎬 <strong>Brand-new VIDU Player</strong> — custom player with play/pause, seek bar, current + total time, fullscreen toggle, and a smooth auto-hide control overlay for distraction-free viewing.</li>
+
+    <li>⚡️ <strong>Playback speed menu</strong> — choose 0.5x, 1x, 1.5x or 2x playback directly from the player. Perfect for review or fast watching.</li>
+
+    <li>🔊 <strong>Keyboard controls + on-screen volume feedback</strong> — space = play/pause, F = fullscreen, arrow keys to seek, arrow up/down to change volume (shows % on screen). Great for quick keyboard navigation. </li>
+
+    <li>📃 <strong>Full-screen playlist overlay</strong> — open playlists in a full overlay with a clean grid view, loading spinner while fetching, and numbered items so you can see order at a glance. (video-number badge added). </li>
+
+    <li>🔗 <strong>YouTube playlist importer</strong> — playlists are fetched through the YouTube API so full playlists can be loaded dynamically (with lazy thumbnails). </li>
+
+    <li>🔒 <strong>Password-protected content</strong> — items can be password-protected and unlocked via a modal. Encrypted IDs and base64/pass fields handle secure access flows. </li>
+
+    <li>⏳ <strong>Player & playlist loading overlays</strong> — polished loading popups and progress bars for downloads, player load, and playlist fetches (includes a spinner and animated progress). </li>
+
+    <li>⬇️ <strong>Download button with visual progress</strong> — header download opens the target resource and shows a simulated progress bar while the link opens.</li>
+
+    <li>🧩 <strong>Improved UI & performance tweaks</strong> — replaced heavy GIFs and expensive CSS filters with faster alternatives, simplified shadows/animations for smoother rendering (faster on low-end devices).</li>
+
+    <li>🔁 <strong>Playlist navigation & back stack</strong> — nested playlist browsing with a back button and a stack so users can drill down and return seamlessly. </li>
+
+    <li>🛡️ <strong>Interaction restrictions for content safety / UX</strong> — context menu blocked, devtools hotkeys prevented, and Escape closes modals / overlays for consistent UX. </li>
+  </ul>
+
+  <p style="margin-top:10px; font-size:13px; color:var(--muted);"><em>on September 17, 2025 — enjoy the updates! 🚀 [VIDU]</em></p>
+</div>
+</div>
  <div id="loading-popup-overlay" class="loading-popup-overlay">
   <div class="loading-popup-content">
-    <p id="loading-popup-message">Downloading VIDU For Windows(x64), please wait...</p>
+    <p id="loading-popup-message">Downloading VIDU For Windows(x64) please wait...</p>
     <div class="loading-bar-container">
       <div id="loading-bar-fill" class="loading-bar-fill"></div>
     </div>
@@ -349,12 +374,12 @@
   <div id="fs-playlist-content" class="fs-playlist-content"></div>
   <div id="fs-playlist-loader" class="fs-playlist-loader" style="display: none;">
     <div class="spinner"></div>
-    <p>Loading playlist...</p>
+    <p>Initializing VIDU Fetcher...</p>
   </div>
 </div>
 <div id="player-loading-overlay" class="loading-popup-overlay">
   <div class="loading-popup-content">
-    <p>Loading VIDU Player</p>
+    <p>Initializing VIDU Player</p>
     <div class="loading-bar-container">
       <div id="player-loading-bar-fill" class="loading-bar-fill"></div>
     </div>
