@@ -356,7 +356,7 @@
   <div class="loading-popup-content">
     <p>Loading VIDU Player</p>
     <div class="loading-bar-container">
-      <div id="player-loading-bar-fill" class="loading-bar-fill"></div>
+      <div id="player-loading-bar-fill" class="player-loading-bar-fill"></div>
     </div>
   </div>
 </div>
@@ -695,6 +695,8 @@ function showPlaylistVideos(pl, skipPush){
 function spawnRipple(ev,target){ const rect = target.getBoundingClientRect(); const drop = document.createElement('div'); drop.className = 'drop'; drop.style.left = (ev.clientX - rect.left) + 'px'; drop.style.top = (ev.clientY - rect.top) + 'px'; target.appendChild(drop); setTimeout(()=> drop.remove(),700); }
 
 let currentItem = null;
+// This object acts as an in-memory cache for playlist data.
+// It is cleared when the page is reloaded, fulfilling the session-only requirement.
 let currentPlaylistCache = {};
 
 function createModal(){
@@ -761,7 +763,15 @@ function onPasswordSubmit(){
 const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
 async function fetchPlaylistVideos(playlistId){
   if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
-  if (currentPlaylistCache[playlistId]) return currentPlaylistCache[playlistId];
+
+  // STEP 1: Check the cache first.
+  // If the playlist data for this ID already exists, return it immediately
+  // without making a new API call.
+  if (currentPlaylistCache[playlistId]) {
+    return currentPlaylistCache[playlistId];
+  }
+
+  // STEP 2: If not in the cache, fetch from the YouTube API.
   const items=[]; let pageToken='';
   do{
     const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}` + (pageToken?`&pageToken=${pageToken}`:'');
@@ -777,7 +787,11 @@ async function fetchPlaylistVideos(playlistId){
     });
     pageToken = data.nextPageToken || '';
   } while(pageToken);
+
+  // STEP 3: After a successful fetch, store the results in the cache
+  // for future use within this session.
   currentPlaylistCache[playlistId] = items;
+
   return items;
 }
 
