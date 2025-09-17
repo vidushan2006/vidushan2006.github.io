@@ -294,6 +294,7 @@
         <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
       </div>
     </a>
+    <! Download button>
     <div class="header-right-controls">
         <button id="download-btn-header" class="header-icon-btn" data-link="https://vidu2006.netlify.app/assets/tools/coming%20soon" aria-label="Download" title="Download">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
@@ -327,17 +328,18 @@
         <h3 id="notification-title">Notifications</h3>
         <button id="notification-close-btn" class="notification-close-btn" aria-label="Close notifications">&times;</button>
     </div>
+   <! Notification panel>
    <div class="notification-content">
   <p><strong>✨ New on VIDU — fresh features & UX upgrades!</strong></p>
 
   <ul>
-    <li>🎬 <strong>Brand-new VIDU Player</strong> — custom player with play/pause, seek bar, current + total time, fullscreen toggle, and a smooth auto-hide control overlay for distraction-free viewing. :contentReference[oaicite:1]{index=1}</li>
+    <li>🎬 <strong>Brand-new VIDU Player</strong> — custom player with play/pause, seek bar, current + total time, fullscreen toggle, and a smooth auto-hide control overlay for distraction-free viewing.</li>
 
-    <li>⚡️ <strong>Playback speed menu</strong> — choose 0.5x, 1x, 1.5x or 2x playback directly from the player. Perfect for review or fast watching. :contentReference[oaicite:2]{index=2}</li>
+    <li>⚡️ <strong>Playback speed menu</strong> — choose 0.5x, 1x, 1.5x or 2x playback directly from the player. Perfect for review or fast watching.</li>
 
     <li>🔊 <strong>Keyboard controls + on-screen volume feedback</strong> — space = play/pause, F = fullscreen, arrow keys to seek, arrow up/down to change volume (shows % on screen). Great for quick keyboard navigation. </li>
 
-    <li>📃 <strong>Full-screen playlist overlay</strong> — open playlists in a full overlay with a clean grid view, loading spinner while fetching, and numbered items so you can see order at a glance. (NEW: video-number badge added). </li>
+    <li>📃 <strong>Full-screen playlist overlay</strong> — open playlists in a full overlay with a clean grid view, loading spinner while fetching, and numbered items so you can see order at a glance. (video-number badge added). </li>
 
     <li>🔗 <strong>YouTube playlist importer</strong> — playlists are fetched through the YouTube API so full playlists can be loaded dynamically (with lazy thumbnails). </li>
 
@@ -345,16 +347,16 @@
 
     <li>⏳ <strong>Player & playlist loading overlays</strong> — polished loading popups and progress bars for downloads, player load, and playlist fetches (includes a spinner and animated progress). </li>
 
-    <li>⬇️ <strong>Download button with visual progress</strong> — header download opens the target resource and shows a simulated progress bar while the link opens. :contentReference[oaicite:8]{index=8}</li>
+    <li>⬇️ <strong>Download button with visual progress</strong> — header download opens the target resource and shows a simulated progress bar while the link opens.</li>
 
-    <li>🧩 <strong>Improved UI & performance tweaks</strong> — replaced heavy GIFs and expensive CSS filters with faster alternatives, simplified shadows/animations for smoother rendering (faster on low-end devices). :contentReference[oaicite:9]{index=9}</li>
+    <li>🧩 <strong>Improved UI & performance tweaks</strong> — replaced heavy GIFs and expensive CSS filters with faster alternatives, simplified shadows/animations for smoother rendering (faster on low-end devices).</li>
 
     <li>🔁 <strong>Playlist navigation & back stack</strong> — nested playlist browsing with a back button and a stack so users can drill down and return seamlessly. </li>
 
     <li>🛡️ <strong>Interaction restrictions for content safety / UX</strong> — context menu blocked, devtools hotkeys prevented, and Escape closes modals / overlays for consistent UX. </li>
   </ul>
 
-  <p style="margin-top:10px; font-size:13px; color:var(--muted);"><em>Posted on September 16, 2025 — enjoy the updates! 🚀</em></p>
+  <p style="margin-top:10px; font-size:13px; color:var(--muted);"><em>Posted on September 17, 2025 — enjoy the updates! 🚀</em></p>
 </div>
    
  <div id="loading-popup-overlay" class="loading-popup-overlay">
@@ -652,6 +654,7 @@
   window.addEventListener('beforeunload', ()=> { try{ window.destroyViduPlayer(); }catch(e){} }, {passive:true});
 })();
 </script>
+<! Classes>   
 <script>
 /*************************************************************************
  * Playlist data + UI + modal + YouTube playlist fetching
@@ -946,5 +949,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 
 
