@@ -193,9 +193,11 @@
     .vidu-player-host:-webkit-full-screen .vidu-mount, .vidu-player-host:fullscreen .vidu-mount { height:100vh !important; width:100% !important; }
     .vidu-player-host:-webkit-full-screen .vidu-mount iframe, .vidu-player-host:fullscreen .vidu-mount iframe { height:100vh !important; width:100% !important; max-height:none !important; }
     .vidu-player-host:-webkit-full-screen .vidu-overlay, .vidu-player-host:fullscreen .vidu-overlay { left:0 !important; right:0 !important; bottom:18px !important; width:100% !important; justify-content:center !important; padding:18px !important; }
-    @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; gap:8px; padding:8px; } .vidu-controls-bg { height:56px; } .vidu-time { min-width:76px; font-size:12px; } .vidu-range { min-width:100px; } }
-    @media (max-width:540px){ .vidu-overlay{ flex-wrap:wrap; justify-content:flex-start; } .vidu-time{ min-width:68px; font-size:12px; } .vidu-range{ min-width:86px; } .vidu-btn{ width:38px; height:38px; } .vidu-close-btn{ top:8px; right:8px; } }
-    @media (max-width:420px){ .vidu-time{ min-width:60px; font-size:12px; } .vidu-range{ min-width:72px; } .vidu-btn{ width:36px; height:36px; } }
+    
+    /* MODIFIED: Updated media queries to fix controls layout on small screens */
+    @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; gap:8px; padding:8px; } .vidu-controls-bg { height:56px; } .vidu-time { min-width:76px; font-size:12px; } .vidu-range { min-width:100px; } .vidu-btn { width: 42px; height: 42px; } }
+    @media (max-width:540px){ .vidu-overlay{ flex-wrap:nowrap; justify-content:flex-start; } .vidu-time{ min-width:68px; font-size:12px; } .vidu-range{ min-width:60px; } .vidu-close-btn{ top:8px; right:8px; } }
+    @media (max-width:420px){ .vidu-time{ min-width:60px; font-size:12px; } .vidu-range{ min-width:40px; } }
 
     .vidu-vol-feedback{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003; padding:12px 18px; border-radius:12px; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.06); font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5); pointer-events:none; opacity:0; transition:opacity .28s ease; display:none; min-width:72px; text-align:center; }
     
@@ -470,6 +472,9 @@
   function playSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4.5v15l12-7.5L6 4.5z" fill="#fff"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4" width="4" height="16" rx="1.2" fill="#fff"/><rect x="15" y="4" width="4" height="16" rx="1.2" fill="#fff"/></svg>`; }
   function gearSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.4-3.5c0-.4-.03-.78-.09-1.15l1.86-1.44a.5.5 0 0 0 .12-.65l-1.76-3.05a.5.5 0 0 0-.6-.22l-2.2.88a7.72 7.72 0 0 0-1.9-1.1l-.33-2.33A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.5.42l-.33 2.33c-.69.25-1.35.6-1.95 1.02l-2.2-.88a.5.5 0 0 0-.6.22L2.7 6.96a.5.5 0 0 0 .12.65l1.86 1.44c-.06.37-.09.75-.09 1.15s.03.78.09 1.15L2.82 14.95a.5.5 0 0 0-.12.65l1.76 3.05c.14.24.4.34.64.28l2.2-.88c.6.42 1.26.77 1.95 1.02l.33 2.33c.03.25.25.42.5.42h3.8c.25 0 .47-.17.5-.42l.33-2.33c.69-.25 1.35-.6 1.95-1.02l2.2.88c.24.09.5-.04.64-.28l1.76-3.05a.5.5 0 0 0-.12-.65l-1.86-1.44c.06-.37.09-.75.09-1.15z" fill="#fff"/></svg>`; }
+  // MODIFIED: Added SVGs for fullscreen button
+  function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" fill="#fff"/></svg>`; }
+  function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" fill="#fff"/></svg>`; }
 
   function createHostElements(){
     let wrap = document.getElementById('player-wrap');
@@ -493,7 +498,8 @@
     const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
     host.appendChild(ctrlBg);
     const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
-    overlay.innerHTML = `<div class="inner-bg" aria-hidden="true"></div><button class="vidu-btn" id="vidu_playbtn">${playSVG()}</button><div class="vidu-time" id="vidu_cur">`+fmtHHMMSS(0)+`</div><input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" /><div class="vidu-time" id="vidu_dur">`+fmtHHMMSS(0)+`</div><button class="vidu-btn" id="vidu_playbackbtn" title="Playback speed" aria-label="Playback speed">`+gearSVG()+`</button><button class="vidu-btn" id="vidu_fullbtn">⤢</button>`;
+    // MODIFIED: Replaced fullscreen character with SVG and added accessibility attributes
+    overlay.innerHTML = `<div class="inner-bg" aria-hidden="true"></div><button class="vidu-btn" id="vidu_playbtn">${playSVG()}</button><div class="vidu-time" id="vidu_cur">`+fmtHHMMSS(0)+`</div><input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" /><div class="vidu-time" id="vidu_dur">`+fmtHHMMSS(0)+`</div><button class="vidu-btn" id="vidu_playbackbtn" title="Playback speed" aria-label="Playback speed">`+gearSVG()+`</button><button class="vidu-btn" id="vidu_fullbtn" title="Fullscreen" aria-label="Fullscreen">${fullscreenSVG()}</button>`;
     host.appendChild(overlay);
     
     const playbackMenu = document.createElement('div');
@@ -546,6 +552,27 @@
     function getFullscreenElement(){ return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null; }
     function toggleFullscreen(){ const fs = getFullscreenElement(); if(fs === host){ const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen; if(exit) exit.call(document); } else { const req = host.requestFullscreen || host.webkitRequestFullscreen || host.mozRequestFullScreen || host.msRequestFullscreen; if(req) req.call(host); } }
     fullBtn.addEventListener('click', toggleFullscreen);
+
+    // MODIFIED: Add listener to update fullscreen button icon
+    state.fsListener = function() {
+      const fullBtn = document.getElementById('vidu_fullbtn');
+      if (!fullBtn) return;
+      const isFullscreen = !!getFullscreenElement();
+      if (isFullscreen) {
+        fullBtn.innerHTML = exitFullscreenSVG();
+        fullBtn.title = 'Exit Fullscreen';
+        fullBtn.setAttribute('aria-label', 'Exit Fullscreen');
+      } else {
+        fullBtn.innerHTML = fullscreenSVG();
+        fullBtn.title = 'Fullscreen';
+        fullBtn.setAttribute('aria-label', 'Fullscreen');
+      }
+    };
+    document.addEventListener('fullscreenchange', state.fsListener);
+    document.addEventListener('webkitfullscreenchange', state.fsListener);
+    document.addEventListener('mozfullscreenchange', state.fsListener);
+    document.addEventListener('MSFullscreenChange', state.fsListener);
+
     function setOverlayHidden(hidden){ if(hidden){ overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); if(closeBtn) closeBtn.classList.add('hidden'); if(playbackMenu) playbackMenu.classList.remove('open'); } else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); } }
     function showLoading(){ try{ if(loadingDiv){ loadingDiv.classList.remove('hidden'); loadingDiv.style.display = 'flex'; } }catch(e){} }
     function hideLoading(){ try{ if(loadingDiv){ loadingDiv.classList.add('hidden'); setTimeout(()=> { try{ loadingDiv.style.display = 'none'; }catch(e){} }, 320); } }catch(e){} }
