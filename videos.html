@@ -27,7 +27,16 @@
 
     .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;align-items:start}
     @media (min-width:900px){ .tiles{grid-template-columns:repeat(4,1fr)} }
-    @media (max-width:640px){ .tiles{grid-template-columns:1fr;gap:14px; justify-items:center;} .card{width:100%;max-width:420px;} }
+    /* ===== MODIFIED: Centered tiles on mobile using flexbox ===== */
+    @media (max-width:640px){
+      .tiles{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap:14px;
+      }
+      .card{width:100%;max-width:420px;}
+    }
 
     /* unified card styling */
     .card{display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.45));border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:transform .22s,box-shadow .22s;box-shadow:0 14px 30px rgba(0,0,0,0.55);min-height:300px}
@@ -502,6 +511,19 @@
     <div class="modal-box" role="document">
         <button class="modal-close" id="access-close" aria-label="Close">✕</button>
         <p style="font-size: 20px; font-weight: 700; color: #eaf7ea; margin: 20px 0;">🔒 Login to access these</p>
+        <div class="pw-actions">
+            <button id="access-request-btn" class="btn">Request Access</button>
+        </div>
+    </div>
+  </div>
+
+  <div id="no-access-modal" class="modal hidden" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-box" role="document">
+      <button class="modal-close" id="no-access-close" aria-label="Close">✕</button>
+      <p style="font-size: 20px; font-weight: 700; color: #eaf7ea; margin: 20px 0;">🔒 You don't have access to this</p>
+      <div class="pw-actions">
+          <button id="no-access-request-btn" class="btn">Request Access</button>
+      </div>
     </div>
   </div>
 
@@ -562,13 +584,24 @@
     const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c'; // keep your key here (used for playlist fetching)
     const YT_API_LOAD_TIMEOUT = 18000; // ms - how long to wait for YT API before showing error
 
-    /* NEW: User Credentials - Configure usernames and passwords here */
-    const userCredentials = {
-      'vidu': 'vidu123',
-      'Imal': '123',
-      'user': 'password'
+    /* ===== MODIFIED: User Permission System ===== */
+    // Define users, their passwords, and what content they can access by its title.
+    const userPermissions = {
+      'vidu': {
+        password: 'vidu123',
+        access: ['PHONK', 'TEST', 'ICT', 'ET Speed Revision', 'ET Theory'] // 'vidu' can access everything
+      },
+      'Imal': {
+        password: '123',
+        access: ['ET Speed Revision', 'ET Theory'] // 'Imal' can only access the two ET playlists
+      },
+      'user': {
+        password: 'password',
+        access: ['PHONK', 'TEST'] // 'user' can only access the two single videos
+      }
     };
-    let isLoggedIn = false;
+    let currentUser = null; // Replaces the old 'isLoggedIn' flag. Stores the logged-in user's data.
+
     // MODIFIED: Added global variable to remember volume across videos.
     let globalLastVolume = 100;
 
@@ -768,17 +801,25 @@
       }, 2000); // exactly 2 seconds as requested
     }
 
-    /* ---------- NEW: Adjust handleTileClick so playlists open popup instead of the mixed viewer auto-play ---------- */
+    /* ===== MODIFIED: Updated click handler with permission checks ===== */
     function handleTileClick(item) {
-        if (isLoggedIn) {
-            if(item && item.type === 'playlist'){
-              openPlaylistPopup(item);
+        if (currentUser) {
+            // User is logged in, check if they have permission for this item.
+            // We check if the item's title is in the user's 'access' array.
+            if (currentUser.permissions.includes(item.title)) {
+                // SUCCESS: User has access.
+                if (item && item.type === 'playlist') {
+                    openPlaylistPopup(item);
+                } else {
+                    lastOpenedPlaylistItem = null;
+                    openViewer(item);
+                }
             } else {
-              // Clear this in case a playlist was opened previously
-              lastOpenedPlaylistItem = null;
-              openViewer(item);
+                // FAIL: User is logged in but does not have permission.
+                showModal(noAccessModal);
             }
         } else {
+            // FAIL: User is not logged in at all.
             showModal(accessModal);
         }
     }
@@ -1724,7 +1765,7 @@
     // expose openViewer globally for other use
     window.openViewer = openViewer;
 
-    /* ---------- NEW: Login & access UI wiring (kept the same) ---------- */
+    /* ===== MODIFIED: Login & access UI wiring ===== */
     const loginBtnTop = document.getElementById('login-btn-top');
     const loginModal = document.getElementById('login-modal');
     const loginClose = document.getElementById('login-close');
@@ -1732,25 +1773,42 @@
     const loginPasswordInput = document.getElementById('login-password');
     const loginSubmit = document.getElementById('login-submit');
     const loginError = document.getElementById('login-error');
+    
+    // Get all modals and their buttons
     const accessModal = document.getElementById('access-modal');
     const accessClose = document.getElementById('access-close');
+    const accessRequestBtn = document.getElementById('access-request-btn');
 
+    const noAccessModal = document.getElementById('no-access-modal');
+    const noAccessClose = document.getElementById('no-access-close');
+    const noAccessRequestBtn = document.getElementById('no-access-request-btn');
+
+    const requestAccessLink = 'https://wa.me/254703255099';
+
+    // Updated login function to use the permission system
     function handleLogin() {
         const username = loginUsernameInput.value.trim();
         const password = loginPasswordInput.value.trim();
         loginError.textContent = '';
 
-        if (userCredentials[username] && userCredentials[username] === password) {
-            isLoggedIn = true;
+        const userAccount = userPermissions[username];
+
+        if (userAccount && userAccount.password === password) {
+            // LOGIN SUCCESSFUL
+            currentUser = {
+                username: username,
+                permissions: userAccount.access || []
+            };
             alert('✅ Logged in successfully! [VIDU]');
             closeModal(loginModal);
-            loginBtnTop.textContent = '✅ Logged In';
+            loginBtnTop.textContent = `✅ Logged In as ${username}`;
             loginBtnTop.disabled = true;
         } else {
             loginError.textContent = 'Invalid username or password.';
         }
     }
 
+    // Login modal event listeners
     loginBtnTop.addEventListener('click', () => {
         loginError.textContent = '';
         loginUsernameInput.value = '';
@@ -1763,8 +1821,15 @@
     loginSubmit.addEventListener('click', handleLogin);
     loginPasswordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
 
+    // "Login to access" modal event listeners
     accessClose.addEventListener('click', () => closeModal(accessModal));
     accessModal.addEventListener('click', (e) => { if (e.target === accessModal) closeModal(accessModal); });
+    accessRequestBtn.addEventListener('click', () => window.open(requestAccessLink, '_blank'));
+
+    // "No access" modal event listeners
+    noAccessClose.addEventListener('click', () => closeModal(noAccessModal));
+    noAccessModal.addEventListener('click', (e) => { if (e.target === noAccessModal) closeModal(noAccessModal); });
+    noAccessRequestBtn.addEventListener('click', () => window.open(requestAccessLink, '_blank'));
 
   })();
   </script>
