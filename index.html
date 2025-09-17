@@ -51,13 +51,15 @@
       align-items:center;
       justify-content:space-between;
       padding:14px 22px;
-      /* PERFORMANCE: Replaced expensive backdrop-filter with a simple transparent background */
-      background:rgba(12, 14, 20, 0.7);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      /* UPDATED: Added a glassy effect with backdrop-filter */
+      background: rgba(20, 22, 28, 0.65); /* Semi-transparent background */
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px); /* For Safari support */
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       border-radius:0 0 10px 10px;
       z-index:4;
       position:relative;
-      box-shadow:0 8px 30px rgba(2,4,12,0.5);
+      box-shadow: 0 8px 30px rgba(2,4,12,0.5); /* Corrected box-shadow syntax */
     }
 
     .header-right-controls {
