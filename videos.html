@@ -482,7 +482,7 @@
 
   <div id="loading-popup" class="loading-popup" aria-hidden="true">
     <div class="loading-card" role="status" aria-live="polite">
-      <div class="loading-label">Loading VIDU Player</div>
+      <div class="loading-label">Initializing VIDU Player</div>
       <div class="loading-bar-wrap" aria-hidden="false">
         <div id="loading-bar" class="loading-bar" style="width:0%"></div>
       </div>
@@ -504,9 +504,6 @@
       'user': 'password'
     };
     let isLoggedIn = false;
-
-    /* NEW: In-memory cache for playlist data to reduce API calls */
-    const playlistCache = {};
 
     /* ---------- sample items (unchanged layout) ---------- */
     const items = [
@@ -582,7 +579,7 @@
       lastOpenedPlaylistItem = item;
       playlistTitleEl.textContent = item.title || 'Playlist';
       playlistCountEl.textContent = 'Loading...';
-      playlistBody.innerHTML = `<div style="padding:18px;color:#ddd">Loading playlist...</div>`;
+      playlistBody.innerHTML = `<div style="padding:18px;color:#ddd">Initializing VIDU Fetcher...</div>`;
       playlistPopup.classList.add('visible');
       playlistPopup.setAttribute('aria-hidden','false');
       document.body.style.overflow = 'hidden';
@@ -1427,11 +1424,6 @@
 
     /* ---------- Playlist fetcher (YouTube Data API) ---------- */
     async function fetchPlaylistVideos(playlistId){
-      // CACHE CHECK: If playlist data is already in cache, return it immediately.
-      if (playlistCache[playlistId]) {
-        return playlistCache[playlistId];
-      }
-
       if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
       const results = []; let pageToken = '';
       do {
@@ -1448,10 +1440,6 @@
         });
         pageToken = data.nextPageToken || '';
       } while(pageToken);
-      
-      // CACHE STORE: On successful fetch, store the results in the cache.
-      playlistCache[playlistId] = results;
-
       return results;
     }
 
