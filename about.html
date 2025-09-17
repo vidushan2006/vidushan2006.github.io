@@ -1,348 +1,434 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VIDU - About</title>
+  <title>VIDU — About</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <link rel="stylesheet" href="assets/css/main.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
   <style>
-    :root {
-      --accent: #7b61ff;
-      --text-primary: #f0f2f5;
-      --text-secondary: #a8b2d1;
-      --bg-glass: rgba(20, 22, 38, 0.5);
-      --border-glass: rgba(255, 255, 255, 0.1);
-      --shadow-color: rgba(0, 0, 0, 0.5);
-      --radius-large: 24px;
-      --radius-medium: 16px;
-      --radius-small: 12px;
-      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    :root{
+      --bg-accent: rgba(6,10,20,0.55);
+      --glass: rgba(255,255,255,0.04);
+      --glass-strong: rgba(255,255,255,0.06);
+      --muted: #bfc8dd;
+      --text: #eef3ff;
+      --accent-1: #7b61ff;
+      --accent-2: #39ff14;
+      --radius: 16px;
+      --elev: 0 20px 40px rgba(2,6,18,0.6);
+      --container: 1200px;
+
+      /* Scrollbox sizing to show exactly 11 lines by default */
+      --scrollbox-lines: 11;
+      --scrollbox-font-size: 15px;
+      --scrollbox-line-height: 1.5;
+      --scrollbox-vertical-padding: 32px; /* 16 top + 16 bottom */
     }
 
-    /* --- Base & Background Setup --- */
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: 'Inter', "Helvetica Neue", Arial, sans-serif;
-      background-color: #02040a;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
+    html,body { height:100%; margin:0; font-family: Inter, "Helvetica Neue", Arial, sans-serif; background:#000; color:var(--text); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
     body {
-      color: var(--text-primary);
       background: url('assets/images/background.png') no-repeat center center fixed;
       background-size: cover;
-      overflow-x: hidden;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
+      position: relative;
+      min-height:100vh;
+      overflow-x:hidden;
     }
 
-    /* Background overlay for depth and focus */
-    body::before {
-      content: '';
+    /* static futuristic overlay — no animation */
+    body::before{
+      content: "";
       position: fixed;
       inset: 0;
+      background:
+        linear-gradient(180deg, rgba(2,6,18,0.55) 0%, rgba(2,6,18,0.65) 60%),
+        radial-gradient(1200px 600px at 10% 10%, rgba(123,97,255,0.06), transparent 15%),
+        radial-gradient(900px 500px at 90% 80%, rgba(57,255,20,0.03), transparent 12%);
       pointer-events: none;
-      background: radial-gradient(ellipse at center, rgba(10, 12, 20, 0.5) 0%, rgba(2, 4, 10, 0.95) 100%);
-      z-index: 1;
-    }
-    
-    body::after {
-        content:'';
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        backdrop-filter: saturate(120%) contrast(110%);
-        z-index: 0;
+      z-index: 0;
+      mix-blend-mode: multiply;
     }
 
-    #wrapper {
+    #wrapper { position: relative; z-index: 2; min-height:100vh; max-width:var(--container); margin: 28px auto; padding: 28px; box-sizing: border-box; }
+
+    header#header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      padding:18px 22px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: var(--elev);
+      backdrop-filter: blur(6px) saturate(120%);
+      position:relative;
+    }
+
+    .logo { display:flex; align-items:center; gap:14px; text-decoration:none; color:var(--text); }
+    .logo-circle {
+      width:64px; height:64px; border-radius:12px; overflow:hidden;
+      display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+      flex-shrink:0;
+    }
+    .logo-circle img { width:100%; height:100%; object-fit:cover; display:block; }
+
+    .brand { display:flex; flex-direction:column; line-height:1; }
+    .brand .title { font-weight:800; font-size:18px; color:var(--text); letter-spacing:-0.4px; text-decoration:none; }
+    .brand .sub { font-size:12px; color:var(--muted); margin-top:2px; }
+
+    /* NAV */
+    nav ul { list-style:none; display:flex; gap:12px; margin:0; padding:0; align-items:center; }
+    nav a {
       position: relative;
-      z-index: 2;
-      width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding: 24px;
-      box-sizing: border-box;
+      display:inline-block;
+      color:var(--muted);
+      text-decoration:none;
+      font-weight:700;
+      padding:14px 14px 12px; /* extra top padding for the neon line space */
+      border-radius:12px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.02);
+      transform-origin: center center;
+      transform-style: preserve-3d;
+      transition: transform .14s cubic-bezier(.2,.9,.2,1), box-shadow .12s ease, color .08s ease;
+      z-index:1;
+      backface-visibility: hidden;
     }
 
-    /* --- Header --- */
-    #header {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 24px;
-      background: var(--bg-glass);
-      backdrop-filter: blur(24px);
-      border: 1px solid var(--border-glass);
-      border-radius: var(--radius-medium);
-      box-shadow: 0 16px 48px var(--shadow-color);
-      box-sizing: border-box;
+    /*
+      Narrower neon line + "around the button" glow:
+      - ::before: a narrow (thin) neon line centered above the button (now decreased width)
+      - ::after: a subtle rounded neon inset/glow that wraps around the button edges on hover
+    */
+
+    /* narrow neon line centered above the button */
+    nav a::before{
+      content: "";
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 8px; /* sits slightly above the button top */
+      width: 40%; /* decreased width (narrower) */
+      height: 6px;
+      border-radius: 999px; /* fully rounded */
+      background: linear-gradient(90deg, rgba(123,97,255,0.12) 10%, rgba(57,255,20,0.95));
+      box-shadow:
+        0 0 8px rgba(57,255,20,0.10),
+        0 6px 18px rgba(57,255,20,0.03);
+      opacity: 0.18; /* subtle by default */
+      transition: opacity .12s ease, transform .12s ease, width .12s ease;
+      pointer-events: none;
+      z-index: 0;
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-      color: var(--text-primary);
-      font-weight: 600;
-      font-size: 20px;
+    /* rounded neon glow that wraps around the button (inset border) */
+    nav a::after{
+      content: "";
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      top: 6px;
+      bottom: 6px;
+      border-radius: 10px;
+      box-shadow:
+        0 0 18px rgba(57,255,20,0.04), /* outer glow */
+        inset 0 0 10px rgba(57,255,20,0.02); /* faint inner tint */
+      opacity: 0; /* hidden by default, appears on hover */
+      transition: opacity .12s ease, box-shadow .12s ease;
+      pointer-events: none;
+      z-index: 0;
     }
 
-    .logo img {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 2px solid var(--border-glass);
-      object-fit: cover;
-      transition: transform 0.3s var(--ease);
-    }
-    
-    .logo:hover img {
-        transform: scale(1.1) rotate(6deg);
-    }
-    
-    .logo-text{
-        display: block;
+    /* Hover/focus: lean forward + brighten neon line + show wrap glow */
+    nav a:hover, nav a:focus {
+      color: var(--text);
+      transform: perspective(700px) rotateX(-8deg) translateY(-8px);
+      box-shadow: 0 20px 50px rgba(2,6,18,0.55);
+      outline: none;
+      z-index: 10; /* bring hovered item to front */
     }
 
-    nav ul {
-      list-style: none;
-      display: flex;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
+    nav a:hover::before, nav a:focus::before {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-3px) scaleX(1.12);
+      width: 46%; /* slightly expand on hover for emphasis while still narrow */
     }
 
-    nav ul li a {
-      color: var(--text-secondary);
-      text-decoration: none;
-      padding: 10px 16px;
-      border-radius: var(--radius-small);
-      font-weight: 500;
-      transition: all 0.2s var(--ease);
-      position: relative;
+    nav a:hover::after, nav a:focus::after {
+      opacity: 0.28; /* visible wrap-around glow */
+      box-shadow:
+        0 0 26px rgba(57,255,20,0.14),
+        inset 0 0 18px rgba(57,255,20,0.04);
     }
 
-    nav ul li a:hover {
-      color: var(--text-primary);
-      background: rgba(255, 255, 255, 0.08);
-    }
-    
-    nav ul li a:active {
-        transform: scale(0.96);
+    /* Keep focus visible for keyboard users */
+    nav a:focus {
+      box-shadow: 0 0 0 3px rgba(57,255,20,0.06);
     }
 
-    /* --- Main Content --- */
-    #page-content {
-      flex-grow: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 0;
+    main { margin-top:28px; display:grid; grid-template-columns: 360px 1fr; gap:28px; align-items:start; min-height:60vh; }
+
+    .card {
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.04);
+      padding:18px;
+      box-shadow: var(--elev);
+      backdrop-filter: blur(8px) saturate(120%);
     }
 
-    .about-card {
-      width: 100%;
-      max-width: 520px;
-      background: var(--bg-glass);
-      backdrop-filter: blur(32px);
-      border: 1px solid var(--border-glass);
-      border-radius: var(--radius-large);
-      box-shadow: 0 24px 64px var(--shadow-color);
-      padding: 40px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
+    .image-card {
+      border-radius: 12px;
+      overflow:hidden;
+      display:block;
+      width:100%;
+      box-sizing:border-box;
+      border: 1px solid rgba(255,255,255,0.04);
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+    }
+    .image-card img { display:block; width:100%; height:auto; object-fit:cover; }
+
+    .meta { margin-top:14px; text-align:center; }
+    .created-by { font-weight:700; color:var(--text); font-size:18px; margin:6px 0 0 0; }
+    .meta .muted { color:var(--muted); font-size:13px; margin-top:6px; }
+
+    .content { display:flex; flex-direction:column; gap:18px; }
+
+    h1, h2 { margin:0; color:var(--text); }
+    h1 { font-size:36px; letter-spacing:-0.6px; }
+    h2 { font-size:22px; color:var(--text); margin-bottom:6px; }
+
+    /* The scrollable detailed box — set to show exactly 11 lines by default */
+    .scrollbox {
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 14px 40px rgba(2,6,18,0.45);
+      color:var(--muted);
+      font-size: var(--scrollbox-font-size);
+      line-height: var(--scrollbox-line-height);
+      overflow-y: auto;
+      /* compute height = (font-size * line-height * lines) + vertical padding */
+      max-height: calc( (var(--scrollbox-font-size) * var(--scrollbox-line-height) * var(--scrollbox-lines)) + var(--scrollbox-vertical-padding) );
     }
 
-    .profile-avatar {
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 4px solid var(--border-glass);
-      box-shadow: 0 10px 30px var(--shadow-color);
-      margin-bottom: 24px;
-    }
-    
-    .creator-name {
-        font-size: 28px;
-        font-weight: 700;
-        margin: 0;
-        color: var(--text-primary);
-    }
-    
-    .about-title {
-        font-size: 16px;
-        font-weight: 400;
-        color: var(--text-secondary);
-        margin: 4px 0 32px 0;
-        letter-spacing: 0.5px;
+    .scrollbox h3 { margin-top:0; color:var(--text); font-size:18px; }
+    .scrollbox h4 { color:var(--text); margin-bottom:6px; }
+    .scrollbox ul, .scrollbox ol { margin:8px 0 12px 20px; color:var(--muted); }
+    .scrollbox strong { color:var(--text); }
+
+    /* custom thin scrollbar for WebKit */
+    .scrollbox::-webkit-scrollbar { width:10px; }
+    .scrollbox::-webkit-scrollbar-track { background: transparent; }
+    .scrollbox::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(123,97,255,0.18), rgba(57,255,20,0.08));
+      border-radius: 10px;
+      border: 2px solid rgba(0,0,0,0.08);
     }
 
-    /* --- Contacts List --- */
-    .contacts-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    
-    .contacts-list li a {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 16px;
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--border-glass);
-        border-radius: var(--radius-medium);
-        text-decoration: none;
-        color: var(--text-secondary);
-        font-weight: 500;
-        transition: all 0.2s var(--ease);
-    }
-    
-    .contacts-list li a:hover {
-        transform: translateY(-4px);
-        background: rgba(0, 0, 0, 0.3);
-        border-color: rgba(255, 255, 255, 0.15);
-        color: var(--text-primary);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    }
-    
-    .contacts-list li img {
-        width: 24px;
-        height: 24px;
-        filter: invert(80%) sepia(15%) saturate(300%) hue-rotate(190deg) brightness(95%) contrast(90%);
-        transition: filter 0.2s var(--ease);
+    .panel {
+      padding:18px;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.03);
+      box-shadow: 0 14px 40px rgba(2,6,18,0.45);
     }
 
-    .contacts-list li a:hover img {
-        filter: invert(44%) sepia(97%) saturate(1495%) hue-rotate(224deg) brightness(102%) contrast(106%);
+    .contacts {
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin-top:6px;
+      align-items:stretch;
+    }
+    .contact-btn {
+      display:inline-flex;
+      align-items:center;
+      gap:12px;
+      text-decoration:none;
+      color:var(--text);
+      padding:12px 16px;
+      border-radius:12px;
+      font-weight:700;
+      background: linear-gradient(90deg, rgba(123,97,255,0.08), rgba(57,255,20,0.03));
+      border: 1px solid rgba(123,97,255,0.10);
+      box-shadow: inset 0 -6px 18px rgba(0,0,0,0.12), 0 10px 30px rgba(123,97,255,0.03);
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .contact-btn img { width:20px; height:20px; display:block; filter: none; }
+    .contact-btn:hover { transform: translateY(-4px); box-shadow: 0 22px 60px rgba(123,97,255,0.07); }
+
+    footer#footer { text-align:center; color:var(--muted); font-size:13px; margin-top:18px; }
+
+    @media (max-width:1100px) {
+      main { grid-template-columns: 1fr; }
+      .logo-circle { width:56px; height:56px; border-radius:10px; }
+      #wrapper { margin:18px; padding:18px; }
+      /* keep the 11-line intent, but allow mobile to reflow — the calc still ensures ~11 lines */
     }
 
-    /* --- Footer --- */
-    #footer {
-      width: 100%;
-      text-align: center;
-      padding: 20px 0 0;
-      font-size: 14px;
-      color: var(--text-secondary);
-      opacity: 0.6;
+    @media (max-width:560px) {
+      .brand .title { font-size:16px; }
+      .contact-btn { font-size:14px; padding:10px 12px; gap:10px; }
     }
-
-    /* --- Responsive Design --- */
-    @media (max-width: 768px) {
-        #wrapper { padding: 16px; }
-        
-        #header { padding: 10px 16px; }
-
-        .logo-text { display: none; } /* Hide "VIDU" text on mobile */
-
-        nav ul { gap: 0; }
-        
-        .about-card { padding: 32px; }
-
-        .profile-avatar { width: 120px; height: 120px; }
-        
-        .creator-name { font-size: 24px; }
-    }
-    
-    @media (max-width: 480px) {
-        nav ul li a { padding: 8px 10px; font-size: 14px; }
-        .logo img { width: 40px; height: 40px; }
-        .about-card { padding: 24px; border-radius: var(--radius-medium); }
-        .profile-avatar { width: 100px; height: 100px; }
-        .contacts-list li a { padding: 12px; }
-    }
-    
-    /* Accessibility */
-    a:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 3px;
-        border-radius: var(--radius-small);
-    }
-    
   </style>
 </head>
+<body>
+  <div id="wrapper" role="document" aria-labelledby="page-title">
 
-<body class="landing is-preload">
-
-  <div id="wrapper">
-
-    <header id="header">
-      <a href="index.html" class="logo" title="VIDU home">
-        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+    <!-- Header -->
+    <header id="header" role="banner" aria-label="Site header">
+      <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
+        <div class="logo-circle" aria-hidden="true">
+          <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+        </div>
+        <div class="brand" aria-hidden="false">
+          <span class="title">VIDU</span>
+          <span class="sub">High-end media toolkit</span>
+        </div>
       </a>
-      <nav>
+
+      <nav role="navigation" aria-label="Main navigation">
         <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="videos.html">Private</a></li>
-          <li><a href="Tools.html">Tools</a></li>
+          <li><a href="index.html">🏠 Home</a></li>
+          <li><a href="videos.html">🔒 Private</a></li>
+          <li><a href="Tools.html" id="nav-tools" title="Tools" aria-label="Tools">🤖 Tools</a></li>
         </ul>
       </nav>
     </header>
 
-    <main id="page-content" role="main">
-      <div class="about-card">
-      
-        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="Profile avatar for VIDU" class="profile-avatar" />
-        
-        <h1 class="creator-name">Created by VIDU</h1>
-        <p class="about-title">About & Contacts</p>
+    <!-- Main -->
+    <main role="main" aria-labelledby="about-heading">
 
-        <ul class="contacts-list" role="list" aria-label="Contact Links">
-          <li role="listitem">
-            <a href="https://wa.me/254703255099" target="_blank" rel="noopener noreferrer">
-              <img src="https://img.icons8.com/ios-filled/48/ffffff/whatsapp.png" alt="" />
-              <span>WhatsApp</span>
+      <!-- Left: Image + meta -->
+      <aside class="card" aria-label="About image and creator" role="complementary">
+        <figure class="image-card" role="img" aria-label="About image">
+          <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU artwork" />
+        </figure>
+
+        <div class="meta" aria-hidden="false">
+          <p class="created-by">Created by VIDU</p>
+          <p class="muted">Designer · Developer · Collector</p>
+        </div>
+      </aside>
+
+      <!-- Right: About text & contacts -->
+      <section class="content" aria-labelledby="about-heading">
+        <div class="panel" role="region">
+          <h1 id="about-heading">About</h1>
+
+          <!-- Scrollable detailed box with emojis and 11-line default view -->
+          <div class="scrollbox" role="region" aria-label="Detailed about — features and usage">
+            <h3>About this site — Created by <strong>VIDU</strong></h3>
+
+            <p>
+              This site is a premium, private-class video platform created and maintained by
+              <strong>VIDU</strong>. It presents curated video content (single videos and YouTube playlists)
+              in a clean, secure interface featuring a custom player, playlist browser, and an access control layer.
+            </p>
+
+            <h4>Key features</h4>
+            <ul>
+              <li>🎓 <strong>Private Classes hub</strong> — a grid of cards ("tiles") for each class (video or playlist). The grid and card UI are rendered dynamically from the site's data.</li>
+
+              <li>🔒 <strong>Secure access & permissions</strong> — users must log in to view protected content; a lightweight permission table determines which accounts can open which classes. Login uses modal flows (login, access-request, access-denied).</li>
+
+              <li>🔑 <strong>Password-unlock support</strong> — some items are additionally password-protected (a password modal appears when an item requires unlocking). Encoded passwords are validated before the viewer opens.</li>
+
+              <li>📜 <strong>Playlist fetching from YouTube</strong> — playlist cards open a playlist popup that fetches playlist items from the YouTube Data API using the configured API key; responses are paged and cached for performance.</li>
+
+              <li>▶️ <strong>Custom player (in-viewer)</strong> — the viewer modal mounts a custom YouTube iframe player with:
+                <ul>
+                  <li>▶️ play / ⏸ pause controls</li>
+                  <li>⏱ seek bar with progress styling</li>
+                  <li>🕒 duration / current time display</li>
+                  <li>⚙️ playback-speed menu and ⛶ fullscreen control</li>
+                </ul>
+              </li>
+
+              <li>✨ <strong>Polished UX elements</strong> — "Now playing" header, loading/progress indicators when switching content, and a playlist popup showing thumbnails and quick-play behavior.</li>
+
+              <li>⌨️ <strong>Keyboard & accessibility</strong> — keyboard support includes:
+                <ul>
+                  <li>Spacebar: toggle play / pause</li>
+                  <li>↑ / ↓ Arrow: adjust volume (visual overlay)</li>
+                  <li>F: toggle fullscreen</li>
+                </ul>
+              </li>
+
+              <li>🗄️ <strong>Client-side caching & graceful errors</strong> — playlist results are cached to avoid redundant fetches; fetch errors are surfaced to the user with clear messages.</li>
+            </ul>
+
+            <h4>How to use</h4>
+            <ol>
+              <li>🖱️ Click a tile. If you're not logged in, the site will prompt you to log in or request access.</li>
+              <li>📂 If the tile is a playlist, the playlist popup will fetch and show videos — click any listed item to play it.</li>
+              <li>🔐 If the item requires a password, enter it in the unlock modal to proceed.</li>
+              <li>🎛️ Use the on-screen controls or keyboard shortcuts to control playback, seek, volume, and fullscreen.</li>
+            </ol>
+
+            <h4>Technical notes</h4>
+            <ul>
+              <li>🔧 The playlist fetcher uses the YouTube Data API and your configured API key — ensure it is valid and has sufficient quota.</li>
+              <li>📡 The custom player depends on YouTube's iframe API for playback control and playback-rate handling.</li>
+              <li>♿ UI elements (modals, viewer, playlist popup, loading states) are implemented with ARIA attributes and keyboard interactions for improved accessibility.</li>
+            </ul>
+
+            <p style="margin-top:8px;font-weight:700;">Credits — Designed & developed by <strong>VIDU</strong>. 🚀</p>
+          </div>
+        </div>
+
+        <div class="panel" role="region" aria-labelledby="contacts-heading">
+          <h2 id="contacts-heading">Contacts</h2>
+
+          <div class="contacts" role="list" aria-label="contact links">
+            <a role="listitem" class="contact-btn" href="https://wa.me/254703255099" target="_blank" rel="noopener">
+              <img src="https://img.icons8.com/ios-filled/24/39ff14/whatsapp.png" alt="" />
+              WhatsApp
             </a>
-          </li>
-          <li role="listitem">
-            <a href="https://github.com/Vidushangithub" target="_blank" rel="noopener noreferrer">
-              <img src="https://img.icons8.com/ios-filled/48/ffffff/github.png" alt="" />
-              <span>GitHub</span>
+
+            <a role="listitem" class="contact-btn" href="https://github.com/Vidushangithub" target="_blank" rel="noopener">
+              <img src="https://img.icons8.com/ios-filled/24/39ff14/github.png" alt="" />
+              GitHub
             </a>
-          </li>
-          <li role="listitem">
-            <a href="https://youtube.com/@beatworld2006" target="_blank" rel="noopener noreferrer">
-              <img src="https://img.icons8.com/ios-filled/48/ffffff/youtube-play.png" alt="" />
-              <span>YouTube</span>
+
+            <a role="listitem" class="contact-btn" href="https://youtube.com/@beatworld2006" target="_blank" rel="noopener">
+              <img src="https://img.icons8.com/ios-filled/24/39ff14/youtube-play.png" alt="" />
+              YouTube
             </a>
-          </li>
-        </ul>
-        
-      </div>
+          </div>
+
+          <div style="margin-top:14px; text-align:center;">
+            <p style="margin:0;font-weight:700;color:var(--text);">Created by VIDU</p>
+          </div>
+        </div>
+
+      </section>
     </main>
-    
-    <footer id="footer">
-        &copy; VIDU. All rights reserved.
+
+    <footer id="footer" role="contentinfo">
+      <small>© <span id="year"></span> VIDU — All rights reserved</small>
     </footer>
 
   </div>
 
+  <!-- Scripts -->
+  <script>
+    try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e){}
+  </script>
+
+  <!-- keep original script includes so existing features continue to work -->
   <script src="assets/js/jquery.min.js"></script>
   <script src="assets/js/browser.min.js"></script>
   <script src="assets/js/breakpoints.min.js"></script>
   <script src="assets/js/util.js"></script>
   <script src="assets/js/main.js"></script>
-
 </body>
 </html>
-
-
-
