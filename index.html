@@ -931,53 +931,38 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('click', (event) => { if (notificationPanel.classList.contains('show') && !notificationPanel.contains(event.target) && !notificationBtn.contains(event.target)) hidePanel(); });
         document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && notificationPanel.classList.contains('show')) hidePanel(); });
     }
-    const downloadBtn = document.getElementById('download-btn-header'), loadingPopup = document.getElementById('loading-popup-overlay'), loadingBar = document.getElementById('loading-bar-fill');
-    const downloadBtn = document.getElementById('download-btn-header'), loadingPopup = document.getElementById('loading-popup-overlay'), loadingBar = document.getElementById('loading-bar-fill'), loadingMsg = document.getElementById('loading-popup-message');
-    if (downloadBtn && loadingPopup && loadingBar) {
+    const downloadBtn = document.getElementById('download-btn-header'),
+          loadingPopup = document.getElementById('loading-popup-overlay'),
+          loadingBar = document.getElementById('loading-bar-fill'),
+          loadingMessage = document.getElementById('loading-popup-message'); // Get the message element
+
+    if (downloadBtn && loadingPopup && loadingBar && loadingMessage) {
         downloadBtn.addEventListener('click', () => {
-            try {
-                const url = (downloadBtn.dataset && downloadBtn.dataset.link) ? downloadBtn.dataset.link : null;
-                if(!url) return;
-                // Set explicit message requested by the user
-                if(loadingMsg) loadingMsg.textContent = 'Downloading VIDU For Windows(x64)';
-                // ensure green color (uses CSS variable --accent-2); fallback to hex if necessary
-                try{ loadingBar.style.background = 'var(--accent-2)'; }catch(_){}
-                // Reset bar
-                loadingBar.style.transition = 'none';
-                loadingBar.style.width = '0%';
-                // Open a blank window immediately (so browser allows navigation later)
-                let newWin = null;
-                try { newWin = window.open('', '_blank'); } catch(e) { newWin = null; }
-                // Show popup
-                loadingPopup.classList.add('show');
-                // start animation next tick
+            const url = downloadBtn.dataset.link;
+            const originalMessage = loadingMessage.textContent; // Store original message for resetting later
+
+            // **FIX APPLIED HERE**: Update the popup's text message
+            loadingMessage.textContent = 'Downloading VIDU For Windows(x64)';
+
+            loadingBar.style.transition = 'none';
+            loadingBar.style.width = '0%';
+            loadingPopup.classList.add('show');
+            
+            setTimeout(() => {
+                loadingBar.style.transition = 'width 3s linear';
+                loadingBar.style.width = '100%';
+            }, 50);
+            
+            setTimeout(() => {
+                window.open(url, '_blank', 'noopener,noreferrer');
+                loadingPopup.classList.remove('show');
                 setTimeout(() => {
-                    loadingBar.style.transition = 'width 3s linear';
-                    loadingBar.style.width = '100%';
-                }, 50);
-                // disable button to prevent double clicks
-                downloadBtn.disabled = true;
-                // After 3s navigate the opened window (or open a tab if blocked)
-                setTimeout(() => {
-                    try {
-                        if (newWin && !newWin.closed) {
-                            // navigate the pre-opened tab/window
-                            newWin.location.href = url;
-                        } else {
-                            // fallback: try opening normally
-                            window.open(url, '_blank', 'noopener,noreferrer');
-                        }
-                    } catch (e) {
-                        try { window.open(url, '_blank', 'noopener,noreferrer'); } catch(_) {}
-                    } finally {
-                        // hide popup and reset bar
-                        loadingPopup.classList.remove('show');
-                        setTimeout(() => { loadingBar.style.transition = 'none'; loadingBar.style.width = '0%'; downloadBtn.disabled = false; }, 300);
-                    }
-                }, 3000);
-            } catch(err){
-                console.error('download click handler error', err);
-            }
+                    loadingBar.style.transition = 'none';
+                    loadingBar.style.width = '0%';
+                    // Reset the message to its original state
+                    loadingMessage.textContent = originalMessage;
+                }, 300);
+            }, 3000);
         });
     }
 });
