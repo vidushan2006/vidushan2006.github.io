@@ -604,14 +604,9 @@
         state.animationFrameId = requestAnimationFrame(updatePlayerUI);
     }
 
-    // UPDATED: Added comments explaining the dynamic creation process.
     return loadYTApi().then(()=> new Promise((resolve,reject)=>{
       if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
       try{
-        // KEY TECHNIQUE 1: DYNAMIC CREATION
-        // The `new YT.Player()` call is what dynamically creates the <iframe>.
-        // The iframe and its URL do not exist in the HTML until this code runs,
-        // which only happens when a user decides to play a video.
         state.player = new YT.Player(mount.id, { videoId: videoId, width: '100%', height: '100%', playerVars: { controls: 0, disablekb: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, origin: location.origin },
           events: {
             onReady: function(evt){
@@ -636,15 +631,8 @@
     })).catch(err=>{ throw err; }).then(p=>{ setTimeout(()=> resetInactivityTimer(), 40); return p; });
   }
 
-  // UPDATED: Added comments explaining the dynamic destruction process.
   function destroyPlayer(){
     try{
-      // KEY TECHNIQUE 2: DYNAMIC DESTRUCTION
-      // This function is crucial. When called (e.g., when the modal closes),
-      // it removes all event listeners and, most importantly, removes the
-      // entire player (`state.host`) from the DOM.
-      // This ensures the <iframe> and its URL are completely gone from the
-      // page, effectively "hiding" it until another video is played.
       if(state.animationFrameId){ cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
       if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
       if(state.docClickHandler){ document.removeEventListener('click', state.docClickHandler); state.docClickHandler = null; }
@@ -771,8 +759,10 @@ function openPasswordModal(item){
 
 function closeModal(){
   const root = document.getElementById('modal-root');
-  if(root) root.style.display = 'none';
-  // This is where the player is destroyed, removing the iframe from the page.
+  if(root) {
+    root.style.display = 'none';
+    root.style.visibility = 'visible'; // Reset visibility for next time
+  }
   if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
   if (currentItem && currentItem.type === 'playlist') {
     const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
@@ -843,7 +833,6 @@ async function openFullScreenPlaylist(item) {
   }
 }
 
-// UPDATED: Function to render playlist with numbers
 function renderFullScreenPlaylist(videos, title) {
   const titleEl = document.getElementById('fs-playlist-title');
   const countEl = document.getElementById('fs-playlist-count');
@@ -866,33 +855,66 @@ function renderFullScreenPlaylist(videos, title) {
   contentEl.appendChild(fragment);
 }
 
+// =======================================================================
+// === UPDATED FUNCTION TO FIX THE LOADING SEQUENCE ======================
+// =======================================================================
 function playVideoWithLoading(videoInfo) {
   const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
   const loadingPopup = document.getElementById('player-loading-overlay');
   const loadingBar = document.getElementById('player-loading-bar-fill');
+  const root = document.getElementById('modal-root');
+
+  // 1. Hide the playlist and show the full-screen loading overlay immediately.
   fsPlaylist.classList.remove('show');
+  loadingPopup.classList.add('show');
+
+  // 2. Simulate a realistic loading progress bar while the actual player loads in the background.
   loadingBar.style.transition = 'none';
   loadingBar.style.width = '0%';
-  loadingPopup.classList.add('show');
-  setTimeout(() => { loadingBar.style.transition = 'width 2s cubic-bezier(0.4, 0, 0.2, 1)'; loadingBar.style.width = '100%'; }, 50);
   setTimeout(() => {
-    loadingPopup.classList.remove('show');
-    const root = document.getElementById('modal-root');
-    root.style.display = 'block';
-    document.getElementById('modal-title').textContent = videoInfo.title;
-    document.getElementById('modal-subtitle').textContent = 'Now Playing';
-    document.getElementById('password-block').style.display = 'none';
-    document.getElementById('player-block').style.display = 'block';
-    if (window.showViduPlayer) {
-      // This is where the player is created on demand.
-      window.showViduPlayer(videoInfo.videoId).catch(err => {
+    loadingBar.style.transition = 'width 4s cubic-bezier(0.25, 0.1, 0.25, 1)';
+    loadingBar.style.width = '90%'; // Animate to 90% and wait for the player to be ready.
+  }, 50);
+
+  // 3. Prepare the modal in the background but keep it invisible.
+  // This allows the player and its iframe to be created without the user seeing them.
+  root.style.display = 'block';
+  root.style.visibility = 'hidden';
+  document.getElementById('modal-title').textContent = videoInfo.title;
+  document.getElementById('modal-subtitle').textContent = 'Now Playing';
+  document.getElementById('password-block').style.display = 'none';
+  document.getElementById('player-block').style.display = 'block';
+
+  if (window.showViduPlayer) {
+    // 4. Call showViduPlayer. It returns a promise that resolves only when the player's "onReady" event fires.
+    window.showViduPlayer(videoInfo.videoId)
+      .then(player => {
+        // 5. The player is now fully ready! We can perform the switch.
+        // Animate the loading bar to 100%.
+        loadingBar.style.transition = 'width 0.3s ease-out';
+        loadingBar.style.width = '100%';
+
+        // After a short delay for the animation to finish, hide the loading overlay and reveal the player.
+        setTimeout(() => {
+          loadingPopup.classList.remove('show');
+          root.style.visibility = 'visible'; // Make the fully loaded player visible.
+
+          // Reset the loading bar for the next time a video is played.
+          setTimeout(() => {
+            loadingBar.style.transition = 'none';
+            loadingBar.style.width = '0%';
+          }, 300);
+        }, 300);
+      })
+      .catch(err => {
+        // Handle cases where the player fails to load.
         console.error('showViduPlayer failed', err);
+        loadingPopup.classList.remove('show');
+        root.style.visibility = 'visible'; // Show the modal to display the error message.
         const wrap = document.getElementById('player-wrap');
         if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
       });
-    }
-    setTimeout(() => { loadingBar.style.transition = 'none'; loadingBar.style.width = '0%'; }, 300);
-  }, 2000);
+  }
 }
 
 function pauseVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = true; }
