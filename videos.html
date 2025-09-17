@@ -369,7 +369,7 @@
       font-size: 42px;
       font-weight: 900;
       color: #00ff3a;
-      text-shadow: 0 0 12px rgba(57, 255, 20, 0.7);
+      text-shadow: 0 0 6px rgba(0,255,120,0.95), 0 0 18px rgba(0,255,120,0.45);
       user-select: none;
     }
     .playlist-item .meta { display:flex; flex-direction:column; gap:6px; }
@@ -519,6 +519,8 @@
       'user': 'password'
     };
     let isLoggedIn = false;
+    // MODIFIED: Added global variable to remember volume across videos.
+    let globalLastVolume = 100;
 
     /* ---------- sample items (unchanged layout) ---------- */
     const items = [
@@ -1123,7 +1125,9 @@
                   const delta = e.key === 'ArrowUp' ? 5 : -5;
                   let target = Math.max(0, Math.min(100, Math.round(curVol + delta)));
                   try{ if(typeof state.player.setVolume === 'function') state.player.setVolume(target); }catch(_){}
+                  // MODIFIED: Update both local and global volume variables
                   state.lastVolume = target;
+                  globalLastVolume = target;
                   // show modern center overlay (fresh logic)
                   try{ showVolumeOverlay(target); }catch(_){}
                   return;
@@ -1331,6 +1335,7 @@
           state.lastActivity = Date.now();
           setOverlayHidden(false);
           if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
+          // MODIFIED: Inactivity timeout changed from 5000ms to 3000ms.
           state.inactivityTimer = setTimeout(()=>{ 
             try{
               const st = state.player && typeof state.player.getPlayerState === 'function' ? state.player.getPlayerState() : -1;
@@ -1338,7 +1343,7 @@
                 setOverlayHidden(true);
               }
             }catch(e){}
-          }, 5000);
+          }, 3000);
         }
 
         function attachActivityListeners(){
@@ -1363,8 +1368,10 @@
 
                   try{
                     if(typeof evt.target.setVolume === 'function'){
-                      const v = Math.max(0, Math.min(100, state.lastVolume || 100));
+                      // MODIFIED: Use the global volume variable to set volume for the new player.
+                      const v = Math.max(0, Math.min(100, globalLastVolume));
                       evt.target.setVolume(v);
+                      state.lastVolume = v; // Sync local state
                       if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute();
                       else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute();
                       // show overlay initial volume for clarity
@@ -1700,4 +1707,3 @@
   </script>
 </body>
 </html>
-
