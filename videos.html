@@ -565,7 +565,7 @@
 
     /* ---------- NEW: Playlist popup helpers & state ---------- */
     let lastOpenedPlaylistItem = null; // remember playlist so we can re-open after closing player
-    const playlistCache = {}; // <<< NEW: In-memory cache for playlists
+    const playlistCache = {}; // <<< In-memory cache for playlists
 
     const playlistPopup = document.getElementById('playlist-popup');
     const playlistBody = document.getElementById('playlist-popup-body');
@@ -613,31 +613,48 @@
     }
 
     function openPlaylistPopup(item) {
-      lastOpenedPlaylistItem = item;
+      // Set the title first, as it's always available.
       playlistTitleEl.textContent = item.title || 'Playlist';
-      playlistPopup.classList.add('visible');
-      playlistPopup.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
+      lastOpenedPlaylistItem = item; // Keep track of the current item.
 
       const playlistId = normalizeIdFromB64(item.idB64 || '');
 
-      // --- CACHING LOGIC ---
+      // --- ROBUST CACHING LOGIC ---
       if (playlistCache[playlistId]) {
-        // If playlist is in cache, render it immediately
+        // CACHE HIT: Prepare the content BEFORE showing the popup for an instant display.
         renderPlaylistBody(playlistCache[playlistId]);
+        
+        // Now show the fully prepared popup.
+        playlistPopup.classList.add('visible');
+        playlistPopup.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
       } else {
-        // If not in cache, show loading and fetch from API
+        // CACHE MISS: Prepare the "loading" content BEFORE showing.
         playlistCountEl.textContent = 'Loading...';
         playlistBody.innerHTML = `<div style="padding:18px;color:#ddd">Initializing VIDU Fetcher...</div>`;
 
+        // Now show the popup in its loading state.
+        playlistPopup.classList.add('visible');
+        playlistPopup.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+
+        // Start fetching the data asynchronously.
         (async () => {
           try {
             const videos = await fetchPlaylistVideos(playlistId);
-            playlistCache[playlistId] = videos; // <<< NEW: Store the fetched results in the cache
-            renderPlaylistBody(videos);
+            playlistCache[playlistId] = videos; // Store result in cache
+
+            // Check if the user is still looking at this specific playlist popup.
+            // This prevents a race condition if they close it quickly.
+            if (lastOpenedPlaylistItem === item && playlistPopup.classList.contains('visible')) {
+              renderPlaylistBody(videos);
+            }
           } catch (err) {
-            playlistBody.innerHTML = `<div style="padding:18px;color:#ffdede">Failed to load playlist: ${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
-            playlistCountEl.textContent = '0 Videos';
+            console.error("Playlist fetch error:", err);
+            if (lastOpenedPlaylistItem === item && playlistPopup.classList.contains('visible')) {
+              playlistBody.innerHTML = `<div style="padding:18px;color:#ffdede">Failed to load playlist: ${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
+              playlistCountEl.textContent = '0 Videos';
+            }
           }
         })();
       }
