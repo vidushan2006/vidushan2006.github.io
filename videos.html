@@ -194,6 +194,28 @@
     .vidu-close-btn{position:absolute;top:10px;right:10px;z-index:10002;width:36px;height:36px;padding:6px;border-radius:8px;background:rgba(0,0,0,0.46);border:1px solid rgba(255,255,255,0.06);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.6);transition:opacity .18s ease,transform .18s ease}
     .vidu-close-btn.hidden{opacity:0;transform:translateY(-6px);pointer-events:none}
 
+    /* ===== NEW: Responsive player controls for small screens ===== */
+    @media (max-width: 500px) {
+      .vidu-overlay {
+        gap: 6px; /* Reduce gap between elements */
+        padding: 6px 8px; /* Reduce padding */
+        left: 6px; right: 6px; bottom: 6px; /* Bring it closer to the edges */
+      }
+      .vidu-btn {
+        width: 40px; /* Make buttons slightly smaller */
+        height: 40px;
+        padding: 6px;
+      }
+      .vidu-time {
+        min-width: 65px; /* Reduce the space for time display */
+        font-size: 12px; /* Smaller font for time */
+        letter-spacing: 0.5px;
+      }
+      .vidu-controls-bg {
+        height: 56px; /* Match the new smaller controls height */
+      }
+    }
+
     /* ===== NEW: Centered volume feedback (modern style) ===== */
     .vidu-volume-overlay {
       position: absolute;
@@ -879,6 +901,9 @@
       function playSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4.5v15l12-7.5L6 4.5z" fill="#fff"/></svg>`; }
       function pauseSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4" width="4" height="16" rx="1.2" fill="#fff"/><rect x="15" y="4" width="4" height="16" rx="1.2" fill="#fff"/></svg>`; }
       function gearSVG(){ return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.4-3.5c0-.4-.03-.78-.09-1.15l1.86-1.44a.5.5 0 0 0 .12-.65l-1.76-3.05a.5.5 0 0 0-.6-.22l-2.2.88a7.72 7.72 0 0 0-1.9-1.1l-.33-2.33A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.5.42l-.33 2.33c-.69.25-1.35.6-1.95 1.02l-2.2-.88a.5.5 0 0 0-.6.22L2.7 6.96a.5.5 0 0 0 .12.65l1.86 1.44c-.06.37-.09.75-.09 1.15s.03.78.09 1.15L2.82 14.95a.5.5 0 0 0-.12.65l1.76 3.05c.14.24.4.34.64.28l2.2-.88c.6.42 1.26.77 1.95 1.02l.33 2.33c.03.25.25.42.5.42h3.8c.25 0 .47-.17.5-.42l.33-2.33c.69-.25 1.35-.6 1.95-1.02l2.2.88c.24.09.5-.04.64-.28l1.76-3.05a.5.5 0 0 0-.12-.65l-1.86-1.44c.06-.37.09-.75.09-1.15z" fill="#fff"/></svg>`; }
+      // NEW: SVG icons for fullscreen button for better quality and UX
+      function enterFullscreenSVG() { return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 3h6v6m-2-4L11 13m-2 8H3v-6m2 4l8-8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
+      function exitFullscreenSVG() { return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9V3h6m4 2L5 13m16-2v6h-6m-2-4l8 8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
 
       function createHostElementsIn(mountRootId){
         const wrap = document.getElementById(mountRootId);
@@ -905,7 +930,7 @@
           <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" />
           <div class="vidu-time" id="vidu_dur">` + fmtTime(0) + `</div>
           <button class="vidu-btn" id="vidu_playbackbtn" title="Playback speed" aria-label="Playback speed">` + gearSVG() + `</button>
-          <button class="vidu-btn" id="vidu_fullbtn">⤢</button>
+          <button class="vidu-btn" id="vidu_fullbtn" title="Toggle fullscreen" aria-label="Toggle fullscreen">${enterFullscreenSVG()}</button>
         `;
         host.appendChild(overlay);
 
@@ -1248,8 +1273,11 @@
         function onFSChange(){
           const fs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null;
           const isOurFullscreen = !!(fs && (fs === host || host.contains(fs) || (fs.contains && fs.contains(host))));
+          const fullBtnLocal = document.getElementById('vidu_fullbtn');
+
           if(isOurFullscreen){
             // entering fullscreen: save inline styles and adjust to viewport
+            if(fullBtnLocal) fullBtnLocal.innerHTML = exitFullscreenSVG(); // Change to exit icon
             try{
               if(!saved.stored){
                 saved.host.position = host.style.position || '';
@@ -1313,6 +1341,7 @@
             }
           } else {
             // exiting fullscreen: restore saved inline styles
+            if(fullBtnLocal) fullBtnLocal.innerHTML = enterFullscreenSVG(); // Change back to enter icon
             try{
               if(saved.stored){
                 host.style.position = saved.host.position;
