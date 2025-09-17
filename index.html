@@ -604,95 +604,45 @@
         state.animationFrameId = requestAnimationFrame(updatePlayerUI);
     }
 
-    return loadYTApi().then(() => new Promise((resolve, reject) => {
-      if (state.player && typeof state.player.destroy === 'function') {
-        try { state.player.destroy(); } catch (e) {}
-        state.player = null;
-      }
-
-      // OBFUSCATION: Create the player in a temporary, off-screen container.
-      // This makes it slightly harder to spot the iframe being created during initial page inspection.
-      // The iframe is moved to its correct, visible location only when the player is ready.
-      // NOTE: This does NOT hide the final video URL from developer tools, as that is impossible.
-      // It is a minor obfuscation technique.
-      const tempId = 'vidu_temp_mount_' + Math.floor(Math.random() * 1e6);
-      const tempContainer = document.createElement('div');
-      tempContainer.id = tempId;
-      tempContainer.style.position = 'fixed';
-      tempContainer.style.top = '-9999px';
-      tempContainer.style.left = '-9999px';
-      document.body.appendChild(tempContainer);
-
-      const originalMountId = mount.id; // Keep track of the original mount point
-
-      try {
-        state.player = new YT.Player(tempId, {
-          videoId: videoId,
-          width: '100%',
-          height: '100%',
-          playerVars: {
-            controls: 0, disablekb: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, origin: location.origin
-          },
+    return loadYTApi().then(()=> new Promise((resolve,reject)=>{
+      if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
+      try{
+        state.player = new YT.Player(mount.id, { videoId: videoId, width: '100%', height: '100%', playerVars: { controls: 0, disablekb: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, origin: location.origin },
           events: {
-            onReady: function(evt) {
-              // Player is ready, now move the iframe from the temp container to the visible one.
-              const finalMount = document.getElementById(originalMountId);
-              const iframe = evt.target.getIframe();
-              if (finalMount && iframe) {
-                  finalMount.innerHTML = ''; // Clear the mount point
-                  finalMount.appendChild(iframe);
-              }
-              
-              // Clean up the temporary container
-              const temp = document.getElementById(tempId);
-              if (temp) { temp.remove(); }
-
-              // --- Original onReady logic continues here ---
-              disableIframeClicks(host);
+            onReady: function(evt){
+              disableIframeClicks(host); 
               showLoading();
-              try { if (typeof evt.target.setVolume === 'function') { const v = Math.max(0, Math.min(100, state.lastVolume || 100)); evt.target.setVolume(v); if (v === 0 && typeof evt.target.mute === 'function') evt.target.mute(); else if (v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute(); } } catch (e) {}
-              try { if (typeof evt.target.setPlaybackQuality === 'function') { evt.target.setPlaybackQuality('default'); } } catch (e) {}
-              try { evt.target.playVideo(); } catch (e) {}
+              
+              // OBFUSCATION (New, safe method):
+              // As a minor security-through-obscurity measure, we remove the ID from the player's
+              // container element ('mount') after it has been initialized. This makes the element 
+              // slightly more anonymous when inspecting the DOM tree. This is a safe operation 
+              // that does not interrupt video playback, fixing the previous issue.
+              try {
+                  const iframe = evt.target.getIframe();
+                  if (iframe && iframe.parentNode && iframe.parentNode.id) {
+                      iframe.parentNode.removeAttribute('id');
+                  }
+              } catch(e) { console.warn('Failed to remove mount ID for obfuscation.', e); }
+
+              try{ if(typeof evt.target.setVolume === 'function'){ const v = Math.max(0, Math.min(100, state.lastVolume || 100)); evt.target.setVolume(v); if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute(); else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute(); } }catch(e){}
+              try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
+              try{ evt.target.playVideo(); }catch(e){}
               mount.style.height = mount.style.height || '520px';
-              if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+              if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
               updatePlayerUI();
-              if (state.mo) state.mo.disconnect();
-              state.mo = new MutationObserver(() => disableIframeClicks(host));
-              state.mo.observe(host, {
-                  childList: true,
-                  subtree: true
-              });
+              if(state.mo) state.mo.disconnect();
+              state.mo = new MutationObserver(()=> disableIframeClicks(host));
+              state.mo.observe(host, { childList:true, subtree:true });
               resetInactivityTimer();
               resolve(state.player);
             },
-            onStateChange: function(e) {
-              try {
-                if (e && e.data === 1) {
-                    try { hideLoading(); } catch (e) {}
-                }
-              } catch (err) {}
-            },
-            onError: function(err) {
-              try { const ld = document.getElementById('vidu_loading'); if (ld) { ld.classList.add('hidden'); ld.style.display = 'none'; } } catch (_) {}
-              console.error('YT player error', err);
-              // Also clean up the temp container on error
-              const temp = document.getElementById(tempId);
-              if (temp) { temp.remove(); }
-            }
+            onStateChange: function(e){ try{ if(e && e.data === 1){ try{ hideLoading(); }catch(e){} } }catch(err){} },
+            onError: function(err){ try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} console.error('YT player error', err); }
           }
         });
-      } catch (err) {
-        // Clean up the temp container if creation fails
-        const temp = document.getElementById(tempId);
-        if (temp) { temp.remove(); }
-        reject(err || new Error('YT player creation failed'));
-      }
-    })).catch(err => {
-      throw err;
-    }).then(p => {
-      setTimeout(() => resetInactivityTimer(), 40);
-      return p;
-    });
+      }catch(err){ reject(err || new Error('YT player creation failed')); }
+    })).catch(err=>{ throw err; }).then(p=>{ setTimeout(()=> resetInactivityTimer(), 40); return p; });
   }
 
   function destroyPlayer(){
