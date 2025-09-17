@@ -131,7 +131,7 @@
     .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);box-shadow:none;}
 
     .password-row{display:flex;gap:8px;margin-top:8px;}
-    .password-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:var(--text);outline:none;transition:box-shadow .15s;}
+    .password-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,0.02);color:var(--text);outline:none;transition:box-shadow .15s;}
     .password-row input:focus{box-shadow:0 0 0 2px var(--accent-1);}
     .muted{color:var(--muted);font-size:13px;}
 
@@ -604,9 +604,14 @@
         state.animationFrameId = requestAnimationFrame(updatePlayerUI);
     }
 
+    // UPDATED: Added comments explaining the dynamic creation process.
     return loadYTApi().then(()=> new Promise((resolve,reject)=>{
       if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
       try{
+        // KEY TECHNIQUE 1: DYNAMIC CREATION
+        // The `new YT.Player()` call is what dynamically creates the <iframe>.
+        // The iframe and its URL do not exist in the HTML until this code runs,
+        // which only happens when a user decides to play a video.
         state.player = new YT.Player(mount.id, { videoId: videoId, width: '100%', height: '100%', playerVars: { controls: 0, disablekb: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, origin: location.origin },
           events: {
             onReady: function(evt){
@@ -631,8 +636,15 @@
     })).catch(err=>{ throw err; }).then(p=>{ setTimeout(()=> resetInactivityTimer(), 40); return p; });
   }
 
+  // UPDATED: Added comments explaining the dynamic destruction process.
   function destroyPlayer(){
     try{
+      // KEY TECHNIQUE 2: DYNAMIC DESTRUCTION
+      // This function is crucial. When called (e.g., when the modal closes),
+      // it removes all event listeners and, most importantly, removes the
+      // entire player (`state.host`) from the DOM.
+      // This ensures the <iframe> and its URL are completely gone from the
+      // page, effectively "hiding" it until another video is played.
       if(state.animationFrameId){ cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
       if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
       if(state.docClickHandler){ document.removeEventListener('click', state.docClickHandler); state.docClickHandler = null; }
@@ -760,6 +772,7 @@ function openPasswordModal(item){
 function closeModal(){
   const root = document.getElementById('modal-root');
   if(root) root.style.display = 'none';
+  // This is where the player is destroyed, removing the iframe from the page.
   if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
   if (currentItem && currentItem.type === 'playlist') {
     const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
@@ -871,6 +884,7 @@ function playVideoWithLoading(videoInfo) {
     document.getElementById('password-block').style.display = 'none';
     document.getElementById('player-block').style.display = 'block';
     if (window.showViduPlayer) {
+      // This is where the player is created on demand.
       window.showViduPlayer(videoInfo.videoId).catch(err => {
         console.error('showViduPlayer failed', err);
         const wrap = document.getElementById('player-wrap');
