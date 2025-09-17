@@ -505,6 +505,9 @@
     };
     let isLoggedIn = false;
 
+    /* NEW: In-memory cache for playlist data to reduce API calls */
+    const playlistCache = {};
+
     /* ---------- sample items (unchanged layout) ---------- */
     const items = [
       { type: 'video', title: 'PHONK', idB64: btoa("m0fM0rBN7cQ"), passB64: btoa("")},
@@ -1424,6 +1427,11 @@
 
     /* ---------- Playlist fetcher (YouTube Data API) ---------- */
     async function fetchPlaylistVideos(playlistId){
+      // CACHE CHECK: If playlist data is already in cache, return it immediately.
+      if (playlistCache[playlistId]) {
+        return playlistCache[playlistId];
+      }
+
       if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
       const results = []; let pageToken = '';
       do {
@@ -1440,6 +1448,10 @@
         });
         pageToken = data.nextPageToken || '';
       } while(pageToken);
+      
+      // CACHE STORE: On successful fetch, store the results in the cache.
+      playlistCache[playlistId] = results;
+
       return results;
     }
 
