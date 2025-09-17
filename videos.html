@@ -565,6 +565,7 @@
 
     /* ---------- NEW: Playlist popup helpers & state ---------- */
     let lastOpenedPlaylistItem = null; // remember playlist so we can re-open after closing player
+    const playlistCache = {}; // <<< NEW: In-memory cache for playlists
 
     const playlistPopup = document.getElementById('playlist-popup');
     const playlistBody = document.getElementById('playlist-popup-body');
@@ -574,54 +575,72 @@
     const loadingPopup = document.getElementById('loading-popup');
     const loadingBar = document.getElementById('loading-bar');
 
-    function openPlaylistPopup(item){
-      // item = {type:'playlist', title, idB64, ...}
+    function renderPlaylistBody(videos) {
+      playlistBody.innerHTML = '';
+      playlistCountEl.textContent = `${videos.length} Videos`;
+
+      if (!videos.length) {
+        playlistBody.innerHTML = `<div style="padding:18px;color:#ffdede">No videos found in this playlist.</div>`;
+        return;
+      }
+
+      videos.forEach(v => {
+        const node = document.createElement('div');
+        node.className = 'playlist-item';
+        node.innerHTML = `
+          <img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" />
+          <div class="meta">
+            <div class="t">${escapeHtml(v.title)}</div>
+            <div class="s">Click to play</div>
+          </div>
+        `;
+        node.tabIndex = 0;
+
+        function clickHandler() {
+          closePlaylistPopup();
+          showLoadingPopupThenPlay(v);
+        }
+        node.addEventListener('click', clickHandler);
+        node.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            clickHandler();
+          }
+        });
+        playlistBody.appendChild(node);
+      });
+      playlistBody.scrollTop = 0;
+    }
+
+    function openPlaylistPopup(item) {
       lastOpenedPlaylistItem = item;
       playlistTitleEl.textContent = item.title || 'Playlist';
-      playlistCountEl.textContent = 'Loading...';
-      playlistBody.innerHTML = `<div style="padding:18px;color:#ddd">Initializing VIDU Fetcher...</div>`;
       playlistPopup.classList.add('visible');
-      playlistPopup.setAttribute('aria-hidden','false');
+      playlistPopup.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
-      // fetch playlist items
-      (async ()=>{
-        try{
-          const rawId = normalizeIdFromB64(item.idB64 || '');
-          const playlistId = (rawId||'').split('&')[0];
-          const videos = await fetchPlaylistVideos(playlistId);
-          playlistBody.innerHTML = '';
-          playlistCountEl.textContent = `${videos.length} Videos`;
-          if(!videos.length){
-            playlistBody.innerHTML = `<div style="padding:18px;color:#ffdede">No videos in playlist.</div>`;
-            return;
+
+      const playlistId = normalizeIdFromB64(item.idB64 || '');
+
+      // --- CACHING LOGIC ---
+      if (playlistCache[playlistId]) {
+        // If playlist is in cache, render it immediately
+        renderPlaylistBody(playlistCache[playlistId]);
+      } else {
+        // If not in cache, show loading and fetch from API
+        playlistCountEl.textContent = 'Loading...';
+        playlistBody.innerHTML = `<div style="padding:18px;color:#ddd">Initializing VIDU Fetcher...</div>`;
+
+        (async () => {
+          try {
+            const videos = await fetchPlaylistVideos(playlistId);
+            playlistCache[playlistId] = videos; // <<< NEW: Store the fetched results in the cache
+            renderPlaylistBody(videos);
+          } catch (err) {
+            playlistBody.innerHTML = `<div style="padding:18px;color:#ffdede">Failed to load playlist: ${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
+            playlistCountEl.textContent = '0 Videos';
           }
-          videos.forEach(v=>{
-            const node = document.createElement('div');
-            node.className = 'playlist-item';
-            node.innerHTML = `
-              <img src="${escapeHtml(v.thumb)}" alt="${escapeHtml(v.title)}" />
-              <div class="meta">
-                <div class="t">${escapeHtml(v.title)}</div>
-                <div class="s">Click to play</div>
-              </div>
-            `;
-            node.tabIndex = 0;
-            function clickHandler(){
-              // close playlist, show loading progress, then open player for this video
-              closePlaylistPopup();
-              showLoadingPopupThenPlay(v);
-            }
-            node.addEventListener('click', clickHandler);
-            node.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key === ' ') { e.preventDefault(); clickHandler(); }});
-            playlistBody.appendChild(node);
-          });
-          // scroll to top
-          playlistBody.scrollTop = 0;
-        }catch(err){
-          playlistBody.innerHTML = `<div style="padding:18px;color:#ffdede">Failed to load playlist: ${escapeHtml(err && err.message ? err.message : String(err))}</div>`;
-          playlistCountEl.textContent = '0 Videos';
-        }
-      })();
+        })();
+      }
     }
 
     function closePlaylistPopup(){
