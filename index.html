@@ -181,7 +181,7 @@
 
     .vidu-loading {
       position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center;
-      background-image: url('assets/images/header.png'); background-repeat: no-repeat; background-position: center; background-size: cover;
+      background: #000;
       transition: opacity .3s ease;
       will-change: opacity;
     }
@@ -594,7 +594,7 @@
 
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
-  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
+  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
   function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
   function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
 
@@ -872,7 +872,7 @@
             
             // NEW: Save progress periodically
             const now = Date.now();
-            if (state.player && state.currentVideoId && now - state.lastSaveTime > 2000) { // Save every 2 seconds
+            if (state.player && state.currentVideoId && now - state.lastSaveTime > 60000) { // Save every 1 minute
                 try {
                     const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
                     const duration = state.player.getDuration ? state.player.getDuration() : 0;
@@ -1158,7 +1158,7 @@ function renderFullScreenPlaylist(videos, title) {
   contentEl.appendChild(fragment);
 }
 
-// MODIFIED: This function now handles the entire loading flow, including restoring position
+// REWRITTEN: This function now delays player creation until after an initial loading bar.
 function playVideoWithLoading(videoInfo) {
     const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
     const loadingPopup = document.getElementById('player-loading-overlay');
@@ -1168,13 +1168,7 @@ function playVideoWithLoading(videoInfo) {
     fsPlaylist.classList.remove('show');
     loadingPopup.classList.add('show');
 
-    loadingBar.style.transition = 'none';
-    loadingBar.style.width = '0%';
-    setTimeout(() => {
-        loadingBar.style.transition = 'width 4s cubic-bezier(0.25, 0.1, 0.25, 1)';
-        loadingBar.style.width = '90%';
-    }, 50);
-
+    // Prepare the modal container but keep it hidden from view
     root.style.display = 'block';
     root.style.visibility = 'hidden';
     document.getElementById('modal-title').textContent = videoInfo.title;
@@ -1182,26 +1176,36 @@ function playVideoWithLoading(videoInfo) {
     document.getElementById('password-block').style.display = 'none';
     document.getElementById('player-block').style.display = 'block';
 
-    // NEW: Check for saved position before creating the player
-    let savedTime = 0;
-    try {
-        const progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
-        if (progress[videoInfo.videoId] && progress[videoInfo.videoId] > 1) {
-            savedTime = progress[videoInfo.videoId];
+    // First, show and animate a loading bar. The iframe won't be created yet.
+    loadingBar.style.transition = 'none';
+    loadingBar.style.width = '0%';
+    setTimeout(() => {
+        loadingBar.style.transition = 'width 2s cubic-bezier(0.25, 0.1, 0.25, 1)';
+        loadingBar.style.width = '100%';
+    }, 50);
+
+    // After the initial loading bar animation is done, create the player.
+    // This delays the creation of the iframe, hiding the video link from devtools during initial load.
+    setTimeout(() => {
+        let savedTime = 0;
+        try {
+            const progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
+            if (progress[videoInfo.videoId] && progress[videoInfo.videoId] > 1) {
+                savedTime = progress[videoInfo.videoId];
+            }
+        } catch (e) {
+            console.warn('Could not read saved video progress.');
         }
-    } catch(e) { console.warn('Could not read saved video progress.'); }
 
-    if (window.showViduPlayer) {
-        // Pass the savedTime to the player creation function
-        window.showViduPlayer(videoInfo.videoId, savedTime)
-            .then(player => {
-                loadingBar.style.transition = 'width 0.3s ease-out';
-                loadingBar.style.width = '100%';
-
-                setTimeout(() => {
+        if (window.showViduPlayer) {
+            // Now we create the player. The player itself has another loading screen (.vidu-loading).
+            window.showViduPlayer(videoInfo.videoId, savedTime)
+                .then(player => {
+                    // This block executes when the player's onReady event has fired.
+                    // Hide the initial loading popup.
                     loadingPopup.classList.remove('show');
 
-                    // NEW: Check if we need to show the "restoring" popup
+                    // Check if we need to show the "restoring position" popup.
                     if (savedTime > 1) {
                         const restoringPopup = document.getElementById('restoring-position-overlay');
                         const restoringBar = document.getElementById('restoring-position-bar-fill');
@@ -1215,35 +1219,35 @@ function playVideoWithLoading(videoInfo) {
                             restoringBar.style.width = '100%';
                         }, 50);
 
-                        // After 2 seconds, hide the restoring popup and show the player
+                        // After 2 seconds, hide the restoring popup and finally show the player.
                         setTimeout(() => {
                             restoringPopup.classList.remove('show');
-                            root.style.visibility = 'visible';
+                            root.style.visibility = 'visible'; // Make player visible
                             setTimeout(() => {
                                 restoringBar.style.transition = 'none';
                                 restoringBar.style.width = '0%';
                             }, 300);
                         }, 2000);
                     } else {
-                        // No saved time, show player immediately
+                        // No saved time, show player immediately.
                         root.style.visibility = 'visible';
                     }
 
-                    // Reset the initial loading bar's state
+                    // Reset the initial loading bar's state for the next use.
                     setTimeout(() => {
                         loadingBar.style.transition = 'none';
                         loadingBar.style.width = '0%';
                     }, 300);
-                }, 300);
-            })
-            .catch(err => {
-                console.error('showViduPlayer failed', err);
-                loadingPopup.classList.remove('show');
-                root.style.visibility = 'visible';
-                const wrap = document.getElementById('player-wrap');
-                if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
-            });
-    }
+                })
+                .catch(err => {
+                    console.error('showViduPlayer failed', err);
+                    loadingPopup.classList.remove('show');
+                    root.style.visibility = 'visible';
+                    const wrap = document.getElementById('player-wrap');
+                    if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
+                });
+        }
+    }, 2100); // Wait for the 2s animation to finish before creating the player.
 }
 
 
