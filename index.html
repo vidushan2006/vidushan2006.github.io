@@ -550,8 +550,9 @@
     lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
     volumeFeedbackTimer: null,
     _menuOpenTs: 0,
-    // State for tracking current video
+    // NEW: State for tracking current video and throttling saves
     currentVideoId: null,
+    lastSaveTime: 0,
   };
 
   function loadYTApi(){
@@ -596,30 +597,7 @@
   function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
   function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
   function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
-  
-  // NEW: Saves the current video progress to localStorage.
-  function saveCurrentVideoTime() {
-    if (state.player && state.currentVideoId && typeof state.player.getCurrentTime === 'function') {
-        try {
-            const currentTime = state.player.getCurrentTime();
-            const duration = state.player.getDuration();
-            let progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
 
-            // If video is watched until the end (or close to it), remove its progress
-            // so it starts from the beginning next time.
-            if (duration && currentTime >= duration - 5) {
-                delete progress[state.currentVideoId];
-            }
-            // Otherwise, save the current time if it's past the first second.
-            else if (currentTime > 1) {
-                progress[state.currentVideoId] = currentTime;
-            }
-            localStorage.setItem('vidu_video_progress', JSON.stringify(progress));
-        } catch (e) {
-            console.warn('Could not save video progress', e);
-        }
-    }
-  }
 
   function createHostElements(){
     let wrap = document.getElementById('player-wrap');
@@ -891,7 +869,21 @@
             if (playBtn.innerHTML !== currentIcon) { playBtn.innerHTML = currentIcon; }
             playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
             
-            // REMOVED: Periodic saving logic has been removed. Saving now happens on close.
+            const now = Date.now();
+            if (state.player && state.currentVideoId && now - state.lastSaveTime > 60000) { // Save every 1 minute
+                try {
+                    const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+                    const duration = state.player.getDuration ? state.player.getDuration() : 0;
+                    if (currentTime > 1 && currentTime < duration - 1) {
+                        let progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
+                        progress[state.currentVideoId] = currentTime;
+                        localStorage.setItem('vidu_video_progress', JSON.stringify(progress));
+                        state.lastSaveTime = now;
+                    }
+                } catch (e) {
+                    console.warn('Could not save video progress', e);
+                }
+            }
 
         } catch (e) {}
         state.animationFrameId = requestAnimationFrame(updatePlayerUI);
@@ -923,28 +915,14 @@
               resetInactivityTimer();
               resolve(state.player);
             },
-            // UPDATED: More robust state handling for the loading indicator.
-            onStateChange: function(e){
-                if (e && typeof e.data !== 'undefined') {
-                    const playerState = e.data;
-                    // State 3 is 'BUFFERING'
-                    if (playerState === 3) {
-                        showLoading();
-                    }
-                    // State 1 is 'PLAYING'
-                    else if (playerState === 1) {
-                        hideLoading();
-                        // This callback syncs the UI to hide the main loading overlay. Fire only once.
-                        if (!hasFiredPlayingCallback) {
-                            hasFiredPlayingCallback = true;
-                            if (typeof onPlayingCallback === 'function') {
-                                onPlayingCallback();
-                            }
+            onStateChange: function(e){ 
+                if (e && e.data === 1) { // 1 is YT.PlayerState.PLAYING
+                    try { hideLoading(); } catch(err){}
+                    if (!hasFiredPlayingCallback) {
+                        hasFiredPlayingCallback = true;
+                        if (typeof onPlayingCallback === 'function') {
+                            onPlayingCallback();
                         }
-                    }
-                    // For other states like PAUSED(2), ENDED(0), CUED(5), just ensure loading is hidden.
-                    else {
-                        hideLoading();
                     }
                 }
             },
@@ -961,9 +939,6 @@
 
   function destroyPlayer(){
     try{
-      // UPDATED: Save final video position before destroying the player instance.
-      saveCurrentVideoTime();
-
       if(state.animationFrameId){ cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
       if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
       if(state.docClickHandler){ document.removeEventListener('click', state.docClickHandler); state.docClickHandler = null; }
