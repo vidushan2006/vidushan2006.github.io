@@ -205,11 +205,7 @@
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
-      /* OPTIMIZED: Replaced expensive backdrop-filter with a more opaque solid background. */
-      /* This is the primary fix for the video lag when controls are visible. */
       background: rgba(20, 22, 28, 0.92);
-      /* backdrop-filter: blur(12px); // REMOVED FOR PERFORMANCE */
-      /* -webkit-backdrop-filter: blur(12px); // REMOVED FOR PERFORMANCE */
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
     }
@@ -333,13 +329,11 @@
       pointer-events:none; opacity:0; transition:opacity .28s ease; display:none; min-width:72px; text-align:center;
     }
     
-    /* MODIFIED: Redesigned playback speed menu to be more compact */
     .vidu-playback-menu {
       position: absolute;
       bottom: 82px;
       right: 12px;
       z-index: 10001;
-      /* MODIFIED: Set a fixed width to make buttons uniform and smaller */
       width: 90px;
       background: rgba(45, 48, 56, 0.85);
       backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -361,7 +355,6 @@
     }
     .vidu-playback-menu button {
         background: transparent; border: none; color: var(--text);
-        /* MODIFIED: Reduced padding to make buttons smaller */
         padding: 8px 12px;
         cursor: pointer; font-weight: 700; font-size: 14px;
         width: 100%; text-align: center; border-radius: 8px;
@@ -373,7 +366,7 @@
     .vidu-playback-menu button.active {
         color: #fff;
         font-weight: 700;
-        background: #4a7453; /* Active color from the image */
+        background: #4a7453;
     }
 
 
@@ -525,6 +518,15 @@
     </div>
   </div>
 </div>
+<!-- NEW: Added a dedicated loading overlay for restoring video position -->
+<div id="restoring-position-overlay" class="loading-popup-overlay">
+  <div class="loading-popup-content">
+    <p id="restoring-position-message">Restoring Last Position...</p>
+    <div class="loading-bar-container">
+      <div id="restoring-position-bar-fill" class="loading-bar-fill"></div>
+    </div>
+  </div>
+</div>
 
 <script>
 // PLAYER SCRIPT
@@ -547,7 +549,10 @@
     desiredPlaying: null,
     lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
     volumeFeedbackTimer: null,
-    _menuOpenTs: 0
+    _menuOpenTs: 0,
+    // NEW: State for tracking current video and throttling saves
+    currentVideoId: null,
+    lastSaveTime: 0,
   };
 
   function loadYTApi(){
@@ -645,7 +650,6 @@
     const playbackMenu = document.createElement('div');
     playbackMenu.className = 'vidu-playback-menu';
     playbackMenu.id = 'vidu_playback_menu';
-    // MODIFIED: Added more speed options to match the desired layout
     playbackMenu.innerHTML = `<button data-speed="2">2x</button><button data-speed="1.75">1.75x</button><button data-speed="1.5">1.5x</button><button data-speed="1.25">1.25x</button><button data-speed="1" class="active">1x</button><button data-speed="0.75">0.75x</button><button data-speed="0.5">0.5x</button><button data-speed="0.25">0.25x</button>`;
     host.appendChild(playbackMenu);
 
@@ -660,9 +664,13 @@
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
 
-  function createPlayer(videoId){
+  // MODIFIED: Function now accepts a startTime parameter
+  function createPlayer(videoId, startTime = 0){
     const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
     state.host = host; state.mount = mount;
+    // NEW: Set the current video ID in the state for saving progress
+    state.currentVideoId = videoId;
+    
     const playBtn = overlay.querySelector('#vidu_playbtn');
     const curEl = overlay.querySelector('#vidu_cur');
     const durEl = overlay.querySelector('#vidu_dur');
@@ -809,7 +817,6 @@
     seekEl.addEventListener('input', ()=>{ if(seekEl._drag && state.player){ const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) curEl.textContent = fmtHHMMSS(Math.floor(dur * (parseFloat(seekEl.value)/100))); updateSeekUI(seekEl); } }, {passive:true});
     updateSeekUI(seekEl);
 
-    // MODIFIED: Simplified the click handler to prevent conflicts. It now only sets the desired state.
     playBtn.addEventListener('click', ()=>{
       if(!state.player) return;
       let st = -1;
@@ -850,7 +857,6 @@
             }
             const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
             
-            // MODIFIED: This loop is now the single source of truth for play/pause actions
             if (state.desiredPlaying !== null) {
               if(state.desiredPlaying && st !== 1){
                 try{ state.player.playVideo(); }catch(e){}
@@ -863,6 +869,29 @@
             const currentIcon = isPlaying ? pauseSVG() : playSVG();
             if (playBtn.innerHTML !== currentIcon) { playBtn.innerHTML = currentIcon; }
             playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
+            
+            // NEW: Save progress periodically
+            const now = Date.now();
+            if (state.player && state.currentVideoId && now - state.lastSaveTime > 2000) { // Save every 2 seconds
+                try {
+                    const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+                    const duration = state.player.getDuration ? state.player.getDuration() : 0;
+                    // Don't save if video is over or at the very beginning
+                    if (currentTime > 1 && currentTime < duration - 1) {
+                        let progress = {};
+                        try {
+                            progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
+                        } catch (e) {
+                            progress = {};
+                        }
+                        progress[state.currentVideoId] = currentTime;
+                        localStorage.setItem('vidu_video_progress', JSON.stringify(progress));
+                        state.lastSaveTime = now;
+                    }
+                } catch (e) {
+                    console.warn('Could not save video progress', e);
+                }
+            }
 
         } catch (e) {}
         state.animationFrameId = requestAnimationFrame(updatePlayerUI);
@@ -877,7 +906,13 @@
               disableIframeClicks(host); showLoading();
               try{ if(typeof evt.target.setVolume === 'function'){ const v = Math.max(0, Math.min(100, state.lastVolume || 100)); evt.target.setVolume(v); if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute(); else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute(); } }catch(e){}
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
-              try{ evt.target.playVideo(); }catch(e){}
+              
+              // NEW: Seek to saved position if it exists, then play
+              if (startTime && startTime > 1) {
+                  try { evt.target.seekTo(startTime, true); } catch (e) {}
+              }
+              try{ evt.target.playVideo(); } catch(e){}
+
               mount.style.height = mount.style.height || '520px';
               if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
               updatePlayerUI();
@@ -908,10 +943,13 @@
       if(state.volumeFeedbackTimer){ clearTimeout(state.volumeFeedbackTimer); state.volumeFeedbackTimer = null; }
       if(state.host){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){} }
       if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
+      // NEW: Clear current video ID on destroy
+      state.currentVideoId = null;
     }catch(e){ console.warn('destroyPlayer err', e); }
   }
 
-  window.showViduPlayer = function(videoId){ if(typeof window.loadYTApi !== 'function') { window.loadYTApi = loadYTApi; } return createPlayer(videoId).catch(err => { console.error('createPlayer failed', err); throw err; }); };
+  // MODIFIED: Function signature updated to accept startTime
+  window.showViduPlayer = function(videoId, startTime = 0){ if(typeof window.loadYTApi !== 'function') { window.loadYTApi = loadYTApi; } return createPlayer(videoId, startTime).catch(err => { console.error('createPlayer failed', err); throw err; }); };
   window.destroyViduPlayer = function(){ destroyPlayer(); const w = document.getElementById('player-wrap'); if(w) w.innerHTML = ''; };
   window.addEventListener('beforeunload', ()=> { try{ window.destroyViduPlayer(); }catch(e){} }, {passive:true});
 })();
@@ -1120,54 +1158,94 @@ function renderFullScreenPlaylist(videos, title) {
   contentEl.appendChild(fragment);
 }
 
+// MODIFIED: This function now handles the entire loading flow, including restoring position
 function playVideoWithLoading(videoInfo) {
-  const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
-  const loadingPopup = document.getElementById('player-loading-overlay');
-  const loadingBar = document.getElementById('player-loading-bar-fill');
-  const root = document.getElementById('modal-root');
+    const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
+    const loadingPopup = document.getElementById('player-loading-overlay');
+    const loadingBar = document.getElementById('player-loading-bar-fill');
+    const root = document.getElementById('modal-root');
 
-  fsPlaylist.classList.remove('show');
-  loadingPopup.classList.add('show');
+    fsPlaylist.classList.remove('show');
+    loadingPopup.classList.add('show');
 
-  loadingBar.style.transition = 'none';
-  loadingBar.style.width = '0%';
-  setTimeout(() => {
-    loadingBar.style.transition = 'width 4s cubic-bezier(0.25, 0.1, 0.25, 1)';
-    loadingBar.style.width = '90%';
-  }, 50);
+    loadingBar.style.transition = 'none';
+    loadingBar.style.width = '0%';
+    setTimeout(() => {
+        loadingBar.style.transition = 'width 4s cubic-bezier(0.25, 0.1, 0.25, 1)';
+        loadingBar.style.width = '90%';
+    }, 50);
 
-  root.style.display = 'block';
-  root.style.visibility = 'hidden';
-  document.getElementById('modal-title').textContent = videoInfo.title;
-  document.getElementById('modal-subtitle').textContent = 'Now Playing';
-  document.getElementById('password-block').style.display = 'none';
-  document.getElementById('player-block').style.display = 'block';
+    root.style.display = 'block';
+    root.style.visibility = 'hidden';
+    document.getElementById('modal-title').textContent = videoInfo.title;
+    document.getElementById('modal-subtitle').textContent = 'Now Playing';
+    document.getElementById('password-block').style.display = 'none';
+    document.getElementById('player-block').style.display = 'block';
 
-  if (window.showViduPlayer) {
-    window.showViduPlayer(videoInfo.videoId)
-      .then(player => {
-        loadingBar.style.transition = 'width 0.3s ease-out';
-        loadingBar.style.width = '100%';
+    // NEW: Check for saved position before creating the player
+    let savedTime = 0;
+    try {
+        const progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
+        if (progress[videoInfo.videoId] && progress[videoInfo.videoId] > 1) {
+            savedTime = progress[videoInfo.videoId];
+        }
+    } catch(e) { console.warn('Could not read saved video progress.'); }
 
-        setTimeout(() => {
-          loadingPopup.classList.remove('show');
-          root.style.visibility = 'visible';
+    if (window.showViduPlayer) {
+        // Pass the savedTime to the player creation function
+        window.showViduPlayer(videoInfo.videoId, savedTime)
+            .then(player => {
+                loadingBar.style.transition = 'width 0.3s ease-out';
+                loadingBar.style.width = '100%';
 
-          setTimeout(() => {
-            loadingBar.style.transition = 'none';
-            loadingBar.style.width = '0%';
-          }, 300);
-        }, 300);
-      })
-      .catch(err => {
-        console.error('showViduPlayer failed', err);
-        loadingPopup.classList.remove('show');
-        root.style.visibility = 'visible';
-        const wrap = document.getElementById('player-wrap');
-        if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
-      });
-  }
+                setTimeout(() => {
+                    loadingPopup.classList.remove('show');
+
+                    // NEW: Check if we need to show the "restoring" popup
+                    if (savedTime > 1) {
+                        const restoringPopup = document.getElementById('restoring-position-overlay');
+                        const restoringBar = document.getElementById('restoring-position-bar-fill');
+                        
+                        restoringPopup.classList.add('show');
+                        restoringBar.style.transition = 'none';
+                        restoringBar.style.width = '0%';
+
+                        setTimeout(() => {
+                            restoringBar.style.transition = 'width 2s linear';
+                            restoringBar.style.width = '100%';
+                        }, 50);
+
+                        // After 2 seconds, hide the restoring popup and show the player
+                        setTimeout(() => {
+                            restoringPopup.classList.remove('show');
+                            root.style.visibility = 'visible';
+                            setTimeout(() => {
+                                restoringBar.style.transition = 'none';
+                                restoringBar.style.width = '0%';
+                            }, 300);
+                        }, 2000);
+                    } else {
+                        // No saved time, show player immediately
+                        root.style.visibility = 'visible';
+                    }
+
+                    // Reset the initial loading bar's state
+                    setTimeout(() => {
+                        loadingBar.style.transition = 'none';
+                        loadingBar.style.width = '0%';
+                    }, 300);
+                }, 300);
+            })
+            .catch(err => {
+                console.error('showViduPlayer failed', err);
+                loadingPopup.classList.remove('show');
+                root.style.visibility = 'visible';
+                const wrap = document.getElementById('player-wrap');
+                if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
+            });
+    }
 }
+
 
 function pauseVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = true; }
 function resumeVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = false; }
