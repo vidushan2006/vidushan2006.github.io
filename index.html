@@ -76,39 +76,41 @@
 
     nav ul{list-style:none;margin:0;padding:0;display:flex;gap:10px;align-items:center;}
     
+    /* UPDATED: Nav links styled as neon green buttons */
     nav ul li a {
       font-weight: 700;
       font-size: 14px;
       position: relative;
-      padding: 8px 16px;
-      color: var(--accent-2);
+      padding: 8px 16px; /* Increased padding for button look */
+      color: var(--accent-2); /* Neon green text */
       text-decoration: none;
       border-radius: 8px;
       transition: all .18s var(--ease);
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(57, 255, 20, 0.08);
+      background: rgba(57, 255, 20, 0.08); /* Subtle green background */
       border: 1px solid rgba(57, 255, 20, 0.25);
       text-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
       box-shadow: inset 0 0 12px rgba(57, 255, 20, 0.15);
     }
 
     nav ul li a:hover {
-      color: #fff;
+      color: #fff; /* Brighten text on hover */
       transform: translateY(-3px) scale(1.03);
-      background: rgba(57, 255, 20, 0.15);
+      background: rgba(57, 255, 20, 0.15); /* More intense background */
       border-color: rgba(57, 255, 20, 0.5);
-      box-shadow: inset 0 0 12px rgba(57, 255, 20, 0.3), 0 0 20px rgba(57, 255, 20, 0.3);
+      box-shadow: inset 0 0 12px rgba(57, 255, 20, 0.3), 0 0 20px rgba(57, 255, 20, 0.3); /* Add outer glow */
     }
     
+    /* PERFORMANCE: Removed heavy neon glow effect (::before pseudo-element) */
     header nav ul li a::after,
     .logo::after{
       content: "";
       position: absolute;
       inset: -4px;
       border-radius: 12px;
-      border: 1px solid transparent;
+      border: 1px solid transparent; /* Simplified border */
       opacity: 0.75;
       z-index: -1;
       pointer-events: none;
@@ -123,6 +125,7 @@
     .inner{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:3;}
 
     .list-container{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:flex-start;margin-top:6px;}
+    /* PERFORMANCE: Optimized list item styles, removed backdrop-filter, simplified shadows and transforms. */
     .list-item{width:150px;cursor:pointer;text-align:center;background:rgba(18, 20, 28, 0.5);border-radius:var(--card-radius);padding:10px;transition:transform .25s var(--ease),box-shadow .25s var(--ease); border:1px solid rgba(255,255,255,0.06); box-shadow:0 8px 24px rgba(6,8,16,0.5);position:relative;will-change:transform, opacity;}
 
     .list-item::after{content:'';position:absolute;left:8px;right:8px;bottom:8px;height:4px;border-radius:4px;background:linear-gradient(90deg, rgba(123,97,255,0.25), rgba(57,255,20,0.18), rgba(255,107,107,0.12));opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;}
@@ -178,8 +181,7 @@
 
     .vidu-loading {
       position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center;
-      /* MODIFIED: Removed header.png background for a cleaner, black loading screen */
-      background-color: #000;
+      background-image: url('assets/images/header.png'); background-repeat: no-repeat; background-position: center; background-size: cover;
       transition: opacity .3s ease;
       will-change: opacity;
     }
@@ -203,7 +205,11 @@
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
+      /* OPTIMIZED: Replaced expensive backdrop-filter with a more opaque solid background. */
+      /* This is the primary fix for the video lag when controls are visible. */
       background: rgba(20, 22, 28, 0.92);
+      /* backdrop-filter: blur(12px); // REMOVED FOR PERFORMANCE */
+      /* -webkit-backdrop-filter: blur(12px); // REMOVED FOR PERFORMANCE */
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
     }
@@ -327,11 +333,13 @@
       pointer-events:none; opacity:0; transition:opacity .28s ease; display:none; min-width:72px; text-align:center;
     }
     
+    /* MODIFIED: Redesigned playback speed menu to be more compact */
     .vidu-playback-menu {
       position: absolute;
       bottom: 82px;
       right: 12px;
       z-index: 10001;
+      /* MODIFIED: Set a fixed width to make buttons uniform and smaller */
       width: 90px;
       background: rgba(45, 48, 56, 0.85);
       backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -353,6 +361,7 @@
     }
     .vidu-playback-menu button {
         background: transparent; border: none; color: var(--text);
+        /* MODIFIED: Reduced padding to make buttons smaller */
         padding: 8px 12px;
         cursor: pointer; font-weight: 700; font-size: 14px;
         width: 100%; text-align: center; border-radius: 8px;
@@ -364,7 +373,7 @@
     .vidu-playback-menu button.active {
         color: #fff;
         font-weight: 700;
-        background: #4a7453;
+        background: #4a7453; /* Active color from the image */
     }
 
 
@@ -516,14 +525,6 @@
     </div>
   </div>
 </div>
-<div id="restoring-position-overlay" class="loading-popup-overlay">
-  <div class="loading-popup-content">
-    <p id="restoring-position-message">Restoring Last Position...</p>
-    <div class="loading-bar-container">
-      <div id="restoring-position-bar-fill" class="loading-bar-fill"></div>
-    </div>
-  </div>
-</div>
 
 <script>
 // PLAYER SCRIPT
@@ -546,9 +547,7 @@
     desiredPlaying: null,
     lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
     volumeFeedbackTimer: null,
-    _menuOpenTs: 0,
-    currentVideoId: null,
-    lastSaveTime: 0,
+    _menuOpenTs: 0
   };
 
   function loadYTApi(){
@@ -590,12 +589,24 @@
 
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
-  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
+  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
   function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
   function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
 
-  // MODIFIED: This function now creates the player elements in memory but does NOT attach them to the DOM.
+
   function createHostElements(){
+    let wrap = document.getElementById('player-wrap');
+    if(!wrap){
+      const root = document.getElementById('modal-root') || document.body;
+      const modalEl = (root && root.querySelector && root.querySelector('.modal')) ? root.querySelector('.modal') : root;
+      wrap = document.createElement('div');
+      wrap.id = 'player-wrap';
+      wrap.style.minWidth = '320px';
+      try{ if(modalEl) modalEl.appendChild(wrap); else document.body.appendChild(wrap); }
+      catch(e){ try{ document.body.appendChild(wrap); }catch(_){} }
+    }
+    const prev = wrap.querySelector('.vidu-player-host');
+    if(prev) prev.remove();
     const host = document.createElement('div'); host.className = 'vidu-player-host';
     const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
     mount.style.height = '520px'; mount.style.background = '#000';
@@ -634,6 +645,7 @@
     const playbackMenu = document.createElement('div');
     playbackMenu.className = 'vidu-playback-menu';
     playbackMenu.id = 'vidu_playback_menu';
+    // MODIFIED: Added more speed options to match the desired layout
     playbackMenu.innerHTML = `<button data-speed="2">2x</button><button data-speed="1.75">1.75x</button><button data-speed="1.5">1.5x</button><button data-speed="1.25">1.25x</button><button data-speed="1" class="active">1x</button><button data-speed="0.75">0.75x</button><button data-speed="0.5">0.5x</button><button data-speed="0.25">0.25x</button>`;
     host.appendChild(playbackMenu);
 
@@ -642,17 +654,15 @@
     host.appendChild(closeBtn);
     const volFeedback = document.createElement('div'); volFeedback.id = 'vidu_vol_feedback'; volFeedback.className = 'vidu-vol-feedback'; volFeedback.style.display = 'none';
     host.appendChild(volFeedback);
-    // The host is NOT appended to the DOM here. It is returned for later attachment.
+    wrap.appendChild(host);
     return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
 
-  function createPlayer(videoId, startTime = 0){
+  function createPlayer(videoId){
     const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
     state.host = host; state.mount = mount;
-    state.currentVideoId = videoId;
-    
     const playBtn = overlay.querySelector('#vidu_playbtn');
     const curEl = overlay.querySelector('#vidu_cur');
     const durEl = overlay.querySelector('#vidu_dur');
@@ -799,6 +809,7 @@
     seekEl.addEventListener('input', ()=>{ if(seekEl._drag && state.player){ const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) curEl.textContent = fmtHHMMSS(Math.floor(dur * (parseFloat(seekEl.value)/100))); updateSeekUI(seekEl); } }, {passive:true});
     updateSeekUI(seekEl);
 
+    // MODIFIED: Simplified the click handler to prevent conflicts. It now only sets the desired state.
     playBtn.addEventListener('click', ()=>{
       if(!state.player) return;
       let st = -1;
@@ -839,6 +850,7 @@
             }
             const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
             
+            // MODIFIED: This loop is now the single source of truth for play/pause actions
             if (state.desiredPlaying !== null) {
               if(state.desiredPlaying && st !== 1){
                 try{ state.player.playVideo(); }catch(e){}
@@ -851,22 +863,6 @@
             const currentIcon = isPlaying ? pauseSVG() : playSVG();
             if (playBtn.innerHTML !== currentIcon) { playBtn.innerHTML = currentIcon; }
             playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
-            
-            const now = Date.now();
-            // MODIFIED: Save interval changed to 30 seconds
-            if (state.player && state.currentVideoId && now - state.lastSaveTime > 30000) {
-                try {
-                    const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
-                    const duration = state.player.getDuration ? state.player.getDuration() : 0;
-                    if (currentTime > 1 && currentTime < duration - 1) {
-                        let progress = {};
-                        try { progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}'); } catch (e) { progress = {}; }
-                        progress[state.currentVideoId] = currentTime;
-                        localStorage.setItem('vidu_video_progress', JSON.stringify(progress));
-                        state.lastSaveTime = now;
-                    }
-                } catch (e) { console.warn('Could not save video progress', e); }
-            }
 
         } catch (e) {}
         state.animationFrameId = requestAnimationFrame(updatePlayerUI);
@@ -878,25 +874,10 @@
         state.player = new YT.Player(mount.id, { videoId: videoId, width: '100%', height: '100%', playerVars: { controls: 0, disablekb: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, origin: location.origin },
           events: {
             onReady: function(evt){
-              // MODIFIED: This is the key change. The player elements (host) are only attached
-              // to the visible DOM *after* the player API is ready. This prevents the iframe
-              // from being inspectable during the initial load.
-              const wrap = document.getElementById('player-wrap');
-              if (wrap) {
-                  wrap.innerHTML = '';
-                  wrap.appendChild(host);
-              }
-              
-              disableIframeClicks(host);
-              showLoading();
+              disableIframeClicks(host); showLoading();
               try{ if(typeof evt.target.setVolume === 'function'){ const v = Math.max(0, Math.min(100, state.lastVolume || 100)); evt.target.setVolume(v); if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute(); else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute(); } }catch(e){}
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
-              
-              if (startTime && startTime > 1) {
-                  try { evt.target.seekTo(startTime, true); } catch (e) {}
-              }
-              try{ evt.target.playVideo(); } catch(e){}
-
+              try{ evt.target.playVideo(); }catch(e){}
               mount.style.height = mount.style.height || '520px';
               if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
               updatePlayerUI();
@@ -904,17 +885,10 @@
               state.mo = new MutationObserver(()=> disableIframeClicks(host));
               state.mo.observe(host, { childList:true, subtree:true });
               resetInactivityTimer();
-              resolve(state.player); // Resolve the promise now that the player is ready and attached
+              resolve(state.player);
             },
             onStateChange: function(e){ try{ if(e && e.data === 1){ try{ hideLoading(); }catch(e){} } }catch(err){} },
-            onError: function(err){
-                try{
-                    const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; }
-                    const wrap = document.getElementById('player-wrap'); if(wrap) wrap.innerHTML = `<p class="muted" style="text-align:center; padding: 20px;">Could not load video.</p>`;
-                } catch(_){}
-                console.error('YT player error', err);
-                reject(err);
-            }
+            onError: function(err){ try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} console.error('YT player error', err); }
           }
         });
       }catch(err){ reject(err || new Error('YT player creation failed')); }
@@ -933,15 +907,12 @@
       if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
       if(state.volumeFeedbackTimer){ clearTimeout(state.volumeFeedbackTimer); state.volumeFeedbackTimer = null; }
       if(state.host){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){} }
-      const wrap = document.getElementById('player-wrap');
-      if(wrap) wrap.innerHTML = '';
-      state.host = null; state.mount = null;
-      state.currentVideoId = null;
+      if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
     }catch(e){ console.warn('destroyPlayer err', e); }
   }
 
-  window.showViduPlayer = function(videoId, startTime = 0){ if(typeof window.loadYTApi !== 'function') { window.loadYTApi = loadYTApi; } return createPlayer(videoId, startTime).catch(err => { console.error('createPlayer failed', err); throw err; }); };
-  window.destroyViduPlayer = function(){ destroyPlayer(); };
+  window.showViduPlayer = function(videoId){ if(typeof window.loadYTApi !== 'function') { window.loadYTApi = loadYTApi; } return createPlayer(videoId).catch(err => { console.error('createPlayer failed', err); throw err; }); };
+  window.destroyViduPlayer = function(){ destroyPlayer(); const w = document.getElementById('player-wrap'); if(w) w.innerHTML = ''; };
   window.addEventListener('beforeunload', ()=> { try{ window.destroyViduPlayer(); }catch(e){} }, {passive:true});
 })();
 </script>
@@ -1150,86 +1121,53 @@ function renderFullScreenPlaylist(videos, title) {
 }
 
 function playVideoWithLoading(videoInfo) {
-    const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
-    const loadingPopup = document.getElementById('player-loading-overlay');
-    const loadingBar = document.getElementById('player-loading-bar-fill');
-    const root = document.getElementById('modal-root');
+  const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
+  const loadingPopup = document.getElementById('player-loading-overlay');
+  const loadingBar = document.getElementById('player-loading-bar-fill');
+  const root = document.getElementById('modal-root');
 
-    fsPlaylist.classList.remove('show');
-    loadingPopup.classList.add('show');
+  fsPlaylist.classList.remove('show');
+  loadingPopup.classList.add('show');
 
-    loadingBar.style.transition = 'none';
-    loadingBar.style.width = '0%';
-    setTimeout(() => {
-        loadingBar.style.transition = 'width 4s cubic-bezier(0.25, 0.1, 0.25, 1)';
-        loadingBar.style.width = '90%';
-    }, 50);
+  loadingBar.style.transition = 'none';
+  loadingBar.style.width = '0%';
+  setTimeout(() => {
+    loadingBar.style.transition = 'width 4s cubic-bezier(0.25, 0.1, 0.25, 1)';
+    loadingBar.style.width = '90%';
+  }, 50);
 
-    root.style.display = 'block';
-    root.style.visibility = 'hidden';
-    document.getElementById('modal-title').textContent = videoInfo.title;
-    document.getElementById('modal-subtitle').textContent = 'Now Playing';
-    document.getElementById('password-block').style.display = 'none';
-    document.getElementById('player-block').style.display = 'block';
+  root.style.display = 'block';
+  root.style.visibility = 'hidden';
+  document.getElementById('modal-title').textContent = videoInfo.title;
+  document.getElementById('modal-subtitle').textContent = 'Now Playing';
+  document.getElementById('password-block').style.display = 'none';
+  document.getElementById('player-block').style.display = 'block';
 
-    let savedTime = 0;
-    try {
-        const progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
-        if (progress[videoInfo.videoId] && progress[videoInfo.videoId] > 1) {
-            savedTime = progress[videoInfo.videoId];
-        }
-    } catch(e) { console.warn('Could not read saved video progress.'); }
+  if (window.showViduPlayer) {
+    window.showViduPlayer(videoInfo.videoId)
+      .then(player => {
+        loadingBar.style.transition = 'width 0.3s ease-out';
+        loadingBar.style.width = '100%';
 
-    if (window.showViduPlayer) {
-        window.showViduPlayer(videoInfo.videoId, savedTime)
-            .then(player => {
-                loadingBar.style.transition = 'width 0.3s ease-out';
-                loadingBar.style.width = '100%';
+        setTimeout(() => {
+          loadingPopup.classList.remove('show');
+          root.style.visibility = 'visible';
 
-                setTimeout(() => {
-                    loadingPopup.classList.remove('show');
-
-                    if (savedTime > 1) {
-                        const restoringPopup = document.getElementById('restoring-position-overlay');
-                        const restoringBar = document.getElementById('restoring-position-bar-fill');
-                        
-                        restoringPopup.classList.add('show');
-                        restoringBar.style.transition = 'none';
-                        restoringBar.style.width = '0%';
-
-                        setTimeout(() => {
-                            restoringBar.style.transition = 'width 2s linear';
-                            restoringBar.style.width = '100%';
-                        }, 50);
-
-                        setTimeout(() => {
-                            restoringPopup.classList.remove('show');
-                            root.style.visibility = 'visible';
-                            setTimeout(() => {
-                                restoringBar.style.transition = 'none';
-                                restoringBar.style.width = '0%';
-                            }, 300);
-                        }, 2000);
-                    } else {
-                        root.style.visibility = 'visible';
-                    }
-
-                    setTimeout(() => {
-                        loadingBar.style.transition = 'none';
-                        loadingBar.style.width = '0%';
-                    }, 300);
-                }, 300);
-            })
-            .catch(err => {
-                console.error('showViduPlayer failed', err);
-                loadingPopup.classList.remove('show');
-                root.style.visibility = 'visible';
-                const wrap = document.getElementById('player-wrap');
-                if (wrap) wrap.innerHTML = `<div class="muted" style="padding:20px;text-align:center;">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
-            });
-    }
+          setTimeout(() => {
+            loadingBar.style.transition = 'none';
+            loadingBar.style.width = '0%';
+          }, 300);
+        }, 300);
+      })
+      .catch(err => {
+        console.error('showViduPlayer failed', err);
+        loadingPopup.classList.remove('show');
+        root.style.visibility = 'visible';
+        const wrap = document.getElementById('player-wrap');
+        if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
+      });
+  }
 }
-
 
 function pauseVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = true; }
 function resumeVisuals(reason){ if(!window.__viduGlobal) window.__viduGlobal = {}; window.__viduGlobal.visualsPaused = false; }
@@ -1296,4 +1234,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
-
