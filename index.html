@@ -181,7 +181,8 @@
 
     .vidu-loading {
       position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center;
-      background-image: url('assets/images/header.png'); background-repeat: no-repeat; background-position: center; background-size: cover;
+      /* REMOVED: No longer using header.png as a loading screen */
+      background: #000;
       transition: opacity .3s ease;
       will-change: opacity;
     }
@@ -391,6 +392,8 @@
     .notification-content p { margin: 0; line-height: 1.6; }
 
     .loading-popup-overlay { position: fixed; inset: 0; background: rgba(4, 6, 12, 0.7); z-index: 20000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease); will-change: opacity; }
+    /* Added backdrop-filter for the restoring popup */
+    .loading-popup-overlay.blur-backdrop { backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
     .loading-popup-overlay.show { opacity: 1; pointer-events: auto; }
     .loading-popup-content { background: linear-gradient(180deg, #1c1c20, #121214); padding: 28px 35px; border-radius: var(--card-radius); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 12px 40px rgba(0,0,0,0.5); text-align: center; max-width: 400px; width: 90%; color: var(--text); }
     .loading-popup-content p { margin: 0 0 18px 0; font-size: 16px; font-weight: 600; line-height: 1.6; }
@@ -525,6 +528,16 @@
     </div>
   </div>
 </div>
+<!-- NEW: Overlay for restoring last played position -->
+<div id="restoring-position-overlay" class="loading-popup-overlay blur-backdrop">
+    <div class="loading-popup-content">
+      <p>Restoring Last Position</p>
+      <div class="loading-bar-container">
+        <div id="restoring-bar-fill" class="loading-bar-fill"></div>
+      </div>
+    </div>
+</div>
+
 
 <script>
 // PLAYER SCRIPT
@@ -547,7 +560,9 @@
     desiredPlaying: null,
     lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
     volumeFeedbackTimer: null,
-    _menuOpenTs: 0
+    _menuOpenTs: 0,
+    currentVideoId: null, // To track current video for saving position
+    lastSaveTime: 0, // To throttle saving position
   };
 
   function loadYTApi(){
@@ -585,6 +600,36 @@
         return pad2(h) + ':' + pad2(m) + ':' + pad2(sec);
     }
     return pad2(m) + ':' + pad2(sec);
+  }
+
+  // --- Last Position Management ---
+  function saveLastPosition() {
+    if (state.player && state.currentVideoId && typeof state.player.getCurrentTime === 'function') {
+        const currentTime = state.player.getCurrentTime();
+        const duration = state.player.getDuration();
+        // Don't save if video is over or not started
+        if (currentTime > 0 && currentTime < duration - 2) {
+            try {
+                let positions = JSON.parse(localStorage.getItem('vidu_positions')) || {};
+                positions[state.currentVideoId] = currentTime;
+                localStorage.setItem('vidu_positions', JSON.stringify(positions));
+            } catch (e) {
+                console.error("Failed to save video position:", e);
+            }
+        }
+    }
+  }
+
+  function getLastPosition(videoId) {
+    try {
+        const positions = JSON.parse(localStorage.getItem('vidu_positions')) || {};
+        const time = positions[videoId];
+        // Return time only if it's a valid number greater than a second
+        return (typeof time === 'number' && time > 1) ? time : null;
+    } catch (e) {
+        console.error("Failed to get video position:", e);
+        return null;
+    }
   }
 
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
@@ -661,6 +706,9 @@
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
 
   function createPlayer(videoId){
+    destroyPlayer(); // Ensure any previous player is gone
+    state.currentVideoId = videoId; // Set current video ID for saving position
+
     const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
     state.host = host; state.mount = mount;
     const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -809,7 +857,6 @@
     seekEl.addEventListener('input', ()=>{ if(seekEl._drag && state.player){ const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) curEl.textContent = fmtHHMMSS(Math.floor(dur * (parseFloat(seekEl.value)/100))); updateSeekUI(seekEl); } }, {passive:true});
     updateSeekUI(seekEl);
 
-    // MODIFIED: Simplified the click handler to prevent conflicts. It now only sets the desired state.
     playBtn.addEventListener('click', ()=>{
       if(!state.player) return;
       let st = -1;
@@ -850,13 +897,19 @@
             }
             const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
             
-            // MODIFIED: This loop is now the single source of truth for play/pause actions
             if (state.desiredPlaying !== null) {
               if(state.desiredPlaying && st !== 1){
                 try{ state.player.playVideo(); }catch(e){}
               } else if(!state.desiredPlaying && st === 1){
                 try{ state.player.pauseVideo(); }catch(e){}
               }
+            }
+            
+            // Throttle saving the last position
+            const now = Date.now();
+            if (now - state.lastSaveTime > 2000) { // Save every 2 seconds
+                saveLastPosition();
+                state.lastSaveTime = now;
             }
 
             const isPlaying = (st === 1);
@@ -870,14 +923,23 @@
 
     return loadYTApi().then(()=> new Promise((resolve,reject)=>{
       if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
+      const lastPosition = getLastPosition(videoId);
+      
       try{
+        let isFirstPlay = true;
         state.player = new YT.Player(mount.id, { videoId: videoId, width: '100%', height: '100%', playerVars: { controls: 0, disablekb: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, origin: location.origin },
           events: {
             onReady: function(evt){
-              disableIframeClicks(host); showLoading();
+              disableIframeClicks(host);
+              // showLoading(); // This is now handled by the global popup
               try{ if(typeof evt.target.setVolume === 'function'){ const v = Math.max(0, Math.min(100, state.lastVolume || 100)); evt.target.setVolume(v); if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute(); else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute(); } }catch(e){}
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
-              try{ evt.target.playVideo(); }catch(e){}
+              
+              if (lastPosition) {
+                  evt.target.seekTo(lastPosition, true);
+              }
+              
+              try{ evt.target.playVideo(); state.desiredPlaying = true; }catch(e){}
               mount.style.height = mount.style.height || '520px';
               if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
               updatePlayerUI();
@@ -885,18 +947,28 @@
               state.mo = new MutationObserver(()=> disableIframeClicks(host));
               state.mo.observe(host, { childList:true, subtree:true });
               resetInactivityTimer();
-              resolve(state.player);
             },
-            onStateChange: function(e){ try{ if(e && e.data === 1){ try{ hideLoading(); }catch(e){} } }catch(err){} },
-            onError: function(err){ try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} console.error('YT player error', err); }
+            onStateChange: function(e){ 
+                if(e.data === YT.PlayerState.PLAYING && isFirstPlay){ 
+                    isFirstPlay = false;
+                    hideLoading(); 
+                    resolve({ player: state.player, restoredTime: lastPosition }); // Resolve promise when video actually starts
+                }
+            },
+            onError: function(err){ 
+                try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} 
+                console.error('YT player error', err);
+                reject(err);
+            }
           }
         });
       }catch(err){ reject(err || new Error('YT player creation failed')); }
-    })).catch(err=>{ throw err; }).then(p=>{ setTimeout(()=> resetInactivityTimer(), 40); return p; });
+    }));
   }
 
   function destroyPlayer(){
     try{
+      saveLastPosition(); // Save one last time on destroy
       if(state.animationFrameId){ cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
       if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
       if(state.docClickHandler){ document.removeEventListener('click', state.docClickHandler); state.docClickHandler = null; }
@@ -908,6 +980,7 @@
       if(state.volumeFeedbackTimer){ clearTimeout(state.volumeFeedbackTimer); state.volumeFeedbackTimer = null; }
       if(state.host){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){} }
       if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
+      state.currentVideoId = null;
     }catch(e){ console.warn('destroyPlayer err', e); }
   }
 
@@ -1124,20 +1197,23 @@ function playVideoWithLoading(videoInfo) {
   const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
   const loadingPopup = document.getElementById('player-loading-overlay');
   const loadingBar = document.getElementById('player-loading-bar-fill');
+  const restoringPopup = document.getElementById('restoring-position-overlay');
+  const restoringBar = document.getElementById('restoring-bar-fill');
   const root = document.getElementById('modal-root');
 
   fsPlaylist.classList.remove('show');
   loadingPopup.classList.add('show');
 
+  // Simulate initial loading progress
   loadingBar.style.transition = 'none';
   loadingBar.style.width = '0%';
   setTimeout(() => {
     loadingBar.style.transition = 'width 4s cubic-bezier(0.25, 0.1, 0.25, 1)';
-    loadingBar.style.width = '90%';
+    loadingBar.style.width = '90%'; // Animate to 90%, wait for player to be ready for the final 10%
   }, 50);
 
   root.style.display = 'block';
-  root.style.visibility = 'hidden';
+  root.style.visibility = 'hidden'; // Hide the player initially to avoid flashes
   document.getElementById('modal-title').textContent = videoInfo.title;
   document.getElementById('modal-subtitle').textContent = 'Now Playing';
   document.getElementById('password-block').style.display = 'none';
@@ -1145,19 +1221,36 @@ function playVideoWithLoading(videoInfo) {
 
   if (window.showViduPlayer) {
     window.showViduPlayer(videoInfo.videoId)
-      .then(player => {
-        loadingBar.style.transition = 'width 0.3s ease-out';
+      .then(result => {
+        // Player is ready and playing, complete the initial loading bar
+        loadingBar.style.transition = 'width 0.4s ease-out';
         loadingBar.style.width = '100%';
 
         setTimeout(() => {
           loadingPopup.classList.remove('show');
-          root.style.visibility = 'visible';
+          root.style.visibility = 'visible'; // Show the player now
 
+          // Check if we need to show the "Restoring Position" popup
+          if (result.restoredTime) {
+              restoringPopup.classList.add('show');
+              restoringBar.style.transition = 'none';
+              restoringBar.style.width = '0%';
+              setTimeout(() => {
+                  restoringBar.style.transition = 'width 2s linear';
+                  restoringBar.style.width = '100%';
+              }, 50);
+
+              setTimeout(() => {
+                  restoringPopup.classList.remove('show');
+              }, 2050); // Hide after the bar fills
+          }
+
+          // Reset the loading bar for next time
           setTimeout(() => {
             loadingBar.style.transition = 'none';
             loadingBar.style.width = '0%';
-          }, 300);
-        }, 300);
+          }, 500);
+        }, 500); // Wait a moment after loading bar hits 100%
       })
       .catch(err => {
         console.error('showViduPlayer failed', err);
