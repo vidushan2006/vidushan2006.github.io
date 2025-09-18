@@ -21,7 +21,6 @@
     }
 
     body{
-      /* PERFORMANCE: Replaced heavy GIF background with a static image */
       background: url('assets/images/background.png') no-repeat center center fixed;
       background-size: cover;
       background-color: #04060c; /* Fallback color */
@@ -58,8 +57,8 @@
       z-index: 10;
       position: sticky;
       top: 12px;
-      width: 100%; /* Make it responsive */
-      max-width: 750px; /* UPDATED: Constrained the max length of the header */
+      width: 100%;
+      max-width: 750px;
       margin: 0 auto;
       box-shadow: 0 8px 30px rgba(2, 4, 12, 0.5);
     }
@@ -76,41 +75,39 @@
 
     nav ul{list-style:none;margin:0;padding:0;display:flex;gap:10px;align-items:center;}
     
-    /* UPDATED: Nav links styled as neon green buttons */
     nav ul li a {
       font-weight: 700;
       font-size: 14px;
       position: relative;
-      padding: 8px 16px; /* Increased padding for button look */
-      color: var(--accent-2); /* Neon green text */
+      padding: 8px 16px;
+      color: var(--accent-2);
       text-decoration: none;
       border-radius: 8px;
       transition: all .18s var(--ease);
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(57, 255, 20, 0.08); /* Subtle green background */
+      background: rgba(57, 255, 20, 0.08);
       border: 1px solid rgba(57, 255, 20, 0.25);
       text-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
       box-shadow: inset 0 0 12px rgba(57, 255, 20, 0.15);
     }
 
     nav ul li a:hover {
-      color: #fff; /* Brighten text on hover */
+      color: #fff;
       transform: translateY(-3px) scale(1.03);
-      background: rgba(57, 255, 20, 0.15); /* More intense background */
+      background: rgba(57, 255, 20, 0.15);
       border-color: rgba(57, 255, 20, 0.5);
-      box-shadow: inset 0 0 12px rgba(57, 255, 20, 0.3), 0 0 20px rgba(57, 255, 20, 0.3); /* Add outer glow */
+      box-shadow: inset 0 0 12px rgba(57, 255, 20, 0.3), 0 0 20px rgba(57, 255, 20, 0.3);
     }
     
-    /* PERFORMANCE: Removed heavy neon glow effect (::before pseudo-element) */
     header nav ul li a::after,
     .logo::after{
       content: "";
       position: absolute;
       inset: -4px;
       border-radius: 12px;
-      border: 1px solid transparent; /* Simplified border */
+      border: 1px solid transparent;
       opacity: 0.75;
       z-index: -1;
       pointer-events: none;
@@ -125,7 +122,6 @@
     .inner{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:3;}
 
     .list-container{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:flex-start;margin-top:6px;}
-    /* PERFORMANCE: Optimized list item styles, removed backdrop-filter, simplified shadows and transforms. */
     .list-item{width:150px;cursor:pointer;text-align:center;background:rgba(18, 20, 28, 0.5);border-radius:var(--card-radius);padding:10px;transition:transform .25s var(--ease),box-shadow .25s var(--ease); border:1px solid rgba(255,255,255,0.06); box-shadow:0 8px 24px rgba(6,8,16,0.5);position:relative;will-change:transform, opacity;}
 
     .list-item::after{content:'';position:absolute;left:8px;right:8px;bottom:8px;height:4px;border-radius:4px;background:linear-gradient(90deg, rgba(123,97,255,0.25), rgba(57,255,20,0.18), rgba(255,107,107,0.12));opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;}
@@ -162,7 +158,7 @@
     @keyframes btnPulse{0%{box-shadow:0 0 0 rgba(57,255,20,0.28);}50%{box-shadow:0 0 30px rgba(57,255,20,0.22);}100%{box-shadow:0 0 0 rgba(57,255,20,0);} }
 
 
-    /* --- FUTURISTIC PLAYER CSS --- */
+    /* --- FUTURISTIC PLAYER CSS (PERFORMANCE OPTIMIZED) --- */
     .vidu-player-host {
       position: relative;
       width: 100%;
@@ -179,12 +175,10 @@
       width:100%; height:100%; display:block; border:0; pointer-events:none;
     }
 
-    /* UPDATED: Loading screen style */
     .vidu-loading {
       position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
+      /* PERFORMANCE: Replaced expensive backdrop-filter with a simple, fast semi-transparent background. */
+      background: rgba(10, 12, 18, 0.85);
       transition: opacity .3s ease;
       will-change: opacity;
     }
@@ -218,6 +212,7 @@
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
+      /* PERFORMANCE: Using a solid, semi-transparent background is much faster than backdrop-filter */
       background: rgba(20, 22, 28, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
@@ -309,7 +304,8 @@
     .vidu-close-btn {
       position:absolute; top:12px; right:12px; z-index:10002;
       width:38px; height:38px; padding:6px; border-radius:50%;
-      background:rgba(20, 22, 28, 0.6); backdrop-filter: blur(8px);
+      /* PERFORMANCE: Replaced backdrop-filter with a more opaque solid color */
+      background:rgba(20, 22, 28, 0.85);
       border:1px solid rgba(255,255,255,0.08); color:#fff;
       display:flex; align-items:center; justify-content:center;
       font-size: 18px; font-weight:700; cursor:pointer;
@@ -319,7 +315,7 @@
     }
     .vidu-close-btn:hover {
       transform: scale(1.1) rotate(90deg);
-      background: rgba(30, 32, 40, 0.8);
+      background: rgba(30, 32, 40, 0.9);
     }
     .vidu-close-btn.hidden {
       opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
@@ -336,21 +332,22 @@
     
     .vidu-vol-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
-      padding:12px 18px; border-radius:12px; background:rgba(20, 22, 28, 0.7);
-      backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,0.08);
+      padding:12px 18px; border-radius:12px; 
+      /* PERFORMANCE: Replaced backdrop-filter */
+      background:rgba(20, 22, 28, 0.9);
+      border:1px solid rgba(255,255,255,0.08);
       font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5);
       pointer-events:none; opacity:0; transition:opacity .28s ease; display:none; min-width:72px; text-align:center;
     }
     
-    /* MODIFIED: Redesigned playback speed menu to be more compact */
     .vidu-playback-menu {
       position: absolute;
       bottom: 82px;
       right: 12px;
       z-index: 10001;
       width: 90px;
-      background: rgba(45, 48, 56, 0.85);
-      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      /* PERFORMANCE: Replaced backdrop-filter with a solid, opaque color for better performance */
+      background: rgba(30, 32, 38, 0.96);
       border-radius: 12px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.5);
       padding: 6px;
@@ -380,7 +377,7 @@
     .vidu-playback-menu button.active {
         color: #fff;
         font-weight: 700;
-        background: #4a7453; /* Active color from the image */
+        background: #4a7453;
     }
 
 
@@ -404,11 +401,9 @@
     .loading-bar-container { width: 100%; height: 8px; background: var(--glass-strong); border-radius: 8px; overflow: hidden; }
     .loading-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); border-radius: 8px; }
     
-    /* ADDED: Style for the restore position popup */
     #restoring-position-overlay.loading-popup-overlay {
-        background: rgba(4, 6, 12, 0.6);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        /* PERFORMANCE: Replaced expensive backdrop-filter with a simple rgba background */
+        background: rgba(4, 6, 12, 0.85);
     }
 
     .fs-playlist-overlay { position: fixed; inset: 0; background: rgba(8, 9, 14, 0.9); z-index: 15000; display: none; flex-direction: column; color: var(--text); opacity: 0; transform: scale(1.02); transition: opacity 0.3s var(--ease), transform 0.3s var(--ease); will-change: opacity, transform; }
@@ -539,7 +534,6 @@
     </div>
   </div>
 </div>
-<!-- ADDED: Overlay for restoring video position -->
 <div id="restoring-position-overlay" class="loading-popup-overlay">
   <div class="loading-popup-content">
     <p>Restoring Last Position</p>
@@ -572,8 +566,8 @@
     lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
     volumeFeedbackTimer: null,
     _menuOpenTs: 0,
-    lastSaveTime: 0, // ADDED: For tracking periodic saves
-    videoId: null, // ADDED: To store the current video ID
+    lastSaveTime: 0,
+    videoId: null,
   };
 
   function loadYTApi(){
@@ -638,7 +632,7 @@
     mount.style.height = '520px'; mount.style.background = '#000';
     host.appendChild(mount);
     const loadingDiv = document.createElement('div'); loadingDiv.className = 'vidu-loading'; loadingDiv.id = 'vidu_loading';
-    loadingDiv.innerHTML = `<div class="vidu-loading-spinner"></div>`; // UPDATED: Added spinner element
+    loadingDiv.innerHTML = `<div class="vidu-loading-spinner"></div>`;
     host.appendChild(loadingDiv);
     const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
     host.appendChild(ctrlBg);
@@ -689,7 +683,7 @@
   function createPlayer(videoId){
     const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
     state.host = host; state.mount = mount;
-    state.videoId = videoId; // Store current video ID in state
+    state.videoId = videoId;
     const playBtn = overlay.querySelector('#vidu_playbtn');
     const curEl = overlay.querySelector('#vidu_cur');
     const durEl = overlay.querySelector('#vidu_dur');
@@ -889,9 +883,8 @@
             if (playBtn.innerHTML !== currentIcon) { playBtn.innerHTML = currentIcon; }
             playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
 
-            // ADDED: Periodic progress saving
             const now = Date.now();
-            if (state.videoId && isPlaying && now - (state.lastSaveTime || 0) > 60000) { // every 1 minute
+            if (state.videoId && isPlaying && now - (state.lastSaveTime || 0) > 60000) {
                 const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
                 if (currentTime > 1) {
                     window.saveVideoProgress(state.videoId, currentTime);
@@ -913,7 +906,6 @@
               try{ if(typeof evt.target.setVolume === 'function'){ const v = Math.max(0, Math.min(100, state.lastVolume || 100)); evt.target.setVolume(v); if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute(); else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute(); } }catch(e){}
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
               
-              // ADDED: Seek to last saved position
               const savedTime = window.getVideoProgress(state.videoId);
               if (savedTime && savedTime > 0) {
                   evt.target.seekTo(savedTime, true);
@@ -939,14 +931,12 @@
 
   function destroyPlayer(){
     try{
-      // ADDED: Save final position on close
       if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
         const cur = state.player.getCurrentTime();
         const dur = state.player.getDuration ? state.player.getDuration() : 0;
         if (cur > 1 && dur > 0 && dur - cur > 5) {
           window.saveVideoProgress(state.videoId, cur);
         } else {
-          // If finished, remove progress to start over next time
           window.saveVideoProgress(state.videoId, 0);
         }
       }
@@ -963,7 +953,6 @@
       if(state.host){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){} }
       if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
       
-      // ADDED: Reset state properties
       state.videoId = null;
       state.lastSaveTime = 0;
     }catch(e){ console.warn('destroyPlayer err', e); }
@@ -983,7 +972,6 @@ function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
 const decodeEnc = (function(){ const key = new TextEncoder().encode('vidu_secret_2025'); function xorDecode(bytes){ const out = new Uint8Array(bytes.length); for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length]; return out; } return function(encStr){ try{ if(!encStr) return ''; const raw = atob(encStr); const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0))); const dec = xorDecode(bytes); return new TextDecoder().decode(dec); }catch(e){ return ''; } }; })();
 function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
-// ADDED: Functions to manage video progress in localStorage
 function getVideoProgress(videoId) {
     if (!videoId) return 0;
     try {
@@ -1002,7 +990,6 @@ function saveVideoProgress(videoId, time) {
         if (time > 1) {
             progress[videoId] = time;
         } else {
-            // If time is near zero (or video finished), remove the entry
             delete progress[videoId];
         }
         localStorage.setItem('vidu_video_progress', JSON.stringify(progress));
@@ -1239,7 +1226,6 @@ function playVideoWithLoading(videoInfo) {
           loadingPopup.classList.remove('show');
           root.style.visibility = 'visible';
 
-          // ADDED: Check for saved progress and show the restoring overlay
           const savedTime = getVideoProgress(videoInfo.videoId);
           if (savedTime && savedTime > 0) {
             const restoringPopup = document.getElementById('restoring-position-overlay');
@@ -1254,7 +1240,7 @@ function playVideoWithLoading(videoInfo) {
               }, 10);
               setTimeout(() => {
                 restoringPopup.classList.remove('show');
-              }, 2000); // Hide after 2 seconds
+              }, 2000);
             }
           }
 
