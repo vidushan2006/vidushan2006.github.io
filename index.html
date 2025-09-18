@@ -167,9 +167,9 @@
       position: relative;
       width: 100%;
       overflow: hidden;
-      border-radius: 12px; /* Slightly larger radius for a modern look */
+      border-radius: 12px;
       background: #000;
-      transform: translateZ(0); /* Promote to its own rendering layer for performance */
+      transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
     }
     .vidu-mount {
@@ -190,7 +190,7 @@
     }
 
     .vidu-controls-bg {
-      position:absolute; left:0; right:0; bottom:0; height:120px; /* Taller gradient for better text visibility */
+      position:absolute; left:0; right:0; bottom:0; height:120px;
       background:linear-gradient(180deg, transparent, rgba(0,0,0,0.85));
       pointer-events:none; z-index:9996;
       transition:opacity .3s var(--ease);
@@ -205,8 +205,6 @@
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
-
-      /* Premium glassmorphism effect for a futuristic feel */
       background: rgba(30, 32, 40, 0.65);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -215,7 +213,7 @@
     }
     .vidu-overlay.hidden {
       opacity:0;
-      transform: translateY(100%); /* Slide out downwards for a smooth exit */
+      transform: translateY(100%);
       pointer-events:none;
     }
     
@@ -253,13 +251,11 @@
     #vidu_playbtn:hover { background: rgba(255, 255, 255, 0.2); }
     #vidu_playbtn svg { width: 24px; height: 24px; }
     
-    /* Futuristic Seek Bar */
     .vidu-range {
       -webkit-appearance: none; appearance: none;
       width: 100%; height: 6px; background: transparent; cursor: pointer;
       position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: auto 0; padding: 0;
     }
-    /* MODIFIED: Added :focus state to remove the default browser outline */
     .vidu-range:focus {
       outline: none;
     }
@@ -335,38 +331,55 @@
       pointer-events:none; opacity:0; transition:opacity .28s ease; display:none; min-width:72px; text-align:center;
     }
     
-    /* MODIFIED: Redesigned playback speed menu */
+    /* MODIFIED: Redesigned playback speed menu for a premium look */
     .vidu-playback-menu {
-      position: absolute; bottom: 82px; right: 12px; z-index: 10001;
-      background: rgba(35, 38, 48, 0.85);
+      position: absolute;
+      bottom: 82px;
+      right: 12px;
+      z-index: 10001;
+      width: 200px; /* Set a fixed width */
+      background: rgba(30, 32, 40, 0.8);
       backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px; /* Rounder edges */
-      box-shadow: 0 12px 35px rgba(0,0,0,0.45);
-      padding: 6px;
-      display: flex; flex-direction: column-reverse;
-      gap: 4px; /* Space between buttons */
-      opacity: 0; transform: translateY(10px) scale(0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      padding: 8px;
+      opacity: 0; transform-origin: bottom right;
+      transform: translateY(10px) scale(0.95);
       transition: opacity .2s var(--ease), transform .2s var(--ease);
       pointer-events: none; will-change: opacity, transform;
-      overflow: hidden;
     }
     .vidu-playback-menu.open {
         opacity: 1; transform: translateY(0) scale(1); pointer-events: auto;
     }
+    .vidu-playback-menu-header {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--muted);
+        padding: 4px 8px 8px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 8px;
+    }
+    .vidu-playback-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Two columns */
+        gap: 6px;
+    }
     .vidu-playback-menu button {
-        background: transparent; border: none; color: var(--muted);
-        padding: 12px 18px; cursor: pointer; font-weight: 600; font-size: 14px;
+        background: transparent; border: none; color: var(--text);
+        padding: 10px 0; cursor: pointer; font-weight: 600; font-size: 14px;
         width: 100%; text-align: center; border-radius: 8px;
         transition: background .18s ease, color .18s ease;
     }
     .vidu-playback-menu button:hover {
-        background: var(--glass-strong); color: var(--text);
+        background: var(--glass-strong);
     }
     .vidu-playback-menu button.active {
         color: var(--accent-2); font-weight: 800;
-        background: rgba(57, 255, 20, 0.1);
+        background: rgba(57, 255, 20, 0.15);
     }
+
 
     .header-icon-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .18s var(--ease); position: relative; width: 38px; height: 38px; }
     .header-icon-btn:hover { color: var(--text); background: var(--glass); transform: scale(1.1); }
@@ -536,7 +549,6 @@
     inactivityTimer: null,
     lastActivity: Date.now(),
     desiredPlaying: null,
-    // MODIFIED: Load volume from localStorage, defaulting to 100.
     lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
     volumeFeedbackTimer: null,
     _menuOpenTs: 0
@@ -579,10 +591,9 @@
     return pad2(m) + ':' + pad2(sec);
   }
 
-  // --- UPDATED FUTURISTIC SVGs ---
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
-  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59 1.69.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
+  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59 1.69.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
   function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
   function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
 
@@ -610,7 +621,6 @@
     host.appendChild(ctrlBg);
     const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
     
-    // --- UPDATED: New control layout HTML ---
     overlay.innerHTML = `
       <div class="vidu-controls-grid">
         <div class="vidu-seek-container">
@@ -639,8 +649,8 @@
     const playbackMenu = document.createElement('div');
     playbackMenu.className = 'vidu-playback-menu';
     playbackMenu.id = 'vidu_playback_menu';
-    // MODIFIED: Added more speed options and updated text for clarity
-    playbackMenu.innerHTML = `<button data-speed="2">2x</button><button data-speed="1.75">1.75x</button><button data-speed="1.5">1.5x</button><button data-speed="1.25">1.25x</button><button data-speed="1" class="active">Normal</button><button data-speed="0.75">0.75x</button><button data-speed="0.5">0.5x</button>`;
+    // MODIFIED: Updated HTML structure for the new menu design
+    playbackMenu.innerHTML = `<div class="vidu-playback-menu-header">Playback Speed</div><div class="vidu-playback-grid"><button data-speed="2">2x</button><button data-speed="1.75">1.75x</button><button data-speed="1.5">1.5x</button><button data-speed="1.25">1.25x</button><button data-speed="1" class="active">Normal</button><button data-speed="0.75">0.75x</button></div>`;
     host.appendChild(playbackMenu);
 
     const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
@@ -664,8 +674,6 @@
     const fullBtn = overlay.querySelector('#vidu_fullbtn');
     const playbackBtn = overlay.querySelector('#vidu_playbackbtn');
     const volFeedbackEl = host.querySelector('#vidu_vol_feedback');
-
-    // --- NEW: Selectors for the new seek bar UI elements ---
     const seekProgressEl = overlay.querySelector('#vidu_seek_progress');
     const seekThumbEl = overlay.querySelector('#vidu_seek_thumb');
 
@@ -689,7 +697,40 @@
     document.addEventListener('click', state.docClickHandler);
 
     function getFullscreenElement(){ return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null; }
-    function toggleFullscreen(){ const fs = getFullscreenElement(); if(fs === host){ const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen; if(exit) exit.call(document); } else { const req = host.requestFullscreen || host.webkitRequestFullscreen || host.mozRequestFullScreen || host.msRequestFullscreen; if(req) req.call(host); } }
+    
+    // MODIFIED: Added automatic landscape orientation logic for mobile devices
+    function toggleFullscreen() {
+        const fs = getFullscreenElement();
+        if (fs === host) { // Exiting fullscreen
+            const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+            if (exit) {
+                exit.call(document);
+                // Attempt to unlock screen orientation
+                if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+                    screen.orientation.unlock();
+                }
+            }
+        } else { // Entering fullscreen
+            const req = host.requestFullscreen || host.webkitRequestFullscreen || host.mozRequestFullScreen || host.msRequestFullscreen;
+            if (req) {
+                req.call(host).then(() => {
+                    // After entering fullscreen, try to lock orientation to landscape
+                    if (window.screen && screen.orientation && typeof screen.orientation.lock === 'function') {
+                        // Simple check for mobile/tablet devices
+                        if (window.innerWidth < 1024) { 
+                            screen.orientation.lock('landscape').catch(err => {
+                                // This might fail if the user has orientation lock enabled on their device.
+                                // We log a warning but don't interrupt the user experience.
+                                console.warn("Could not lock screen orientation:", err);
+                            });
+                        }
+                    }
+                }).catch(err => {
+                    console.error("Fullscreen request failed:", err);
+                });
+            }
+        }
+    }
     fullBtn.addEventListener('click', toggleFullscreen);
 
     state.fsListener = function() {
@@ -768,7 +809,6 @@
     seekEl.addEventListener('pointerdown', ()=> seekEl._drag=true, {passive:true});
     seekEl.addEventListener('pointerup', ()=>{ seekEl._drag=false; if(!state.player) return; const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) state.player.seekTo(dur * (parseFloat(seekEl.value)/100), true); }, {passive:true});
 
-    // --- UPDATED: New function to sync the visual seek bar with the input range value ---
     function updateSeekUI(el){
       try{
         const v = Math.max(0, Math.min(100, parseFloat(el.value) || 0));
@@ -790,13 +830,12 @@
                 if (state.player && typeof state.player.getPlayerState === 'function') {
                     const isMenuOpen = document.getElementById('vidu_playback_menu')?.classList.contains('open');
                     const isDragging = document.getElementById('vidu_seek')?._drag;
-                    // Only hide if the user isn't interacting with the menu or dragging the seek bar.
                     if (!isMenuOpen && !isDragging) {
                         setOverlayHidden(true);
                     }
                 }
             } catch(e) { console.warn('Inactivity timer error', e); }
-        }, 3000); // Hide after 3 seconds of inactivity.
+        }, 3000);
     }
     function attachActivityListeners(){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); }); }catch(e){} }
     attachActivityListeners();
@@ -980,7 +1019,7 @@ function closeModal(){
   const root = document.getElementById('modal-root');
   if(root) {
     root.style.display = 'none';
-    root.style.visibility = 'visible'; // Reset visibility for next time
+    root.style.visibility = 'visible';
   }
   if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
   if (currentItem && currentItem.type === 'playlist') {
