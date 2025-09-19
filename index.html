@@ -478,66 +478,29 @@
         <h3 id="notification-title">Notifications</h3>
         <button id="notification-close-btn" class="notification-close-btn" aria-label="Close notifications">&times;</button>
     </div>
-<div class="notification-content">
-  <p style="margin:0 0 12px 0; font-weight:800; font-size:18px; color: #fff;">
-    Ayo, VIDU here. The architect of this whole operation. 👨‍💻
-  </p>
-  <p style="margin:0 0 20px 0; color: #b8c1d9;">
-    You wanted to know what's under the hood? Aight, here’s the full breakdown of every single feature I personally coded into this site. It's a vibe.
-  </p>
+    <div class="notification-content">
+  <p style="margin:0 0 8px 0; font-weight:700; font-size:16px;">✨ yo — what's poppin' on VIDU (features, but make it chaotic):</p>
 
-  <h4 style="color: #00ff8a; margin: 20px 0 10px 0; border-bottom: 1px solid rgba(0, 255, 138, 0.2); padding-bottom: 5px;">🎬 The VIDU Player™️ (Yeah, I built that)</h4>
-  <ul style="padding-left: 20px; line-height: 1.7; list-style-type: '✅ '; margin-bottom: 20px;">
-    <li>
-      <strong>Custom Controls:</strong> The default YouTube player is mid, so I built my own slick interface over the YouTube Iframe API. All the buttons and sliders? That's pure HTML and CSS, controlled by my JavaScript.
-    </li>
-    <li>
-      <strong>Keyboard Warrior Mode:</strong> I added `keydown` event listeners so you can go full hacker mode. <strong>Space</strong> for play/pause, <strong>Arrow Keys</strong> for skipping and volume control, and <strong>F</strong> for fullscreen. No mouse required.
-    </li>
-    <li>
-      <strong>Speed Demon Settings:</strong> The little gear icon lets you change playback speed. I'm hooking into the player's `setPlaybackRate()` function to let you bend time. You're welcome.
-    </li>
-    <li>
-      <strong>"Never Lose Your Spot" Save:</strong> Your browser has a secret diary called `localStorage`. I wrote a script to save your video timestamp there every minute. When you come back, it reads that file and `seekTo()` puts you right back where you were. Magic. ✨
-    </li>
+  <ul style="padding-left:20px; line-height:1.65; margin:0 0 10px 0;">
+    <li>🎬 <strong>Custom VIDU Player</strong> — play/pause, seek, time counter, fullscreen, and pretty control auto-hide. Smooth like your WiFi when it actually works. 😌</li>
+    <li>⚡ <strong>Speed Booster</strong> — 0.5x → 2x (and weird speeds for weird flexes). Study faster, procrastinate faster. ⏩</li>
+    <li>⌨️ <strong>Keyboard Kung-Fu</strong> — Space = play/pause, ←→ = skip, F = fullscreen, ↑↓ = vibe control (volume). For the people who refuse to touch the mouse. 🐭✋</li>
+    <li>📺 <strong>Playlist Mode (big brain view)</strong> — grid/list, numbered badges, lazy thumbnails so the page doesn’t eat your RAM. 🍽️</li>
+    <li>🔗 <strong>YT Playlist Importer</strong> — paste a YouTube link and boom — our site does the heavy lifting (no cap). 🔁</li>
+    <li>🔐 <strong>Password Vault</strong> — private vids behind a modal cloak (not sus, just exclusive). 👑</li>
+    <li>💾 <strong>Pick up where you left off</strong> — resume playback like the responsible adult you pretend to be. 🧾✅</li>
+    <li>⬇️ <strong>Download Button</strong> — click, see a fake-but-flashy progress bar, pretend it’s downloading a whole season. 😏</li>
+    <li>⏳ <strong>Loading & Spinners</strong> — pretty loaders so waiting feels less soul-crushing. (still waiting tho). 🌀</li>
+    <li>↩️ <strong>Back-stack Navigation</strong> — drill into playlists, back out without having an existential crisis. 🔁</li>
+    <li>🛡️ <strong>Interaction Safety</strong> — context menu chill zone, esc closes popups, and some devtools-blocking drama for the paranoid. 🕵️‍♂️</li>
+    <li>👥 <strong>Login / Permission Flow</strong> — gated content, request access, exclusives, secret handshakes (metaphorical). 🤝</li>
+    <li>🎨 <strong>Smooth UI & Micro-animations</strong> — glassy cards, subtle shadows, tiny bounces that say “I care but not too much.” ✨</li>
+    <li>⚠️ <strong>JS Required Notice</strong> — polite reminder to enable JavaScript unless you enjoy broken things. (we don’t judge, we debug). 🛠️</li>
+    <li>🧩 <strong>Unified Modal System</strong> — one modal to rule them all: unlocks, confirmations, and the occasional drama dialog. 🪄</li>
   </ul>
 
-  <h4 style="color: #00ff8a; margin: 20px 0 10px 0; border-bottom: 1px solid rgba(0, 255, 138, 0.2); padding-bottom: 5px;">🔐 Security & Playlists</h4>
-  <ul style="padding-left: 20px; line-height: 1.7; list-style-type: '✅ '; margin-bottom: 20px;">
-    <li>
-      <strong>The Vault (Password Protection):</strong> For the exclusive content, I added a password check. It's a simple but effective system using Base64 encoding on the password string, which my JavaScript decodes and verifies before letting you in. 🤫
-    </li>
-    <li>
-      <strong>Multi-User Login:</strong> The private page isn't a free-for-all. I built a client-side login system with a JavaScript object acting as a user database. It checks your creds and grants access only to the playlists you're cleared for. VIP treatment only. 💅
-    </li>
-    <li>
-      <strong>YT Playlist Importer:</strong> This is the big one. I'm using the official YouTube Data API. When you paste a link, my code makes a `fetch` call, pulls all the video data, and then dynamically builds that slick fullscreen playlist view for you to scroll through.
-    </li>
-  </ul>
-
-  <h4 style="color: #00ff8a; margin: 20px 0 10px 0; border-bottom: 1px solid rgba(0, 255, 138, 0.2); padding-bottom: 5px;">🛠️ The VIDU Tool Shed</h4>
-  <ul style="padding-left: 20px; line-height: 1.7; list-style-type: '✅ '; margin-bottom: 20px;">
-    <li>
-      <strong>The Video Yoinker (YT Downloader):</strong> Need a video offline? Just paste one or more links. I use a clever bit of code called a Regular Expression (regex) to instantly find the video ID from any link format. Then I just hand it off to a download service for you.
-    </li>
-    <li>
-      <strong>Link Glo-Up (YT Converter):</strong> Long, ugly YouTube links are a crime. This tool also uses regex to find the video ID and then rebuilds the URL into the clean `youtu.be` format. So much better for sharing.
-    </li>
-  </ul>
-  
-  <h4 style="color: #00ff8a; margin: 20px 0 10px 0; border-bottom: 1px solid rgba(0, 255, 138, 0.2); padding-bottom: 5px;">✨ The Vibe (UI/UX)</h4>
-  <ul style="padding-left: 20px; line-height: 1.7; list-style-type: '✅ '; margin-bottom: 20px;">
-    <li>
-      <strong>Glassy Everything:</strong> That cool, see-through blur effect on the modals and header? That's a CSS property called `backdrop-filter: blur()`. Makes everything look premium.
-    </li>
-    <li>
-      <strong>Buttery Smooth Animations:</strong> Every fade-in, every sliding card, every loading bar—that's all custom CSS `transitions` and `animations` I wrote to make the experience feel alive and responsive. No jank here.
-    </li>
-  </ul>
-
-  <p style="margin:20px 0 0 0; font-size:13px; color:#aeb8d0; text-align: center;">
-    <em>Literally coded the soul into this site. Hope you dig it.</em><br/>
-    <strong>- VIDU ✌️</strong>
+  <p style="margin:6px 0 0 0; font-size:12px; color:#cfe0ff;">
+    <em>Posted: Sept 17, 2025 —✌️</em>
   </p>
 </div>
 </div>
