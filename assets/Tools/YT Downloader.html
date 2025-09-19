@@ -3,26 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIDU - YT Video Downloader ⬇️</title>
-    <!-- Google Fonts: Inter for a clean, modern look -->
+    <title>YT Downloader /// VIDU_OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* --- CSS Reset & Global Styling --- */
+        /* --- CSS Variables for Theming --- */
         :root {
-            --primary-color: #007aff;
-            --primary-hover: #0056b3;
-            --success-color: #34c759;
-            --background-color: #1c1c1e;
-            --card-background: rgba(44, 44, 46, 0.85); /* Dark, semi-transparent background */
-            --border-color: rgba(255, 255, 255, 0.1);
-            --text-color: #f2f2f7;
-            --text-secondary: #8e8e93;
-            --border-radius: 16px; /* Increased for a softer, more modern look */
-            --shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+            --bg-color: #0a0f14;
+            --accent-color: #00e5c3; /* Bright cyan */
+            --text-color: #d1d5db;
+            --text-secondary: #6b7280;
+            --border-color: rgba(0, 229, 195, 0.2);
+            --card-bg: #111827;
+            --shadow-glow: 0 0 15px rgba(0, 229, 195, 0.2);
         }
 
+        /* --- Global Styles & Animated Background --- */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -30,80 +27,87 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-image: url('assets/images/background.gif');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            font-family: 'IBM Plex Mono', monospace;
+            background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Align to top to better handle scrolling */
+            align-items: flex-start;
             min-height: 100vh;
             padding: 40px 20px;
             overflow-y: scroll;
+            
+            /* Animated Grid Background: A repeating linear gradient is animated for a sci-fi effect. */
+            background-image:
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveGrid 10s linear infinite;
         }
 
-        /* --- Main Container --- */
-        .container {
+        @keyframes moveGrid {
+            from { background-position: 0 0; }
+            to { background-position: -50px -50px; }
+        }
+
+        /* --- Main Terminal-style Container --- */
+        .terminal-container {
             width: 100%;
-            max-width: 700px;
-            background-color: var(--card-background);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            padding: 40px;
-            text-align: center;
+            max-width: 750px;
+            background-color: rgba(17, 24, 39, 0.9); /* Semi-transparent */
             border: 1px solid var(--border-color);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            transition: all 0.3s ease;
+            box-shadow: var(--shadow-glow), 0 0 40px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            text-align: center;
+            border-radius: 4px; /* Sharp corners */
         }
 
-        /* --- Header & Subheader --- */
+        /* --- Header --- */
         .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 12px;
-            background: -webkit-linear-gradient(45deg, #34c759, #007aff, #af52de);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-shadow: 0 0 8px rgba(0, 229, 195, 0.5);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
         .header p {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: var(--text-secondary);
-            margin-bottom: 35px;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
+            margin-bottom: 30px;
         }
         
-        /* --- Input Textarea --- */
+        /* --- Textarea --- */
         textarea {
             width: 100%;
             min-height: 160px;
             padding: 15px;
-            border-radius: 12px;
             border: 1px solid var(--border-color);
-            font-family: 'Inter', sans-serif;
+            border-radius: 2px;
+            font-family: 'IBM Plex Mono', monospace;
             font-size: 1rem;
             resize: vertical;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            background-color: rgba(28, 28, 30, 0.7);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background-color: rgba(10, 15, 20, 0.8);
             color: var(--text-color);
         }
 
         textarea:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
+            border-color: var(--accent-color);
+            box-shadow: var(--shadow-glow);
         }
         
         textarea::placeholder {
             color: var(--text-secondary);
+            opacity: 0.7;
         }
 
-        /* --- Action Buttons --- */
+        /* --- Buttons --- */
         .actions {
             display: flex;
             justify-content: center;
@@ -112,62 +116,69 @@
         }
 
         .btn {
-            padding: 14px 30px;
+            padding: 12px 25px;
             font-size: 1rem;
-            font-weight: 600;
-            border-radius: 12px;
-            border: none;
+            font-weight: 500;
+            border-radius: 2px;
+            border: 1px solid var(--accent-color);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease-in-out;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
+            gap: 8px;
+            text-transform: uppercase;
         }
 
         .btn-primary {
-            background: linear-gradient(45deg, var(--primary-color), #0056b3);
-            color: white;
+            background-color: var(--accent-color);
+            color: var(--bg-color);
         }
 
         .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3);
+            background-color: transparent;
+            color: var(--accent-color);
+            box-shadow: var(--shadow-glow);
         }
         
         .btn-primary:disabled {
             background: var(--text-secondary);
+            border-color: var(--text-secondary);
+            color: var(--bg-color);
             cursor: not-allowed;
-            transform: none;
             box-shadow: none;
         }
 
         .btn-secondary {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: transparent;
             color: var(--text-color);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--text-secondary);
         }
-
         .btn-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+            border-color: var(--text-color);
+            color: var(--accent-color);
         }
 
-        /* --- Loader Animation --- */
+        /* --- Loader --- */
         .loader {
-            display: none; /* Hidden by default */
-            width: 48px;
-            height: 48px;
-            border: 5px solid var(--text-color);
-            border-bottom-color: transparent;
-            border-radius: 50%;
-            animation: rotation 1s linear infinite;
+            display: none;
+            width: 40px;
+            height: 40px;
             margin: 30px auto;
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            position: relative;
+            animation: spin 1.2s linear infinite;
         }
-
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .loader::before {
+            content: '';
+            position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border: 2px solid transparent;
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite reverse;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* --- Results Section --- */
         #results-container {
@@ -175,102 +186,76 @@
             text-align: left;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
         }
         
         .video-card {
-            display: flex;
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
             gap: 20px;
-            background-color: rgba(28, 28, 30, 0.7);
-            border-radius: 12px;
-            padding: 20px;
+            background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeIn 0.5s forwards;
+            padding: 15px;
             align-items: center;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s forwards;
         }
-
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
         
         .video-card img {
             width: 120px;
             height: 90px;
-            border-radius: 8px;
             object-fit: cover;
-            flex-shrink: 0;
+            filter: grayscale(30%) contrast(110%);
         }
         
-        .video-info {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex-grow: 1;
-            min-width: 0; /* Prevents text overflow issues */
-        }
-
         .video-info h3 {
             font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: 500;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            color: var(--text-color);
         }
-        
         .video-info p {
             font-size: 0.9rem;
             color: var(--text-secondary);
+            margin-top: 5px;
         }
         
         .video-card .btn-download {
-            padding: 10px 20px;
+            padding: 8px 16px;
             font-size: 0.9rem;
-            flex-shrink: 0;
             text-decoration: none;
-            color: white;
-            background-color: var(--success-color);
+            color: var(--bg-color);
+            background-color: var(--accent-color);
+            border: 1px solid var(--accent-color);
         }
-        
          .video-card .btn-download:hover {
-            background-color: #28a745;
+            background-color: transparent;
+            color: var(--accent-color);
         }
         
-        /* --- Responsive Design --- */
         @media (max-width: 600px) {
-            .video-card {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .video-card .btn-download {
-                width: 100%;
-                margin-top: 10px;
-            }
+            .video-card { grid-template-columns: 1fr; }
+            .video-card img { width: 100%; height: auto; margin-bottom: 10px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="terminal-container">
         <header class="header">
-            <h1>VIDU</h1>
-            <h1>YT Downloader</h1>
-            <p>Paste one or more YouTube links below. The tool will prepare the download for each video.</p>
+            <h1>[ VIDU DOWNLOADER ]</h1>
+            <p>> INITIATE BATCH DOWNLOAD PROTOCOL</p>
         </header>
 
-        <textarea id="input-links" placeholder="e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ&#10;https://youtu.be/xvFZjo5PgG0"></textarea>
+        <textarea id="input-links" placeholder="> PASTE TARGET URLS (ONE PER LINE)..."></textarea>
 
         <div class="actions">
-            <button id="fetch-btn" class="btn btn-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Fetch Videos
-            </button>
-            <button id="clear-btn" class="btn btn-secondary">Clear</button>
+            <button id="fetch-btn" class="btn btn-primary">FETCH</button>
+            <button id="clear-btn" class="btn btn-secondary">CLEAR LOG</button>
         </div>
 
         <div id="loader" class="loader"></div>
@@ -284,78 +269,55 @@
         const loader = document.getElementById('loader');
         const resultsContainer = document.getElementById('results-container');
 
-        /**
-         * Extracts the YouTube video ID from various URL formats.
-         * @param {string} url - The YouTube URL.
-         * @returns {string|null} The video ID or null if not found.
-         */
         function getYouTubeId(url) {
             const regex = /(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|shorts\/|v\/|)([\w-]{11})(?:\S+)?/;
             const match = url.match(regex);
             return match ? match[1] : null;
         }
 
-        /**
-         * Simulates fetching video data and displays it.
-         */
         async function fetchAndDisplayVideos() {
             const urls = inputLinks.value.trim().split('\n').filter(url => url);
-            
             if (urls.length === 0) {
-                alert('Please paste at least one YouTube link (VIDU).');
+                alert('VIDU_OS: ERROR - NO INPUT DETECTED.');
                 return;
             }
 
-            // --- UI changes for loading state ---
             fetchBtn.disabled = true;
-            fetchBtn.innerHTML = 'Fetching...';
+            fetchBtn.textContent = 'FETCHING...';
             resultsContainer.innerHTML = '';
             loader.style.display = 'block';
 
-            // --- Simulate API call delay ---
             await new Promise(resolve => setTimeout(resolve, 1500));
 
             const videoData = urls.map((url, index) => {
                 const videoId = getYouTubeId(url);
                 if (!videoId) return null;
-                
-                // In a real app, you'd fetch the title via an API. Here we generate a placeholder.
-                // NOTE: We cannot directly fetch titles due to browser security restrictions (CORS).
                 return {
                     id: videoId,
-                    title: `Video from link ${index + 1}`,
+                    title: `TARGET_ACQUIRED [${videoId}]`,
                     thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
                     shortLink: `https://youtu.be/${videoId}`
                 };
             }).filter(video => video !== null);
 
-            // --- Update UI with results ---
             loader.style.display = 'none';
             fetchBtn.disabled = false;
-            fetchBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Fetch Videos`;
+            fetchBtn.textContent = 'FETCH';
             
             if (videoData.length === 0) {
-                 resultsContainer.innerHTML = '<p style="text-align:center; color: var(--text-secondary);">No valid YouTube links found.</p>';
+                 resultsContainer.innerHTML = '<p style="text-align:center; color: var(--text-secondary);">> No valid targets found.</p>';
                  return;
             }
 
             displayVideoCards(videoData);
         }
         
-        /**
-         * Renders the video cards in the results container.
-         * @param {Array} videos - An array of video objects.
-         */
         function displayVideoCards(videos) {
             videos.forEach((video, index) => {
-                // IMPORTANT: This service is a third-party tool. It handles the actual download.
-                // We are preparing the link and sending the user to it.
                 const downloadServiceUrl = `https://cobalt.tools/en?url=${video.shortLink}`;
-                
                 const card = document.createElement('div');
                 card.className = 'video-card';
-                card.style.animationDelay = `${index * 100}ms`; // Staggered animation
-                
+                card.style.animationDelay = `${index * 100}ms`;
                 card.innerHTML = `
                     <img src="${video.thumbnail}" alt="Video thumbnail">
                     <div class="video-info">
@@ -363,7 +325,7 @@
                         <p>${video.shortLink}</p>
                     </div>
                     <a href="${downloadServiceUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-download">
-                        Prepare Download
+                        PREPARE
                     </a>
                 `;
                 resultsContainer.appendChild(card);
@@ -375,10 +337,8 @@
             resultsContainer.innerHTML = '';
         }
 
-        // --- Event Listeners ---
         fetchBtn.addEventListener('click', fetchAndDisplayVideos);
         clearBtn.addEventListener('click', clearAll);
     </script>
 </body>
 </html>
-
