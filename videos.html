@@ -9,7 +9,8 @@
     /* ---- ROOT VARIABLES & GLOBAL STYLES ---- */
     :root {
       --bg-main: #0A0C10;
-      --bg-glass: rgba(16, 20, 28, 0.6);
+      /* OPTIMIZED: Increased opacity for glass effect without blur */
+      --bg-glass: rgba(16, 20, 28, 0.85); 
       --border-color: rgba(136, 146, 176, 0.2);
       --glow-color: rgba(0, 255, 138, 0.8);
       --accent-primary: #00FF8A;
@@ -65,8 +66,8 @@
       right: 0;
       top: 0;
       z-index: 120;
-      background: rgba(10, 12, 16, 0.5);
-      backdrop-filter: blur(12px);
+      /* OPTIMIZED: Replaced expensive backdrop-filter with a solid, translucent background */
+      background: rgba(10, 12, 16, 0.8);
       border-bottom: 1px solid var(--border-color);
       box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
     }
@@ -179,12 +180,13 @@
       cursor: pointer;
       transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      transform-style: preserve-3d;
-      min-height: 280px;
+      /* OPTIMIZED: Hint to the browser to prepare for animation, improving smoothness */
+      will-change: transform, box-shadow; 
     }
     .card:hover {
-      transform: translateY(-10px) perspective(1000px) rotateX(2deg) rotateY(-2deg) scale(1.02);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+      /* OPTIMIZED: Replaced complex 3D transform with a simpler, faster 2D version */
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0 20px 45px rgba(0,0,0,0.65);
     }
     .card .card-border {
       position: absolute;
@@ -277,8 +279,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(8px);
+      /* OPTIMIZED: Removed blur, increased opacity for similar effect */
+      background: rgba(0, 0, 0, 0.85);
       z-index: 300;
       padding: 18px;
       opacity: 0;
@@ -418,8 +420,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0,0,0,0.78);
-      backdrop-filter: blur(16px);
+      /* OPTIMIZED: Removed blur, increased opacity for performance */
+      background: rgba(0,0,0,0.92);
       z-index: 400;
       padding: 22px;
       opacity: 0;
@@ -513,7 +515,6 @@
     .vidu-mount { width: 100%; height: 100%; background: #000; }
     .vidu-mount iframe { width: 100%; height: 100%; border: 0; display: block; }
     
-    /* MODIFIED: Stylish Loading Spinner */
     @keyframes vidu-spin { to { transform: rotate(360deg); } }
     .vidu-loading-spinner {
       width: 56px;
@@ -570,7 +571,7 @@
       border-radius: 10px;
       background: var(--bg-glass);
       border: 1px solid var(--border-color);
-      backdrop-filter: blur(8px);
+      /* OPTIMIZED: Removed blur for performance */
       transition: opacity .22s ease, transform .22s ease;
     }
     .vidu-overlay.hidden { opacity: 0; transform: translateY(6px); pointer-events: none; }
@@ -661,7 +662,7 @@
       background: var(--bg-glass);
       box-shadow: 0 10px 40px rgba(0,0,0,0.6);
       border: 1px solid var(--border-color);
-      backdrop-filter: blur(10px);
+      /* OPTIMIZED: Removed blur */
       transform: scale(0.86);
       opacity: 0;
       transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .22s ease;
@@ -677,7 +678,8 @@
     /* Playback Menu */
     .vidu-playback-menu {
       position: absolute; z-index: 100005; background: var(--bg-glass); border: 1px solid var(--border-color);
-      backdrop-filter: blur(10px); border-radius: 8px; padding: 6px; box-shadow: 0 12px 30px rgba(0,0,0,0.6); min-width: 88px;
+      /* OPTIMIZED: Removed blur */
+      border-radius: 8px; padding: 6px; box-shadow: 0 12px 30px rgba(0,0,0,0.6); min-width: 88px;
     }
     .vidu-playback-item {
       display: block; width: 100%; border: 0; padding: 8px 10px; color: var(--text-primary); text-align: center;
@@ -699,7 +701,7 @@
       box-shadow: 0 40px 120px rgba(0,0,0,0.8);
       padding: 18px;
       border: 1px solid var(--border-color);
-      backdrop-filter: blur(16px);
+      /* OPTIMIZED: Removed blur */
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -750,7 +752,9 @@
 
     .loading-popup {
       position: fixed; inset: 0; z-index: 800; display: none; align-items: center;
-      justify-content: center; pointer-events: none; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+      justify-content: center; pointer-events: none; 
+      /* OPTIMIZED: Removed blur */
+      background: rgba(0,0,0,0.8);
     }
     .loading-popup.visible { display: flex; pointer-events: auto; }
     .loading-card {
@@ -883,7 +887,6 @@
     </div>
   </div>
   
-  <!-- ADDED: New popup for restoring video position -->
   <div id="restoring-popup" class="loading-popup" aria-hidden="true">
     <div class="loading-card" role="status" aria-live="polite">
       <div class="loading-label">Restoring Last Position</div>
@@ -979,7 +982,6 @@
     const playlistTitleEl = document.getElementById('playlist-popup-title');
     const playlistCloseBtn = document.getElementById('playlist-popup-close');
     
-    // MODIFIED: Moved loader elements here for broader access
     const loadingPopup = document.getElementById('loading-popup');
     const loadingBar = document.getElementById('loading-bar');
     const loadingLabel = document.getElementById('loading-label');
@@ -1076,7 +1078,6 @@
     /* ---------- NEW: LocalStorage helpers for video position ---------- */
     function saveVideoPosition(videoId, currentTime) {
         if (!videoId || typeof currentTime !== 'number') return;
-        // Do not save if time is negligible
         if (currentTime < 2) return;
         localStorage.setItem('vidu_pos_' + videoId, currentTime);
     }
@@ -1106,12 +1107,11 @@
         
         setTimeout(() => { loadingBar.style.width = '90%'; }, 500);
 
-        await playerPromise; // Wait for the player to be fully ready
+        await playerPromise;
 
         loadingBar.style.transition = 'width 0.3s ease-out';
         loadingBar.style.width = '100%';
 
-        // Hide the "Initializing" popup
         setTimeout(() => {
             loadingPopup.classList.remove('visible');
             loadingPopup.setAttribute('aria-hidden','true');
@@ -1121,8 +1121,7 @@
                 loadingBar.style.width = '0%';
             }, 300);
 
-            // If a start time was found, show the "Restoring Position" popup
-            if (startTime > 1) { // Check if time is meaningful
+            if (startTime > 1) {
                 const restoringPopup = document.getElementById('restoring-popup');
                 const restoringBar = document.getElementById('restoring-bar');
                 
@@ -1133,7 +1132,6 @@
                 restoringBar.style.transition = 'width 2s linear';
                 setTimeout(() => { restoringBar.style.width = '100%'; }, 50);
 
-                // Hide after 2 seconds
                 setTimeout(() => {
                     restoringPopup.classList.remove('visible');
                     restoringPopup.setAttribute('aria-hidden', 'true');
@@ -1255,8 +1253,9 @@
     (function playerModule(){
       if(window.__viduPlayerLoaded) return;
       window.__viduPlayerLoaded = true;
-
-      const state = { player: null, updateInterval: null, savePosInterval: null, keyHandler: null, mo: null, host: null, mount: null, fsListener: null, fsResizeHandler: null, inactivityTimer: null, lastActivity: Date.now(), desiredPlaying: null, lastVolume: 100, volumeHideTimer: null };
+      
+      /* OPTIMIZED: Replaced updateInterval with animationFrameId for smooth, efficient UI updates. */
+      const state = { player: null, savePosInterval: null, animationFrameId: null, keyHandler: null, mo: null, host: null, mount: null, fsListener: null, fsResizeHandler: null, inactivityTimer: null, lastActivity: Date.now(), desiredPlaying: null, lastVolume: 100, volumeHideTimer: null };
 
       function pad2(n){ n = Math.max(0, Math.floor(n||0)); return (n < 10 ? '0' + n : String(n)); }
       function fmtTime(s){ s = Math.max(0, Math.floor(s||0)); const h = Math.floor(s/3600); const m = Math.floor((s%3600)/60); const sec = s%60; return (h > 0 ? pad2(h) + ' : ' : '') + pad2(m) + ' : ' + pad2(sec); }
@@ -1277,7 +1276,6 @@
         host.appendChild(mount);
         const loadingDiv = document.createElement('div'); 
         loadingDiv.className = 'vidu-loading'; 
-        // MODIFIED: Added performant CSS spinner instead of image
         loadingDiv.innerHTML = `<div class="vidu-loading-spinner"></div><div class="vidu-loading-text">Loading Video...</div>`;
         host.appendChild(loadingDiv);
         const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg'; host.appendChild(ctrlBg);
@@ -1313,6 +1311,27 @@
         const seekEl = overlay.querySelector('#vidu_seek');
         const playbackBtn = overlay.querySelector('#vidu_playbackbtn');
         const fullBtn = overlay.querySelector('#vidu_fullbtn');
+        
+        /* OPTIMIZED: This function will be called by requestAnimationFrame for smooth updates. */
+        function tick() {
+            if (!state.player || typeof state.player.getDuration !== 'function' || !state.animationFrameId) {
+                return; // Stop the loop if player is gone or it has been cancelled
+            }
+            
+            const cur = state.player.getCurrentTime();
+            curEl.textContent = fmtTime(cur);
+
+            if (!seekEl._drag) {
+                const dur = state.player.getDuration();
+                if (dur > 0) {
+                    seekEl.value = (cur / dur) * 100;
+                    updateSeekBackground(seekEl);
+                }
+            }
+            
+            state.animationFrameId = requestAnimationFrame(tick); // Schedule the next frame
+        }
+
         function renderVolIcon(vol){ const muted = (vol === 0); if(muted){ return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 6L6 10H3v4h3l5 4V6z" fill="#fff" opacity="0.96"/><path d="M19 9l-1.4-1.4L16 9.2 17.4 10.6 19 9z" fill="#fff"/><line x1="21" y1="3" x2="3" y2="21" stroke="#ff7f7f" stroke-width="1.6" stroke-linecap="round"/></svg>`; } else { return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 6L6 10H3v4h3l5 4V6z" fill="#fff" opacity="0.96"/><path d="M16.5 7.5c.9.9 1.5 2.1 1.5 3.5s-.6 2.6-1.5 3.5" stroke="#bfffbf" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`; } }
         function showVolumeOverlay(volume){ try{ if(!volWrap) return; const pct = Math.max(0, Math.min(100, Math.round(Number(volume)||0))); const pctEl = volWrap.querySelector('#vidu_vol_pct'); const iconEl = volWrap.querySelector('#vidu_vol_icon'); if(pctEl) pctEl.textContent = pct + '%'; if(iconEl) iconEl.innerHTML = renderVolIcon(pct); volWrap.classList.add('visible'); volWrap.setAttribute('aria-hidden','false'); if(state.volumeHideTimer) { clearTimeout(state.volumeHideTimer); state.volumeHideTimer = null; } state.volumeHideTimer = setTimeout(()=>{ try{ volWrap.classList.remove('visible'); volWrap.setAttribute('aria-hidden','true'); state.volumeHideTimer = null; }catch(e){} }, 3000); }catch(e){ console.warn('showVolumeOverlay err', e); } }
         function toggleFullscreen(){ const fs = document.fullscreenElement || document.webkitFullscreenElement; if(fs){ document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen && document.webkitExitFullscreen(); } else { host.requestFullscreen ? host.requestFullscreen() : host.webkitRequestFullscreen && host.webkitRequestFullscreen(); } }
@@ -1376,64 +1395,76 @@
         }, {passive:true});
         seekEl.addEventListener('input', ()=>{ if(seekEl._drag && state.player){ const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) curEl.textContent = fmtTime(Math.floor(dur * (parseFloat(seekEl.value)/100))); updateSeekBackground(seekEl); } }, {passive:true});
         function updateSeekBackground(el){ try{ const v = Math.max(0, Math.min(100, parseFloat(el.value) || 0)); el.style.background = `linear-gradient(90deg, var(--accent-primary) ${v}%, rgba(255,255,255,0.2) ${v}%)`; }catch(e){} } updateSeekBackground(seekEl);
-        playBtn.addEventListener('click', ()=> { if(!state.player) return; let st = state.player.getPlayerState ? state.player.getPlayerState() : -1; const wantPlay = !(st === 1); state.desiredPlaying = wantPlay; playBtn.innerHTML = wantPlay ? pauseSVG() : playSVG(); if(wantPlay) state.player.playVideo(); else state.player.pauseVideo(); resetInactivityTimer(); });
+        playBtn.addEventListener('click', ()=> { if(!state.player) return; let st = state.player.getPlayerState ? state.player.getPlayerState() : -1; const wantPlay = !(st === 1); state.desiredPlaying = wantPlay; if(wantPlay) state.player.playVideo(); else state.player.pauseVideo(); resetInactivityTimer(); });
         function onFSChange(){ const fs = document.fullscreenElement || document.webkitFullscreenElement; fullBtn.innerHTML = fs ? exitFullscreenSVG() : enterFullscreenSVG(); }
         state.fsListener = onFSChange; document.addEventListener('fullscreenchange', state.fsListener); document.addEventListener('webkitfullscreenchange', state.fsListener);
         function resetInactivityTimer(){ state.lastActivity = Date.now(); setOverlayHidden(false); if(state.inactivityTimer) clearTimeout(state.inactivityTimer); state.inactivityTimer = setTimeout(()=>{ const st = state.player && typeof state.player.getPlayerState === 'function' ? state.player.getPlayerState() : -1; if(st === 1) setOverlayHidden(true); }, 3000); }
         host.addEventListener('mousemove', resetInactivityTimer, {passive:true});
+        
         return new Promise((resolve,reject)=>{
           state.player = new YT.Player(mount.id, { 
             videoId: videoId, 
-            playerVars: { 
-                controls: 0, 
-                disablekb: 1, 
-                rel: 0, 
-                modestbranding: 1, 
-                playsinline: 1, 
-                iv_load_policy: 3, 
-                origin: location.origin,
-                start: Math.floor(startTime) // ADDED: Restore position
-            }, 
+            playerVars: { controls: 0, disablekb: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, origin: location.origin, start: Math.floor(startTime) }, 
             events: {
-            onReady: function(evt){
-              disableIframeClicks(host);
-              const v = Math.max(0, Math.min(100, globalLastVolume)); evt.target.setVolume(v); state.lastVolume = v;
-              evt.target.playVideo();
-              
-              if(state.updateInterval) clearInterval(state.updateInterval);
-              if(state.savePosInterval) clearInterval(state.savePosInterval);
+                onReady: function(evt){
+                  disableIframeClicks(host);
+                  const v = Math.max(0, Math.min(100, globalLastVolume)); evt.target.setVolume(v); state.lastVolume = v;
+                  evt.target.playVideo();
+                  
+                  if(state.savePosInterval) clearInterval(state.savePosInterval);
+                  state.savePosInterval = setInterval(() => {
+                    if (state.player && typeof state.player.getCurrentTime === 'function' && state.player.getPlayerState() === 1) { // 1 = playing
+                        saveVideoPosition(videoId, state.player.getCurrentTime());
+                    }
+                  }, 60000); // 60 seconds
 
-              // MODIFIED: Reduced update frequency for performance
-              state.updateInterval = setInterval(()=>{
-                if(!state.player) return;
-                const dur = state.player.getDuration ? state.player.getDuration() : 0; const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
-                curEl.textContent = fmtTime(cur); durEl.textContent = fmtTime(dur);
-                if(!seekEl._drag && dur) { seekEl.value = (cur / dur) * 100; updateSeekBackground(seekEl); }
-                const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
-                playBtn.innerHTML = (st === 1) ? pauseSVG() : playSVG();
-              }, 250); // From 160ms to 250ms
-
-              // ADDED: Save position every minute
-              state.savePosInterval = setInterval(() => {
-                if (state.player && typeof state.player.getCurrentTime === 'function' && state.player.getPlayerState() === 1) { // 1 = playing
-                    saveVideoPosition(videoId, state.player.getCurrentTime());
-                }
-              }, 60000); // 60 seconds
-
-              resolve(state.player);
-            },
-            onStateChange: function(e){ if(e && e.data === 1){ loadingDiv.classList.add('hidden'); } },
-            onError: function(err){ reject(err); }
+                  resolve(state.player);
+                },
+                /* OPTIMIZED: This event handler manages the animation loop for perfect sync and efficiency. */
+                onStateChange: function(e){
+                    if(!e || typeof e.data === 'undefined') return;
+                    const st = e.data;
+                    playBtn.innerHTML = (st === 1) ? pauseSVG() : playSVG(); // Update play/pause button icon
+                    
+                    if (st === 1) { // State: PLAYING
+                        loadingDiv.classList.add('hidden');
+                        if (!state.animationFrameId) {
+                            state.animationFrameId = requestAnimationFrame(tick);
+                        }
+                    } else { // State: PAUSED, ENDED, BUFFERING, etc.
+                        if (state.animationFrameId) {
+                            cancelAnimationFrame(state.animationFrameId);
+                            state.animationFrameId = null;
+                        }
+                        // Perform one final UI update to ensure time/seek are accurate on pause
+                        setTimeout(() => {
+                           if (state.player && typeof state.player.getCurrentTime === 'function') {
+                               const dur = state.player.getDuration();
+                               const cur = state.player.getCurrentTime();
+                               durEl.textContent = fmtTime(dur);
+                               curEl.textContent = fmtTime(cur);
+                               if (!seekEl._drag && dur) {
+                                   seekEl.value = (cur / dur) * 100;
+                                   updateSeekBackground(seekEl);
+                               }
+                           }
+                        }, 50);
+                    }
+                },
+                onError: function(err){ reject(err); }
           }});
         });
       }
       function destroyPlayer(){ 
         try{ 
-            if(state.updateInterval) clearInterval(state.updateInterval); 
+            /* OPTIMIZED: Ensure the animation loop is cancelled on close */
+            if(state.animationFrameId) {
+                cancelAnimationFrame(state.animationFrameId);
+                state.animationFrameId = null;
+            }
             if(state.savePosInterval) clearInterval(state.savePosInterval);
             if(state.keyHandler) document.removeEventListener('keydown', state.keyHandler); 
             
-            // ADDED: Save final position on close
             if (state.player && typeof state.player.getCurrentTime === 'function') {
                 const videoData = state.player.getVideoData ? state.player.getVideoData() : {};
                 const videoId = videoData.video_id;
@@ -1445,7 +1476,7 @@
             if(state.player) state.player.destroy(); 
             if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); } 
             if(state.host) state.host.remove(); 
-        }catch(e){} 
+        }catch(e){ console.error("Error destroying player:", e); } 
       }
       window.showViduPlayer = (videoId, mountRootId, startTime) => createYTPlayer(videoId, mountRootId, startTime);
       window.destroyViduPlayer = () => destroyPlayer();
