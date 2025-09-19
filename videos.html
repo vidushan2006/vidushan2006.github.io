@@ -511,6 +511,8 @@
         overflow: hidden;
         border-radius: 8px;
         background: #000;
+        /* ADDED: A powerful performance hint that isolates the player's rendering from the rest of the page, preventing stutter. */
+        contain: strict;
     }
     .vidu-mount { width: 100%; height: 100%; background: #000; }
     .vidu-mount iframe { width: 100%; height: 100%; border: 0; display: block; }
@@ -936,6 +938,19 @@
     function escapeHtml(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function normalizeIdFromB64(idB64){
       try { return atob(idB64 || '').split('&')[0]; } catch(e){ console.warn('Invalid idB64', idB64, e); return ''; }
+    }
+    /* ADDED: Throttling utility to prevent high-frequency events from causing lag. */
+    function throttle(func, limit) {
+      let inThrottle;
+      return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+          func.apply(context, args);
+          inThrottle = true;
+          setTimeout(() => inThrottle = false, limit);
+        }
+      }
     }
 
     /* ---------- RENDER TILES (NEW DESIGN) ---------- */
@@ -1409,7 +1424,8 @@
         function onFSChange(){ const fs = document.fullscreenElement || document.webkitFullscreenElement; fullBtn.innerHTML = fs ? exitFullscreenSVG() : enterFullscreenSVG(); }
         state.fsListener = onFSChange; document.addEventListener('fullscreenchange', state.fsListener); document.addEventListener('webkitfullscreenchange', state.fsListener);
         function resetInactivityTimer(){ state.lastActivity = Date.now(); setOverlayHidden(false); if(state.inactivityTimer) clearTimeout(state.inactivityTimer); state.inactivityTimer = setTimeout(()=>{ const st = state.player && typeof state.player.getPlayerState === 'function' ? state.player.getPlayerState() : -1; if(st === 1) setOverlayHidden(true); }, 3000); }
-        host.addEventListener('mousemove', resetInactivityTimer, {passive:true});
+        /* ADDED: Throttled mousemove listener for better performance */
+        host.addEventListener('mousemove', throttle(resetInactivityTimer, 100), {passive:true});
         
         return new Promise((resolve,reject)=>{
           state.player = new YT.Player(mount.id, { 
