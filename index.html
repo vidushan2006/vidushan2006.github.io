@@ -167,6 +167,8 @@
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
+      /* ADDED: A powerful performance hint that isolates the player's rendering from the rest of the page, preventing stutter. */
+      contain: strict;
     }
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
@@ -565,6 +567,20 @@
     lastSaveTime: 0,
     videoId: null,
   };
+  
+  /* ADDED: Throttling utility to prevent high-frequency events from causing lag. */
+  function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+      const args = arguments;
+      const context = this;
+      if (!inThrottle) {
+        func.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    }
+  }
 
   function loadYTApi(){
     if(window.YT && window.YT.Player) return Promise.resolve();
@@ -850,7 +866,20 @@
             } catch(e) { console.warn('Inactivity timer error', e); }
         }, 3000);
     }
-    function attachActivityListeners(){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); }); }catch(e){} }
+    
+    function attachActivityListeners(){
+      try {
+        const throttledReset = throttle(resetInactivityTimer, 100);
+        ['mousemove', 'pointermove', 'touchmove'].forEach(ev => {
+          host.addEventListener(ev, throttledReset, { passive: true });
+          document.addEventListener(ev, throttledReset, { passive: true });
+        });
+        ['keydown', 'mousedown', 'touchstart'].forEach(ev => {
+          host.addEventListener(ev, resetInactivityTimer, { passive: true });
+          document.addEventListener(ev, resetInactivityTimer, { passive: true });
+        });
+      } catch(e) { console.warn('Failed to attach activity listeners', e); }
+    }
     attachActivityListeners();
 
     function updatePlayerUI() {
@@ -1321,5 +1350,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
-
-
