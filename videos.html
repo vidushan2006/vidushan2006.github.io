@@ -913,7 +913,15 @@
     };
     let currentUser = null; // Stores the logged-in user's data.
 
-    let globalLastVolume = 100;
+    /* ===== ADDED: Load saved volume on startup ===== */
+    let globalLastVolume = 100; // Default volume
+    try {
+      const savedVolume = localStorage.getItem('vidu_last_volume');
+      if (savedVolume !== null && !isNaN(savedVolume)) {
+          globalLastVolume = Math.max(0, Math.min(100, parseInt(savedVolume, 10)));
+      }
+    } catch(e) { console.warn("Could not load saved volume.", e); }
+    
 
     /* ---------- sample items ---------- */
     const items = [
@@ -1358,7 +1366,9 @@
                     state.player.setVolume(target); 
                     state.lastVolume = target; 
                     globalLastVolume = target; 
-                    showVolumeOverlay(target); 
+                    showVolumeOverlay(target);
+                    /* ===== ADDED: Save volume to localStorage on change ===== */
+                    localStorage.setItem('vidu_last_volume', target);
                 } catch(err){} 
                 return;
             }
