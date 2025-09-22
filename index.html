@@ -159,30 +159,36 @@
 
 
     /* --- FUTURISTIC PLAYER CSS (PERFORMANCE OPTIMIZED) --- */
+
+    /* NEW: Wrapper for the glow effect. It is positioned but does NOT clip its content. */
+    .vidu-player-glow-wrapper {
+        position: relative;
+    }
+
     .vidu-player-host {
       position: relative;
       width: 100%;
-      overflow: hidden;
+      overflow: hidden; /* This remains to clip the video content to the rounded corners */
       border-radius: 12px;
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
     }
 
-    /* --- ✨ NEW NEON BORDER ANIMATION ✨ --- */
+    /* --- ✨ NEON BORDER ANIMATION (FIXED) ✨ --- */
     @keyframes rotate-glow {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
 
-    .vidu-player-host::before {
+    /* The animation is now on the WRAPPER's pseudo-element, so it won't be clipped. */
+    .vidu-player-glow-wrapper::before {
       content: '';
       position: absolute;
       inset: -3px; /* Creates border just outside the player frame */
-      z-index: -1;
+      z-index: 0;
       border-radius: 15px; /* Slightly larger than the host's 12px radius */
       
-      /* The multi-color neon gradient with green as the primary color */
       background: conic-gradient(
         from 180deg at 50% 50%,
         transparent 0%,
@@ -192,26 +198,18 @@
         transparent 100%
       );
       
-      /* The animation. This is the "normal" speed for when the video is playing. */
       animation: rotate-glow 4s linear infinite;
-      
-      /* Creates the soft "glow" effect */
-      filter: blur(8px); 
-      
-      /* Performance hint for the browser */
+      filter: blur(8px);
       will-change: transform;
-      
-      /* Ensures smooth speed changes between play/pause states */
       transition: animation-duration 0.5s var(--ease);
     }
 
-    /* When paused, slow the animation down significantly */
-    .vidu-player-host.is-paused::before {
+    /* State classes are now applied to the wrapper to control the glow */
+    .vidu-player-glow-wrapper.is-paused::before {
       animation-duration: 15s;
     }
 
-    /* In fullscreen, completely remove the animation for performance and aesthetics */
-    .vidu-player-host.is-fullscreen::before {
+    .vidu-player-glow-wrapper.is-fullscreen::before {
       display: none;
     }
     /* --- END NEON BORDER ANIMATION --- */
@@ -226,7 +224,6 @@
 
     .vidu-loading {
       position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center;
-      /* PERFORMANCE: Replaced expensive backdrop-filter with a simple, fast semi-transparent background. */
       background: rgba(10, 12, 18, 0.85);
       transition: opacity .3s ease;
       will-change: opacity;
@@ -261,7 +258,6 @@
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
-      /* PERFORMANCE: Using a solid, semi-transparent background is much faster than backdrop-filter */
       background: rgba(20, 22, 28, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
@@ -353,7 +349,6 @@
     .vidu-close-btn {
       position:absolute; top:12px; right:12px; z-index:10002;
       width:38px; height:38px; padding:6px; border-radius:50%;
-      /* PERFORMANCE: Replaced backdrop-filter with a more opaque solid color */
       background:rgba(20, 22, 28, 0.85);
       border:1px solid rgba(255,255,255,0.08); color:#fff;
       display:flex; align-items:center; justify-content:center;
@@ -372,9 +367,9 @@
 
     #close-player { display:none !important; }
 
-    .vidu-player-host:-webkit-full-screen .vidu-mount, .vidu-player-host:fullscreen .vidu-mount { height:100vh !important; width:100% !important; }
-    .vidu-player-host:-webkit-full-screen .vidu-mount iframe, .vidu-player-host:fullscreen .vidu-mount iframe { height:100vh !important; width:100% !important; max-height:none !important; }
-    .vidu-player-host:-webkit-full-screen .vidu-overlay, .vidu-player-host:fullscreen .vidu-overlay { left:18px !important; right:18px !important; bottom:18px !important; }
+    .vidu-player-glow-wrapper:-webkit-full-screen .vidu-mount, .vidu-player-glow-wrapper:fullscreen .vidu-mount { height:100vh !important; width:100% !important; }
+    .vidu-player-glow-wrapper:-webkit-full-screen .vidu-mount iframe, .vidu-player-glow-wrapper:fullscreen .vidu-mount iframe { height:100vh !important; width:100% !important; max-height:none !important; }
+    .vidu-player-glow-wrapper:-webkit-full-screen .vidu-overlay, .vidu-player-glow-wrapper:fullscreen .vidu-overlay { left:18px !important; right:18px !important; bottom:18px !important; }
     
     @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
     @media (max-width:540px){ .vidu-controls-grid { grid-template-areas: "seek seek" "left right"; grid-template-columns: 1fr 1fr; } .vidu-time-container { display: none; } }
@@ -382,7 +377,6 @@
     .vidu-vol-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
       padding:12px 18px; border-radius:12px; 
-      /* PERFORMANCE: Replaced backdrop-filter */
       background:rgba(20, 22, 28, 0.9);
       border:1px solid rgba(255,255,255,0.08);
       font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5);
@@ -395,7 +389,6 @@
       right: 12px;
       z-index: 10001;
       width: 90px;
-      /* PERFORMANCE: Replaced backdrop-filter with a solid, opaque color for better performance */
       background: rgba(30, 32, 38, 0.96);
       border-radius: 12px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.5);
@@ -451,7 +444,6 @@
     .loading-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); border-radius: 8px; }
     
     #restoring-position-overlay.loading-popup-overlay {
-        /* PERFORMANCE: Replaced expensive backdrop-filter with a simple rgba background */
         background: rgba(4, 6, 12, 0.85);
     }
 
@@ -637,7 +629,7 @@
     animationFrameId: null,
     keyHandler: null,
     mo: null,
-    host: null,
+    host: null, // Will now refer to the glow wrapper
     mount: null,
     fsResizeHandler: null,
     fsListener: null,
@@ -707,34 +699,39 @@
       try{ if(modalEl) modalEl.appendChild(wrap); else document.body.appendChild(wrap); }
       catch(e){ try{ document.body.appendChild(wrap); }catch(_){} }
     }
-    const prev = wrap.querySelector('.vidu-player-host');
+    const prev = wrap.querySelector('.vidu-player-glow-wrapper'); // Select wrapper to remove
     if(prev) prev.remove();
-    const host = document.createElement('div'); host.className = 'vidu-player-host';
+
+    // FIXED: Create the glow wrapper and the inner player host
+    const glowWrapper = document.createElement('div'); 
+    glowWrapper.className = 'vidu-player-glow-wrapper';
+    
+    const host = document.createElement('div'); 
+    host.className = 'vidu-player-host';
+
     const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
     mount.style.height = '520px'; mount.style.background = '#000';
     host.appendChild(mount);
+    
     const loadingDiv = document.createElement('div'); loadingDiv.className = 'vidu-loading'; loadingDiv.id = 'vidu_loading';
     loadingDiv.innerHTML = `<div class="vidu-loading-spinner"></div>`;
     host.appendChild(loadingDiv);
+
     const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
     host.appendChild(ctrlBg);
+
     const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
-    
     overlay.innerHTML = `
       <div class="vidu-controls-grid">
         <div class="vidu-seek-container">
-          <div class="seek-track">
-            <div id="vidu_seek_progress" class="seek-progress"></div>
-          </div>
+          <div class="seek-track"><div id="vidu_seek_progress" class="seek-progress"></div></div>
           <div id="vidu_seek_thumb" class="seek-thumb"></div>
           <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" aria-label="Video progress"/>
         </div>
         <div class="vidu-controls-left">
           <button class="vidu-btn" id="vidu_playbtn" aria-label="Play">${playSVG()}</button>
           <div class="vidu-time-container">
-            <span id="vidu_cur" class="vidu-time">${fmtHHMMSS(0)}</span>
-            <span class="vidu-time-separator">/</span>
-            <span id="vidu_dur" class="vidu-time">${fmtHHMMSS(0)}</span>
+            <span id="vidu_cur" class="vidu-time">${fmtHHMMSS(0)}</span><span class="vidu-time-separator">/</span><span id="vidu_dur" class="vidu-time">${fmtHHMMSS(0)}</span>
           </div>
         </div>
         <div class="vidu-controls-center"></div>
@@ -749,20 +746,26 @@
     playbackMenu.className = 'vidu-playback-menu';
     playbackMenu.id = 'vidu_playback_menu';
     playbackMenu.innerHTML = `<button data-speed="5">😎</button><button data-speed="2">2x</button><button data-speed="1.75">1.75x</button><button data-speed="1.5">1.5x</button><button data-speed="1.25">1.25x</button><button data-speed="1" class="active">1x</button>`;
-    host.appendChild(playbackMenu);
+    host.appendChild(playbackMenu); // Appended to inner host for correct positioning
 
     const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
     closeBtn.addEventListener('click', ()=> { try{ if(typeof window.closeModal === 'function') window.closeModal(); else { const root = document.getElementById('modal-root'); if(root) root.style.display='none'; if(window.destroyViduPlayer) window.destroyViduPlayer(); } }catch(e){ console.warn('closeBtn error', e); } });
-    host.appendChild(closeBtn);
+    host.appendChild(closeBtn); // Appended to inner host
+
     const volFeedback = document.createElement('div'); volFeedback.id = 'vidu_vol_feedback'; volFeedback.className = 'vidu-vol-feedback'; volFeedback.style.display = 'none';
-    host.appendChild(volFeedback);
-    wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
+    host.appendChild(volFeedback); // Appended to inner host
+    
+    glowWrapper.appendChild(host); // Place the original host inside the new wrapper
+    wrap.appendChild(glowWrapper); // Add the wrapper to the page
+    
+    // The function now returns the glowWrapper as the main 'host' for state control
+    return { host: glowWrapper, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
 
   function createPlayer(videoId){
+    // `host` is now the glowWrapper
     const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
     state.host = host; state.mount = mount;
     state.videoId = videoId;
@@ -799,7 +802,8 @@
     
     function toggleFullscreen() {
         const fs = getFullscreenElement();
-        if (fs === host) {
+        // `state.host` is the glow wrapper, which is the element we make fullscreen
+        if (fs === state.host) {
             const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
             if (exit) {
                 exit.call(document);
@@ -808,9 +812,9 @@
                 }
             }
         } else {
-            const req = host.requestFullscreen || host.webkitRequestFullscreen || host.mozRequestFullScreen || host.msRequestFullscreen;
+            const req = state.host.requestFullscreen || state.host.webkitRequestFullscreen || state.host.mozRequestFullScreen || state.host.msRequestFullscreen;
             if (req) {
-                req.call(host).then(() => {
+                req.call(state.host).then(() => {
                     if (window.screen && screen.orientation && typeof screen.orientation.lock === 'function') {
                         if (window.innerWidth < 1024) { 
                             screen.orientation.lock('landscape').catch(err => {
@@ -831,7 +835,6 @@
       if (!fullBtn) return;
       const isFullscreen = !!getFullscreenElement();
       
-      // MODIFICATION: Add/remove class for fullscreen neon border control
       if(state.host){
         if(isFullscreen){
           state.host.classList.add('is-fullscreen');
@@ -961,11 +964,9 @@
                 updateSeekUI(seekEl);
             }
             const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
-
-            // MODIFICATION: Add/remove class for paused state neon border control
+            
             if(state.host){
-                // YT.PlayerState.PAUSED is 2
-                if(st === 2){
+                if(st === 2){ // YT.PlayerState.PAUSED is 2
                     state.host.classList.add('is-paused');
                 } else {
                     state.host.classList.remove('is-paused');
