@@ -159,61 +159,15 @@
 
 
     /* --- FUTURISTIC PLAYER CSS (PERFORMANCE OPTIMIZED) --- */
-
-    .vidu-player-glow-wrapper {
-        position: relative;
-    }
-
     .vidu-player-host {
       position: relative;
-      z-index: 2; /* Ensures player controls are on top of the border SVG */
       width: 100%;
-      overflow: hidden; 
+      overflow: hidden;
       border-radius: 12px;
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
     }
-
-    /* --- ✨ NEW SVG NEON LINE ANIMATION ✨ --- */
-    @keyframes border-chase {
-      from { stroke-dashoffset: 100; }
-      to { stroke-dashoffset: -100; }
-    }
-
-    .vidu-border-glow {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1; /* Positioned behind the player host */
-      filter: drop-shadow(0 0 2px var(--accent-2)) drop-shadow(0 0 6px rgba(57, 255, 20, 0.4));
-    }
-
-    .vidu-border-glow rect {
-      width: 100%;
-      height: 100%;
-      rx: 12px; /* Match player's border-radius */
-      fill: transparent;
-      stroke: url(#vidu-glow-gradient);
-      stroke-width: 0.4; /* Thin line in relation to viewbox */
-      stroke-linecap: round;
-      /* The visible line is 25% of the total path length */
-      stroke-dasharray: 25 75;
-      animation: border-chase 4s linear infinite;
-      transition: animation-duration 0.5s var(--ease);
-    }
-    
-    .vidu-player-glow-wrapper.is-paused .vidu-border-glow rect {
-      animation-duration: 15s;
-    }
-    .vidu-player-glow-wrapper.is-fullscreen .vidu-border-glow {
-      display: none;
-    }
-    /* --- END NEON LINE ANIMATION --- */
-
-
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
     }
@@ -223,6 +177,7 @@
 
     .vidu-loading {
       position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center;
+      /* PERFORMANCE: Replaced expensive backdrop-filter with a simple, fast semi-transparent background. */
       background: rgba(10, 12, 18, 0.85);
       transition: opacity .3s ease;
       will-change: opacity;
@@ -257,6 +212,7 @@
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
+      /* PERFORMANCE: Using a solid, semi-transparent background is much faster than backdrop-filter */
       background: rgba(20, 22, 28, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
@@ -348,6 +304,7 @@
     .vidu-close-btn {
       position:absolute; top:12px; right:12px; z-index:10002;
       width:38px; height:38px; padding:6px; border-radius:50%;
+      /* PERFORMANCE: Replaced backdrop-filter with a more opaque solid color */
       background:rgba(20, 22, 28, 0.85);
       border:1px solid rgba(255,255,255,0.08); color:#fff;
       display:flex; align-items:center; justify-content:center;
@@ -366,9 +323,9 @@
 
     #close-player { display:none !important; }
 
-    .vidu-player-glow-wrapper:-webkit-full-screen .vidu-mount, .vidu-player-glow-wrapper:fullscreen .vidu-mount { height:100vh !important; width:100% !important; }
-    .vidu-player-glow-wrapper:-webkit-full-screen .vidu-mount iframe, .vidu-player-glow-wrapper:fullscreen .vidu-mount iframe { height:100vh !important; width:100% !important; max-height:none !important; }
-    .vidu-player-glow-wrapper:-webkit-full-screen .vidu-overlay, .vidu-player-glow-wrapper:fullscreen .vidu-overlay { left:18px !important; right:18px !important; bottom:18px !important; }
+    .vidu-player-host:-webkit-full-screen .vidu-mount, .vidu-player-host:fullscreen .vidu-mount { height:100vh !important; width:100% !important; }
+    .vidu-player-host:-webkit-full-screen .vidu-mount iframe, .vidu-player-host:fullscreen .vidu-mount iframe { height:100vh !important; width:100% !important; max-height:none !important; }
+    .vidu-player-host:-webkit-full-screen .vidu-overlay, .vidu-player-host:fullscreen .vidu-overlay { left:18px !important; right:18px !important; bottom:18px !important; }
     
     @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
     @media (max-width:540px){ .vidu-controls-grid { grid-template-areas: "seek seek" "left right"; grid-template-columns: 1fr 1fr; } .vidu-time-container { display: none; } }
@@ -376,6 +333,7 @@
     .vidu-vol-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
       padding:12px 18px; border-radius:12px; 
+      /* PERFORMANCE: Replaced backdrop-filter */
       background:rgba(20, 22, 28, 0.9);
       border:1px solid rgba(255,255,255,0.08);
       font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5);
@@ -388,6 +346,7 @@
       right: 12px;
       z-index: 10001;
       width: 90px;
+      /* PERFORMANCE: Replaced backdrop-filter with a solid, opaque color for better performance */
       background: rgba(30, 32, 38, 0.96);
       border-radius: 12px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.5);
@@ -443,6 +402,7 @@
     .loading-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); border-radius: 8px; }
     
     #restoring-position-overlay.loading-popup-overlay {
+        /* PERFORMANCE: Replaced expensive backdrop-filter with a simple rgba background */
         background: rgba(4, 6, 12, 0.85);
     }
 
@@ -628,7 +588,7 @@
     animationFrameId: null,
     keyHandler: null,
     mo: null,
-    host: null, 
+    host: null,
     mount: null,
     fsResizeHandler: null,
     fsListener: null,
@@ -698,56 +658,34 @@
       try{ if(modalEl) modalEl.appendChild(wrap); else document.body.appendChild(wrap); }
       catch(e){ try{ document.body.appendChild(wrap); }catch(_){} }
     }
-    const prev = wrap.querySelector('.vidu-player-glow-wrapper');
+    const prev = wrap.querySelector('.vidu-player-host');
     if(prev) prev.remove();
-
-    const glowWrapper = document.createElement('div'); 
-    glowWrapper.className = 'vidu-player-glow-wrapper';
-    
-    // NEW: Create the SVG element for the border animation
-    const svgNS = "http://www.w3.org/2000/svg";
-    const borderSvg = document.createElementNS(svgNS, 'svg');
-    borderSvg.setAttribute('class', 'vidu-border-glow');
-    borderSvg.setAttribute('viewBox', '0 0 100 100');
-    borderSvg.setAttribute('preserveAspectRatio', 'none');
-    borderSvg.innerHTML = `
-        <defs>
-            <linearGradient id="vidu-glow-gradient" gradientTransform="rotate(90)">
-                <stop offset="0%" stop-color="var(--accent-2)" />
-                <stop offset="50%" stop-color="var(--accent-1)" />
-                <stop offset="100%" stop-color="var(--accent-2)" />
-            </linearGradient>
-        </defs>
-        <rect pathLength="100" vector-effect="non-scaling-stroke"></rect>
-    `;
-    glowWrapper.appendChild(borderSvg);
-    
-    const host = document.createElement('div'); 
-    host.className = 'vidu-player-host';
-
+    const host = document.createElement('div'); host.className = 'vidu-player-host';
     const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
     mount.style.height = '520px'; mount.style.background = '#000';
     host.appendChild(mount);
-    
     const loadingDiv = document.createElement('div'); loadingDiv.className = 'vidu-loading'; loadingDiv.id = 'vidu_loading';
     loadingDiv.innerHTML = `<div class="vidu-loading-spinner"></div>`;
     host.appendChild(loadingDiv);
-
     const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
     host.appendChild(ctrlBg);
-
     const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
+    
     overlay.innerHTML = `
       <div class="vidu-controls-grid">
         <div class="vidu-seek-container">
-          <div class="seek-track"><div id="vidu_seek_progress" class="seek-progress"></div></div>
+          <div class="seek-track">
+            <div id="vidu_seek_progress" class="seek-progress"></div>
+          </div>
           <div id="vidu_seek_thumb" class="seek-thumb"></div>
           <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" aria-label="Video progress"/>
         </div>
         <div class="vidu-controls-left">
           <button class="vidu-btn" id="vidu_playbtn" aria-label="Play">${playSVG()}</button>
           <div class="vidu-time-container">
-            <span id="vidu_cur" class="vidu-time">${fmtHHMMSS(0)}</span><span class="vidu-time-separator">/</span><span id="vidu_dur" class="vidu-time">${fmtHHMMSS(0)}</span>
+            <span id="vidu_cur" class="vidu-time">${fmtHHMMSS(0)}</span>
+            <span class="vidu-time-separator">/</span>
+            <span id="vidu_dur" class="vidu-time">${fmtHHMMSS(0)}</span>
           </div>
         </div>
         <div class="vidu-controls-center"></div>
@@ -767,14 +705,10 @@
     const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
     closeBtn.addEventListener('click', ()=> { try{ if(typeof window.closeModal === 'function') window.closeModal(); else { const root = document.getElementById('modal-root'); if(root) root.style.display='none'; if(window.destroyViduPlayer) window.destroyViduPlayer(); } }catch(e){ console.warn('closeBtn error', e); } });
     host.appendChild(closeBtn);
-
     const volFeedback = document.createElement('div'); volFeedback.id = 'vidu_vol_feedback'; volFeedback.className = 'vidu-vol-feedback'; volFeedback.style.display = 'none';
     host.appendChild(volFeedback);
-    
-    glowWrapper.appendChild(host);
-    wrap.appendChild(glowWrapper);
-    
-    return { host: glowWrapper, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
+    wrap.appendChild(host);
+    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
@@ -816,7 +750,7 @@
     
     function toggleFullscreen() {
         const fs = getFullscreenElement();
-        if (fs === state.host) {
+        if (fs === host) {
             const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
             if (exit) {
                 exit.call(document);
@@ -825,9 +759,9 @@
                 }
             }
         } else {
-            const req = state.host.requestFullscreen || state.host.webkitRequestFullscreen || state.host.mozRequestFullScreen || state.host.msRequestFullscreen;
+            const req = host.requestFullscreen || host.webkitRequestFullscreen || host.mozRequestFullScreen || host.msRequestFullscreen;
             if (req) {
-                req.call(state.host).then(() => {
+                req.call(host).then(() => {
                     if (window.screen && screen.orientation && typeof screen.orientation.lock === 'function') {
                         if (window.innerWidth < 1024) { 
                             screen.orientation.lock('landscape').catch(err => {
@@ -847,15 +781,6 @@
       const fullBtn = document.getElementById('vidu_fullbtn');
       if (!fullBtn) return;
       const isFullscreen = !!getFullscreenElement();
-      
-      if(state.host){
-        if(isFullscreen){
-          state.host.classList.add('is-fullscreen');
-        } else {
-          state.host.classList.remove('is-fullscreen');
-        }
-      }
-
       if (isFullscreen) {
         fullBtn.innerHTML = exitFullscreenSVG();
         fullBtn.title = 'Exit Fullscreen';
@@ -978,14 +903,6 @@
             }
             const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
             
-            if(state.host){
-                if(st === 2){
-                    state.host.classList.add('is-paused');
-                } else {
-                    state.host.classList.remove('is-paused');
-                }
-            }
-            
             if (state.desiredPlaying !== null) {
               if(state.desiredPlaying && st !== 1){
                 try{ state.player.playVideo(); }catch(e){}
@@ -1083,7 +1000,7 @@
 /*************************************************************************
  * Playlist data + UI + modal + YouTube playlist fetching
  *************************************************************************/
-const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d/9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
+const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
 function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
 const decodeEnc = (function(){ const key = new TextEncoder().encode('vidu_secret_2025'); function xorDecode(bytes){ const out = new Uint8Array(bytes.length); for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length]; return out; } return function(encStr){ try{ if(!encStr) return ''; const raw = atob(encStr); const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0))); const dec = xorDecode(bytes); return new TextDecoder().decode(dec); }catch(e){ return ''; } }; })();
 function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
