@@ -958,7 +958,23 @@
         if(seekThumbEl) seekThumbEl.style.left = `${v}%`;
       }catch(e){}
     }
-    seekEl.addEventListener('input', ()=>{ if(seekEl._drag && state.player){ const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) curEl.textContent = fmtHHMMSS(Math.floor(dur * (parseFloat(seekEl.value)/100))); updateSeekUI(seekEl); } }, {passive:true});
+    
+    seekEl.addEventListener('input', () => {
+        if (seekEl._drag) {
+            // While dragging, only update the visual progress bar and thumb.
+            updateSeekUI(seekEl);
+
+            // Also update the time in the preview tooltip. The main time display will
+            // continue to show the actual current playback time, avoiding confusion.
+            if (state.player) {
+                const dur = state.player.getDuration ? state.player.getDuration() : 0;
+                if (dur && seekPreviewTime) {
+                    const time = dur * (parseFloat(seekEl.value) / 100);
+                    seekPreviewTime.textContent = fmtHHMMSS(time);
+                }
+            }
+        }
+    }, { passive: true });
     updateSeekUI(seekEl);
 
     // --- MODIFIED: Event listener for seek preview ---
