@@ -442,6 +442,58 @@
     .fs-playlist-loader .spinner { width: 50px; height: 50px; border: 4px solid var(--glass-strong); border-top-color: var(--accent-2); border-radius: 50%; animation: spin 1s linear infinite; }
     .fs-playlist-loader p { margin-top: 16px; font-weight: 600; color: var(--muted); }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* --- CUSTOM PICTURE-IN-PICTURE STYLES --- */
+    #custom-pip {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 400px;
+      max-width: 90vw;
+      background: #1a1c20;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      z-index: 100000;
+      display: none; /* Initially hidden */
+      flex-direction: column;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+    #custom-pip-header {
+      padding: 8px 12px;
+      background: rgba(30, 32, 38, 0.9);
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: move;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+    #custom-pip-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.2s, transform 0.2s;
+    }
+    #custom-pip-close:hover {
+      color: #fff;
+      transform: scale(1.1);
+    }
+    #custom-pip-content {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+    }
+    #custom-pip-content iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
   </style>
 </head>
 <body class="landing is-preload">
@@ -585,6 +637,15 @@
   </div>
 </div>
 
+<!-- Custom Picture-in-Picture Container -->
+<div id="custom-pip">
+    <div id="custom-pip-header">
+        <span id="custom-pip-title">Picture-in-Picture</span>
+        <button id="custom-pip-close">&times;</button>
+    </div>
+    <div id="custom-pip-content"></div>
+</div>
+
 
 <script>
 // PLAYER SCRIPT
@@ -653,7 +714,7 @@
 
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
-  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
+  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
   function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
   function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
 
@@ -715,7 +776,8 @@
 
     const pipBtn = document.createElement('button');
     pipBtn.className = 'vidu-pip-btn'; pipBtn.id = 'vidu_pipbtn';
-    pipBtn.title = 'Picture-in-Picture (Hint: Right-click video twice)'; pipBtn.type = 'button'; pipBtn.setAttribute('aria-label', 'Picture-in-Picture');
+    pipBtn.title = 'Picture-in-Picture'; // Updated title
+    pipBtn.type = 'button'; pipBtn.setAttribute('aria-label', 'Picture-in-Picture');
     pipBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg>`;
     host.appendChild(pipBtn);
 
@@ -744,8 +806,12 @@
     const seekProgressEl = overlay.querySelector('#vidu_seek_progress');
     const seekThumbEl = overlay.querySelector('#vidu_seek_thumb');
 
+    // Add event listener for our custom PiP button
+    pipBtn.addEventListener('click', toggleCustomPiP);
+
+
     state.visibilityChangeHandler = function() {
-        if (document.pictureInPictureElement) { return; }
+        if (document.pictureInPictureElement || document.getElementById('custom-pip').style.display === 'flex') { return; } // Check custom pip too
         if (document.hidden) {
             if (state.player && typeof state.player.getPlayerState === 'function' && state.player.getPlayerState() === 1) {
                 state.wasPlayingBeforeHidden = true;
@@ -1020,6 +1086,11 @@
       if(state.host){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){} }
       if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
       
+      // Close custom PiP if it's open
+      if(document.getElementById('custom-pip').style.display === 'flex') {
+        closeCustomPiP();
+      }
+
       state.videoId = null;
       state.lastSaveTime = 0;
       state.wasPlayingBeforeHidden = false;
@@ -1032,6 +1103,115 @@
 })();
 </script>
 <script>
+/*************************************************************************
+ * Custom Picture-in-Picture Logic
+ *************************************************************************/
+const pipWindow = document.getElementById('custom-pip');
+const pipHeader = document.getElementById('custom-pip-header');
+const pipContent = document.getElementById('custom-pip-content');
+const pipCloseBtn = document.getElementById('custom-pip-close');
+const pipTitle = document.getElementById('custom-pip-title');
+
+let isDragging = false;
+let originalParent = null;
+let videoIframe = null;
+let offsetX, offsetY;
+
+function toggleCustomPiP() {
+    if (pipWindow.style.display === 'flex') {
+        closeCustomPiP();
+    } else {
+        openCustomPiP();
+    }
+}
+
+function openCustomPiP() {
+    const playerHost = document.querySelector('.vidu-player-host');
+    if (!playerHost) return;
+
+    videoIframe = playerHost.querySelector('iframe');
+    if (!videoIframe) return;
+    
+    // Store original parent to return the iframe later
+    originalParent = videoIframe.parentElement;
+
+    // Set title
+    const modalTitle = document.getElementById('modal-title');
+    if (modalTitle) {
+        pipTitle.textContent = modalTitle.textContent;
+    }
+
+    // Move iframe to PiP window
+    pipContent.appendChild(videoIframe);
+    videoIframe.style.pointerEvents = 'auto'; // Enable interaction within PiP
+
+    // Show the PiP window
+    pipWindow.style.display = 'flex';
+
+    // Hide the main player modal
+    const modalRoot = document.getElementById('modal-root');
+    if (modalRoot) {
+        modalRoot.style.display = 'none';
+    }
+}
+
+function closeCustomPiP() {
+    if (videoIframe && originalParent) {
+        // Return iframe to its original container
+        originalParent.appendChild(videoIframe);
+        videoIframe.style.pointerEvents = 'none'; // Disable clicks again
+    }
+
+    // Hide the PiP window
+    pipWindow.style.display = 'none';
+
+    // Show the main player modal again if it was open
+    const modalRoot = document.getElementById('modal-root');
+    if (modalRoot && document.querySelector('#player-wrap .vidu-player-host')) {
+        modalRoot.style.display = 'block';
+    }
+    
+    videoIframe = null;
+    originalParent = null;
+}
+
+// Drag functionality
+pipHeader.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    pipWindow.style.transition = 'none'; // Disable transition during drag
+    offsetX = e.clientX - pipWindow.getBoundingClientRect().left;
+    offsetY = e.clientY - pipWindow.getBoundingClientRect().top;
+    document.body.style.userSelect = 'none'; // Prevent text selection
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    
+    let newX = e.clientX - offsetX;
+    let newY = e.clientY - offsetY;
+
+    // Constrain to viewport
+    const maxX = window.innerWidth - pipWindow.offsetWidth;
+    const maxY = window.innerHeight - pipWindow.offsetHeight;
+
+    newX = Math.max(0, Math.min(newX, maxX));
+    newY = Math.max(0, Math.min(newY, maxY));
+
+    pipWindow.style.left = `${newX}px`;
+    pipWindow.style.top = `${newY}px`;
+    pipWindow.style.bottom = 'auto'; // Override initial position
+    pipWindow.style.right = 'auto';
+});
+
+document.addEventListener('mouseup', () => {
+    isDragging = false;
+    pipWindow.style.transition = ''; // Re-enable transition
+    document.body.style.userSelect = '';
+});
+
+pipCloseBtn.addEventListener('click', closeCustomPiP);
+
+
 /*************************************************************************
  * Playlist data + UI + modal + YouTube playlist fetching
  *************************************************************************/
@@ -1348,7 +1528,9 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { 
         const root = document.getElementById('modal-root'); 
         const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
-        if (root && root.style.display !== 'none') closeModal();
+        const customPip = document.getElementById('custom-pip');
+        if (customPip && customPip.style.display === 'flex') closeCustomPiP();
+        else if (root && root.style.display !== 'none') closeModal();
         else if (fsPlaylist && fsPlaylist.classList.contains('show')) {
             fsPlaylist.classList.remove('show');
             currentItem = null;
