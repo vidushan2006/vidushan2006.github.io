@@ -161,13 +161,13 @@
     /* --- FUTURISTIC PLAYER CSS (PERFORMANCE OPTIMIZED) --- */
     .vidu-player-wrapper {
         position: relative;
+        padding: 3px; /* This creates the space for the border */
     }
 
     .vidu-player-host {
       position: relative;
       width: 100%;
-      overflow: hidden; /* This is crucial for rounding the iframe corners */
-      border-radius: 12px;
+      height: 100%;
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
@@ -212,7 +212,7 @@
     .vidu-overlay {
       position:absolute; left:12px; right:12px; bottom:12px; z-index:9999;
       padding: 10px 16px;
-      border-radius: 12px;
+      /* border-radius: 12px; /* REMOVED for sharp corners */
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
@@ -380,11 +380,11 @@
         background: #4a7453;
     }
 
-    /* --- NEON BORDER FOR VIDU PLAYER --- */
+    /* --- NEON BORDER FOR VIDU PLAYER (FIXED) --- */
     .vidu-player-wrapper::before {
       content: '';
       position: absolute;
-      inset: -3px; /* Border thickness */
+      inset: 0;
       z-index: 0;
       background: conic-gradient(
         from 180deg at 50% 50%,
@@ -394,7 +394,6 @@
         rgba(57, 255, 20, 0.5),    /* Softer green */
         rgba(57, 255, 20, 1)       /* Loop back to green */
       );
-      border-radius: 15px; /* Host radius (12px) + inset (3px) */
       animation: vidu-neon-spin 4s linear infinite;
       will-change: transform;
       transition: animation-duration 0.5s ease-out, opacity 0.3s ease;
@@ -489,7 +488,7 @@
   <header id="header">
     <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
       <div class="logo-circle" aria-hidden="true">
-        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b_556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
       </div>
     </a>
     <div class="header-right-controls">
