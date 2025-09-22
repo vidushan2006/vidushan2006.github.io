@@ -168,6 +168,55 @@
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
     }
+
+    /* --- ✨ NEW NEON BORDER ANIMATION ✨ --- */
+    @keyframes rotate-glow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .vidu-player-host::before {
+      content: '';
+      position: absolute;
+      inset: -3px; /* Creates border just outside the player frame */
+      z-index: -1;
+      border-radius: 15px; /* Slightly larger than the host's 12px radius */
+      
+      /* The multi-color neon gradient with green as the primary color */
+      background: conic-gradient(
+        from 180deg at 50% 50%,
+        transparent 0%,
+        rgba(57, 255, 20, 0.8) 60%,   /* Main Green: --accent-2 */
+        rgba(123, 97, 255, 0.7) 75%,  /* Purple mix: --accent-1 */
+        rgba(255, 107, 107, 0.6) 90%, /* Red mix: --accent-3 */
+        transparent 100%
+      );
+      
+      /* The animation. This is the "normal" speed for when the video is playing. */
+      animation: rotate-glow 4s linear infinite;
+      
+      /* Creates the soft "glow" effect */
+      filter: blur(8px); 
+      
+      /* Performance hint for the browser */
+      will-change: transform;
+      
+      /* Ensures smooth speed changes between play/pause states */
+      transition: animation-duration 0.5s var(--ease);
+    }
+
+    /* When paused, slow the animation down significantly */
+    .vidu-player-host.is-paused::before {
+      animation-duration: 15s;
+    }
+
+    /* In fullscreen, completely remove the animation for performance and aesthetics */
+    .vidu-player-host.is-fullscreen::before {
+      display: none;
+    }
+    /* --- END NEON BORDER ANIMATION --- */
+
+
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
     }
@@ -781,6 +830,16 @@
       const fullBtn = document.getElementById('vidu_fullbtn');
       if (!fullBtn) return;
       const isFullscreen = !!getFullscreenElement();
+      
+      // MODIFICATION: Add/remove class for fullscreen neon border control
+      if(state.host){
+        if(isFullscreen){
+          state.host.classList.add('is-fullscreen');
+        } else {
+          state.host.classList.remove('is-fullscreen');
+        }
+      }
+
       if (isFullscreen) {
         fullBtn.innerHTML = exitFullscreenSVG();
         fullBtn.title = 'Exit Fullscreen';
@@ -902,6 +961,16 @@
                 updateSeekUI(seekEl);
             }
             const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
+
+            // MODIFICATION: Add/remove class for paused state neon border control
+            if(state.host){
+                // YT.PlayerState.PAUSED is 2
+                if(st === 2){
+                    state.host.classList.add('is-paused');
+                } else {
+                    state.host.classList.remove('is-paused');
+                }
+            }
             
             if (state.desiredPlaying !== null) {
               if(state.desiredPlaying && st !== 1){
@@ -1358,6 +1427,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
-
-
-
