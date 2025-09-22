@@ -796,7 +796,20 @@
     document.addEventListener('mozfullscreenchange', state.fsListener);
     document.addEventListener('MSFullscreenChange', state.fsListener);
 
-    function setOverlayHidden(hidden){ if(hidden){ overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); if(closeBtn) closeBtn.classList.add('hidden'); if(playbackMenu) playbackMenu.classList.remove('open'); } else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); } }
+    function setOverlayHidden(hidden){ 
+        if(hidden){ 
+            overlay.classList.add('hidden'); 
+            ctrlBg.classList.add('hidden'); 
+            if(closeBtn) closeBtn.classList.add('hidden'); 
+            if(playbackMenu) playbackMenu.classList.remove('open'); 
+            if(state.host) state.host.style.cursor = 'none';
+        } else { 
+            overlay.classList.remove('hidden'); 
+            ctrlBg.classList.remove('hidden'); 
+            if(closeBtn) closeBtn.classList.remove('hidden'); 
+            if(state.host) state.host.style.cursor = '';
+        } 
+    }
     function showLoading(){ try{ if(loadingDiv){ loadingDiv.classList.remove('hidden'); loadingDiv.style.display = 'flex'; } }catch(e){} }
     function hideLoading(){ try{ if(loadingDiv){ loadingDiv.classList.add('hidden'); setTimeout(()=> { try{ loadingDiv.style.display = 'none'; }catch(e){} }, 320); } }catch(e){} }
 
