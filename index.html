@@ -3,7 +3,7 @@
 <head>
   <title>VIDU</title>
   <meta charset="utf--8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1.0" />
   <link rel="stylesheet" href="assets/css/main.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
@@ -44,6 +44,21 @@
     }
 
     #wrapper{position:relative;z-index:3;padding-bottom:48px;}
+
+    /* --- NEW: Player Active State --- */
+    /* This is the most performant way to hide the main content. 
+       'display: none' removes the elements from the render tree,
+       so the browser doesn't need to calculate their layout or paint them,
+       which is much faster than removing and re-adding them to the DOM. */
+    body.player-active #wrapper,
+    body.player-active #footer {
+      display: none;
+    }
+
+    /* --- NEW: Prevent scrolling on body when swiping on player */
+    body.no-scroll {
+        overflow: hidden;
+    }
 
     header#header{
       display: flex;
@@ -167,7 +182,13 @@
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
-      -webkit-tap-highlight-color: transparent; /* Disable tap highlight on mobile */
+      /* For touch gestures */
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+       -khtml-user-select: none;
+         -moz-user-select: none;
+          -ms-user-select: none;
+              user-select: none;
     }
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
@@ -178,7 +199,6 @@
 
     .vidu-loading {
       position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center;
-      /* PERFORMANCE: Replaced expensive backdrop-filter with a simple, fast semi-transparent background. */
       background: rgba(10, 12, 18, 0.85);
       transition: opacity .3s ease;
       will-change: opacity;
@@ -213,7 +233,6 @@
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
-      /* PERFORMANCE: Using a solid, semi-transparent background is much faster than backdrop-filter */
       background: rgba(20, 22, 28, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
@@ -240,7 +259,6 @@
     .vidu-controls-center { grid-area: center; }
     .vidu-controls-right { grid-area: right; display: flex; align-items: center; gap: 8px; justify-self: end; }
 
-
     .vidu-btn {
       background: transparent; color:#fff; padding:0; border-radius:8px; cursor:pointer; user-select:none; border:none;
       display:flex; align-items:center; justify-content:center; width:40px; height:40px;
@@ -249,7 +267,7 @@
     }
     .vidu-btn:hover { background: rgba(255,255,255,0.1); }
     .vidu-btn:active{ transform: scale(.95); transition-duration: .08s; }
-    .vidu-btn svg { width: 22px; height: 22px; transition: transform .2s var(--ease); }
+    .vidu-btn svg { width: 22px; height: 22px; transition: transform .2s var(--ease); pointer-events: none; }
     .vidu-btn:hover svg { transform: scale(1.1); }
 
     #vidu_playbtn {
@@ -258,17 +276,90 @@
     #vidu_playbtn:hover { background: rgba(255, 255, 255, 0.2); }
     #vidu_playbtn svg { width: 24px; height: 24px; }
     
+    /* --- NEW: Volume Control Styles --- */
+    .vidu-volume-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .vidu-volume-panel {
+        position: absolute;
+        bottom: 110%; /* Position above the button */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 32px;
+        height: 120px;
+        background: rgba(30, 32, 38, 0.96);
+        border-radius: 16px;
+        padding: 16px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s var(--ease), transform 0.2s var(--ease), visibility 0.2s;
+        transform-origin: bottom center;
+        transform: translateX(-50%) translateY(10px) scale(0.9);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .vidu-volume-container.open .vidu-volume-panel {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0) scale(1);
+    }
+    .vidu-volume-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100px; /* This becomes the height due to rotation */
+        height: 6px;
+        background: transparent;
+        cursor: pointer;
+        transform: rotate(-90deg);
+    }
+    .vidu-volume-slider-track {
+        width: 100px;
+        height: 6px;
+        background: rgba(59, 130, 246, 0.35); /* Unfilled line is blue */
+        border-radius: 6px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        overflow: hidden;
+    }
+    .vidu-volume-progress {
+        position: absolute;
+        left: 0;
+        bottom: 0; /* Fills from bottom for vertical slider */
+        width: 100%;
+        background: var(--accent-2);
+        pointer-events: none;
+        border-radius: 6px;
+        will-change: height;
+    }
+
     .vidu-range {
       -webkit-appearance: none; appearance: none;
       width: 100%; height: 6px; background: transparent; cursor: pointer;
       position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: auto 0; padding: 0;
     }
-    .vidu-range:focus {
-      outline: none;
-    }
+    .vidu-range:focus { outline: none; }
+
+    /* For Webkit Browsers (Chrome, Safari) */
+    .vidu-range::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: transparent; border: 0; cursor: pointer; }
+    .vidu-volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #fff; border-radius: 50%; cursor: pointer; transform: rotate(90deg); }
+    
+    /* For Firefox */
+    .vidu-range::-moz-range-thumb { width: 16px; height: 16px; background: transparent; border: 0; cursor: pointer; }
+    .vidu-volume-slider::-moz-range-thumb { width: 16px; height: 16px; background: #fff; border-radius: 50%; border:0; cursor: pointer; }
+    .vidu-volume-slider::-moz-range-track { width: 100%; height: 6px; background: rgba(59, 130, 246, 0.35); border-radius: 6px; }
+    .vidu-volume-slider::-moz-range-progress { background-color: var(--accent-2); height:6px; border-radius:6px; }
+
+
     .seek-track {
       position: relative; width: 100%; height: 6px;
-      background: rgba(59, 130, 246, 0.35); /* MODIFIED: Blue track */
+      background: rgba(255,255,255,0.2);
       border-radius: 6px;
       pointer-events: none; overflow: hidden;
     }
@@ -277,37 +368,21 @@
       background: var(--accent-2); border-radius: 6px;
       will-change: width;
     }
-    /* --- FIX: Hide the native slider thumb to prevent "double thumb" issue --- */
-    .vidu-range::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
-      background: transparent;
-      border: 0;
-      cursor: pointer;
-    }
-    .vidu-range::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      background: transparent;
-      border: 0;
-      cursor: pointer;
-    }
+
     .seek-thumb {
       position: absolute; top: 50%; left: 0; width: 16px; height: 16px;
-      background: #00c6ff; /* MODIFIED: Neon blue */
+      background: #00c6ff;
       border-radius: 50%; transform: translateY(-50%) scale(1);
       pointer-events: none; 
-      box-shadow: 0 0 8px rgba(0, 198, 255, 0.7); /* MODIFIED: Blue glow */
-      transition: transform .2s var(--ease); /* PERFORMANCE: Removed box-shadow from transition */
+      box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
+      transition: transform .2s var(--ease);
       will-change: left, transform;
     }
     .vidu-seek-container:hover .seek-thumb {
       transform: translateY(-50%) scale(1.15); 
-      box-shadow: 0 0 16px rgba(0, 198, 255, 1); /* MODIFIED: Brighter blue glow on hover */
+      box-shadow: 0 0 16px rgba(0, 198, 255, 1);
     }
     
-    /* --- MODIFIED: Styles for the seek preview tooltip --- */
     .seek-preview {
       position: absolute;
       bottom: 24px;
@@ -333,63 +408,29 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
     .seeking-text-inner {
-      color: var(--accent-2); /* neon green */
-      font-weight: 700;
-      font-size: 15px;
-      white-space: nowrap;
-      text-shadow: 0 0 4px rgba(57, 255, 20, 0.4); /* MODIFIED: Reduced glow */
-      display: flex;
-      align-items: baseline;
-      justify-content: center;
+      color: var(--accent-2); font-weight: 700; font-size: 15px; white-space: nowrap; text-shadow: 0 0 4px rgba(57, 255, 20, 0.4); display: flex; align-items: baseline; justify-content: center;
     }
-    .seeking-dots {
-      display: inline-block;
-      width: 1.5em; /* reserve space for dots to avoid jumping */
-      text-align: left;
-      vertical-align: bottom;
-    }
-    .seeking-dots::after {
-      content: ".";
-      animation: seeking-dots-anim 1.5s steps(3, start) infinite;
-    }
-    @keyframes seeking-dots-anim {
-      33% { content: ".."; }
-      66% { content: "..."; }
-    }
-    .seek-preview-time {
-        display: block;
-        color: var(--text);
-        font-size: 13px;
-        font-weight: 600;
-        margin-top: 2px;
-    }
+    .seeking-dots { display: inline-block; width: 1.5em; text-align: left; vertical-align: bottom; }
+    .seeking-dots::after { content: "."; animation: seeking-dots-anim 1.5s steps(3, start) infinite; }
+    @keyframes seeking-dots-anim { 33% { content: ".."; } 66% { content: "..."; } }
+    .seek-preview-time { display: block; color: var(--text); font-size: 13px; font-weight: 600; margin-top: 2px; }
 
     .vidu-time-container { display: flex; align-items: baseline; }
-    .vidu-time {
-      min-width: auto; font-size:14px; font-weight:600; color:var(--text); text-align:center;
-      letter-spacing:0.5px; text-shadow:0 1px 2px rgba(0,0,0,0.6); user-select:none;
-    }
+    .vidu-time { min-width: auto; font-size:14px; font-weight:600; color:var(--text); text-align:center; letter-spacing:0.5px; text-shadow:0 1px 2px rgba(0,0,0,0.6); user-select:none; }
     .vidu-time-separator { color: var(--muted); margin: 0 6px; font-size: 13px; }
 
     .vidu-close-btn {
       position:absolute; top:12px; right:12px; z-index:10002;
       width:38px; height:38px; padding:6px; border-radius:50%;
-      /* PERFORMANCE: Replaced backdrop-filter with a more opaque solid color */
-      background:rgba(20, 22, 28, 0.85);
-      border:1px solid rgba(255,255,255,0.08); color:#fff;
+      background:rgba(20, 22, 28, 0.85); border:1px solid rgba(255,255,255,0.08); color:#fff;
       display:flex; align-items:center; justify-content:center;
       font-size: 18px; font-weight:700; cursor:pointer;
       box-shadow:0 8px 20px rgba(0,0,0,0.5);
       transition: opacity .3s ease, transform .3s ease, background .3s ease;
       will-change: opacity, transform;
     }
-    .vidu-close-btn:hover {
-      transform: scale(1.1) rotate(90deg);
-      background: rgba(30, 32, 40, 0.9);
-    }
-    .vidu-close-btn.hidden {
-      opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
-    }
+    .vidu-close-btn:hover { transform: scale(1.1) rotate(90deg); background: rgba(30, 32, 40, 0.9); }
+    .vidu-close-btn.hidden { opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none; }
 
     #close-player { display:none !important; }
 
@@ -400,52 +441,29 @@
     @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
     @media (max-width:540px){ .vidu-controls-grid { grid-template-areas: "seek seek" "left right"; grid-template-columns: 1fr 1fr; } .vidu-time-container { display: none; } }
     
-    /* --- NEW/MODIFIED: OSD Feedback --- */
-    .vidu-osd-feedback{
+    /* --- NEW: Unified On-Screen Display (OSD) --- */
+    .vidu-osd-feedback {
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
       padding:12px 18px; border-radius:12px; 
-      background:rgba(20, 22, 28, 0.9);
-      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(20, 22, 28, 0.9); border:1px solid rgba(255,255,255,0.08);
       font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5);
       pointer-events:none; opacity:0;
-      transition:opacity .28s ease; 
-      display:flex; align-items:center; justify-content:center; gap: 10px;
-      min-width: 90px;
-      visibility: hidden;
+      transition: opacity .28s ease, transform .28s ease;
+      display:none; min-width:80px; text-align:center;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
     }
     .vidu-osd-feedback.visible {
         opacity: 1;
-        visibility: visible;
+        transform: translate(-50%, -50%) scale(1);
     }
-    .vidu-osd-feedback svg { width: 28px; height: 28px; fill: currentColor; }
-    
-    /* --- NEW: Double-tap feedback animation --- */
-    .vidu-seek-feedback {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 10003;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 14px;
-        font-weight: 600;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        opacity: 0;
-        pointer-events: none;
+    .vidu-osd-feedback-icon {
+        width: 32px;
+        height: 32px;
+        fill: #fff;
     }
-    .vidu-seek-feedback.left { left: 15%; }
-    .vidu-seek-feedback.right { right: 15%; }
-    .vidu-seek-feedback.show { animation: vidu-seek-pop 0.6s var(--ease); }
-    @keyframes vidu-seek-pop {
-        0% { transform: translateY(-50%) scale(0.8); opacity: 0; }
-        20% { transform: translateY(-50%) scale(1.1); opacity: 1; }
-        80% { transform: translateY(-50%) scale(1); opacity: 1; }
-        100% { transform: translateY(-50%) scale(0.9); opacity: 0; }
-    }
-    .vidu-seek-feedback svg {
-        width: 48px; height: 48px;
-        fill: rgba(255, 255, 255, 0.8);
+    .vidu-osd-feedback-text {
+        font-size: 16px;
+        line-height: 1;
     }
 
     .vidu-playback-menu {
@@ -454,7 +472,6 @@
       right: 12px;
       z-index: 10001;
       width: 90px;
-      /* PERFORMANCE: Replaced backdrop-filter with a solid, opaque color for better performance */
       background: rgba(30, 32, 38, 0.96);
       border-radius: 12px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.5);
@@ -485,9 +502,9 @@
     .vidu-playback-menu button.active {
         color: #fff;
         font-weight: 700;
-        background: #4a7453;
+        background: var(--accent-2);
+        color: #000;
     }
-
 
     .header-icon-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .18s var(--ease); position: relative; width: 38px; height: 38px; }
     .header-icon-btn:hover { color: var(--text); background: var(--glass); transform: scale(1.1); }
@@ -510,7 +527,6 @@
     .loading-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); border-radius: 8px; }
     
     #restoring-position-overlay.loading-popup-overlay {
-        /* PERFORMANCE: Replaced expensive backdrop-filter with a simple rgba background */
         background: rgba(4, 6, 12, 0.85);
     }
 
@@ -541,73 +557,6 @@
     .fs-playlist-loader .spinner { width: 50px; height: 50px; border: 4px solid var(--glass-strong); border-top-color: var(--accent-2); border-radius: 50%; animation: spin 1s linear infinite; }
     .fs-playlist-loader p { margin-top: 16px; font-weight: 600; color: var(--muted); }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* --- REVISED: Volume Slider Styles --- */
-    .vidu-volume-container { position: relative; display: flex; align-items: center; justify-content: center; }
-    .vidu-volume-panel {
-        position: absolute;
-        bottom: 55px; /* Position above the button */
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(30, 32, 38, 0.96);
-        border-radius: 12px;
-        width: 44px; /* Container width */
-        height: 160px; /* Container height */
-        padding: 16px 0;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity .2s var(--ease), transform .2s var(--ease);
-        transform-origin: bottom center;
-        transform: translateX(-50%) translateY(10px) scale(0.95);
-        pointer-events: none;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .vidu-volume-panel.open {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(-50%) translateY(0) scale(1);
-        pointer-events: auto;
-    }
-    .vidu-volume-slider {
-        -webkit-appearance: slider-vertical; /* Vertical slider */
-        appearance: none;
-        width: 6px; /* Track width */
-        height: 120px; /* Slider height */
-        cursor: pointer;
-        background: transparent;
-    }
-    .vidu-volume-slider::-webkit-slider-runnable-track {
-        width: 6px;
-        height: 100%;
-        background: rgba(59, 130, 246, 0.35); /* Blue track */
-        border-radius: 6px;
-    }
-    .vidu-volume-slider::-moz-range-track {
-        width: 6px;
-        height: 100%;
-        background: rgba(59, 130, 246, 0.35); /* Blue track */
-        border-radius: 6px;
-    }
-    .vidu-volume-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        height: 18px;
-        width: 18px;
-        border-radius: 50%;
-        background: var(--accent-2);
-        box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
-    }
-    .vidu-volume-slider::-moz-range-thumb {
-        height: 18px;
-        width: 18px;
-        border-radius: 50%;
-        background: var(--accent-2);
-        border: 0;
-        box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
-    }
-
   </style>
 </head>
 <body class="landing is-preload">
@@ -641,10 +590,10 @@
       <div id="playlist-videos" style="margin-top:2rem; display:none;"></div>
     </div>
   </section>
-  <footer id="footer">
-    <p>&copy; VIDU. 2025 All rights reserved.</p>
-  </footer>
  </div>
+ <footer id="footer">
+    <p>&copy; VIDU. 2025 All rights reserved.</p>
+ </footer>
  <div id="modal-root" style="display:none;"></div>
  <div id="notification-panel" class="notification-panel" role="dialog" aria-labelledby="notification-title" aria-hidden="true">
     <div class="notification-header">
@@ -758,17 +707,7 @@
   if(window.__viduPlayerLoaded) return;
   window.__viduPlayerLoaded = true;
 
-  // --- NEW: Function to hide/show main page content for performance ---
-  function togglePageContent(show) {
-      const wrapper = document.getElementById('wrapper');
-      if (wrapper) {
-          wrapper.style.display = show ? '' : 'none';
-      }
-      const footer = document.getElementById('footer');
-      if(footer) {
-          footer.style.display = show ? '' : 'none';
-      }
-  }
+  const PLAYBACK_SPEEDS = [1, 1.25, 1.5, 1.75, 2, 5];
 
   const state = {
     player: null,
@@ -792,16 +731,14 @@
     lastTime: -1,
     lastDuration: -1,
     lastPlayerState: -1,
-    lastVolumeLevel: -1,
     // --- Touch Gesture State ---
-    touch_lastTapTime: 0,
-    touch_lastTapX: 0,
-    touch_isSwiping: false,
-    touch_startX: 0,
-    touch_startY: 0,
-    touch_swipeMode: null, // 'volume', 'seek'
-    touch_seekStartTime: 0,
-    touch_initialVolume: 0, // Store volume at the start of a swipe
+    touchStartX: 0,
+    touchStartY: 0,
+    touchStartTime: 0,
+    isSwiping: false,
+    swipeSeekAmount: 0,
+    lastTapTime: 0,
+    isVolumePanelOpen: false,
   };
 
   function loadYTApi(){
@@ -840,20 +777,19 @@
     }
     return pad2(m) + ':' + pad2(sec);
   }
-  
-  // --- SVG Icon Helper Functions ---
+
+  // --- SVG Icons for Player and OSD ---
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
-  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19-.15-.24-.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22-.07.49-.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
+  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l-2-3.46c.12-.22.07-.49-.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
   function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
   function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
-  function volumeHighSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;}
-  function volumeMidSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM3 9v6h4l5 5V4L7 9H3z"/></svg>`;}
-  function volumeLowSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>`;}
-  function volumeMuteSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;}
-  function rewindSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>`; }
-  function ffwdSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>`; }
-  function speedSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 8v8l6-4-6-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>`;}
+  function volumeHighSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`; }
+  function volumeMuteSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`; }
+  function fastForwardSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>`;}
+  function rewindSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm-1.5-6l6 4.5V7.5l-6 4.5z"/></svg>`; }
+  function speedSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 8v8l6-4-6-4zm11.9.82c-1.1-.54-2.24.32-2.24 1.54v5.3c0 1.22 1.14 2.08 2.24 1.54l3.18-1.55c1.09-.53 1.09-2.28 0-2.81l-3.18-1.52z"/></svg>`;}
+
 
   function createHostElements(){
     let wrap = document.getElementById('player-wrap');
@@ -896,10 +832,13 @@
         </div>
         <div class="vidu-controls-left">
           <button class="vidu-btn" id="vidu_playbtn" aria-label="Play">${playSVG()}</button>
-          <div class="vidu-volume-container">
-            <button class="vidu-btn" id="vidu_volumebtn" title="Volume" aria-label="Volume">${volumeHighSVG()}</button>
-            <div class="vidu-volume-panel" id="vidu_volume_panel">
-              <input type="range" min="0" max="100" value="100" class="vidu-volume-slider" id="vidu_volume_slider" orient="vertical" />
+          <div id="vidu_volume_container" class="vidu-volume-container">
+            <button class="vidu-btn" id="vidu_volumebtn" aria-label="Volume">${volumeHighSVG()}</button>
+            <div class="vidu-volume-panel">
+                <div class="vidu-volume-slider-track">
+                    <div id="vidu_volume_progress" class="vidu-volume-progress"></div>
+                </div>
+                <input id="vidu_volume_slider" class="vidu-volume-slider" type="range" min="0" max="100" step="1" value="100" aria-label="Volume control"/>
             </div>
           </div>
           <div class="vidu-time-container">
@@ -925,13 +864,9 @@
     const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
     closeBtn.addEventListener('click', ()=> { try{ if(typeof window.closeModal === 'function') window.closeModal(); else { const root = document.getElementById('modal-root'); if(root) root.style.display='none'; if(window.destroyViduPlayer) window.destroyViduPlayer(); } }catch(e){ console.warn('closeBtn error', e); } });
     host.appendChild(closeBtn);
-    const osdFeedbackEl = document.createElement('div'); osdFeedbackEl.id = 'vidu_osd_feedback'; osdFeedbackEl.className = 'vidu-osd-feedback';
-    host.appendChild(osdFeedbackEl);
-    const seekFeedbackLeft = document.createElement('div'); seekFeedbackLeft.id = 'vidu_seek_feedback_left'; seekFeedbackLeft.className = 'vidu-seek-feedback left'; seekFeedbackLeft.innerHTML = `${rewindSVG()}<span>10s</span>`;
-    host.appendChild(seekFeedbackLeft);
-    const seekFeedbackRight = document.createElement('div'); seekFeedbackRight.id = 'vidu_seek_feedback_right'; seekFeedbackRight.className = 'vidu-seek-feedback right'; seekFeedbackRight.innerHTML = `${ffwdSVG()}<span>10s</span>`;
-    host.appendChild(seekFeedbackRight);
-    
+    const osdFeedback = document.createElement('div'); osdFeedback.id = 'vidu_osd_feedback'; osdFeedback.className = 'vidu-osd-feedback';
+    osdFeedback.innerHTML = `<div id="vidu_osd_icon" class="vidu-osd-feedback-icon"></div><span id="vidu_osd_text" class="vidu-osd-feedback-text"></span>`;
+    host.appendChild(osdFeedback);
     wrap.appendChild(host);
     return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
   }
@@ -948,43 +883,66 @@
     const seekEl = overlay.querySelector('#vidu_seek');
     const fullBtn = overlay.querySelector('#vidu_fullbtn');
     const playbackBtn = overlay.querySelector('#vidu_playbackbtn');
-    const osdFeedbackEl = host.querySelector('#vidu_osd_feedback');
     const seekProgressEl = overlay.querySelector('#vidu_seek_progress');
     const seekThumbEl = overlay.querySelector('#vidu_seek_thumb');
     const seekContainer = overlay.querySelector('.vidu-seek-container');
     const seekPreview = overlay.querySelector('#vidu_seek_preview');
     const seekPreviewTime = overlay.querySelector('#vidu_seek_preview_time');
+    // --- NEW: Volume Elements ---
+    const volumeContainer = overlay.querySelector('#vidu_volume_container');
     const volumeBtn = overlay.querySelector('#vidu_volumebtn');
-    const volumePanel = overlay.querySelector('#vidu_volume_panel');
     const volumeSlider = overlay.querySelector('#vidu_volume_slider');
-    const seekFeedbackLeft = host.querySelector('#vidu_seek_feedback_left');
-    const seekFeedbackRight = host.querySelector('#vidu_seek_feedback_right');
+    const volumeProgress = overlay.querySelector('#vidu_volume_progress');
 
-    playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); volumePanel.classList.remove('open'); });
+    // --- NEW: Unified OSD function ---
+    function showOSDFeedback({ icon, text, duration = 2000 }) {
+        const osdEl = document.getElementById('vidu_osd_feedback');
+        const osdIcon = document.getElementById('vidu_osd_icon');
+        const osdText = document.getElementById('vidu_osd_text');
+        if (!osdEl || !osdIcon || !osdText) return;
+
+        if (state.osdTimer) clearTimeout(state.osdTimer);
+        
+        osdIcon.innerHTML = icon || '';
+        osdText.textContent = text || '';
+        osdEl.style.display = 'flex';
+        
+        setTimeout(() => osdEl.classList.add('visible'), 10);
+
+        state.osdTimer = setTimeout(() => {
+            osdEl.classList.remove('visible');
+            setTimeout(() => { osdEl.style.display = 'none'; }, 300);
+        }, duration);
+    }
+
+    playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); });
+    
+    function setPlaybackSpeed(speed) {
+        if (state.player && typeof state.player.setPlaybackRate === 'function') {
+            state.player.setPlaybackRate(speed);
+            playbackMenu.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            const activeButton = playbackMenu.querySelector(`button[data-speed="${speed}"]`);
+            if (activeButton) activeButton.classList.add('active');
+            
+            showOSDFeedback({ icon: speedSVG(), text: speed === 5 ? '😎' : `${speed}x` });
+        }
+    }
+
     playbackMenu.addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON' && e.target.dataset.speed) {
             const speed = parseFloat(e.target.dataset.speed);
-            setPlaybackRate(speed);
+            setPlaybackSpeed(speed);
             playbackMenu.classList.remove('open');
         }
-    });
-    
-    volumeBtn.addEventListener('click', (e) => { e.stopPropagation(); volumePanel.classList.toggle('open'); playbackMenu.classList.remove('open'); });
-    volumeSlider.addEventListener('input', () => {
-        const newVolume = parseFloat(volumeSlider.value);
-        setVolume(newVolume, false); // Don't show OSD for slider drag
-    });
-    volumeSlider.addEventListener('change', () => { // Show OSD on release
-        const newVolume = parseFloat(volumeSlider.value);
-        setVolume(newVolume, true);
     });
 
     state.docClickHandler = (e) => {
       if (playbackMenu.classList.contains('open') && !playbackMenu.contains(e.target) && !playbackBtn.contains(e.target)) {
         playbackMenu.classList.remove('open');
       }
-      if (volumePanel.classList.contains('open') && !volumePanel.contains(e.target) && !volumeBtn.contains(e.target)) {
-        volumePanel.classList.remove('open');
+      if (state.isVolumePanelOpen && !volumeContainer.contains(e.target)) {
+        volumeContainer.classList.remove('open');
+        state.isVolumePanelOpen = false;
       }
     };
     document.addEventListener('click', state.docClickHandler);
@@ -994,62 +952,32 @@
     function toggleFullscreen() {
         const fs = getFullscreenElement();
         if (fs === host) {
-            const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
-            if (exit) {
-                exit.call(document);
-                if (screen.orientation && typeof screen.orientation.unlock === 'function') {
-                    screen.orientation.unlock();
-                }
-            }
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
         } else {
-            const req = host.requestFullscreen || host.webkitRequestFullscreen || host.mozRequestFullScreen || host.msRequestFullscreen;
-            if (req) {
-                req.call(host).then(() => {
-                    if (window.screen && screen.orientation && typeof screen.orientation.lock === 'function') {
-                        if (window.innerWidth < 1024) { 
-                            screen.orientation.lock('landscape').catch(err => {
-                                console.warn("Could not lock screen orientation:", err);
-                            });
-                        }
-                    }
-                }).catch(err => {
-                    console.error("Fullscreen request failed:", err);
-                });
-            }
+            if (host.requestFullscreen) host.requestFullscreen();
+            else if (host.webkitRequestFullscreen) host.webkitRequestFullscreen();
         }
     }
     fullBtn.addEventListener('click', toggleFullscreen);
 
     state.fsListener = function() {
-      const fullBtn = document.getElementById('vidu_fullbtn');
-      if (!fullBtn) return;
       const isFullscreen = !!getFullscreenElement();
-      if (isFullscreen) {
-        fullBtn.innerHTML = exitFullscreenSVG();
-        fullBtn.title = 'Exit Fullscreen';
-        fullBtn.setAttribute('aria-label', 'Exit Fullscreen');
-      } else {
-        fullBtn.innerHTML = fullscreenSVG();
-        fullBtn.title = 'Fullscreen';
-        fullBtn.setAttribute('aria-label', 'Fullscreen');
-      }
+      fullBtn.innerHTML = isFullscreen ? exitFullscreenSVG() : fullscreenSVG();
+      fullBtn.title = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
     };
     document.addEventListener('fullscreenchange', state.fsListener);
     document.addEventListener('webkitfullscreenchange', state.fsListener);
-    document.addEventListener('mozfullscreenchange', state.fsListener);
-    document.addEventListener('MSFullscreenChange', state.fsListener);
 
     function setOverlayHidden(hidden){ 
         if(hidden){ 
-            overlay.classList.add('hidden'); 
-            ctrlBg.classList.add('hidden'); 
+            overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); 
             if(closeBtn) closeBtn.classList.add('hidden'); 
             if(playbackMenu) playbackMenu.classList.remove('open');
-            if(volumePanel) volumePanel.classList.remove('open');
+            if(volumeContainer) volumeContainer.classList.remove('open'); state.isVolumePanelOpen = false;
             if(state.host) state.host.style.cursor = 'none';
         } else { 
-            overlay.classList.remove('hidden'); 
-            ctrlBg.classList.remove('hidden'); 
+            overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); 
             if(closeBtn) closeBtn.classList.remove('hidden'); 
             if(state.host) state.host.style.cursor = '';
         } 
@@ -1057,75 +985,70 @@
     function showLoading(){ try{ if(loadingDiv){ loadingDiv.classList.remove('hidden'); loadingDiv.style.display = 'flex'; } }catch(e){} }
     function hideLoading(){ try{ if(loadingDiv){ loadingDiv.classList.add('hidden'); setTimeout(()=> { try{ loadingDiv.style.display = 'none'; }catch(e){} }, 320); } }catch(e){} }
 
-    function showOSDFeedback({ icon, text, duration = 1500 }) {
-        if (state.osdTimer) clearTimeout(state.osdTimer);
-        osdFeedbackEl.innerHTML = `${icon}<span>${text}</span>`;
-        osdFeedbackEl.classList.add('visible');
-        state.osdTimer = setTimeout(() => {
-            osdFeedbackEl.classList.remove('visible');
-        }, duration);
-    }
-    
-    function setVolume(newVolume, showOsd = true) {
-        if (!state.player || typeof state.player.getVolume !== 'function') return;
+    function updateVolume(newVolume, showOsd = true) {
         newVolume = Math.max(0, Math.min(100, newVolume));
-        state.player.setVolume(newVolume);
+        if (state.player) {
+            state.player.setVolume(newVolume);
+            if (newVolume > 0 && state.player.isMuted()) state.player.unMute();
+            else if (newVolume === 0 && !state.player.isMuted()) state.player.mute();
+        }
         state.lastVolume = newVolume;
         try { localStorage.setItem('vidu_player_volume', newVolume); } catch(e){}
-        if (newVolume > 0 && typeof state.player.unMute === 'function') state.player.unMute();
-        if (newVolume === 0 && typeof state.player.mute === 'function') state.player.mute();
-        if (showOsd) showOSDFeedback({ icon: volumeHighSVG(), text: `${Math.round(newVolume)}%` });
-        resetInactivityTimer();
-    }
-    
-    function setPlaybackRate(speed) {
-        if (state.player && typeof state.player.setPlaybackRate === 'function') {
-            state.player.setPlaybackRate(speed);
-            playbackMenu.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-            const activeButton = playbackMenu.querySelector(`button[data-speed="${speed}"]`);
-            if (activeButton) activeButton.classList.add('active');
-            const speedText = speed === 5 ? '😎' : `${speed}x`;
-            showOSDFeedback({ icon: speedSVG(), text: speedText });
+        
+        // Update UI
+        volumeSlider.value = newVolume;
+        if(CSS.supports('--p: 0')){ // Use custom property for modern browsers
+           volumeSlider.style.setProperty('--p', newVolume);
+        }
+        volumeProgress.style.height = `${newVolume}%`;
+        volumeBtn.innerHTML = newVolume > 0 ? volumeHighSVG() : volumeMuteSVG();
+
+        if (showOsd) {
+           showOSDFeedback({ icon: newVolume > 0 ? volumeHighSVG() : volumeMuteSVG(), text: `${Math.round(newVolume)}%` });
         }
     }
+    
+    volumeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.isVolumePanelOpen = !state.isVolumePanelOpen;
+        volumeContainer.classList.toggle('open', state.isVolumePanelOpen);
+    });
 
+    volumeSlider.addEventListener('input', () => {
+        updateVolume(parseFloat(volumeSlider.value), true);
+    });
+    
     state.keyHandler = function(e){
       const active = document.activeElement; const seekIsActive = (active && active.id === 'vidu_seek');
       if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
       const root = document.getElementById('modal-root'); if(!root || root.style.display === 'none') return;
       
-      const key = e.key.toLowerCase();
-      switch (key) {
-        case ' ': e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); resetInactivityTimer(); } break;
+      let handled = true;
+      switch(e.key.toLowerCase()) {
+        case ' ': e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); } break;
         case 'f': e.preventDefault(); toggleFullscreen(); break;
-        case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek forward err', err); } break;
-        case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek back err', err); } break;
-        case 'arrowup': e.preventDefault(); setVolume((state.player.getVolume() || 0) + 5); break;
-        case 'arrowdown': e.preventDefault(); setVolume((state.player.getVolume() || 0) - 5); break;
-        case 'q':
-        case 'e':
-        case 'w':
-          e.preventDefault();
-          if (!state.player) break;
-          // --- NEW: Correct speed cycling logic ---
-          const speeds = [1, 1.25, 1.5, 1.75, 2, 5];
-          if (key === 'w') {
-              setPlaybackRate(1);
-              break;
-          }
-          const currentRate = state.player.getPlaybackRate();
-          let currentIndex = speeds.indexOf(currentRate);
-          if (currentIndex === -1) currentIndex = 0; // Default to 1x
-
-          let nextIndex;
-          if (key === 'e') { // 'e' for next speed (faster)
-             nextIndex = (currentIndex + 1) % speeds.length;
-          } else { // 'q' for previous speed (slower)
-             nextIndex = (currentIndex - 1 + speeds.length) % speeds.length;
-          }
-          setPlaybackRate(speeds[nextIndex]);
-          break;
+        case 'arrowright': e.preventDefault(); if(state.player?.seekTo){ const cur = state.player.getCurrentTime() || 0; state.player.seekTo(cur + 10, true); showOSDFeedback({icon: fastForwardSVG(), text: "+10s"}) } break;
+        case 'arrowleft': e.preventDefault(); if(state.player?.seekTo){ const cur = state.player.getCurrentTime() || 0; state.player.seekTo(Math.max(0, cur - 10), true); showOSDFeedback({icon: rewindSVG(), text: "-10s"}) } break;
+        case 'arrowup': e.preventDefault(); updateVolume(state.lastVolume + 5); break;
+        case 'arrowdown': e.preventDefault(); updateVolume(state.lastVolume - 5); break;
+        case 'e': {
+            const currentRate = state.player.getPlaybackRate();
+            const currentIndex = PLAYBACK_SPEEDS.indexOf(currentRate);
+            const nextIndex = (currentIndex + 1) % PLAYBACK_SPEEDS.length;
+            setPlaybackSpeed(PLAYBACK_SPEEDS[nextIndex]);
+            break;
+        }
+        case 'q': {
+            const currentRate = state.player.getPlaybackRate();
+            const currentIndex = PLAYBACK_SPEEDS.indexOf(currentRate);
+            const prevIndex = (currentIndex - 1 + PLAYBACK_SPEEDS.length) % PLAYBACK_SPEEDS.length;
+            setPlaybackSpeed(PLAYBACK_SPEEDS[prevIndex]);
+            break;
+        }
+        case 'w': setPlaybackSpeed(1); break;
+        default: handled = false; break;
       }
+      if(handled) resetInactivityTimer();
     };
     document.addEventListener('keydown', state.keyHandler);
 
@@ -1146,40 +1069,18 @@
       }catch(e){}
     }
     
-    seekEl.addEventListener('input', () => {
-        if (seekEl._drag) {
-            updateSeekUI(seekEl);
-            if (state.player) {
-                const dur = state.player.getDuration ? state.player.getDuration() : 0;
-                if (dur && seekPreviewTime) {
-                    const time = dur * (parseFloat(seekEl.value) / 100);
-                    seekPreviewTime.textContent = fmtHHMMSS(time);
-                }
-            }
-        }
-    }, { passive: true });
+    seekEl.addEventListener('input', () => { if (seekEl._drag) updateSeekUI(seekEl); }, { passive: true });
     updateSeekUI(seekEl);
 
     seekContainer.addEventListener('pointermove', (e) => {
         if (!state.player || typeof state.player.getDuration !== 'function' || !seekPreview) return;
-        const duration = state.player.getDuration();
-        if (!duration || !isFinite(duration)) return;
-
         const rect = seekContainer.getBoundingClientRect();
         const hoverX = e.clientX - rect.left;
-        
         const hoverFraction = Math.max(0, Math.min(1, hoverX / rect.width));
-        const time = hoverFraction * duration;
-        if (seekPreviewTime) {
-            seekPreviewTime.textContent = fmtHHMMSS(time);
-        }
-
+        const time = hoverFraction * state.player.getDuration();
+        seekPreviewTime.textContent = fmtHHMMSS(time);
         const previewWidth = seekPreview.offsetWidth;
-        let previewLeft = hoverX - (previewWidth / 2);
-        
-        previewLeft = Math.max(0, previewLeft);
-        previewLeft = Math.min(rect.width - previewWidth, previewLeft);
-        
+        let previewLeft = Math.max(0, Math.min(rect.width - previewWidth, hoverX - (previewWidth / 2)));
         seekPreview.style.setProperty('--preview-x', `${previewLeft}px`);
     });
 
@@ -1191,126 +1092,114 @@
       resetInactivityTimer();
     });
 
+    // --- NEW: Touch Gesture Handlers ---
+    host.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            state.touchStartX = e.touches[0].clientX;
+            state.touchStartY = e.touches[0].clientY;
+            state.touchStartTime = Date.now();
+            state.isSwiping = false;
+            state.swipeSeekAmount = 0;
+        }
+    });
+
+    host.addEventListener('touchmove', (e) => {
+        if (e.touches.length !== 1 || !state.touchStartTime) return;
+        
+        const deltaX = e.touches[0].clientX - state.touchStartX;
+        const deltaY = e.touches[0].clientY - state.touchStartY;
+
+        if (!state.isSwiping) {
+            // Determine swipe direction after a small threshold
+            if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+                state.isSwiping = true;
+                if (Math.abs(deltaY) > Math.abs(deltaX) && state.touchStartX > window.innerWidth / 2) {
+                    state.swipeDirection = 'volume';
+                    document.body.classList.add('no-scroll');
+                } else {
+                    state.swipeDirection = 'seek';
+                }
+            }
+        }
+        
+        if (state.isSwiping) {
+            e.preventDefault();
+            if (state.swipeDirection === 'volume') {
+                const volumeChange = -deltaY * 0.5; // Sensitivity factor
+                updateVolume(state.lastVolume + volumeChange, true);
+                state.touchStartY = e.touches[0].clientY; // Reset start Y for continuous swipe
+            } else if (state.swipeDirection === 'seek') {
+                const seekChange = deltaX * 0.2; // Sensitivity
+                state.swipeSeekAmount += seekChange;
+                const seekDisplay = `${state.swipeSeekAmount > 0 ? '+' : ''}${Math.round(state.swipeSeekAmount)}s`;
+                showOSDFeedback({ icon: state.swipeSeekAmount > 0 ? fastForwardSVG() : rewindSVG(), text: seekDisplay, duration: 99999 });
+                state.touchStartX = e.touches[0].clientX; // Reset start X
+            }
+        }
+    }, { passive: false });
+
+    host.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        const tapDuration = now - state.touchStartTime;
+
+        if (state.isSwiping) {
+            if (state.swipeDirection === 'seek' && state.player) {
+                const currentTime = state.player.getCurrentTime();
+                state.player.seekTo(currentTime + state.swipeSeekAmount, true);
+                // The OSD will just fade out on its own timer
+            }
+        } else if (tapDuration < 250) { // It's a tap
+            if (now - state.lastTapTime < 300) { // Double tap
+                if (state.touchStartX > window.innerWidth / 2) {
+                    state.player.seekTo(state.player.getCurrentTime() + 10, true);
+                    showOSDFeedback({ icon: fastForwardSVG(), text: "+10s" });
+                } else {
+                    state.player.seekTo(Math.max(0, state.player.getCurrentTime() - 10), true);
+                    showOSDFeedback({ icon: rewindSVG(), text: "-10s" });
+                }
+                state.lastTapTime = 0; // Reset after double tap
+            } else { // Single tap
+                resetInactivityTimer();
+                state.lastTapTime = now;
+            }
+        }
+
+        // Cleanup
+        state.isSwiping = false;
+        state.swipeDirection = null;
+        state.touchStartTime = 0;
+        document.body.classList.remove('no-scroll');
+        // Clear sticky seek OSD
+        if (state.osdTimer && state.swipeSeekAmount !== 0) {
+            clearTimeout(state.osdTimer);
+            state.osdTimer = setTimeout(() => {
+                const osdEl = document.getElementById('vidu_osd_feedback');
+                if(osdEl) {
+                    osdEl.classList.remove('visible');
+                    setTimeout(() => { osdEl.style.display = 'none'; }, 300);
+                }
+            }, 500);
+        }
+        state.swipeSeekAmount = 0;
+    });
+
     function resetInactivityTimer(){
         state.lastActivity = Date.now();
         setOverlayHidden(false);
         if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
         state.inactivityTimer = setTimeout(()=>{
             try {
-                const isMenuOpen = playbackMenu.classList.contains('open') || volumePanel.classList.contains('open');
-                const isDragging = seekEl._drag;
-                if (!isMenuOpen && !isDragging) {
-                    setOverlayHidden(true);
+                if (state.player && typeof state.player.getPlayerState === 'function') {
+                    const isMenuOpen = document.getElementById('vidu_playback_menu')?.classList.contains('open');
+                    const isDragging = document.getElementById('vidu_seek')?._drag;
+                    if (!isMenuOpen && !isDragging && !state.isVolumePanelOpen) {
+                        setOverlayHidden(true);
+                    }
                 }
             } catch(e) { console.warn('Inactivity timer error', e); }
         }, 3000);
     }
-    
-    // --- Touch and Mouse Wheel Listeners ---
-    function attachActivityListeners(){ 
-        ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); });
-        host.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const delta = e.deltaY > 0 ? -5 : 5; // Negative deltaY is scroll up
-            setVolume(state.player.getVolume() + delta);
-        }, { passive: false });
-        
-        host.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) return; // Ignore multi-touch gestures
-            const now = Date.now();
-            const touch = e.touches[0];
-            const rect = host.getBoundingClientRect();
-            const tapX = touch.clientX - rect.left;
-            
-            // Double tap logic
-            if (now - state.touch_lastTapTime < 300) {
-                if (Math.abs(tapX - state.touch_lastTapX) < 50) { // Tapped in same area
-                    if (!state.player) return;
-                    const isRightSide = tapX > rect.width / 2;
-                    const currentTime = state.player.getCurrentTime();
-                    const duration = state.player.getDuration();
-                    if (isRightSide) {
-                        state.player.seekTo(Math.min(duration, currentTime + 10), true);
-                        seekFeedbackRight.classList.remove('show');
-                        void seekFeedbackRight.offsetWidth; // Trigger reflow
-                        seekFeedbackRight.classList.add('show');
-                    } else {
-                        state.player.seekTo(Math.max(0, currentTime - 10), true);
-                        seekFeedbackLeft.classList.remove('show');
-                        void seekFeedbackLeft.offsetWidth; // Trigger reflow
-                        seekFeedbackLeft.classList.add('show');
-                    }
-                }
-            }
-            
-            state.touch_lastTapTime = now;
-            state.touch_lastTapX = tapX;
-            state.touch_startX = touch.clientX;
-            state.touch_startY = touch.clientY;
-            state.touch_isSwiping = false;
-            state.touch_swipeMode = null;
-            state.touch_seekStartTime = state.player ? state.player.getCurrentTime() : 0;
-            // --- FIX: Store initial volume for accurate swipe control ---
-            state.touch_initialVolume = state.player ? state.player.getVolume() : state.lastVolume;
-            resetInactivityTimer();
-        }, { passive: true });
-        
-        host.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 1 || !state.player) return;
-            const touch = e.touches[0];
-            const deltaX = touch.clientX - state.touch_startX;
-            const deltaY = touch.clientY - state.touch_startY;
-
-            if (!state.touch_isSwiping) {
-                if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
-                    state.touch_isSwiping = true;
-                    if (Math.abs(deltaY) > Math.abs(deltaX)) { // Vertical swipe is always volume
-                        state.touch_swipeMode = 'volume';
-                    } else { // Horizontal swipe
-                        state.touch_swipeMode = 'seek';
-                    }
-                }
-            }
-
-            if (state.touch_isSwiping) {
-                e.preventDefault();
-                setOverlayHidden(true); // Hide controls while swiping
-                const rect = host.getBoundingClientRect();
-
-                if (state.touch_swipeMode === 'volume') {
-                    // --- FIX: Calculate volume based on initial touch position for accuracy ---
-                    const totalDeltaY = touch.clientY - state.touch_startY;
-                    // Adjust sensitivity; a full screen swipe changes volume by ~150%
-                    const volumeChange = (-totalDeltaY / rect.height) * 150; 
-                    const newVolume = state.touch_initialVolume + volumeChange;
-                    setVolume(newVolume, true);
-                } else if (state.touch_swipeMode === 'seek') {
-                    const duration = state.player.getDuration();
-                    const seekChange = (deltaX / rect.width) * (duration / 2); // Swipe across screen seeks half the video
-                    const targetTime = Math.max(0, Math.min(duration, state.touch_seekStartTime + seekChange));
-                    const seekText = fmtHHMMSS(targetTime) + " / " + fmtHHMMSS(duration);
-                    showOSDFeedback({ icon: (seekChange > 0 ? ffwdSVG() : rewindSVG()), text: seekText, duration: 500 });
-                }
-            }
-        }, { passive: false });
-
-        host.addEventListener('touchend', (e) => {
-            if (state.touch_isSwiping && state.touch_swipeMode === 'seek') {
-                const rect = host.getBoundingClientRect();
-                const deltaX = e.changedTouches[0].clientX - state.touch_startX;
-                const duration = state.player.getDuration();
-                const seekChange = (deltaX / rect.width) * (duration / 2);
-                const targetTime = Math.max(0, Math.min(duration, state.touch_seekStartTime + seekChange));
-                state.player.seekTo(targetTime, true);
-            }
-            if (state.osdTimer) clearTimeout(state.osdTimer);
-            state.osdTimer = setTimeout(() => { osdFeedbackEl.classList.remove('visible'); }, 500);
-            
-            state.touch_isSwiping = false;
-            state.touch_swipeMode = null;
-            resetInactivityTimer();
-        }, { passive: true });
-    }
+    function attachActivityListeners(){ try{ ['mousemove','pointermove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); }); }catch(e){} }
     attachActivityListeners();
 
     function updatePlayerUI() {
@@ -1319,61 +1208,34 @@
             const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
             const dur = state.player.getDuration ? state.player.getDuration() : 0;
             const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
-            const vol = state.player.getVolume ? Math.round(state.player.getVolume()) : state.lastVolume;
-
-            if (vol !== state.lastVolumeLevel) {
-                let icon;
-                if (vol === 0 || state.player.isMuted()) icon = volumeMuteSVG();
-                else if (vol <= 33) icon = volumeLowSVG();
-                else if (vol <= 66) icon = volumeMidSVG();
-                else icon = volumeHighSVG();
-                volumeBtn.innerHTML = icon;
-                volumeSlider.value = vol;
-                state.lastVolumeLevel = vol;
-            }
 
             const flooredCur = Math.floor(cur);
             if (flooredCur !== state.lastTime) {
                 curEl.textContent = fmtHHMMSS(flooredCur);
                 state.lastTime = flooredCur;
             }
-
-            const flooredDur = Math.floor(dur);
-            if (dur && isFinite(dur) && flooredDur !== state.lastDuration) {
-                durEl.textContent = fmtHHMMSS(flooredDur);
-                state.lastDuration = flooredDur;
+            if (dur && isFinite(dur) && Math.floor(dur) !== state.lastDuration) {
+                durEl.textContent = fmtHHMMSS(dur);
+                state.lastDuration = Math.floor(dur);
             }
-
             if (!seekEl._drag && dur && isFinite(dur)) {
                 seekEl.value = (cur / Math.max(1, dur)) * 100;
                 updateSeekUI(seekEl);
             }
-            
             if (state.desiredPlaying !== null) {
-              if(state.desiredPlaying && st !== 1){
-                try{ state.player.playVideo(); }catch(e){}
-              } else if(!state.desiredPlaying && st === 1){
-                try{ state.player.pauseVideo(); }catch(e){}
-              }
+              if(state.desiredPlaying && st !== 1) state.player.playVideo();
+              else if(!state.desiredPlaying && st === 1) state.player.pauseVideo();
             }
-
             if (st !== state.lastPlayerState) {
                 const isPlaying = (st === 1);
-                const currentIcon = isPlaying ? pauseSVG() : playSVG();
-                playBtn.innerHTML = currentIcon;
+                playBtn.innerHTML = isPlaying ? pauseSVG() : playSVG();
                 playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
                 state.lastPlayerState = st;
             }
-
             const now = Date.now();
-            const isPlaying = (st === 1);
-            if (state.videoId && isPlaying && now - (state.lastSaveTime || 0) > 60000) {
-                if (cur > 1) {
-                    window.saveVideoProgress(state.videoId, cur);
-                    state.lastSaveTime = now;
-                }
+            if (state.videoId && (st === 1) && now - (state.lastSaveTime || 0) > 60000) {
+                if (cur > 1) { window.saveVideoProgress(state.videoId, cur); state.lastSaveTime = now; }
             }
-
         } catch (e) {}
         state.animationFrameId = requestAnimationFrame(updatePlayerUI);
     }
@@ -1385,16 +1247,15 @@
           events: {
             onReady: function(evt){
               disableIframeClicks(host); showLoading();
-              setVolume(state.lastVolume, false); // Set initial volume without OSD
-              
-              try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
+              updateVolume(state.lastVolume, false); // Set initial volume without OSD
+              evt.target.setPlaybackQuality('default');
               
               const savedTime = window.getVideoProgress(state.videoId);
               if (savedTime && savedTime > 0) {
                   evt.target.seekTo(savedTime, true);
               }
 
-              try{ evt.target.playVideo(); }catch(e){}
+              evt.target.playVideo();
               mount.style.height = mount.style.height || '520px';
               if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
               updatePlayerUI();
@@ -1404,8 +1265,8 @@
               resetInactivityTimer();
               resolve(state.player);
             },
-            onStateChange: function(e){ try{ if(e && e.data === 1){ try{ hideLoading(); }catch(e){} } }catch(err){} },
-            onError: function(err){ try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} console.error('YT player error', err); }
+            onStateChange: function(e){ if(e?.data === 1) hideLoading(); },
+            onError: (err) => { hideLoading(); console.error('YT player error', err); }
           }
         });
       }catch(err){ reject(err || new Error('YT player creation failed')); }
@@ -1429,27 +1290,14 @@
       if(state.docClickHandler){ document.removeEventListener('click', state.docClickHandler); state.docClickHandler = null; }
       if(state.player){ try{ state.player.destroy(); }catch(e){} state.player = null; }
       if(state.mo){ try{ state.mo.disconnect(); }catch(e){} state.mo = null; }
-      if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
-      if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); document.removeEventListener('mozfullscreenchange', state.fsListener); document.removeEventListener('MSFullscreenChange', state.fsListener); state.fsListener = null; }
+      if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); state.fsListener = null; }
       if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
       if(state.osdTimer){ clearTimeout(state.osdTimer); state.osdTimer = null; }
-      if(state.host){ 
-          try{ 
-              // Removing all listeners attached in attachActivityListeners
-              state.host.removeEventListener('wheel', null);
-              state.host.removeEventListener('touchstart', null);
-              state.host.removeEventListener('touchmove', null);
-              state.host.removeEventListener('touchend', null);
-          } catch(e){} 
-      }
+      if(state.host){ try{ ['mousemove','pointermove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){} }
       if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
       
       state.videoId = null;
       state.lastSaveTime = 0;
-
-      // --- NEW: Show page content when player is destroyed ---
-      togglePageContent(true);
-
     }catch(e){ console.warn('destroyPlayer err', e); }
   }
 
@@ -1472,25 +1320,25 @@ function getVideoProgress(videoId) {
     try {
         const progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
         return progress[videoId] || 0;
-    } catch (e) {
-        console.warn('Could not get video progress', e);
-        return 0;
-    }
+    } catch (e) { return 0; }
 }
 
 function saveVideoProgress(videoId, time) {
     if (!videoId) return;
     try {
         const progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
-        if (time > 1) {
-            progress[videoId] = time;
-        } else {
-            delete progress[videoId];
-        }
+        if (time > 1) { progress[videoId] = time; } 
+        else { delete progress[videoId]; }
         localStorage.setItem('vidu_video_progress', JSON.stringify(progress));
-    } catch (e) {
-        console.error("Failed to save video progress", e);
-    }
+    } catch (e) { console.error("Failed to save video progress", e); }
+}
+
+// --- NEW: Centralized functions to manage UI state ---
+function preparePlayerUI() {
+    document.body.classList.add('player-active');
+}
+function restoreMainUI() {
+    document.body.classList.remove('player-active');
 }
 
 function renderPlaylists(){
@@ -1574,11 +1422,9 @@ function showUnlockedItem(item) {
 
 function openPasswordModal(item){
   currentItem = item;
+  preparePlayerUI();
   const root = document.getElementById('modal-root');
   root.style.display = 'block';
-  
-  if (typeof togglePageContent === 'function') togglePageContent(false);
-
   document.getElementById('modal-title').textContent = item.name || 'Protected';
   document.getElementById('modal-subtitle').textContent = (item.type || 'video') + ' — password required';
   document.getElementById('password-input').value = '';
@@ -1589,14 +1435,13 @@ function openPasswordModal(item){
 }
 
 function closeModal(){
+  restoreMainUI();
   const root = document.getElementById('modal-root');
   if(root) {
     root.style.display = 'none';
     root.style.visibility = 'visible';
   }
-
   if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
-  
   if (currentItem && currentItem.type === 'playlist') {
     const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
     if (fsPlaylist) fsPlaylist.classList.add('show');
@@ -1651,10 +1496,8 @@ async function openFullScreenPlaylist(item) {
   countEl.textContent = '... Videos';
   contentEl.innerHTML = '';
   loaderEl.style.display = 'flex';
+  preparePlayerUI();
   overlay.classList.add('show');
-  
-  if (typeof togglePageContent === 'function') togglePageContent(false);
-
   const rawId = decodeEnc(item.idEnc);
   const playlistId = rawId.split('&')[0];
   try {
@@ -1700,8 +1543,6 @@ function playVideoWithLoading(videoInfo) {
   fsPlaylist.classList.remove('show');
   loadingPopup.classList.add('show');
 
-  if (typeof togglePageContent === 'function') togglePageContent(false);
-
   loadingBar.style.transition = 'none';
   loadingBar.style.width = '0%';
   setTimeout(() => {
@@ -1709,6 +1550,7 @@ function playVideoWithLoading(videoInfo) {
     loadingBar.style.width = '90%';
   }, 50);
 
+  preparePlayerUI();
   root.style.display = 'block';
   root.style.visibility = 'hidden';
   document.getElementById('modal-title').textContent = videoInfo.title;
@@ -1732,15 +1574,9 @@ function playVideoWithLoading(videoInfo) {
             const restoringBar = document.getElementById('restoring-bar-fill');
             if(restoringPopup && restoringBar) {
               restoringPopup.classList.add('show');
-              restoringBar.style.transition = 'none';
-              restoringBar.style.width = '0%';
-              setTimeout(() => {
-                restoringBar.style.transition = 'width 2s cubic-bezier(0.25, 1, 0.5, 1)';
-                restoringBar.style.width = '100%';
-              }, 10);
-              setTimeout(() => {
-                restoringPopup.classList.remove('show');
-              }, 2000);
+              restoringBar.style.transition = 'none'; restoringBar.style.width = '0%';
+              setTimeout(() => { restoringBar.style.transition = 'width 2s cubic-bezier(0.25, 1, 0.5, 1)'; restoringBar.style.width = '100%'; }, 10);
+              setTimeout(() => { restoringPopup.classList.remove('show'); }, 2000);
             }
           }
 
@@ -1754,7 +1590,7 @@ function playVideoWithLoading(videoInfo) {
         console.error('showViduPlayer failed', err);
         loadingPopup.classList.remove('show');
         root.style.visibility = 'visible';
-        if (typeof togglePageContent === 'function') togglePageContent(true);
+        restoreMainUI();
         const wrap = document.getElementById('player-wrap');
         if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
       });
@@ -1767,7 +1603,7 @@ document.addEventListener('DOMContentLoaded', function(){
   (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
   document.getElementById('fs-playlist-close-btn').addEventListener('click', () => {
     document.getElementById('fullscreen-playlist-overlay').classList.remove('show');
-    if (typeof togglePageContent === 'function') togglePageContent(true);
+    restoreMainUI();
     currentItem = null;
   });
 });
@@ -1781,7 +1617,7 @@ document.addEventListener('keydown', e => {
         if (root && root.style.display !== 'none') closeModal();
         else if (fsPlaylist && fsPlaylist.classList.contains('show')) {
             fsPlaylist.classList.remove('show');
-            if (typeof togglePageContent === 'function') togglePageContent(true);
+            restoreMainUI();
             currentItem = null;
         }
     } 
