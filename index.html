@@ -392,7 +392,7 @@
       /* --- You can customize the neon border here! --- */
       stroke-width: 8;          /* Controls the thickness of the neon line. Increase for a thicker line. */
       stroke-linejoin: round;   /* Makes the corners of the line bend smoothly, preventing sharp points. */
-      stroke-linecap: round;    /* Makes the start and end of the moving line rounded. */
+      stroke-linecap: butt;    /* Use 'butt' for perfect loops, preventing a millisecond pause. */
       stroke-dasharray: 150 450; /* Length of the visible dash and the gap. */
       animation: vidu-ants-march 3s linear infinite; /* Controls the animation speed. Decrease the time (e.g., from 3s to 2s) to make it faster. */
     }
@@ -483,7 +483,7 @@
     .header-neon-border {
       position: absolute;
       inset: 0;
-      z-index: -1;
+      z-index: 0; /* Sits above the header's own background but below its content. */
       pointer-events: none;
       border-radius: 12px;
       overflow: hidden;
@@ -499,6 +499,12 @@
       to {
         stroke-dashoffset: -750; /* Animate by total dasharray length (250+500) */
       }
+    }
+    /* Elevate header content (logo, buttons) above the neon border overlay */
+    header#header > .logo,
+    header#header > .header-right-controls {
+        position: relative;
+        z-index: 1;
     }
   </style>
 </head>
@@ -522,7 +528,7 @@
     </div>
     <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
       <div class="logo-circle" aria-hidden="true">
-        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b_556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
       </div>
     </a>
     <div class="header-right-controls">
