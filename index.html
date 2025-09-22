@@ -691,7 +691,7 @@
   window.__viduPlayerLoaded = true;
 
   // This will manage the state of the MAIN player in the modal
-  const mainPlayerState = {
+  window.mainPlayerState = {
       instance: null,
       videoId: null,
       title: null,
@@ -702,7 +702,7 @@
   };
 
   // This will manage the state of the PiP player
-  const pipPlayerState = {
+  window.pipPlayerState = {
       instance: null,
       videoId: null,
       title: null,
@@ -847,7 +847,6 @@
       const playbackMenu = $('.vidu-playback-menu');
 
       let desiredPlaying = null;
-      let wasPlayingBeforeHidden = false;
       let lastSaveTime = 0;
 
       function setOverlayHidden(hidden){ 
@@ -942,7 +941,6 @@
       }
       
       const keyHandler = (e) => {
-          // Logic for keyboard controls... (space, f, arrows)
           const active = document.activeElement; const seekIsActive = (active === seekEl);
           if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
 
@@ -1097,23 +1095,24 @@
       document.removeEventListener('webkitfullscreenchange', stateObject.eventListeners.fsListener);
       // Clear all timers
       for(const key in stateObject.timers) clearTimeout(stateObject.timers[key]);
-      
-      // Clear container if needed (optional, setupPlayer does it)
   }
+
+  window.setupPlayer = setupPlayer; // Expose to global scope for PiP script
+  window.destroyPlayerInstance = destroyPlayerInstance; // Expose to global scope for PiP script
 
   window.showViduPlayer = function(videoInfo){
       const container = document.getElementById('player-wrap');
-      return setupPlayer(videoInfo, container, mainPlayerState, false);
+      return setupPlayer(videoInfo, container, window.mainPlayerState, false);
   };
   window.destroyViduPlayer = function() {
-      destroyPlayerInstance(mainPlayerState);
+      destroyPlayerInstance(window.mainPlayerState);
       const w = document.getElementById('player-wrap');
       if (w) w.innerHTML = '';
   }
 
    window.addEventListener('beforeunload', () => {
-        destroyPlayerInstance(mainPlayerState);
-        destroyPlayerInstance(pipPlayerState);
+        destroyPlayerInstance(window.mainPlayerState);
+        destroyPlayerInstance(window.pipPlayerState);
     }, { passive: true });
 
 })();
@@ -1236,7 +1235,7 @@ pipCloseBtn.addEventListener('click', closeCustomPiP);
 /*************************************************************************
  * Playlist data + UI + modal + YouTube playlist fetching
  *************************************************************************/
-const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a7circ;': 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
+const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
 function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
 const decodeEnc = (function(){ const key = new TextEncoder().encode('vidu_secret_2025'); function xorDecode(bytes){ const out = new Uint8Array(bytes.length); for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length]; return out; } return function(encStr){ try{ if(!encStr) return ''; const raw = atob(encStr); const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0))); const dec = xorDecode(bytes); return new TextDecoder().decode(dec); }catch(e){ return ''; } }; })();
 function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
@@ -1246,7 +1245,10 @@ function getVideoProgress(videoId) {
     try {
         const progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
         return progress[videoId] || 0;
-    } catch (e) { return 0; }
+    } catch (e) {
+        console.warn('Could not get video progress', e);
+        return 0;
+    }
 }
 
 function saveVideoProgress(videoId, time) {
@@ -1259,7 +1261,9 @@ function saveVideoProgress(videoId, time) {
             delete progress[videoId];
         }
         localStorage.setItem('vidu_video_progress', JSON.stringify(progress));
-    } catch (e) { console.error("Failed to save video progress", e); }
+    } catch (e) {
+        console.error("Failed to save video progress", e);
+    }
 }
 
 function renderPlaylists(){
@@ -1356,9 +1360,17 @@ function openPasswordModal(item){
 
 function closeModal(){
   const root = document.getElementById('modal-root');
-  if(root) root.style.display = 'none';
-  if(window.destroyViduPlayer) window.destroyViduPlayer();
-  currentItem = null;
+  if(root) {
+    root.style.display = 'none';
+    root.style.visibility = 'visible';
+  }
+  if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
+  if (currentItem && currentItem.type === 'playlist') {
+    const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
+    if (fsPlaylist) fsPlaylist.classList.add('show');
+  } else {
+    currentItem = null;
+  }
 }
 
 function onPasswordSubmit(){
@@ -1432,7 +1444,12 @@ function renderFullScreenPlaylist(videos, title) {
   videos.forEach((video, index) => {
     const li = document.createElement('div');
     li.className = 'fs-playlist-item';
-    li.innerHTML = `<div class="video-number-thumbnail"><span>${index + 1}</span></div><div class="title">${escapeHtml(video.title)}</div>`;
+    li.innerHTML = `
+        <div class="video-number-thumbnail">
+            <span>${index + 1}</span>
+        </div>
+        <div class="title">${escapeHtml(video.title)}</div>
+    `;
     li.onclick = () => playVideoWithLoading({ videoId: video.videoId, title: video.title, startPlaying: true });
     fragment.appendChild(li);
   });
@@ -1442,7 +1459,7 @@ function renderFullScreenPlaylist(videos, title) {
 function playVideoWithLoading(videoInfo) {
   // FIX: If PiP is open when a new video is clicked, close it first.
   if (document.getElementById('custom-pip').style.display === 'flex') {
-      closeCustomPiP(); // This will now destroy the PiP player correctly.
+      closeCustomPiP(); 
   }
 
   const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
@@ -1453,7 +1470,8 @@ function playVideoWithLoading(videoInfo) {
   fsPlaylist.classList.remove('show');
   loadingPopup.classList.add('show');
 
-  loadingBar.style.transition = 'none'; loadingBar.style.width = '0%';
+  loadingBar.style.transition = 'none';
+  loadingBar.style.width = '0%';
   setTimeout(() => {
     loadingBar.style.transition = 'width 4s cubic-bezier(0.25, 0.1, 0.25, 1)';
     loadingBar.style.width = '90%';
@@ -1470,31 +1488,44 @@ function playVideoWithLoading(videoInfo) {
       .then(player => {
         loadingBar.style.transition = 'width 0.3s ease-out';
         loadingBar.style.width = '100%';
+
         setTimeout(() => {
           loadingPopup.classList.remove('show');
           root.style.visibility = 'visible';
-          // ... (rest of the logic is fine)
-           const savedTime = getVideoProgress(videoInfo.videoId);
-            if (savedTime && savedTime > 0 && !videoInfo.startTime) { // only show if not seeking from PiP
+
+            if (!videoInfo.startTime) {
+              const savedTime = getVideoProgress(videoInfo.videoId);
+              if (savedTime && savedTime > 0) {
                 const restoringPopup = document.getElementById('restoring-position-overlay');
                 const restoringBar = document.getElementById('restoring-bar-fill');
                 if(restoringPopup && restoringBar) {
-                    restoringPopup.classList.add('show');
-                    restoringBar.style.transition = 'none'; restoringBar.style.width = '0%';
-                    setTimeout(() => {
-                        restoringBar.style.transition = 'width 2s cubic-bezier(0.25, 1, 0.5, 1)';
-                        restoringBar.style.width = '100%';
-                    }, 10);
-                    setTimeout(() => restoringPopup.classList.remove('show'), 2000);
+                  restoringPopup.classList.add('show');
+                  restoringBar.style.transition = 'none';
+                  restoringBar.style.width = '0%';
+                  setTimeout(() => {
+                    restoringBar.style.transition = 'width 2s cubic-bezier(0.25, 1, 0.5, 1)';
+                    restoringBar.style.width = '100%';
+                  }, 10);
+                  setTimeout(() => {
+                    restoringPopup.classList.remove('show');
+                  }, 2000);
                 }
+              }
             }
+
+
+          setTimeout(() => {
+            loadingBar.style.transition = 'none';
+            loadingBar.style.width = '0%';
+          }, 300);
         }, 300);
       })
       .catch(err => {
         console.error('showViduPlayer failed', err);
         loadingPopup.classList.remove('show');
         root.style.visibility = 'visible';
-        document.getElementById('player-wrap').innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
+        const wrap = document.getElementById('player-wrap');
+        if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
       });
 }
 
@@ -1560,3 +1591,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
