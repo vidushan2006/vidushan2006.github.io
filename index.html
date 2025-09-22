@@ -2,10 +2,21 @@
 <html>
 <head>
   <title>VIDU</title>
-  <meta charset="utf--8" />
+  <!-- OPTIMIZATION: Corrected charset from utf--8 to utf-8 for proper text rendering. -->
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+
+  <!-- OPTIMIZATION: Added preconnect links. This tells the browser to start establishing a connection to these domains early, speeding up resource loading (fonts, thumbnails, YouTube API). -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://www.youtube.com">
+  <link rel="preconnect" href="https://i.ytimg.com">
+  <link rel="preconnect" href="https://i.pinimg.com">
+  
   <link rel="stylesheet" href="assets/css/main.css" />
+  <!-- OPTIMIZATION: The 'display=swap' parameter ensures that text remains visible while the custom font is loading, improving perceived performance. -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
   <style>
     :root{
       --bg-overlay: rgba(4,6,12,0.46);
@@ -122,7 +133,21 @@
     .inner{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:3;}
 
     .list-container{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:flex-start;margin-top:6px;}
-    .list-item{width:150px;cursor:pointer;text-align:center;background:rgba(18, 20, 28, 0.5);border-radius:var(--card-radius);padding:10px;transition:transform .25s var(--ease),box-shadow .25s var(--ease); border:1px solid rgba(255,255,255,0.06); box-shadow:0 8px 24px rgba(6,8,16,0.5);position:relative;will-change:transform, opacity;}
+    .list-item{
+      width:150px;
+      cursor:pointer;
+      text-align:center;
+      background:rgba(18, 20, 28, 0.5);
+      border-radius:var(--card-radius);
+      padding:10px;
+      transition:transform .25s var(--ease),box-shadow .25s var(--ease); 
+      border:1px solid rgba(255,255,255,0.06); 
+      box-shadow:0 8px 24px rgba(6,8,16,0.5);
+      position:relative;
+      will-change:transform, opacity;
+      /* OPTIMIZATION: Isolates the rendering of this element, telling the browser its contents won't affect the rest of the page layout. This can speed up rendering. */
+      contain: content;
+    }
 
     .list-item::after{content:'';position:absolute;left:8px;right:8px;bottom:8px;height:4px;border-radius:4px;background:linear-gradient(90deg, rgba(123,97,255,0.25), rgba(57,255,20,0.18), rgba(255,107,107,0.12));opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;}
     .list-item:hover::after{opacity:1;transform:translateY(0);}
@@ -165,7 +190,10 @@
       overflow: hidden;
       border-radius: 12px;
       background: #000;
+      /* OPTIMIZATION: Promotes the player to its own compositing layer, which can significantly improve animation and video playback performance. */
       transform: translateZ(0);
+      /* OPTIMIZATION: A strong performance hint for the browser that the player is a completely self-contained widget. */
+      contain: strict;
       -webkit-font-smoothing: antialiased;
       height: 100%;
     }
@@ -773,7 +801,7 @@
 
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
-  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19-.15-.24-.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
+  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69-.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19-.15-.24-.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
   function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
   function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
   function pipSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg>`; }
@@ -1003,22 +1031,54 @@
       // Fullscreen specific logic
       if (!isPip) {
           function getFullscreenElement(){ return document.fullscreenElement || document.webkitFullscreenElement; }
+          
+          // --- NEW FEATURE & OPTIMIZATION: Automatic Landscape on Fullscreen (Mobile) ---
           function toggleFullscreen() {
               if (!getFullscreenElement()) {
-                  host.requestFullscreen ? host.requestFullscreen() : host.webkitRequestFullscreen();
+                  // Request fullscreen
+                  const promise = host.requestFullscreen ? host.requestFullscreen() : host.webkitRequestFullscreen();
+                  if (!promise) return;
+
+                  // On mobile devices, after entering fullscreen, try to lock the orientation to landscape for a better viewing experience.
+                  if (window.matchMedia("(max-width: 768px)").matches) {
+                      promise.then(() => {
+                          try {
+                              if (screen.orientation && typeof screen.orientation.lock === 'function') {
+                                  // This is an asynchronous request. We catch potential errors.
+                                  screen.orientation.lock('landscape').catch(err => console.warn("Could not lock to landscape:", err));
+                              }
+                          } catch (e) {
+                              console.warn("Screen Orientation API is not available.", e);
+                          }
+                      }).catch(err => {
+                          console.warn("Fullscreen request failed:", err);
+                      });
+                  }
               } else {
-                  document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen();
+                  // Exit fullscreen
+                  if (document.exitFullscreen) document.exitFullscreen();
+                  else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
               }
           }
           fullBtn.addEventListener('click', toggleFullscreen);
 
           const fsListener = () => {
-              if (getFullscreenElement()) {
+              const isFullscreen = !!getFullscreenElement();
+              if (isFullscreen) {
                   fullBtn.innerHTML = exitFullscreenSVG();
               } else {
                   fullBtn.innerHTML = fullscreenSVG();
+                  // --- NEW FEATURE: When exiting fullscreen, unlock the screen orientation to allow it to return to normal.
+                  try {
+                      if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+                          screen.orientation.unlock();
+                      }
+                  } catch (e) {
+                      console.warn("Could not unlock screen orientation.", e);
+                  }
               }
           };
+
           stateObject.eventListeners.fsListener = fsListener;
           document.addEventListener('fullscreenchange', fsListener);
           document.addEventListener('webkitfullscreenchange', fsListener);
@@ -1316,7 +1376,8 @@ function renderPlaylists(){
   if(!playlists || playlists.length === 0){ ul.innerHTML = '<li class="muted">No playlists available.</li>'; return; }
   playlists.forEach(pl=>{
     const li = document.createElement('li'); li.className='list-item ripple';
-    li.innerHTML = `<img src="${escapeHtml(pl.thumbnail)}" alt="${escapeHtml(pl.name)}" /><span class="title">${escapeHtml(pl.name)}</span>`;
+    // OPTIMIZATION: Added loading="lazy" to defer loading of off-screen images. Added width/height to prevent layout shift.
+    li.innerHTML = `<img src="${escapeHtml(pl.thumbnail)}" alt="${escapeHtml(pl.name)}" loading="lazy" width="150" height="150" /><span class="title">${escapeHtml(pl.name)}</span>`;
     li.addEventListener('click', (ev)=>{ spawnRipple(ev, li); showPlaylistVideos(pl); });
     ul.appendChild(li);
   });
@@ -1338,7 +1399,8 @@ function showPlaylistVideos(pl, skipPush){
   (pl.videos||[]).forEach(v=>{
     const vli = document.createElement('li'); vli.className='list-item ripple';
     const thumb = v.thumbnail || '';
-    vli.innerHTML = `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.name)}" /><span class="title">${escapeHtml(v.name)}</span>`;
+    // OPTIMIZATION: Added loading="lazy" to defer loading of off-screen images. Added width/height to prevent layout shift.
+    vli.innerHTML = `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.name)}" loading="lazy" width="150" height="150" /><span class="title">${escapeHtml(v.name)}</span>`;
     if(v && Array.isArray(v.videos)){
       vli.addEventListener('click',(ev)=>{ spawnRipple(ev, vli); showPlaylistVideos(v); });
     } else {
@@ -1598,11 +1660,12 @@ document.addEventListener('keydown', e => {
 });
 </script>
 
-<script src="assets/js/jquery.min.js"></script>
-<script src="assets/js/browser.min.js"></script>
-<script src="assets/js/breakpoints.min.js"></script>
-<script src="assets/js/util.js"></script>
-<script src="assets/js/main.js"></script>
+<!-- OPTIMIZATION: Added the 'defer' attribute to these scripts. This allows the browser to parse the HTML without being blocked by script loading, improving the initial page load time. The scripts will execute in order after the document is parsed. -->
+<script src="assets/js/jquery.min.js" defer></script>
+<script src="assets/js/browser.min.js" defer></script>
+<script src="assets/js/breakpoints.min.js" defer></script>
+<script src="assets/js/util.js" defer></script>
+<script src="assets/js/main.js" defer></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
