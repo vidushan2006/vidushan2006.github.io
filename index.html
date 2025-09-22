@@ -478,11 +478,48 @@
     .fs-playlist-loader .spinner { width: 50px; height: 50px; border: 4px solid var(--glass-strong); border-top-color: var(--accent-2); border-radius: 50%; animation: spin 1s linear infinite; }
     .fs-playlist-loader p { margin-top: 16px; font-weight: 600; color: var(--muted); }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* --- NEON BORDER FOR HEADER --- */
+    .header-neon-border {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .header-neon-rect {
+      stroke-width: 3;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      stroke-dasharray: 250 500;
+      animation: header-ants-march 5s linear infinite;
+    }
+    @keyframes header-ants-march {
+      to {
+        stroke-dashoffset: -750; /* Animate by total dasharray length (250+500) */
+      }
+    }
   </style>
 </head>
 <body class="landing is-preload">
  <div id="wrapper">
   <header id="header">
+    <div class="header-neon-border" aria-hidden="true">
+        <svg viewBox="0 0 750 68" preserveAspectRatio="none" style="width:100%; height:100%;">
+            <defs>
+                <linearGradient id="header-neon-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="var(--accent-1)" stop-opacity="0.1" />
+                    <stop offset="10%" stop-color="var(--accent-1)" />
+                    <stop offset="45%" stop-color="var(--accent-2)" />
+                    <stop offset="55%" stop-color="var(--accent-2)" />
+                    <stop offset="90%" stop-color="var(--accent-1)" />
+                    <stop offset="100%" stop-color="var(--accent-1)" stop-opacity="0.1" />
+                </linearGradient>
+            </defs>
+            <rect class="header-neon-rect" x="1.5" y="1.5" width="747" height="65" rx="12" ry="12" fill="transparent" stroke="url(#header-neon-gradient)" />
+        </svg>
+    </div>
     <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
       <div class="logo-circle" aria-hidden="true">
         <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
@@ -726,7 +763,7 @@
                     <stop offset="100%" stop-color="var(--accent-2)" />
                 </linearGradient>
             </defs>
-            <rect class="neon-rect" x="2" y="2" width="196" height="96" rx="0" ry="0" fill="transparent" stroke="url(#vidu-neon-gradient)" />
+            <rect class="neon-rect" x="4" y="4" width="192" height="92" rx="14" ry="14" fill="transparent" stroke="url(#vidu-neon-gradient)" />
         </svg>
     `;
 
