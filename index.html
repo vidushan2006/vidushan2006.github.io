@@ -45,7 +45,6 @@
 
     #wrapper{position:relative;z-index:3;padding-bottom:48px;}
 
-    /* --- NEW: Player Active State --- */
     body.player-active #wrapper {
       display: none;
     }
@@ -55,8 +54,6 @@
       align-items: center;
       justify-content: space-between;
       padding: 14px 22px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       z-index: 10;
@@ -66,7 +63,21 @@
       max-width: 750px;
       margin: 0 auto;
       box-shadow: 0 8px 30px rgba(2, 4, 12, 0.5);
+      /* PERFORMANCE: backdrop-filter is expensive. Will be replaced on mobile. */
+      background: rgba(20, 22, 28, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
+    
+    /* PERFORMANCE FIX: On smaller screens, replace expensive backdrop-filter with a simple background */
+    @media (max-width: 768px) {
+      header#header {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: rgba(20, 22, 28, 0.92);
+      }
+    }
+
 
     .header-right-controls {
         display: flex;
@@ -127,7 +138,12 @@
     .inner{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:3;}
 
     .list-container{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:flex-start;margin-top:6px;}
-    .list-item{width:150px;cursor:pointer;text-align:center;background:rgba(18, 20, 28, 0.5);border-radius:var(--card-radius);padding:10px;transition:transform .25s var(--ease),box-shadow .25s var(--ease); border:1px solid rgba(255,255,255,0.06); box-shadow:0 8px 24px rgba(6,8,16,0.5);position:relative;will-change:transform, opacity;}
+    /* PERFORMANCE FIX: Removed box-shadow from transition, will use pseudo-element for glow */
+    .list-item{
+      width:150px; cursor:pointer; text-align:center; background:rgba(18, 20, 28, 0.5); border-radius:var(--card-radius); padding:10px; 
+      transition:transform .25s var(--ease);
+      border:1px solid rgba(255,255,255,0.06); box-shadow:0 8px 24px rgba(6,8,16,0.5); position:relative; will-change:transform, opacity;
+    }
 
     .list-item::after{content:'';position:absolute;left:8px;right:8px;bottom:8px;height:4px;border-radius:4px;background:linear-gradient(90deg, rgba(123,97,255,0.25), rgba(57,255,20,0.18), rgba(255,107,107,0.12));opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;}
     .list-item:hover::after{opacity:1;transform:translateY(0);}
@@ -172,7 +188,7 @@
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
-      -webkit-tap-highlight-color: transparent; /* Disable tap highlight on mobile */
+      -webkit-tap-highlight-color: transparent;
     }
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
@@ -252,7 +268,7 @@
     }
     .vidu-btn:hover { background: rgba(255,255,255,0.1); }
     .vidu-btn:active{ transform: scale(.95); transition-duration: .08s; }
-    .vidu-btn svg { width: 22px; height: 22px; transition: transform .2s var(--ease); }
+    .vidu-btn svg { width: 22px; height: 22px; transition: transform .2s var(--ease); will-change: transform; }
     .vidu-btn:hover svg { transform: scale(1.1); }
 
     #vidu_playbtn {
@@ -411,6 +427,7 @@
       display:flex; align-items:center; justify-content:center; gap: 10px;
       min-width: 90px;
       visibility: hidden;
+      will-change: opacity;
     }
     .vidu-osd-feedback.visible {
         opacity: 1;
@@ -538,11 +555,10 @@
     .fs-playlist-loader p { margin-top: 16px; font-weight: 600; color: var(--muted); }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* --- FIXED: Volume Slider Styles --- */
     .vidu-volume-container { position: relative; }
     .vidu-volume-panel {
         position: absolute;
-        bottom: 50px; /* Position above the button */
+        bottom: 50px;
         left: 50%;
         width: 40px;
         height: 150px;
@@ -565,7 +581,7 @@
     .vidu-volume-slider {
         -webkit-appearance: none;
         appearance: none;
-        width: 120px; /* This is the height when rotated */
+        width: 120px;
         cursor: pointer;
         background: transparent;
         position: absolute;
@@ -771,21 +787,32 @@
     _menuOpenTs: 0,
     lastSaveTime: 0,
     videoId: null,
-    // --- OPTIMIZATION: State variables to prevent unnecessary DOM updates ---
     lastTime: -1,
     lastDuration: -1,
     lastPlayerState: -1,
     lastVolumeLevel: -1,
-    // --- Touch Gesture State ---
     touch_lastTapTime: 0,
     touch_lastTapX: 0,
     touch_isSwiping: false,
     touch_startX: 0,
     touch_startY: 0,
-    touch_swipeMode: null, // 'volume' or 'seek'
+    touch_swipeMode: null,
     touch_seekStartTime: 0,
     touch_startVolume: 0,
   };
+
+  function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+      const args = arguments;
+      const context = this;
+      if (!inThrottle) {
+        func.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    }
+  }
 
   function loadYTApi(){
     if(window.YT && window.YT.Player) return Promise.resolve();
@@ -824,10 +851,9 @@
     return pad2(m) + ':' + pad2(sec);
   }
   
-  // --- SVG Icon Helper Functions ---
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
-  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19-.15-.24-.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18-.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
+  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19-.15-.24-.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
   function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
   function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
   function volumeHighSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;}
@@ -955,9 +981,9 @@
     volumeBtn.addEventListener('click', (e) => { e.stopPropagation(); volumePanel.classList.toggle('open'); playbackMenu.classList.remove('open'); });
     volumeSlider.addEventListener('input', () => {
         const newVolume = parseFloat(volumeSlider.value);
-        setVolume(newVolume, false); // Don't show OSD for slider drag
+        setVolume(newVolume, false);
     });
-    volumeSlider.addEventListener('change', () => { // Show OSD on release
+    volumeSlider.addEventListener('change', () => {
         const newVolume = parseFloat(volumeSlider.value);
         setVolume(newVolume, true);
     });
@@ -990,14 +1016,10 @@
                 req.call(host).then(() => {
                     if (window.screen && screen.orientation && typeof screen.orientation.lock === 'function') {
                         if (window.innerWidth < 1024) { 
-                            screen.orientation.lock('landscape').catch(err => {
-                                console.warn("Could not lock screen orientation:", err);
-                            });
+                            screen.orientation.lock('landscape').catch(err => {});
                         }
                     }
-                }).catch(err => {
-                    console.error("Fullscreen request failed:", err);
-                });
+                }).catch(err => {});
             }
         }
     }
@@ -1081,8 +1103,8 @@
       switch (key) {
         case ' ': e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); resetInactivityTimer(); } break;
         case 'f': e.preventDefault(); toggleFullscreen(); break;
-        case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek forward err', err); } break;
-        case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek back err', err); } break;
+        case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
+        case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
         case 'arrowup': e.preventDefault(); setVolume((state.player.getVolume() || 0) + 5); break;
         case 'arrowdown': e.preventDefault(); setVolume((state.player.getVolume() || 0) - 5); break;
         case 'q':
@@ -1099,9 +1121,9 @@
           if (currentIndex === -1) currentIndex = speeds.findIndex(s => s === 1);
 
           let nextIndex;
-          if (key === 'e') { // next
+          if (key === 'e') {
              nextIndex = (currentIndex + 1) % speeds.length;
-          } else { // 'q', previous
+          } else {
              nextIndex = (currentIndex - 1 + speeds.length) % speeds.length;
           }
           setPlaybackRate(speeds[nextIndex]);
@@ -1183,44 +1205,59 @@
                 if (!isMenuOpen && !isDragging) {
                     setOverlayHidden(true);
                 }
-            } catch(e) { console.warn('Inactivity timer error', e); }
+            } catch(e) {}
         }, 3000);
     }
     
-    // --- Touch and Mouse Wheel Listeners ---
     function attachActivityListeners(){ 
         ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); });
+        
+        const throttledWheelHandler = throttle((e) => {
+            const delta = e.deltaY > 0 ? -5 : 5;
+            setVolume(state.player.getVolume() + delta);
+        }, 50);
         host.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const delta = e.deltaY > 0 ? -5 : 5; // Negative deltaY is scroll up
-            setVolume(state.player.getVolume() + delta);
+            throttledWheelHandler(e);
         }, { passive: false });
         
+        const throttledTouchMoveHandler = throttle((e) => {
+            if (!state.touch_isSwiping) return;
+            const touch = e.touches[0];
+            const rect = host.getBoundingClientRect();
+
+            if (state.touch_swipeMode === 'volume') {
+                const totalDeltaY = touch.clientY - state.touch_startY;
+                const volumeChange = (-totalDeltaY / rect.height) * 125;
+                setVolume(state.touch_startVolume + volumeChange, true);
+            } else if (state.touch_swipeMode === 'seek') {
+                const deltaX = touch.clientX - state.touch_startX;
+                const duration = state.player.getDuration();
+                const seekChange = (deltaX / rect.width) * (duration / 2);
+                const targetTime = Math.max(0, Math.min(duration, state.touch_seekStartTime + seekChange));
+                const seekText = fmtHHMMSS(targetTime) + " / " + fmtHHMMSS(duration);
+                showOSDFeedback({ icon: (seekChange > 0 ? ffwdSVG() : rewindSVG()), text: seekText, duration: 500 });
+            }
+        }, 50);
+
         host.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) return; // Ignore multi-touch gestures
+            if (e.touches.length > 1) return;
             const now = Date.now();
             const touch = e.touches[0];
             const rect = host.getBoundingClientRect();
             const tapX = touch.clientX - rect.left;
             
-            // Double tap logic
-            if (now - state.touch_lastTapTime < 300) {
-                if (Math.abs(tapX - state.touch_lastTapX) < 50) { // Tapped in same area
-                    if (!state.player) return;
-                    const isRightSide = tapX > rect.width / 2;
-                    const currentTime = state.player.getCurrentTime();
-                    const duration = state.player.getDuration();
-                    if (isRightSide) {
-                        state.player.seekTo(Math.min(duration, currentTime + 10), true);
-                        seekFeedbackRight.classList.remove('show');
-                        void seekFeedbackRight.offsetWidth; // Trigger reflow
-                        seekFeedbackRight.classList.add('show');
-                    } else {
-                        state.player.seekTo(Math.max(0, currentTime - 10), true);
-                        seekFeedbackLeft.classList.remove('show');
-                        void seekFeedbackLeft.offsetWidth; // Trigger reflow
-                        seekFeedbackLeft.classList.add('show');
-                    }
+            if (now - state.touch_lastTapTime < 300 && Math.abs(tapX - state.touch_lastTapX) < 50) {
+                if (!state.player) return;
+                const isRightSide = tapX > rect.width / 2;
+                const currentTime = state.player.getCurrentTime();
+                const duration = state.player.getDuration();
+                if (isRightSide) {
+                    state.player.seekTo(Math.min(duration, currentTime + 10), true);
+                    seekFeedbackRight.classList.remove('show'); void seekFeedbackRight.offsetWidth; seekFeedbackRight.classList.add('show');
+                } else {
+                    state.player.seekTo(Math.max(0, currentTime - 10), true);
+                    seekFeedbackLeft.classList.remove('show'); void seekFeedbackLeft.offsetWidth; seekFeedbackLeft.classList.add('show');
                 }
             }
             
@@ -1239,37 +1276,22 @@
         
         host.addEventListener('touchmove', (e) => {
             if (e.touches.length > 1) return;
-            const touch = e.touches[0];
-            const deltaX = touch.clientX - state.touch_startX;
-            const deltaY = touch.clientY - state.touch_startY;
-
             if (!state.touch_isSwiping) {
+                const deltaX = e.touches[0].clientX - state.touch_startX;
+                const deltaY = e.touches[0].clientY - state.touch_startY;
                 if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                     state.touch_isSwiping = true;
-                    if (Math.abs(deltaY) > Math.abs(deltaX)) { // Vertical swipe
-                        state.touch_swipeMode = (touch.clientX > window.innerWidth / 2) ? 'volume' : 'none';
-                    } else { // Horizontal swipe
+                    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                        state.touch_swipeMode = (e.touches[0].clientX > window.innerWidth / 2) ? 'volume' : 'none';
+                    } else {
                         state.touch_swipeMode = 'seek';
                     }
                 }
             }
-
-            if (state.touch_isSwiping) {
-                e.preventDefault();
-                setOverlayHidden(true); // Hide controls while swiping
-                const rect = host.getBoundingClientRect();
-
-                if (state.touch_swipeMode === 'volume') {
-                    const totalDeltaY = touch.clientY - state.touch_startY;
-                    const volumeChange = (-totalDeltaY / rect.height) * 125; // Swipe full height = 125% volume change
-                    setVolume(state.touch_startVolume + volumeChange, true);
-                } else if (state.touch_swipeMode === 'seek') {
-                    const duration = state.player.getDuration();
-                    const seekChange = (deltaX / rect.width) * (duration / 2); // Swipe across screen seeks half the video
-                    const targetTime = Math.max(0, Math.min(duration, state.touch_seekStartTime + seekChange));
-                    const seekText = fmtHHMMSS(targetTime) + " / " + fmtHHMMSS(duration);
-                    showOSDFeedback({ icon: (seekChange > 0 ? ffwdSVG() : rewindSVG()), text: seekText, duration: 500 });
-                }
+            if(state.touch_isSwiping){
+              e.preventDefault();
+              setOverlayHidden(true);
+              throttledTouchMoveHandler(e);
             }
         }, { passive: false });
 
@@ -1364,15 +1386,12 @@
           events: {
             onReady: function(evt){
               disableIframeClicks(host); showLoading();
-              setVolume(state.lastVolume, false); // Set initial volume without OSD
-              
+              setVolume(state.lastVolume, false);
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
-              
               const savedTime = window.getVideoProgress(state.videoId);
               if (savedTime && savedTime > 0) {
                   evt.target.seekTo(savedTime, true);
               }
-
               try{ evt.target.playVideo(); }catch(e){}
               mount.style.height = mount.style.height || '520px';
               if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
@@ -1414,7 +1433,6 @@
       if(state.osdTimer){ clearTimeout(state.osdTimer); state.osdTimer = null; }
       if(state.host){ 
           try{ 
-              // Removing all listeners attached in attachActivityListeners
               state.host.removeEventListener('wheel', null);
               state.host.removeEventListener('touchstart', null);
               state.host.removeEventListener('touchmove', null);
@@ -1553,7 +1571,7 @@ function openPasswordModal(item){
   currentItem = item;
   const root = document.getElementById('modal-root');
   root.style.display = 'block';
-  document.body.classList.add('player-active'); // NEW: Add class to body
+  document.body.classList.add('player-active');
   document.getElementById('modal-title').textContent = item.name || 'Protected';
   document.getElementById('modal-subtitle').textContent = (item.type || 'video') + ' — password required';
   document.getElementById('password-input').value = '';
@@ -1571,7 +1589,7 @@ function closeModal(){
     root.style.display = 'none';
     root.style.visibility = 'visible';
   }
-  document.body.classList.remove('player-active'); // NEW: Remove class from body
+  document.body.classList.remove('player-active');
   if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
   if (currentItem && currentItem.type === 'playlist') {
     const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
@@ -1629,7 +1647,7 @@ async function openFullScreenPlaylist(item) {
   contentEl.innerHTML = '';
   loaderEl.style.display = 'flex';
   overlay.classList.add('show');
-  document.body.classList.add('player-active'); // NEW: Add class to body
+  document.body.classList.add('player-active');
   const rawId = decodeEnc(item.idEnc);
   const playlistId = rawId.split('&')[0];
   try {
@@ -1684,7 +1702,7 @@ function playVideoWithLoading(videoInfo) {
 
   root.style.display = 'block';
   root.style.visibility = 'hidden';
-  document.body.classList.add('player-active'); // NEW: Add class to body
+  document.body.classList.add('player-active');
   document.getElementById('modal-title').textContent = videoInfo.title;
   document.getElementById('modal-subtitle').textContent = 'Now Playing';
   document.getElementById('password-block').style.display = 'none';
@@ -1728,7 +1746,7 @@ function playVideoWithLoading(videoInfo) {
         console.error('showViduPlayer failed', err);
         loadingPopup.classList.remove('show');
         root.style.visibility = 'visible';
-        document.body.classList.remove('player-active'); // NEW: Remove class on error
+        document.body.classList.remove('player-active');
         const wrap = document.getElementById('player-wrap');
         if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
       });
@@ -1744,7 +1762,7 @@ document.addEventListener('DOMContentLoaded', function(){
   (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
   document.getElementById('fs-playlist-close-btn').addEventListener('click', () => {
     document.getElementById('fullscreen-playlist-overlay').classList.remove('show');
-    document.body.classList.remove('player-active'); // NEW: Remove class from body
+    document.body.classList.remove('player-active');
     currentItem = null;
     resumeVisuals('playlist-closed');
   });
@@ -1759,7 +1777,7 @@ document.addEventListener('keydown', e => {
         if (root && root.style.display !== 'none') closeModal();
         else if (fsPlaylist && fsPlaylist.classList.contains('show')) {
             fsPlaylist.classList.remove('show');
-            document.body.classList.remove('player-active'); // NEW: Remove class from body
+            document.body.classList.remove('player-active');
             currentItem = null;
             resumeVisuals('esc');
         }
