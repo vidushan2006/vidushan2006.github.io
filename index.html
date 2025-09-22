@@ -948,8 +948,17 @@
     };
     document.addEventListener('keydown', state.keyHandler);
 
+    // --- MODIFIED CODE BLOCK START ---
+    // This section fixes the mobile seeking issue by using more reliable events.
     seekEl.addEventListener('pointerdown', ()=> seekEl._drag=true, {passive:true});
-    seekEl.addEventListener('pointerup', ()=>{ seekEl._drag=false; if(!state.player) return; const dur = state.player.getDuration ? state.player.getDuration() : 0; if(dur) state.player.seekTo(dur * (parseFloat(seekEl.value)/100), true); }, {passive:true});
+    seekEl.addEventListener('pointerup', ()=>{ seekEl._drag=false; }, {passive:true});
+    seekEl.addEventListener('change', ()=>{ 
+      if(!state.player) return; 
+      const dur = state.player.getDuration ? state.player.getDuration() : 0; 
+      if(dur) state.player.seekTo(dur * (parseFloat(seekEl.value)/100), true);
+      seekEl._drag=false; 
+    }, {passive:true});
+    // --- MODIFIED CODE BLOCK END ---
 
     function updateSeekUI(el){
       try{
