@@ -172,6 +172,7 @@
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent; /* Disable tap highlight on mobile */
     }
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
@@ -404,16 +405,54 @@
     @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
     @media (max-width:540px){ .vidu-controls-grid { grid-template-areas: "seek seek" "left right"; grid-template-columns: 1fr 1fr; } .vidu-time-container { display: none; } }
     
-    .vidu-vol-feedback{
+    /* --- NEW/MODIFIED: OSD Feedback --- */
+    .vidu-osd-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
       padding:12px 18px; border-radius:12px; 
-      /* PERFORMANCE: Replaced backdrop-filter */
       background:rgba(20, 22, 28, 0.9);
       border:1px solid rgba(255,255,255,0.08);
       font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5);
-      pointer-events:none; opacity:0; transition:opacity .28s ease; display:none; min-width:72px; text-align:center;
+      pointer-events:none; opacity:0;
+      transition:opacity .28s ease; 
+      display:flex; align-items:center; justify-content:center; gap: 10px;
+      min-width: 90px;
+      visibility: hidden;
     }
+    .vidu-osd-feedback.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    .vidu-osd-feedback svg { width: 28px; height: 28px; fill: currentColor; }
     
+    /* --- NEW: Double-tap feedback animation --- */
+    .vidu-seek-feedback {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10003;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .vidu-seek-feedback.left { left: 15%; }
+    .vidu-seek-feedback.right { right: 15%; }
+    .vidu-seek-feedback.show { animation: vidu-seek-pop 0.6s var(--ease); }
+    @keyframes vidu-seek-pop {
+        0% { transform: translateY(-50%) scale(0.8); opacity: 0; }
+        20% { transform: translateY(-50%) scale(1.1); opacity: 1; }
+        80% { transform: translateY(-50%) scale(1); opacity: 1; }
+        100% { transform: translateY(-50%) scale(0.9); opacity: 0; }
+    }
+    .vidu-seek-feedback svg {
+        width: 48px; height: 48px;
+        fill: rgba(255, 255, 255, 0.8);
+    }
+
     .vidu-playback-menu {
       position: absolute;
       bottom: 82px;
@@ -507,6 +546,83 @@
     .fs-playlist-loader .spinner { width: 50px; height: 50px; border: 4px solid var(--glass-strong); border-top-color: var(--accent-2); border-radius: 50%; animation: spin 1s linear infinite; }
     .fs-playlist-loader p { margin-top: 16px; font-weight: 600; color: var(--muted); }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* --- NEW: Volume Slider Styles --- */
+    .vidu-volume-container { position: relative; }
+    .vidu-volume-panel {
+        position: absolute;
+        bottom: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(30, 32, 38, 0.96);
+        border-radius: 12px;
+        padding: 12px 8px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .2s var(--ease), transform .2s var(--ease);
+        transform-origin: bottom center;
+        transform: translateX(-50%) translateY(10px) scale(0.95);
+        pointer-events: none;
+    }
+    .vidu-volume-panel.open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    .vidu-volume-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 120px;
+        cursor: pointer;
+        background: transparent;
+        transform: rotate(-90deg);
+        position: relative;
+        top: -55px;
+        left: -55px;
+    }
+    .vidu-volume-slider::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 6px;
+        background: rgba(255,255,255,0.15);
+        border-radius: 6px;
+    }
+    .vidu-volume-slider::-moz-range-track {
+        width: 100%;
+        height: 6px;
+        background: rgba(255,255,255,0.15);
+        border-radius: 6px;
+    }
+    .vidu-volume-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        background: var(--accent-2);
+        margin-top: -5px;
+        box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+    }
+    .vidu-volume-slider::-moz-range-thumb {
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        background: var(--accent-2);
+        border: 0;
+        box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+    }
+
+    /* --- NEW: Brightness Overlay --- */
+    .vidu-brightness-overlay {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 9994;
+      transition: opacity 0.1s linear;
+      will-change: opacity;
+    }
   </style>
 </head>
 <body class="landing is-preload">
@@ -671,7 +787,8 @@
     lastActivity: Date.now(),
     desiredPlaying: null,
     lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
-    volumeFeedbackTimer: null,
+    brightness: (() => { try { const b = localStorage.getItem('vidu_player_brightness'); return (b !== null && !isNaN(b)) ? parseFloat(b) : 100; } catch(e) { return 100; } })(),
+    osdTimer: null,
     _menuOpenTs: 0,
     lastSaveTime: 0,
     videoId: null,
@@ -679,6 +796,15 @@
     lastTime: -1,
     lastDuration: -1,
     lastPlayerState: -1,
+    lastVolumeLevel: -1,
+    // --- Touch Gesture State ---
+    touch_lastTapTime: 0,
+    touch_lastTapX: 0,
+    touch_isSwiping: false,
+    touch_startX: 0,
+    touch_startY: 0,
+    touch_swipeMode: null, // 'volume', 'brightness', 'seek'
+    touch_seekStartTime: 0,
   };
 
   function loadYTApi(){
@@ -717,13 +843,21 @@
     }
     return pad2(m) + ':' + pad2(sec);
   }
-
+  
+  // --- SVG Icon Helper Functions ---
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
-  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
+  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19-.15-.24-.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
   function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
   function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
-
+  function volumeHighSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;}
+  function volumeMidSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM3 9v6h4l5 5V4L7 9H3z"/></svg>`;}
+  function volumeLowSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>`;}
+  function volumeMuteSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;}
+  function brightnessSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>`;}
+  function rewindSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>`; }
+  function ffwdSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>`; }
+  function speedSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 8v8l6-4-6-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>`;}
 
   function createHostElements(){
     let wrap = document.getElementById('player-wrap');
@@ -766,6 +900,12 @@
         </div>
         <div class="vidu-controls-left">
           <button class="vidu-btn" id="vidu_playbtn" aria-label="Play">${playSVG()}</button>
+          <div class="vidu-volume-container">
+            <button class="vidu-btn" id="vidu_volumebtn" title="Volume" aria-label="Volume">${volumeHighSVG()}</button>
+            <div class="vidu-volume-panel" id="vidu_volume_panel">
+              <input type="range" min="0" max="100" value="100" class="vidu-volume-slider" id="vidu_volume_slider" />
+            </div>
+          </div>
           <div class="vidu-time-container">
             <span id="vidu_cur" class="vidu-time">${fmtHHMMSS(0)}</span>
             <span class="vidu-time-separator">/</span>
@@ -789,16 +929,23 @@
     const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
     closeBtn.addEventListener('click', ()=> { try{ if(typeof window.closeModal === 'function') window.closeModal(); else { const root = document.getElementById('modal-root'); if(root) root.style.display='none'; if(window.destroyViduPlayer) window.destroyViduPlayer(); } }catch(e){ console.warn('closeBtn error', e); } });
     host.appendChild(closeBtn);
-    const volFeedback = document.createElement('div'); volFeedback.id = 'vidu_vol_feedback'; volFeedback.className = 'vidu-vol-feedback'; volFeedback.style.display = 'none';
-    host.appendChild(volFeedback);
+    const osdFeedback = document.createElement('div'); osdFeedback.id = 'vidu_osd_feedback'; osdFeedback.className = 'vidu-osd-feedback';
+    host.appendChild(osdFeedback);
+    const brightnessOverlay = document.createElement('div'); brightnessOverlay.id = 'vidu_brightness_overlay'; brightnessOverlay.className = 'vidu-brightness-overlay';
+    host.appendChild(brightnessOverlay);
+    const seekFeedbackLeft = document.createElement('div'); seekFeedbackLeft.id = 'vidu_seek_feedback_left'; seekFeedbackLeft.className = 'vidu-seek-feedback left'; seekFeedbackLeft.innerHTML = `${rewindSVG()}<span>10s</span>`;
+    host.appendChild(seekFeedbackLeft);
+    const seekFeedbackRight = document.createElement('div'); seekFeedbackRight.id = 'vidu_seek_feedback_right'; seekFeedbackRight.className = 'vidu-seek-feedback right'; seekFeedbackRight.innerHTML = `${ffwdSVG()}<span>10s</span>`;
+    host.appendChild(seekFeedbackRight);
+    
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
+    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, brightnessOverlay };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
 
   function createPlayer(videoId){
-    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
+    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, brightnessOverlay } = createHostElements();
     state.host = host; state.mount = mount;
     state.videoId = videoId;
     const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -807,31 +954,52 @@
     const seekEl = overlay.querySelector('#vidu_seek');
     const fullBtn = overlay.querySelector('#vidu_fullbtn');
     const playbackBtn = overlay.querySelector('#vidu_playbackbtn');
-    const volFeedbackEl = host.querySelector('#vidu_vol_feedback');
+    const osdFeedbackEl = host.querySelector('#vidu_osd_feedback');
     const seekProgressEl = overlay.querySelector('#vidu_seek_progress');
     const seekThumbEl = overlay.querySelector('#vidu_seek_thumb');
-    
-    // --- MODIFIED: References for seek preview elements ---
     const seekContainer = overlay.querySelector('.vidu-seek-container');
     const seekPreview = overlay.querySelector('#vidu_seek_preview');
     const seekPreviewTime = overlay.querySelector('#vidu_seek_preview_time');
+    const volumeBtn = overlay.querySelector('#vidu_volumebtn');
+    const volumePanel = overlay.querySelector('#vidu_volume_panel');
+    const volumeSlider = overlay.querySelector('#vidu_volume_slider');
+    const seekFeedbackLeft = host.querySelector('#vidu_seek_feedback_left');
+    const seekFeedbackRight = host.querySelector('#vidu_seek_feedback_right');
 
+    function updateBrightness(level) {
+        state.brightness = Math.max(0, Math.min(100, level));
+        // Maps brightness 100 -> 0 opacity, 0 -> 0.7 opacity
+        const opacity = (1 - (state.brightness / 100)) * 0.7;
+        brightnessOverlay.style.opacity = opacity;
+        try { localStorage.setItem('vidu_player_brightness', state.brightness); } catch(e){}
+    }
+    updateBrightness(state.brightness); // Set initial brightness
 
-    playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); });
+    playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); volumePanel.classList.remove('open'); });
     playbackMenu.addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON' && e.target.dataset.speed) {
             const speed = parseFloat(e.target.dataset.speed);
-            if (state.player && typeof state.player.setPlaybackRate === 'function') {
-                state.player.setPlaybackRate(speed);
-                playbackMenu.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                playbackMenu.classList.remove('open');
-            }
+            setPlaybackRate(speed);
+            playbackMenu.classList.remove('open');
         }
     });
+    
+    volumeBtn.addEventListener('click', (e) => { e.stopPropagation(); volumePanel.classList.toggle('open'); playbackMenu.classList.remove('open'); });
+    volumeSlider.addEventListener('input', () => {
+        const newVolume = parseFloat(volumeSlider.value);
+        setVolume(newVolume, false); // Don't show OSD for slider drag
+    });
+    volumeSlider.addEventListener('change', () => { // Show OSD on release
+        const newVolume = parseFloat(volumeSlider.value);
+        setVolume(newVolume, true);
+    });
+
     state.docClickHandler = (e) => {
       if (playbackMenu.classList.contains('open') && !playbackMenu.contains(e.target) && !playbackBtn.contains(e.target)) {
         playbackMenu.classList.remove('open');
+      }
+      if (volumePanel.classList.contains('open') && !volumePanel.contains(e.target) && !volumeBtn.contains(e.target)) {
+        volumePanel.classList.remove('open');
       }
     };
     document.addEventListener('click', state.docClickHandler);
@@ -891,7 +1059,8 @@
             overlay.classList.add('hidden'); 
             ctrlBg.classList.add('hidden'); 
             if(closeBtn) closeBtn.classList.add('hidden'); 
-            if(playbackMenu) playbackMenu.classList.remove('open'); 
+            if(playbackMenu) playbackMenu.classList.remove('open');
+            if(volumePanel) volumePanel.classList.remove('open');
             if(state.host) state.host.style.cursor = 'none';
         } else { 
             overlay.classList.remove('hidden'); 
@@ -903,53 +1072,72 @@
     function showLoading(){ try{ if(loadingDiv){ loadingDiv.classList.remove('hidden'); loadingDiv.style.display = 'flex'; } }catch(e){} }
     function hideLoading(){ try{ if(loadingDiv){ loadingDiv.classList.add('hidden'); setTimeout(()=> { try{ loadingDiv.style.display = 'none'; }catch(e){} }, 320); } }catch(e){} }
 
-    function showVolumeFeedback(volume) {
-        if (state.volumeFeedbackTimer) clearTimeout(state.volumeFeedbackTimer);
-        volFeedbackEl.textContent = `${Math.round(volume)}%`;
-        volFeedbackEl.style.display = 'block';
-        setTimeout(() => { volFeedbackEl.style.opacity = 1; }, 10);
-        state.volumeFeedbackTimer = setTimeout(() => {
-            volFeedbackEl.style.opacity = 0;
-            setTimeout(() => { volFeedbackEl.style.display = 'none'; }, 280);
-        }, 3000);
+    function showOSDFeedback({ icon, text, duration = 1500 }) {
+        if (state.osdTimer) clearTimeout(state.osdTimer);
+        osdFeedbackEl.innerHTML = `${icon}<span>${text}</span>`;
+        osdFeedbackEl.classList.add('visible');
+        state.osdTimer = setTimeout(() => {
+            osdFeedbackEl.classList.remove('visible');
+        }, duration);
+    }
+    
+    function setVolume(newVolume, showOsd = true) {
+        if (!state.player || typeof state.player.getVolume !== 'function') return;
+        newVolume = Math.max(0, Math.min(100, newVolume));
+        state.player.setVolume(newVolume);
+        state.lastVolume = newVolume;
+        try { localStorage.setItem('vidu_player_volume', newVolume); } catch(e){}
+        if (newVolume > 0 && typeof state.player.unMute === 'function') state.player.unMute();
+        if (newVolume === 0 && typeof state.player.mute === 'function') state.player.mute();
+        if (showOsd) showOSDFeedback({ icon: volumeHighSVG(), text: `${Math.round(newVolume)}%` });
+        resetInactivityTimer();
+    }
+    
+    function setPlaybackRate(speed) {
+        if (state.player && typeof state.player.setPlaybackRate === 'function') {
+            state.player.setPlaybackRate(speed);
+            playbackMenu.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            const activeButton = playbackMenu.querySelector(`button[data-speed="${speed}"]`);
+            if (activeButton) activeButton.classList.add('active');
+            const speedText = speed === 5 ? '😎' : `${speed}x`;
+            showOSDFeedback({ icon: speedSVG(), text: speedText });
+        }
     }
 
     state.keyHandler = function(e){
       const active = document.activeElement; const seekIsActive = (active && active.id === 'vidu_seek');
       if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
       const root = document.getElementById('modal-root'); if(!root || root.style.display === 'none') return;
-      if(e.code === 'Space' || e.key === ' '){ e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); resetInactivityTimer(); } return; }
-      if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){ e.preventDefault(); toggleFullscreen(); return; }
-      if(e.key === 'ArrowRight' || e.code === 'ArrowRight' || e.key === 'Right'){ e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek forward err', err); } return; }
-      if(e.key === 'ArrowLeft' || e.code === 'ArrowLeft' || e.key === 'Left'){ e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek back err', err); } return; }
-      if (e.key === 'ArrowUp' || e.code === 'ArrowUp') {
-            e.preventDefault();
-            if (state.player && typeof state.player.getVolume === 'function') {
-                const currentVolume = state.player.getVolume();
-                const newVolume = Math.min(100, currentVolume + 5);
-                state.player.setVolume(newVolume);
-                state.lastVolume = newVolume;
-                try { localStorage.setItem('vidu_player_volume', newVolume); } catch(e){}
-                if (newVolume > 0 && typeof state.player.unMute === 'function') state.player.unMute();
-                showVolumeFeedback(newVolume);
-                resetInactivityTimer();
-            }
-            return;
-        }
-        if (e.key === 'ArrowDown' || e.code === 'ArrowDown') {
-            e.preventDefault();
-            if (state.player && typeof state.player.getVolume === 'function') {
-                const currentVolume = state.player.getVolume();
-                const newVolume = Math.max(0, currentVolume - 5);
-                state.player.setVolume(newVolume);
-                state.lastVolume = newVolume;
-                try { localStorage.setItem('vidu_player_volume', newVolume); } catch(e){}
-                if (newVolume === 0 && typeof state.player.mute === 'function') state.player.mute();
-                showVolumeFeedback(newVolume);
-                resetInactivityTimer();
-            }
-            return;
-        }
+      
+      const key = e.key.toLowerCase();
+      switch (key) {
+        case ' ': e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); resetInactivityTimer(); } break;
+        case 'f': e.preventDefault(); toggleFullscreen(); break;
+        case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek forward err', err); } break;
+        case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek back err', err); } break;
+        case 'arrowup': e.preventDefault(); setVolume((state.player.getVolume() || 0) + 5); break;
+        case 'arrowdown': e.preventDefault(); setVolume((state.player.getVolume() || 0) - 5); break;
+        case 'q':
+        case 'e':
+        case 'w':
+          e.preventDefault();
+          const buttons = Array.from(playbackMenu.querySelectorAll('button[data-speed]'));
+          const speeds = buttons.map(b => parseFloat(b.dataset.speed));
+          if (key === 'w') { setPlaybackRate(1); break; }
+          
+          const currentRate = state.player.getPlaybackRate();
+          let currentIndex = speeds.findIndex(s => s === currentRate);
+          if (currentIndex === -1) currentIndex = speeds.findIndex(s => s === 1);
+
+          let nextIndex;
+          if (key === 'e') { // next
+             nextIndex = (currentIndex + 1) % speeds.length;
+          } else { // 'q', previous
+             nextIndex = (currentIndex - 1 + speeds.length) % speeds.length;
+          }
+          setPlaybackRate(speeds[nextIndex]);
+          break;
+      }
     };
     document.addEventListener('keydown', state.keyHandler);
 
@@ -1021,17 +1209,122 @@
         if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
         state.inactivityTimer = setTimeout(()=>{
             try {
-                if (state.player && typeof state.player.getPlayerState === 'function') {
-                    const isMenuOpen = document.getElementById('vidu_playback_menu')?.classList.contains('open');
-                    const isDragging = document.getElementById('vidu_seek')?._drag;
-                    if (!isMenuOpen && !isDragging) {
-                        setOverlayHidden(true);
-                    }
+                const isMenuOpen = playbackMenu.classList.contains('open') || volumePanel.classList.contains('open');
+                const isDragging = seekEl._drag;
+                if (!isMenuOpen && !isDragging) {
+                    setOverlayHidden(true);
                 }
             } catch(e) { console.warn('Inactivity timer error', e); }
         }, 3000);
     }
-    function attachActivityListeners(){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); }); }catch(e){} }
+    
+    // --- Touch and Mouse Wheel Listeners ---
+    function attachActivityListeners(){ 
+        ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); });
+        host.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -5 : 5; // Negative deltaY is scroll up
+            setVolume(state.player.getVolume() + delta);
+        }, { passive: false });
+        
+        host.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) return; // Ignore multi-touch gestures
+            const now = Date.now();
+            const touch = e.touches[0];
+            const rect = host.getBoundingClientRect();
+            const tapX = touch.clientX - rect.left;
+            
+            // Double tap logic
+            if (now - state.touch_lastTapTime < 300) {
+                if (Math.abs(tapX - state.touch_lastTapX) < 50) { // Tapped in same area
+                    if (!state.player) return;
+                    const isRightSide = tapX > rect.width / 2;
+                    const currentTime = state.player.getCurrentTime();
+                    const duration = state.player.getDuration();
+                    if (isRightSide) {
+                        state.player.seekTo(Math.min(duration, currentTime + 10), true);
+                        seekFeedbackRight.classList.remove('show');
+                        void seekFeedbackRight.offsetWidth; // Trigger reflow
+                        seekFeedbackRight.classList.add('show');
+                    } else {
+                        state.player.seekTo(Math.max(0, currentTime - 10), true);
+                        seekFeedbackLeft.classList.remove('show');
+                        void seekFeedbackLeft.offsetWidth; // Trigger reflow
+                        seekFeedbackLeft.classList.add('show');
+                    }
+                }
+            }
+            
+            state.touch_lastTapTime = now;
+            state.touch_lastTapX = tapX;
+            state.touch_startX = touch.clientX;
+            state.touch_startY = touch.clientY;
+            state.touch_isSwiping = false;
+            state.touch_swipeMode = null;
+            state.touch_seekStartTime = state.player ? state.player.getCurrentTime() : 0;
+            resetInactivityTimer();
+        }, { passive: true });
+        
+        host.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) return;
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - state.touch_startX;
+            const deltaY = touch.clientY - state.touch_startY;
+
+            if (!state.touch_isSwiping) {
+                if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+                    state.touch_isSwiping = true;
+                    if (Math.abs(deltaY) > Math.abs(deltaX)) { // Vertical swipe
+                        state.touch_swipeMode = (touch.clientX > window.innerWidth / 2) ? 'volume' : 'brightness';
+                    } else { // Horizontal swipe
+                        state.touch_swipeMode = 'seek';
+                    }
+                }
+            }
+
+            if (state.touch_isSwiping) {
+                e.preventDefault();
+                setOverlayHidden(true); // Hide controls while swiping
+                const rect = host.getBoundingClientRect();
+
+                if (state.touch_swipeMode === 'volume') {
+                    const volumeChange = (-deltaY / rect.height) * 100;
+                    const currentVolume = state.player.getVolume();
+                    setVolume(currentVolume + volumeChange, true);
+                    state.touch_startY = touch.clientY; // Reset startY to make swipe continuous
+                } else if (state.touch_swipeMode === 'brightness') {
+                    const brightnessChange = (-deltaY / rect.height) * 100;
+                    const newBrightness = state.brightness + brightnessChange;
+                    updateBrightness(newBrightness);
+                    showOSDFeedback({ icon: brightnessSVG(), text: `${Math.round(state.brightness)}%`, duration: 500 });
+                    state.touch_startY = touch.clientY;
+                } else if (state.touch_swipeMode === 'seek') {
+                    const duration = state.player.getDuration();
+                    const seekChange = (deltaX / rect.width) * (duration / 2); // Swipe across screen seeks half the video
+                    const targetTime = Math.max(0, Math.min(duration, state.touch_seekStartTime + seekChange));
+                    const seekText = fmtHHMMSS(targetTime) + " / " + fmtHHMMSS(duration);
+                    showOSDFeedback({ icon: (seekChange > 0 ? ffwdSVG() : rewindSVG()), text: seekText, duration: 500 });
+                }
+            }
+        }, { passive: false });
+
+        host.addEventListener('touchend', (e) => {
+            if (state.touch_isSwiping && state.touch_swipeMode === 'seek') {
+                const rect = host.getBoundingClientRect();
+                const deltaX = e.changedTouches[0].clientX - state.touch_startX;
+                const duration = state.player.getDuration();
+                const seekChange = (deltaX / rect.width) * (duration / 2);
+                const targetTime = Math.max(0, Math.min(duration, state.touch_seekStartTime + seekChange));
+                state.player.seekTo(targetTime, true);
+            }
+            if (state.osdTimer) clearTimeout(state.osdTimer);
+            state.osdTimer = setTimeout(() => { osdFeedbackEl.classList.remove('visible'); }, 500);
+            
+            state.touch_isSwiping = false;
+            state.touch_swipeMode = null;
+            resetInactivityTimer();
+        }, { passive: true });
+    }
     attachActivityListeners();
 
     function updatePlayerUI() {
@@ -1040,6 +1333,18 @@
             const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
             const dur = state.player.getDuration ? state.player.getDuration() : 0;
             const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+            const vol = state.player.getVolume ? Math.round(state.player.getVolume()) : state.lastVolume;
+
+            if (vol !== state.lastVolumeLevel) {
+                let icon;
+                if (vol === 0 || state.player.isMuted()) icon = volumeMuteSVG();
+                else if (vol <= 33) icon = volumeLowSVG();
+                else if (vol <= 66) icon = volumeMidSVG();
+                else icon = volumeHighSVG();
+                volumeBtn.innerHTML = icon;
+                volumeSlider.value = vol;
+                state.lastVolumeLevel = vol;
+            }
 
             const flooredCur = Math.floor(cur);
             if (flooredCur !== state.lastTime) {
@@ -1094,7 +1399,8 @@
           events: {
             onReady: function(evt){
               disableIframeClicks(host); showLoading();
-              try{ if(typeof evt.target.setVolume === 'function'){ const v = Math.max(0, Math.min(100, state.lastVolume || 100)); evt.target.setVolume(v); if(v === 0 && typeof evt.target.mute === 'function') evt.target.mute(); else if(v > 0 && typeof evt.target.unMute === 'function') evt.target.unMute(); } }catch(e){}
+              setVolume(state.lastVolume, false); // Set initial volume without OSD
+              
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
               
               const savedTime = window.getVideoProgress(state.videoId);
@@ -1140,8 +1446,16 @@
       if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
       if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); document.removeEventListener('mozfullscreenchange', state.fsListener); document.removeEventListener('MSFullscreenChange', state.fsListener); state.fsListener = null; }
       if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
-      if(state.volumeFeedbackTimer){ clearTimeout(state.volumeFeedbackTimer); state.volumeFeedbackTimer = null; }
-      if(state.host){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){} }
+      if(state.osdTimer){ clearTimeout(state.osdTimer); state.osdTimer = null; }
+      if(state.host){ 
+          try{ 
+              // Removing all listeners attached in attachActivityListeners
+              state.host.removeEventListener('wheel', null);
+              state.host.removeEventListener('touchstart', null);
+              state.host.removeEventListener('touchmove', null);
+              state.host.removeEventListener('touchend', null);
+          } catch(e){} 
+      }
       if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
       
       state.videoId = null;
