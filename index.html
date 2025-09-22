@@ -390,15 +390,15 @@
     }
     .vidu-neon-border .neon-rect {
       /* --- You can customize the neon border here! --- */
-      stroke-width: 15;          /* Controls the thickness of the neon line. Increase for a thicker line. */
+      stroke-width: 200;          /* Controls the thickness of the neon line. Increase for a thicker line. */
       stroke-linejoin: round;   /* Makes the corners of the line bend smoothly, preventing sharp points. */
       stroke-linecap: round;    /* Makes the start and end of the moving line rounded. */
-      stroke-dasharray: 400 50; /* Length of the visible dash and the gap. */
+      stroke-dasharray: 300 100; /* Length of the visible dash and the gap. */
       animation: vidu-ants-march 4s linear infinite; /* Controls the animation speed. Decrease the time (e.g., from 3s to 2s) to make it faster. */
     }
     @keyframes vidu-ants-march {
       to {
-        stroke-dashoffset: -350; /* Animate by total dasharray length (150+450) */
+        stroke-dashoffset: -250; /* Animate by total dasharray length (150+450) */
       }
     }
     .vidu-player-wrapper.is-paused .neon-rect {
@@ -1494,6 +1494,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 
 
 
