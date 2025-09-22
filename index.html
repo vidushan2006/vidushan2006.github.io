@@ -171,6 +171,8 @@
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
       z-index: 1; 
+      border-radius: 14px; /* Added for rounded corners on the video itself */
+      overflow: hidden; /* Added to clip the iframe content */
     }
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
@@ -217,6 +219,7 @@
       background: rgba(20, 22, 28, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
+      border-radius: 16px; /* Added for more rounded edges */
     }
     .vidu-overlay.hidden {
       opacity:0;
@@ -242,7 +245,7 @@
 
 
     .vidu-btn {
-      background: transparent; color:#fff; padding:0; border-radius:8px; cursor:pointer; user-select:none; border:none;
+      background: transparent; color:#fff; padding:0; border-radius:10px; cursor:pointer; user-select:none; border:none; /* Increased border-radius from 8px to 10px */
       display:flex; align-items:center; justify-content:center; width:40px; height:40px;
       transition: background .18s var(--ease), transform .12s ease;
       position: relative;
@@ -268,12 +271,12 @@
     }
     .seek-track {
       position: relative; width: 100%; height: 6px;
-      background: rgba(255, 255, 255, 0.15); border-radius: 6px;
+      background: rgba(255, 255, 255, 0.15); border-radius: 8px; /* Increased border-radius */
       pointer-events: none; overflow: hidden;
     }
     .seek-progress {
       position: absolute; left: 0; top: 0; height: 100%;
-      background: var(--accent-2); border-radius: 6px;
+      background: var(--accent-2); border-radius: 8px; /* Increased border-radius */
       will-change: width;
     }
     .vidu-range::-webkit-slider-thumb {
@@ -366,7 +369,7 @@
         background: transparent; border: none; color: var(--text);
         padding: 8px 12px;
         cursor: pointer; font-weight: 700; font-size: 14px;
-        width: 100%; text-align: center; border-radius: 8px;
+        width: 100%; text-align: center; border-radius: 10px; /* Increased border-radius */
         transition: background .18s ease, color .18s ease;
     }
     .vidu-playback-menu button:hover {
@@ -386,9 +389,10 @@
       pointer-events: none;
     }
     .vidu-neon-border .neon-rect {
-      stroke-width: 4; /* SVG stroke is centered, so 4px width = 2px visible border */
+      stroke-width: 6; /* SVG stroke is centered, increased from 4 for a thicker line */
+      stroke-linecap: round; /* Added for rounded head/tail */
       stroke-dasharray: 150 450; /* Length of the visible dash and the gap */
-      animation: vidu-ants-march 6s linear infinite;
+      animation: vidu-ants-march 3s linear infinite; /* Increased speed (decreased duration from 6s) */
     }
     @keyframes vidu-ants-march {
       to {
