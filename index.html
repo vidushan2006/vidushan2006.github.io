@@ -159,20 +159,14 @@
 
 
     /* --- FUTURISTIC PLAYER CSS (PERFORMANCE OPTIMIZED) --- */
-    .vidu-player-wrapper {
-        position: relative;
-    }
-
     .vidu-player-host {
       position: relative;
       width: 100%;
-      height: 100%;
+      overflow: hidden;
+      border-radius: 12px;
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
-      z-index: 1; 
-      border-radius: 14px; /* Added for rounded corners on the video itself */
-      overflow: hidden; /* Added to clip the iframe content */
     }
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
@@ -183,6 +177,7 @@
 
     .vidu-loading {
       position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center;
+      /* PERFORMANCE: Replaced expensive backdrop-filter with a simple, fast semi-transparent background. */
       background: rgba(10, 12, 18, 0.85);
       transition: opacity .3s ease;
       will-change: opacity;
@@ -213,13 +208,14 @@
     .vidu-overlay {
       position:absolute; left:12px; right:12px; bottom:12px; z-index:9999;
       padding: 10px 16px;
+      border-radius: 12px;
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
+      /* PERFORMANCE: Using a solid, semi-transparent background is much faster than backdrop-filter */
       background: rgba(20, 22, 28, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
-      border-radius: 16px; /* Added for more rounded edges */
     }
     .vidu-overlay.hidden {
       opacity:0;
@@ -245,7 +241,7 @@
 
 
     .vidu-btn {
-      background: transparent; color:#fff; padding:0; border-radius:10px; cursor:pointer; user-select:none; border:none; /* Increased border-radius from 8px to 10px */
+      background: transparent; color:#fff; padding:0; border-radius:8px; cursor:pointer; user-select:none; border:none;
       display:flex; align-items:center; justify-content:center; width:40px; height:40px;
       transition: background .18s var(--ease), transform .12s ease;
       position: relative;
@@ -271,12 +267,12 @@
     }
     .seek-track {
       position: relative; width: 100%; height: 6px;
-      background: rgba(255, 255, 255, 0.15); border-radius: 8px; /* Increased border-radius */
+      background: rgba(255, 255, 255, 0.15); border-radius: 6px;
       pointer-events: none; overflow: hidden;
     }
     .seek-progress {
       position: absolute; left: 0; top: 0; height: 100%;
-      background: var(--accent-2); border-radius: 8px; /* Increased border-radius */
+      background: var(--accent-2); border-radius: 6px;
       will-change: width;
     }
     .vidu-range::-webkit-slider-thumb {
@@ -308,6 +304,7 @@
     .vidu-close-btn {
       position:absolute; top:12px; right:12px; z-index:10002;
       width:38px; height:38px; padding:6px; border-radius:50%;
+      /* PERFORMANCE: Replaced backdrop-filter with a more opaque solid color */
       background:rgba(20, 22, 28, 0.85);
       border:1px solid rgba(255,255,255,0.08); color:#fff;
       display:flex; align-items:center; justify-content:center;
@@ -336,6 +333,7 @@
     .vidu-vol-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
       padding:12px 18px; border-radius:12px; 
+      /* PERFORMANCE: Replaced backdrop-filter */
       background:rgba(20, 22, 28, 0.9);
       border:1px solid rgba(255,255,255,0.08);
       font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5);
@@ -348,6 +346,7 @@
       right: 12px;
       z-index: 10001;
       width: 90px;
+      /* PERFORMANCE: Replaced backdrop-filter with a solid, opaque color for better performance */
       background: rgba(30, 32, 38, 0.96);
       border-radius: 12px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.5);
@@ -369,7 +368,7 @@
         background: transparent; border: none; color: var(--text);
         padding: 8px 12px;
         cursor: pointer; font-weight: 700; font-size: 14px;
-        width: 100%; text-align: center; border-radius: 10px; /* Increased border-radius */
+        width: 100%; text-align: center; border-radius: 8px;
         transition: background .18s ease, color .18s ease;
     }
     .vidu-playback-menu button:hover {
@@ -379,51 +378,6 @@
         color: #fff;
         font-weight: 700;
         background: #4a7453;
-    }
-
-    /* --- NEON BORDER FOR VIDU PLAYER (SVG METHOD) --- */
-    .vidu-neon-border {
-      position: absolute;
-      inset: -2px; /* Controls border thickness (2px) */
-      z-index: 0;
-      pointer-events: none;
-    }
-    .vidu-neon-border .neon-rect {
-      /* --- You can customize the neon border here! --- */
-      stroke-width: 20;          /* Controls the thickness of the neon line. Increase for a thicker line. */
-      stroke-linejoin: round;   /* Makes the corners of the line bend smoothly, preventing sharp points. */
-      stroke-linecap: round;    /* Makes the start and end of the moving line rounded. */
-      stroke-dasharray: 150 450; /* Length of the visible dash and the gap. */
-      animation: vidu-ants-march 4s linear infinite; /* Controls the animation speed. Decrease the time (e.g., from 3s to 2s) to make it faster. */
-    }
-    @keyframes vidu-ants-march {
-      to {
-        stroke-dashoffset: -600; /* Animate by total dasharray length (150+450) */
-      }
-    }
-    .vidu-player-wrapper.is-paused .neon-rect {
-      animation-duration: 20s;
-    }
-    .vidu-player-wrapper.is-fullscreen .vidu-neon-border {
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    /* --- PLAYER MODAL UI ADJUSTMENT --- */
-    .modal.player-active {
-      background: transparent;
-      border: none;
-      box-shadow: none;
-      padding: 0;
-    }
-
-    .modal.player-active .controls {
-      padding-bottom: 10px; /* Space between title and player */
-      margin-bottom: 0;
-    }
-
-    .modal.player-active #player-block {
-      margin-top: 0;
     }
 
 
@@ -448,6 +402,7 @@
     .loading-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); border-radius: 8px; }
     
     #restoring-position-overlay.loading-popup-overlay {
+        /* PERFORMANCE: Replaced expensive backdrop-filter with a simple rgba background */
         background: rgba(4, 6, 12, 0.85);
     }
 
@@ -478,48 +433,11 @@
     .fs-playlist-loader .spinner { width: 50px; height: 50px; border: 4px solid var(--glass-strong); border-top-color: var(--accent-2); border-radius: 50%; animation: spin 1s linear infinite; }
     .fs-playlist-loader p { margin-top: 16px; font-weight: 600; color: var(--muted); }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* --- NEON BORDER FOR HEADER --- */
-    .header-neon-border {
-      position: absolute;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .header-neon-rect {
-      stroke-width: 3;
-      stroke-linejoin: round;
-      stroke-linecap: round;
-      stroke-dasharray: 250 500;
-      animation: header-ants-march 5s linear infinite;
-    }
-    @keyframes header-ants-march {
-      to {
-        stroke-dashoffset: -750; /* Animate by total dasharray length (250+500) */
-      }
-    }
   </style>
 </head>
 <body class="landing is-preload">
  <div id="wrapper">
   <header id="header">
-    <div class="header-neon-border" aria-hidden="true">
-        <svg viewBox="0 0 750 68" preserveAspectRatio="none" style="width:100%; height:100%;">
-            <defs>
-                <linearGradient id="header-neon-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="var(--accent-1)" stop-opacity="0.1" />
-                    <stop offset="10%" stop-color="var(--accent-1)" />
-                    <stop offset="45%" stop-color="var(--accent-2)" />
-                    <stop offset="55%" stop-color="var(--accent-2)" />
-                    <stop offset="90%" stop-color="var(--accent-1)" />
-                    <stop offset="100%" stop-color="var(--accent-1)" stop-opacity="0.1" />
-                </linearGradient>
-            </defs>
-            <rect class="header-neon-rect" x="1.5" y="1.5" width="747" height="65" rx="12" ry="12" fill="transparent" stroke="url(#header-neon-gradient)" />
-        </svg>
-    </div>
     <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
       <div class="logo-circle" aria-hidden="true">
         <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
@@ -671,7 +589,6 @@
     keyHandler: null,
     mo: null,
     host: null,
-    wrapper: null, /* ADDED: For neon border */
     mount: null,
     fsResizeHandler: null,
     fsListener: null,
@@ -735,53 +652,25 @@
     if(!wrap){
       const root = document.getElementById('modal-root') || document.body;
       const modalEl = (root && root.querySelector && root.querySelector('.modal')) ? root.querySelector('.modal') : root;
-      if (modalEl && modalEl.classList.contains('modal')) {
-        modalEl.classList.add('player-active');
-      }
       wrap = document.createElement('div');
       wrap.id = 'player-wrap';
       wrap.style.minWidth = '320px';
       try{ if(modalEl) modalEl.appendChild(wrap); else document.body.appendChild(wrap); }
       catch(e){ try{ document.body.appendChild(wrap); }catch(_){} }
     }
-    const prev = wrap.querySelector('.vidu-player-wrapper');
+    const prev = wrap.querySelector('.vidu-player-host');
     if(prev) prev.remove();
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'vidu-player-wrapper is-paused';
-
-    const borderDiv = document.createElement('div');
-    borderDiv.className = 'vidu-neon-border';
-    borderDiv.setAttribute('aria-hidden', 'true');
-    borderDiv.innerHTML = `
-        <svg viewBox="0 0 200 100" preserveAspectRatio="none" style="width:100%; height:100%;">
-            <defs>
-                <linearGradient id="vidu-neon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="var(--accent-2)" />
-                    <stop offset="33%" stop-color="var(--accent-1)" />
-                    <stop offset="66%" stop-color="var(--accent-3)" />
-                    <stop offset="100%" stop-color="var(--accent-2)" />
-                </linearGradient>
-            </defs>
-            <rect class="neon-rect" x="4" y="4" width="192" height="92" rx="14" ry="14" fill="transparent" stroke="url(#vidu-neon-gradient)" />
-        </svg>
-    `;
-
-    const host = document.createElement('div'); 
-    host.className = 'vidu-player-host';
-    
+    const host = document.createElement('div'); host.className = 'vidu-player-host';
     const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
     mount.style.height = '520px'; mount.style.background = '#000';
     host.appendChild(mount);
-
     const loadingDiv = document.createElement('div'); loadingDiv.className = 'vidu-loading'; loadingDiv.id = 'vidu_loading';
     loadingDiv.innerHTML = `<div class="vidu-loading-spinner"></div>`;
     host.appendChild(loadingDiv);
-
     const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
     host.appendChild(ctrlBg);
-
     const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
+    
     overlay.innerHTML = `
       <div class="vidu-controls-grid">
         <div class="vidu-seek-container">
@@ -818,18 +707,15 @@
     host.appendChild(closeBtn);
     const volFeedback = document.createElement('div'); volFeedback.id = 'vidu_vol_feedback'; volFeedback.className = 'vidu-vol-feedback'; volFeedback.style.display = 'none';
     host.appendChild(volFeedback);
-
-    wrapper.appendChild(borderDiv);
-    wrapper.appendChild(host);
-    wrap.appendChild(wrapper);
-    return { host, wrapper, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
+    wrap.appendChild(host);
+    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
 
   function createPlayer(videoId){
-    const { host, wrapper, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
-    state.host = host; state.wrapper = wrapper; state.mount = mount;
+    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
+    state.host = host; state.mount = mount;
     state.videoId = videoId;
     const playBtn = overlay.querySelector('#vidu_playbtn');
     const curEl = overlay.querySelector('#vidu_cur');
@@ -893,17 +779,8 @@
 
     state.fsListener = function() {
       const fullBtn = document.getElementById('vidu_fullbtn');
-      const isFullscreen = !!getFullscreenElement();
-      
-      if (state.wrapper) {
-          if (isFullscreen) {
-              state.wrapper.classList.add('is-fullscreen');
-          } else {
-              state.wrapper.classList.remove('is-fullscreen');
-          }
-      }
-
       if (!fullBtn) return;
+      const isFullscreen = !!getFullscreenElement();
       if (isFullscreen) {
         fullBtn.innerHTML = exitFullscreenSVG();
         fullBtn.title = 'Exit Fullscreen';
@@ -1026,14 +903,6 @@
             }
             const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
             
-            if (state.wrapper) {
-                if (st === 1) { // playing
-                    state.wrapper.classList.remove('is-paused');
-                } else { // paused, buffering, ended, etc.
-                    state.wrapper.classList.add('is-paused');
-                }
-            }
-
             if (state.desiredPlaying !== null) {
               if(state.desiredPlaying && st !== 1){
                 try{ state.player.playVideo(); }catch(e){}
@@ -1095,9 +964,6 @@
 
   function destroyPlayer(){
     try{
-      const modal = document.querySelector('.modal.player-active');
-      if (modal) modal.classList.remove('player-active');
-
       if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
         const cur = state.player.getCurrentTime();
         const dur = state.player.getDuration ? state.player.getDuration() : 0;
@@ -1118,9 +984,7 @@
       if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
       if(state.volumeFeedbackTimer){ clearTimeout(state.volumeFeedbackTimer); state.volumeFeedbackTimer = null; }
       if(state.host){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){} }
-      if(state.wrapper){ try{ state.wrapper.remove(); }catch(e){} state.wrapper = null; }
-      state.host = null; 
-      state.mount = null;
+      if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
       
       state.videoId = null;
       state.lastSaveTime = 0;
@@ -1494,9 +1358,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
-
-
-
-
-
-
