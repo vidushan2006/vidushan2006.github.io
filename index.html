@@ -140,7 +140,7 @@
     .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);box-shadow:none;}
 
     .password-row{display:flex;gap:8px;margin-top:8px;}
-    .password-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,0.02);color:var(--text);outline:none;transition:box-shadow .15s;}
+    .password-row input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,0,0.02);color:var(--text);outline:none;transition:box-shadow .15s;}
     .password-row input:focus{box-shadow:0 0 0 2px var(--accent-1);}
     .muted{color:var(--muted);font-size:13px;}
 
@@ -167,6 +167,9 @@
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
+    }
+    .vidu-player-host.cursor-hidden {
+      cursor: none;
     }
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
@@ -301,23 +304,29 @@
     }
     .vidu-time-separator { color: var(--muted); margin: 0 6px; font-size: 13px; }
 
-    .vidu-close-btn {
-      position:absolute; top:12px; right:12px; z-index:10002;
+    .vidu-pip-btn, .vidu-close-btn {
+      position:absolute; top:12px; z-index:10002;
       width:38px; height:38px; padding:6px; border-radius:50%;
       /* PERFORMANCE: Replaced backdrop-filter with a more opaque solid color */
       background:rgba(20, 22, 28, 0.85);
       border:1px solid rgba(255,255,255,0.08); color:#fff;
       display:flex; align-items:center; justify-content:center;
-      font-size: 18px; font-weight:700; cursor:pointer;
+      cursor:pointer;
       box-shadow:0 8px 20px rgba(0,0,0,0.5);
       transition: opacity .3s ease, transform .3s ease, background .3s ease;
       will-change: opacity, transform;
     }
-    .vidu-close-btn:hover {
-      transform: scale(1.1) rotate(90deg);
+    .vidu-close-btn { right:12px; font-size: 18px; font-weight:700; }
+    .vidu-pip-btn { left:12px; }
+    .vidu-pip-btn svg { width: 22px; height: 22px; }
+
+    .vidu-pip-btn:hover, .vidu-close-btn:hover {
+      transform: scale(1.1);
       background: rgba(30, 32, 40, 0.9);
     }
-    .vidu-close-btn.hidden {
+    .vidu-close-btn:hover { transform: scale(1.1) rotate(90deg); }
+
+    .vidu-pip-btn.hidden, .vidu-close-btn.hidden {
       opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
     }
 
@@ -601,6 +610,8 @@
     _menuOpenTs: 0,
     lastSaveTime: 0,
     videoId: null,
+    wasPlayingBeforeHidden: false,
+    visibilityChangeHandler: null,
   };
 
   function loadYTApi(){
@@ -702,19 +713,25 @@
     playbackMenu.innerHTML = `<button data-speed="5">😎</button><button data-speed="2">2x</button><button data-speed="1.75">1.75x</button><button data-speed="1.5">1.5x</button><button data-speed="1.25">1.25x</button><button data-speed="1" class="active">1x</button>`;
     host.appendChild(playbackMenu);
 
+    const pipBtn = document.createElement('button');
+    pipBtn.className = 'vidu-pip-btn'; pipBtn.id = 'vidu_pipbtn';
+    pipBtn.title = 'Picture-in-Picture (Hint: Right-click video twice)'; pipBtn.type = 'button'; pipBtn.setAttribute('aria-label', 'Picture-in-Picture');
+    pipBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg>`;
+    host.appendChild(pipBtn);
+
     const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
     closeBtn.addEventListener('click', ()=> { try{ if(typeof window.closeModal === 'function') window.closeModal(); else { const root = document.getElementById('modal-root'); if(root) root.style.display='none'; if(window.destroyViduPlayer) window.destroyViduPlayer(); } }catch(e){ console.warn('closeBtn error', e); } });
     host.appendChild(closeBtn);
     const volFeedback = document.createElement('div'); volFeedback.id = 'vidu_vol_feedback'; volFeedback.className = 'vidu-vol-feedback'; volFeedback.style.display = 'none';
     host.appendChild(volFeedback);
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
+    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, pipBtn };
   }
 
-  function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
+  function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
 
   function createPlayer(videoId){
-    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
+    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, pipBtn } = createHostElements();
     state.host = host; state.mount = mount;
     state.videoId = videoId;
     const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -726,6 +743,22 @@
     const volFeedbackEl = host.querySelector('#vidu_vol_feedback');
     const seekProgressEl = overlay.querySelector('#vidu_seek_progress');
     const seekThumbEl = overlay.querySelector('#vidu_seek_thumb');
+
+    state.visibilityChangeHandler = function() {
+        if (document.pictureInPictureElement) { return; }
+        if (document.hidden) {
+            if (state.player && typeof state.player.getPlayerState === 'function' && state.player.getPlayerState() === 1) {
+                state.wasPlayingBeforeHidden = true;
+                state.player.pauseVideo();
+            }
+        } else {
+            if (state.wasPlayingBeforeHidden) {
+                state.player.playVideo();
+                state.wasPlayingBeforeHidden = false;
+            }
+        }
+    };
+    document.addEventListener('visibilitychange', state.visibilityChangeHandler);
 
     playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); });
     playbackMenu.addEventListener('click', (e) => {
@@ -796,7 +829,7 @@
     document.addEventListener('mozfullscreenchange', state.fsListener);
     document.addEventListener('MSFullscreenChange', state.fsListener);
 
-    function setOverlayHidden(hidden){ if(hidden){ overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); if(closeBtn) closeBtn.classList.add('hidden'); if(playbackMenu) playbackMenu.classList.remove('open'); } else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); } }
+    function setOverlayHidden(hidden){ if(hidden){ overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); if(closeBtn) closeBtn.classList.add('hidden'); if(pipBtn) pipBtn.classList.add('hidden'); if(playbackMenu) playbackMenu.classList.remove('open'); if(state.host) state.host.classList.add('cursor-hidden'); } else { overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); if(closeBtn) closeBtn.classList.remove('hidden'); if(pipBtn) pipBtn.classList.remove('hidden'); if(state.host) state.host.classList.remove('cursor-hidden'); } }
     function showLoading(){ try{ if(loadingDiv){ loadingDiv.classList.remove('hidden'); loadingDiv.style.display = 'flex'; } }catch(e){} }
     function hideLoading(){ try{ if(loadingDiv){ loadingDiv.classList.add('hidden'); setTimeout(()=> { try{ loadingDiv.style.display = 'none'; }catch(e){} }, 320); } }catch(e){} }
 
@@ -976,6 +1009,7 @@
 
       if(state.animationFrameId){ cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
       if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
+      if(state.visibilityChangeHandler) { document.removeEventListener('visibilitychange', state.visibilityChangeHandler); state.visibilityChangeHandler = null; }
       if(state.docClickHandler){ document.removeEventListener('click', state.docClickHandler); state.docClickHandler = null; }
       if(state.player){ try{ state.player.destroy(); }catch(e){} state.player = null; }
       if(state.mo){ try{ state.mo.disconnect(); }catch(e){} state.mo = null; }
@@ -988,6 +1022,7 @@
       
       state.videoId = null;
       state.lastSaveTime = 0;
+      state.wasPlayingBeforeHidden = false;
     }catch(e){ console.warn('destroyPlayer err', e); }
   }
 
@@ -1094,7 +1129,7 @@ let currentPlaylistCache = {};
 
 function createModal(){
   const root = document.getElementById('modal-root');
-  root.innerHTML = `<div class="modal-backdrop" id="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><div class="controls"><div><strong id="modal-title">Locked</strong><div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div></div><div><button id="modal-close" class="btn secondary">Close</button></div></div><div id="modal-body"><div id="password-block"><div style="color:#bbb;margin-bottom:8px;">This item is password-protected.</div><div class="password-row"><input id="password-input" type="password" placeholder="Enter password" /><button id="password-submit" class="btn">Unlock</button></div><div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div></div><div id="player-block" style="display:none;margin-top:12px;"><div id="player-wrap"></div></div></div></div></div>`;
+  root.innerHTML = `<div class="modal-backdrop" id="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><div class="controls"><div><strong id="modal-title">Locked</strong><div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div></div><div><button id="modal-close" class="btn secondary">Close</button></div></div><div id="modal-body"><div id="password-block"><div style="color:#bbb;margin-bottom:8px;">This item is password-protected.</div><div class="password-row"><input id="password-input" type="password" placeholder="Enter password" /><button id="password-submit" class="btn">Unlock</button></div><div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div></div><div id="player-block" style="display:none;margin-top:12px;"><div id="player-wrap"></div></div></div></div>`;
   document.getElementById('modal-close').onclick = closeModal;
   document.getElementById('password-submit').onclick = onPasswordSubmit;
   document.getElementById('password-input').onkeydown = (e)=>{ if(e.key === 'Enter') onPasswordSubmit(); };
