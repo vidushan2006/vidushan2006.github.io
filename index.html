@@ -159,15 +159,19 @@
 
 
     /* --- FUTURISTIC PLAYER CSS (PERFORMANCE OPTIMIZED) --- */
+    .vidu-player-wrapper {
+        position: relative;
+    }
+
     .vidu-player-host {
       position: relative;
       width: 100%;
-      overflow: hidden;
+      overflow: hidden; /* This is crucial for rounding the iframe corners */
       border-radius: 12px;
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
-      z-index: 1; /* Ensure host is on top of its pseudo-element */
+      z-index: 1; 
     }
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
@@ -178,7 +182,6 @@
 
     .vidu-loading {
       position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center;
-      /* PERFORMANCE: Replaced expensive backdrop-filter with a simple, fast semi-transparent background. */
       background: rgba(10, 12, 18, 0.85);
       transition: opacity .3s ease;
       will-change: opacity;
@@ -213,7 +216,6 @@
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
-      /* PERFORMANCE: Using a solid, semi-transparent background is much faster than backdrop-filter */
       background: rgba(20, 22, 28, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
@@ -305,7 +307,6 @@
     .vidu-close-btn {
       position:absolute; top:12px; right:12px; z-index:10002;
       width:38px; height:38px; padding:6px; border-radius:50%;
-      /* PERFORMANCE: Replaced backdrop-filter with a more opaque solid color */
       background:rgba(20, 22, 28, 0.85);
       border:1px solid rgba(255,255,255,0.08); color:#fff;
       display:flex; align-items:center; justify-content:center;
@@ -334,7 +335,6 @@
     .vidu-vol-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
       padding:12px 18px; border-radius:12px; 
-      /* PERFORMANCE: Replaced backdrop-filter */
       background:rgba(20, 22, 28, 0.9);
       border:1px solid rgba(255,255,255,0.08);
       font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5);
@@ -347,7 +347,6 @@
       right: 12px;
       z-index: 10001;
       width: 90px;
-      /* PERFORMANCE: Replaced backdrop-filter with a solid, opaque color for better performance */
       background: rgba(30, 32, 38, 0.96);
       border-radius: 12px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.5);
@@ -382,11 +381,11 @@
     }
 
     /* --- NEON BORDER FOR VIDU PLAYER --- */
-    .vidu-player-host::before {
+    .vidu-player-wrapper::before {
       content: '';
       position: absolute;
       inset: -3px; /* Border thickness */
-      z-index: -1;
+      z-index: 0;
       background: conic-gradient(
         from 180deg at 50% 50%,
         rgba(57, 255, 20, 1),      /* --accent-2 (green) */
@@ -406,12 +405,12 @@
       to { transform: rotate(360deg); }
     }
 
-    .vidu-player-host.is-paused::before {
+    .vidu-player-wrapper.is-paused::before {
       animation-duration: 20s; /* Much slower when paused */
     }
 
-    .vidu-player-host.is-fullscreen::before {
-      opacity: 0; /* Use opacity for smoother transition */
+    .vidu-player-wrapper.is-fullscreen::before {
+      opacity: 0; /* Hide when host is fullscreen */
     }
     
     /* --- PLAYER MODAL UI ADJUSTMENT --- */
@@ -453,7 +452,6 @@
     .loading-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); border-radius: 8px; }
     
     #restoring-position-overlay.loading-popup-overlay {
-        /* PERFORMANCE: Replaced expensive backdrop-filter with a simple rgba background */
         background: rgba(4, 6, 12, 0.85);
     }
 
@@ -491,7 +489,7 @@
   <header id="header">
     <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
       <div class="logo-circle" aria-hidden="true">
-        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b_556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
       </div>
     </a>
     <div class="header-right-controls">
@@ -640,6 +638,7 @@
     keyHandler: null,
     mo: null,
     host: null,
+    wrapper: null, /* ADDED: For neon border */
     mount: null,
     fsResizeHandler: null,
     fsListener: null,
@@ -712,19 +711,28 @@
       try{ if(modalEl) modalEl.appendChild(wrap); else document.body.appendChild(wrap); }
       catch(e){ try{ document.body.appendChild(wrap); }catch(_){} }
     }
-    const prev = wrap.querySelector('.vidu-player-host');
+    const prev = wrap.querySelector('.vidu-player-wrapper');
     if(prev) prev.remove();
-    const host = document.createElement('div'); host.className = 'vidu-player-host is-paused';
+
+    // Create wrapper for border animation
+    const wrapper = document.createElement('div');
+    wrapper.className = 'vidu-player-wrapper is-paused';
+
+    const host = document.createElement('div'); 
+    host.className = 'vidu-player-host';
+    
     const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
     mount.style.height = '520px'; mount.style.background = '#000';
     host.appendChild(mount);
+
     const loadingDiv = document.createElement('div'); loadingDiv.className = 'vidu-loading'; loadingDiv.id = 'vidu_loading';
     loadingDiv.innerHTML = `<div class="vidu-loading-spinner"></div>`;
     host.appendChild(loadingDiv);
+
     const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
     host.appendChild(ctrlBg);
+
     const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
-    
     overlay.innerHTML = `
       <div class="vidu-controls-grid">
         <div class="vidu-seek-container">
@@ -761,15 +769,17 @@
     host.appendChild(closeBtn);
     const volFeedback = document.createElement('div'); volFeedback.id = 'vidu_vol_feedback'; volFeedback.className = 'vidu-vol-feedback'; volFeedback.style.display = 'none';
     host.appendChild(volFeedback);
-    wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
+
+    wrapper.appendChild(host);
+    wrap.appendChild(wrapper);
+    return { host, wrapper, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
 
   function createPlayer(videoId){
-    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
-    state.host = host; state.mount = mount;
+    const { host, wrapper, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
+    state.host = host; state.wrapper = wrapper; state.mount = mount;
     state.videoId = videoId;
     const playBtn = overlay.querySelector('#vidu_playbtn');
     const curEl = overlay.querySelector('#vidu_cur');
@@ -835,11 +845,11 @@
       const fullBtn = document.getElementById('vidu_fullbtn');
       const isFullscreen = !!getFullscreenElement();
       
-      if (state.host) {
+      if (state.wrapper) {
           if (isFullscreen) {
-              state.host.classList.add('is-fullscreen');
+              state.wrapper.classList.add('is-fullscreen');
           } else {
-              state.host.classList.remove('is-fullscreen');
+              state.wrapper.classList.remove('is-fullscreen');
           }
       }
 
@@ -966,12 +976,11 @@
             }
             const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
             
-            // Neon border animation control
-            if (state.host) {
+            if (state.wrapper) {
                 if (st === 1) { // playing
-                    state.host.classList.remove('is-paused');
+                    state.wrapper.classList.remove('is-paused');
                 } else { // paused, buffering, ended, etc.
-                    state.host.classList.add('is-paused');
+                    state.wrapper.classList.add('is-paused');
                 }
             }
 
@@ -1059,7 +1068,9 @@
       if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
       if(state.volumeFeedbackTimer){ clearTimeout(state.volumeFeedbackTimer); state.volumeFeedbackTimer = null; }
       if(state.host){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ state.host.removeEventListener(ev, resetInactivityTimer); document.removeEventListener(ev, resetInactivityTimer); }); }catch(e){} }
-      if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
+      if(state.wrapper){ try{ state.wrapper.remove(); }catch(e){} state.wrapper = null; }
+      state.host = null; 
+      state.mount = null;
       
       state.videoId = null;
       state.lastSaveTime = 0;
