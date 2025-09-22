@@ -45,6 +45,7 @@
 
     #wrapper{position:relative;z-index:3;padding-bottom:48px;}
 
+    /* --- NEW: Player Active State --- */
     body.player-active #wrapper {
       display: none;
     }
@@ -54,6 +55,8 @@
       align-items: center;
       justify-content: space-between;
       padding: 14px 22px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       z-index: 10;
@@ -63,21 +66,7 @@
       max-width: 750px;
       margin: 0 auto;
       box-shadow: 0 8px 30px rgba(2, 4, 12, 0.5);
-      /* PERFORMANCE: backdrop-filter is expensive. Will be replaced on mobile. */
-      background: rgba(20, 22, 28, 0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
     }
-    
-    /* PERFORMANCE FIX: On smaller screens, replace expensive backdrop-filter with a simple background */
-    @media (max-width: 768px) {
-      header#header {
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-        background: rgba(20, 22, 28, 0.92);
-      }
-    }
-
 
     .header-right-controls {
         display: flex;
@@ -138,12 +127,7 @@
     .inner{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:3;}
 
     .list-container{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:flex-start;margin-top:6px;}
-    /* PERFORMANCE FIX: Removed box-shadow from transition, will use pseudo-element for glow */
-    .list-item{
-      width:150px; cursor:pointer; text-align:center; background:rgba(18, 20, 28, 0.5); border-radius:var(--card-radius); padding:10px; 
-      transition:transform .25s var(--ease);
-      border:1px solid rgba(255,255,255,0.06); box-shadow:0 8px 24px rgba(6,8,16,0.5); position:relative; will-change:transform, opacity;
-    }
+    .list-item{width:150px;cursor:pointer;text-align:center;background:rgba(18, 20, 28, 0.5);border-radius:var(--card-radius);padding:10px;transition:transform .25s var(--ease),box-shadow .25s var(--ease); border:1px solid rgba(255,255,255,0.06); box-shadow:0 8px 24px rgba(6,8,16,0.5);position:relative;will-change:transform, opacity;}
 
     .list-item::after{content:'';position:absolute;left:8px;right:8px;bottom:8px;height:4px;border-radius:4px;background:linear-gradient(90deg, rgba(123,97,255,0.25), rgba(57,255,20,0.18), rgba(255,107,107,0.12));opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;}
     .list-item:hover::after{opacity:1;transform:translateY(0);}
@@ -188,7 +172,7 @@
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
-      -webkit-tap-highlight-color: transparent;
+      -webkit-tap-highlight-color: transparent; /* Disable tap highlight on mobile */
     }
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
@@ -199,6 +183,7 @@
 
     .vidu-loading {
       position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center;
+      /* PERFORMANCE: Replaced expensive backdrop-filter with a simple, fast semi-transparent background. */
       background: rgba(10, 12, 18, 0.85);
       transition: opacity .3s ease;
       will-change: opacity;
@@ -233,6 +218,7 @@
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
+      /* PERFORMANCE: Using a solid, semi-transparent background is much faster than backdrop-filter */
       background: rgba(20, 22, 28, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
@@ -268,7 +254,7 @@
     }
     .vidu-btn:hover { background: rgba(255,255,255,0.1); }
     .vidu-btn:active{ transform: scale(.95); transition-duration: .08s; }
-    .vidu-btn svg { width: 22px; height: 22px; transition: transform .2s var(--ease); will-change: transform; }
+    .vidu-btn svg { width: 22px; height: 22px; transition: transform .2s var(--ease); }
     .vidu-btn:hover svg { transform: scale(1.1); }
 
     #vidu_playbtn {
@@ -287,7 +273,7 @@
     }
     .seek-track {
       position: relative; width: 100%; height: 6px;
-      background: rgba(59, 130, 246, 0.35);
+      background: rgba(59, 130, 246, 0.35); /* MODIFIED: Blue track */
       border-radius: 6px;
       pointer-events: none; overflow: hidden;
     }
@@ -296,6 +282,7 @@
       background: var(--accent-2); border-radius: 6px;
       will-change: width;
     }
+    /* --- FIX: Hide the native slider thumb to prevent "double thumb" issue --- */
     .vidu-range::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 16px;
@@ -313,18 +300,19 @@
     }
     .seek-thumb {
       position: absolute; top: 50%; left: 0; width: 16px; height: 16px;
-      background: #00c6ff;
+      background: #00c6ff; /* MODIFIED: Neon blue */
       border-radius: 50%; transform: translateY(-50%) scale(1);
       pointer-events: none; 
-      box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
-      transition: transform .2s var(--ease);
+      box-shadow: 0 0 8px rgba(0, 198, 255, 0.7); /* MODIFIED: Blue glow */
+      transition: transform .2s var(--ease); /* PERFORMANCE: Removed box-shadow from transition */
       will-change: left, transform;
     }
     .vidu-seek-container:hover .seek-thumb {
       transform: translateY(-50%) scale(1.15); 
-      box-shadow: 0 0 16px rgba(0, 198, 255, 1);
+      box-shadow: 0 0 16px rgba(0, 198, 255, 1); /* MODIFIED: Brighter blue glow on hover */
     }
     
+    /* --- MODIFIED: Styles for the seek preview tooltip --- */
     .seek-preview {
       position: absolute;
       bottom: 24px;
@@ -350,18 +338,18 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
     .seeking-text-inner {
-      color: var(--accent-2);
+      color: var(--accent-2); /* neon green */
       font-weight: 700;
       font-size: 15px;
       white-space: nowrap;
-      text-shadow: 0 0 4px rgba(57, 255, 20, 0.4);
+      text-shadow: 0 0 4px rgba(57, 255, 20, 0.4); /* MODIFIED: Reduced glow */
       display: flex;
       align-items: baseline;
       justify-content: center;
     }
     .seeking-dots {
       display: inline-block;
-      width: 1.5em;
+      width: 1.5em; /* reserve space for dots to avoid jumping */
       text-align: left;
       vertical-align: bottom;
     }
@@ -391,6 +379,7 @@
     .vidu-close-btn {
       position:absolute; top:12px; right:12px; z-index:10002;
       width:38px; height:38px; padding:6px; border-radius:50%;
+      /* PERFORMANCE: Replaced backdrop-filter with a more opaque solid color */
       background:rgba(20, 22, 28, 0.85);
       border:1px solid rgba(255,255,255,0.08); color:#fff;
       display:flex; align-items:center; justify-content:center;
@@ -416,6 +405,7 @@
     @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
     @media (max-width:540px){ .vidu-controls-grid { grid-template-areas: "seek seek" "left right"; grid-template-columns: 1fr 1fr; } .vidu-time-container { display: none; } }
     
+    /* --- NEW/MODIFIED: OSD Feedback --- */
     .vidu-osd-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
       padding:12px 18px; border-radius:12px; 
@@ -427,7 +417,6 @@
       display:flex; align-items:center; justify-content:center; gap: 10px;
       min-width: 90px;
       visibility: hidden;
-      will-change: opacity;
     }
     .vidu-osd-feedback.visible {
         opacity: 1;
@@ -435,6 +424,7 @@
     }
     .vidu-osd-feedback svg { width: 28px; height: 28px; fill: currentColor; }
     
+    /* --- NEW: Double-tap feedback animation --- */
     .vidu-seek-feedback {
         position: absolute;
         top: 50%;
@@ -469,6 +459,7 @@
       right: 12px;
       z-index: 10001;
       width: 90px;
+      /* PERFORMANCE: Replaced backdrop-filter with a solid, opaque color for better performance */
       background: rgba(30, 32, 38, 0.96);
       border-radius: 12px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.5);
@@ -524,6 +515,7 @@
     .loading-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); border-radius: 8px; }
     
     #restoring-position-overlay.loading-popup-overlay {
+        /* PERFORMANCE: Replaced expensive backdrop-filter with a simple rgba background */
         background: rgba(4, 6, 12, 0.85);
     }
 
@@ -555,15 +547,16 @@
     .fs-playlist-loader p { margin-top: 16px; font-weight: 600; color: var(--muted); }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* --- NEW: Volume Slider Styles --- */
     .vidu-volume-container { position: relative; }
     .vidu-volume-panel {
         position: absolute;
         bottom: 50px;
         left: 50%;
-        width: 40px;
-        height: 150px;
+        transform: translateX(-50%);
         background: rgba(30, 32, 38, 0.96);
         border-radius: 12px;
+        padding: 12px 8px;
         box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         opacity: 0;
         visibility: hidden;
@@ -584,10 +577,10 @@
         width: 120px;
         cursor: pointer;
         background: transparent;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-90deg);
+        transform: rotate(-90deg);
+        position: relative;
+        top: -55px;
+        left: -55px;
     }
     .vidu-volume-slider::-webkit-slider-runnable-track {
         width: 100%;
@@ -619,6 +612,17 @@
         box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
     }
 
+    /* --- NEW: Brightness Overlay --- */
+    .vidu-brightness-overlay {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 9994;
+      transition: opacity 0.1s linear;
+      will-change: opacity;
+    }
   </style>
 </head>
 <body class="landing is-preload">
@@ -783,36 +787,25 @@
     lastActivity: Date.now(),
     desiredPlaying: null,
     lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
+    brightness: (() => { try { const b = localStorage.getItem('vidu_player_brightness'); return (b !== null && !isNaN(b)) ? parseFloat(b) : 100; } catch(e) { return 100; } })(),
     osdTimer: null,
     _menuOpenTs: 0,
     lastSaveTime: 0,
     videoId: null,
+    // --- OPTIMIZATION: State variables to prevent unnecessary DOM updates ---
     lastTime: -1,
     lastDuration: -1,
     lastPlayerState: -1,
     lastVolumeLevel: -1,
+    // --- Touch Gesture State ---
     touch_lastTapTime: 0,
     touch_lastTapX: 0,
     touch_isSwiping: false,
     touch_startX: 0,
     touch_startY: 0,
-    touch_swipeMode: null,
+    touch_swipeMode: null, // 'volume', 'brightness', 'seek'
     touch_seekStartTime: 0,
-    touch_startVolume: 0,
   };
-
-  function throttle(func, limit) {
-    let inThrottle;
-    return function() {
-      const args = arguments;
-      const context = this;
-      if (!inThrottle) {
-        func.apply(context, args);
-        inThrottle = true;
-        setTimeout(() => inThrottle = false, limit);
-      }
-    }
-  }
 
   function loadYTApi(){
     if(window.YT && window.YT.Player) return Promise.resolve();
@@ -851,6 +844,7 @@
     return pad2(m) + ':' + pad2(sec);
   }
   
+  // --- SVG Icon Helper Functions ---
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
   function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19-.15-.24-.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22.07-.49-.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
@@ -860,6 +854,7 @@
   function volumeMidSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM3 9v6h4l5 5V4L7 9H3z"/></svg>`;}
   function volumeLowSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>`;}
   function volumeMuteSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;}
+  function brightnessSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>`;}
   function rewindSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>`; }
   function ffwdSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>`; }
   function speedSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 8v8l6-4-6-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>`;}
@@ -936,19 +931,21 @@
     host.appendChild(closeBtn);
     const osdFeedback = document.createElement('div'); osdFeedback.id = 'vidu_osd_feedback'; osdFeedback.className = 'vidu-osd-feedback';
     host.appendChild(osdFeedback);
+    const brightnessOverlay = document.createElement('div'); brightnessOverlay.id = 'vidu_brightness_overlay'; brightnessOverlay.className = 'vidu-brightness-overlay';
+    host.appendChild(brightnessOverlay);
     const seekFeedbackLeft = document.createElement('div'); seekFeedbackLeft.id = 'vidu_seek_feedback_left'; seekFeedbackLeft.className = 'vidu-seek-feedback left'; seekFeedbackLeft.innerHTML = `${rewindSVG()}<span>10s</span>`;
     host.appendChild(seekFeedbackLeft);
     const seekFeedbackRight = document.createElement('div'); seekFeedbackRight.id = 'vidu_seek_feedback_right'; seekFeedbackRight.className = 'vidu-seek-feedback right'; seekFeedbackRight.innerHTML = `${ffwdSVG()}<span>10s</span>`;
     host.appendChild(seekFeedbackRight);
     
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
+    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, brightnessOverlay };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){ console.warn('disableIframeClicks', e); } }
 
   function createPlayer(videoId){
-    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
+    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, brightnessOverlay } = createHostElements();
     state.host = host; state.mount = mount;
     state.videoId = videoId;
     const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -969,6 +966,15 @@
     const seekFeedbackLeft = host.querySelector('#vidu_seek_feedback_left');
     const seekFeedbackRight = host.querySelector('#vidu_seek_feedback_right');
 
+    function updateBrightness(level) {
+        state.brightness = Math.max(0, Math.min(100, level));
+        // Maps brightness 100 -> 0 opacity, 0 -> 0.7 opacity
+        const opacity = (1 - (state.brightness / 100)) * 0.7;
+        brightnessOverlay.style.opacity = opacity;
+        try { localStorage.setItem('vidu_player_brightness', state.brightness); } catch(e){}
+    }
+    updateBrightness(state.brightness); // Set initial brightness
+
     playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); volumePanel.classList.remove('open'); });
     playbackMenu.addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON' && e.target.dataset.speed) {
@@ -981,9 +987,9 @@
     volumeBtn.addEventListener('click', (e) => { e.stopPropagation(); volumePanel.classList.toggle('open'); playbackMenu.classList.remove('open'); });
     volumeSlider.addEventListener('input', () => {
         const newVolume = parseFloat(volumeSlider.value);
-        setVolume(newVolume, false);
+        setVolume(newVolume, false); // Don't show OSD for slider drag
     });
-    volumeSlider.addEventListener('change', () => {
+    volumeSlider.addEventListener('change', () => { // Show OSD on release
         const newVolume = parseFloat(volumeSlider.value);
         setVolume(newVolume, true);
     });
@@ -1016,10 +1022,14 @@
                 req.call(host).then(() => {
                     if (window.screen && screen.orientation && typeof screen.orientation.lock === 'function') {
                         if (window.innerWidth < 1024) { 
-                            screen.orientation.lock('landscape').catch(err => {});
+                            screen.orientation.lock('landscape').catch(err => {
+                                console.warn("Could not lock screen orientation:", err);
+                            });
                         }
                     }
-                }).catch(err => {});
+                }).catch(err => {
+                    console.error("Fullscreen request failed:", err);
+                });
             }
         }
     }
@@ -1103,8 +1113,8 @@
       switch (key) {
         case ' ': e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); resetInactivityTimer(); } break;
         case 'f': e.preventDefault(); toggleFullscreen(); break;
-        case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
-        case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
+        case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek forward err', err); } break;
+        case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){ console.warn('seek back err', err); } break;
         case 'arrowup': e.preventDefault(); setVolume((state.player.getVolume() || 0) + 5); break;
         case 'arrowdown': e.preventDefault(); setVolume((state.player.getVolume() || 0) - 5); break;
         case 'q':
@@ -1112,8 +1122,7 @@
         case 'w':
           e.preventDefault();
           const buttons = Array.from(playbackMenu.querySelectorAll('button[data-speed]'));
-          const speeds = buttons.map(b => parseFloat(b.dataset.speed)).sort((a, b) => a - b);
-          
+          const speeds = buttons.map(b => parseFloat(b.dataset.speed));
           if (key === 'w') { setPlaybackRate(1); break; }
           
           const currentRate = state.player.getPlaybackRate();
@@ -1121,9 +1130,9 @@
           if (currentIndex === -1) currentIndex = speeds.findIndex(s => s === 1);
 
           let nextIndex;
-          if (key === 'e') {
+          if (key === 'e') { // next
              nextIndex = (currentIndex + 1) % speeds.length;
-          } else {
+          } else { // 'q', previous
              nextIndex = (currentIndex - 1 + speeds.length) % speeds.length;
           }
           setPlaybackRate(speeds[nextIndex]);
@@ -1205,59 +1214,44 @@
                 if (!isMenuOpen && !isDragging) {
                     setOverlayHidden(true);
                 }
-            } catch(e) {}
+            } catch(e) { console.warn('Inactivity timer error', e); }
         }, 3000);
     }
     
+    // --- Touch and Mouse Wheel Listeners ---
     function attachActivityListeners(){ 
         ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); });
-        
-        const throttledWheelHandler = throttle((e) => {
-            const delta = e.deltaY > 0 ? -5 : 5;
-            setVolume(state.player.getVolume() + delta);
-        }, 50);
         host.addEventListener('wheel', (e) => {
             e.preventDefault();
-            throttledWheelHandler(e);
+            const delta = e.deltaY > 0 ? -5 : 5; // Negative deltaY is scroll up
+            setVolume(state.player.getVolume() + delta);
         }, { passive: false });
         
-        const throttledTouchMoveHandler = throttle((e) => {
-            if (!state.touch_isSwiping) return;
-            const touch = e.touches[0];
-            const rect = host.getBoundingClientRect();
-
-            if (state.touch_swipeMode === 'volume') {
-                const totalDeltaY = touch.clientY - state.touch_startY;
-                const volumeChange = (-totalDeltaY / rect.height) * 125;
-                setVolume(state.touch_startVolume + volumeChange, true);
-            } else if (state.touch_swipeMode === 'seek') {
-                const deltaX = touch.clientX - state.touch_startX;
-                const duration = state.player.getDuration();
-                const seekChange = (deltaX / rect.width) * (duration / 2);
-                const targetTime = Math.max(0, Math.min(duration, state.touch_seekStartTime + seekChange));
-                const seekText = fmtHHMMSS(targetTime) + " / " + fmtHHMMSS(duration);
-                showOSDFeedback({ icon: (seekChange > 0 ? ffwdSVG() : rewindSVG()), text: seekText, duration: 500 });
-            }
-        }, 50);
-
         host.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) return;
+            if (e.touches.length > 1) return; // Ignore multi-touch gestures
             const now = Date.now();
             const touch = e.touches[0];
             const rect = host.getBoundingClientRect();
             const tapX = touch.clientX - rect.left;
             
-            if (now - state.touch_lastTapTime < 300 && Math.abs(tapX - state.touch_lastTapX) < 50) {
-                if (!state.player) return;
-                const isRightSide = tapX > rect.width / 2;
-                const currentTime = state.player.getCurrentTime();
-                const duration = state.player.getDuration();
-                if (isRightSide) {
-                    state.player.seekTo(Math.min(duration, currentTime + 10), true);
-                    seekFeedbackRight.classList.remove('show'); void seekFeedbackRight.offsetWidth; seekFeedbackRight.classList.add('show');
-                } else {
-                    state.player.seekTo(Math.max(0, currentTime - 10), true);
-                    seekFeedbackLeft.classList.remove('show'); void seekFeedbackLeft.offsetWidth; seekFeedbackLeft.classList.add('show');
+            // Double tap logic
+            if (now - state.touch_lastTapTime < 300) {
+                if (Math.abs(tapX - state.touch_lastTapX) < 50) { // Tapped in same area
+                    if (!state.player) return;
+                    const isRightSide = tapX > rect.width / 2;
+                    const currentTime = state.player.getCurrentTime();
+                    const duration = state.player.getDuration();
+                    if (isRightSide) {
+                        state.player.seekTo(Math.min(duration, currentTime + 10), true);
+                        seekFeedbackRight.classList.remove('show');
+                        void seekFeedbackRight.offsetWidth; // Trigger reflow
+                        seekFeedbackRight.classList.add('show');
+                    } else {
+                        state.player.seekTo(Math.max(0, currentTime - 10), true);
+                        seekFeedbackLeft.classList.remove('show');
+                        void seekFeedbackLeft.offsetWidth; // Trigger reflow
+                        seekFeedbackLeft.classList.add('show');
+                    }
                 }
             }
             
@@ -1267,31 +1261,50 @@
             state.touch_startY = touch.clientY;
             state.touch_isSwiping = false;
             state.touch_swipeMode = null;
-            if (state.player) {
-                state.touch_seekStartTime = state.player.getCurrentTime();
-                state.touch_startVolume = state.player.getVolume();
-            }
+            state.touch_seekStartTime = state.player ? state.player.getCurrentTime() : 0;
             resetInactivityTimer();
         }, { passive: true });
         
         host.addEventListener('touchmove', (e) => {
             if (e.touches.length > 1) return;
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - state.touch_startX;
+            const deltaY = touch.clientY - state.touch_startY;
+
             if (!state.touch_isSwiping) {
-                const deltaX = e.touches[0].clientX - state.touch_startX;
-                const deltaY = e.touches[0].clientY - state.touch_startY;
                 if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                     state.touch_isSwiping = true;
-                    if (Math.abs(deltaY) > Math.abs(deltaX)) {
-                        state.touch_swipeMode = (e.touches[0].clientX > window.innerWidth / 2) ? 'volume' : 'none';
-                    } else {
+                    if (Math.abs(deltaY) > Math.abs(deltaX)) { // Vertical swipe
+                        state.touch_swipeMode = (touch.clientX > window.innerWidth / 2) ? 'volume' : 'brightness';
+                    } else { // Horizontal swipe
                         state.touch_swipeMode = 'seek';
                     }
                 }
             }
-            if(state.touch_isSwiping){
-              e.preventDefault();
-              setOverlayHidden(true);
-              throttledTouchMoveHandler(e);
+
+            if (state.touch_isSwiping) {
+                e.preventDefault();
+                setOverlayHidden(true); // Hide controls while swiping
+                const rect = host.getBoundingClientRect();
+
+                if (state.touch_swipeMode === 'volume') {
+                    const volumeChange = (-deltaY / rect.height) * 100;
+                    const currentVolume = state.player.getVolume();
+                    setVolume(currentVolume + volumeChange, true);
+                    state.touch_startY = touch.clientY; // Reset startY to make swipe continuous
+                } else if (state.touch_swipeMode === 'brightness') {
+                    const brightnessChange = (-deltaY / rect.height) * 100;
+                    const newBrightness = state.brightness + brightnessChange;
+                    updateBrightness(newBrightness);
+                    showOSDFeedback({ icon: brightnessSVG(), text: `${Math.round(state.brightness)}%`, duration: 500 });
+                    state.touch_startY = touch.clientY;
+                } else if (state.touch_swipeMode === 'seek') {
+                    const duration = state.player.getDuration();
+                    const seekChange = (deltaX / rect.width) * (duration / 2); // Swipe across screen seeks half the video
+                    const targetTime = Math.max(0, Math.min(duration, state.touch_seekStartTime + seekChange));
+                    const seekText = fmtHHMMSS(targetTime) + " / " + fmtHHMMSS(duration);
+                    showOSDFeedback({ icon: (seekChange > 0 ? ffwdSVG() : rewindSVG()), text: seekText, duration: 500 });
+                }
             }
         }, { passive: false });
 
@@ -1386,12 +1399,15 @@
           events: {
             onReady: function(evt){
               disableIframeClicks(host); showLoading();
-              setVolume(state.lastVolume, false);
+              setVolume(state.lastVolume, false); // Set initial volume without OSD
+              
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
+              
               const savedTime = window.getVideoProgress(state.videoId);
               if (savedTime && savedTime > 0) {
                   evt.target.seekTo(savedTime, true);
               }
+
               try{ evt.target.playVideo(); }catch(e){}
               mount.style.height = mount.style.height || '520px';
               if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
@@ -1433,6 +1449,7 @@
       if(state.osdTimer){ clearTimeout(state.osdTimer); state.osdTimer = null; }
       if(state.host){ 
           try{ 
+              // Removing all listeners attached in attachActivityListeners
               state.host.removeEventListener('wheel', null);
               state.host.removeEventListener('touchstart', null);
               state.host.removeEventListener('touchmove', null);
@@ -1571,7 +1588,7 @@ function openPasswordModal(item){
   currentItem = item;
   const root = document.getElementById('modal-root');
   root.style.display = 'block';
-  document.body.classList.add('player-active');
+  document.body.classList.add('player-active'); // NEW: Add class to body
   document.getElementById('modal-title').textContent = item.name || 'Protected';
   document.getElementById('modal-subtitle').textContent = (item.type || 'video') + ' — password required';
   document.getElementById('password-input').value = '';
@@ -1589,7 +1606,7 @@ function closeModal(){
     root.style.display = 'none';
     root.style.visibility = 'visible';
   }
-  document.body.classList.remove('player-active');
+  document.body.classList.remove('player-active'); // NEW: Remove class from body
   if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
   if (currentItem && currentItem.type === 'playlist') {
     const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
@@ -1647,7 +1664,7 @@ async function openFullScreenPlaylist(item) {
   contentEl.innerHTML = '';
   loaderEl.style.display = 'flex';
   overlay.classList.add('show');
-  document.body.classList.add('player-active');
+  document.body.classList.add('player-active'); // NEW: Add class to body
   const rawId = decodeEnc(item.idEnc);
   const playlistId = rawId.split('&')[0];
   try {
@@ -1702,7 +1719,7 @@ function playVideoWithLoading(videoInfo) {
 
   root.style.display = 'block';
   root.style.visibility = 'hidden';
-  document.body.classList.add('player-active');
+  document.body.classList.add('player-active'); // NEW: Add class to body
   document.getElementById('modal-title').textContent = videoInfo.title;
   document.getElementById('modal-subtitle').textContent = 'Now Playing';
   document.getElementById('password-block').style.display = 'none';
@@ -1746,7 +1763,7 @@ function playVideoWithLoading(videoInfo) {
         console.error('showViduPlayer failed', err);
         loadingPopup.classList.remove('show');
         root.style.visibility = 'visible';
-        document.body.classList.remove('player-active');
+        document.body.classList.remove('player-active'); // NEW: Remove class on error
         const wrap = document.getElementById('player-wrap');
         if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
       });
@@ -1762,7 +1779,7 @@ document.addEventListener('DOMContentLoaded', function(){
   (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
   document.getElementById('fs-playlist-close-btn').addEventListener('click', () => {
     document.getElementById('fullscreen-playlist-overlay').classList.remove('show');
-    document.body.classList.remove('player-active');
+    document.body.classList.remove('player-active'); // NEW: Remove class from body
     currentItem = null;
     resumeVisuals('playlist-closed');
   });
@@ -1777,7 +1794,7 @@ document.addEventListener('keydown', e => {
         if (root && root.style.display !== 'none') closeModal();
         else if (fsPlaylist && fsPlaylist.classList.contains('show')) {
             fsPlaylist.classList.remove('show');
-            document.body.classList.remove('player-active');
+            document.body.classList.remove('player-active'); // NEW: Remove class from body
             currentItem = null;
             resumeVisuals('esc');
         }
