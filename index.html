@@ -145,14 +145,23 @@
       box-shadow:0 8px 24px rgba(6,8,16,0.5);
       position:relative;
       will-change:transform, opacity;
-      /* OPTIMIZATION: Isolates the rendering of this element, telling the browser its contents won't affect the rest of the page layout. This can speed up rendering. */
-      contain: content;
     }
 
     .list-item::after{content:'';position:absolute;left:8px;right:8px;bottom:8px;height:4px;border-radius:4px;background:linear-gradient(90deg, rgba(123,97,255,0.25), rgba(57,255,20,0.18), rgba(255,107,107,0.12));opacity:0;transform:translateY(6px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;}
     .list-item:hover::after{opacity:1;transform:translateY(0);}
     .list-item:hover{transform: translateY(-6px) scale(1.02); box-shadow:0 16px 32px rgba(6,8,16,0.6);}
-    .list-item img{width:100%;border-radius:6px;display:block;transition:transform .4s var(--ease);box-shadow:0 8px 20px rgba(0,0,0,0.4);will-change:transform;background:rgba(0,0,0,0.1);}
+    .list-item img{
+      width:100%;
+      border-radius:6px;
+      display:block;
+      transition:transform .4s var(--ease);
+      box-shadow:0 8px 20px rgba(0,0,0,0.4);
+      will-change:transform;
+      background:rgba(0,0,0,0.1);
+      /* FIX: Added aspect-ratio and object-fit to prevent images from stretching. This reverts them to their original appearance while keeping the performance benefits. */
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+    }
     .list-item:hover img{transform:scale(1.04);}
 
     .list-item .title{display:block;margin-top:0.45rem;color:var(--text);font-weight:700;font-size:14px;text-shadow:0 1px 0 rgba(0,0,0,0.45);}
@@ -190,10 +199,9 @@
       overflow: hidden;
       border-radius: 12px;
       background: #000;
-      /* OPTIMIZATION: Promotes the player to its own compositing layer, which can significantly improve animation and video playback performance. */
       transform: translateZ(0);
-      /* OPTIMIZATION: A strong performance hint for the browser that the player is a completely self-contained widget. */
-      contain: strict;
+      /* FIX: Changed 'contain: strict' to 'contain: layout style' to fix player visibility. This is a less aggressive optimization that still provides performance benefits without breaking the player's rendering. */
+      contain: layout style;
       -webkit-font-smoothing: antialiased;
       height: 100%;
     }
@@ -1032,19 +1040,14 @@
       if (!isPip) {
           function getFullscreenElement(){ return document.fullscreenElement || document.webkitFullscreenElement; }
           
-          // --- NEW FEATURE & OPTIMIZATION: Automatic Landscape on Fullscreen (Mobile) ---
           function toggleFullscreen() {
               if (!getFullscreenElement()) {
-                  // Request fullscreen
                   const promise = host.requestFullscreen ? host.requestFullscreen() : host.webkitRequestFullscreen();
                   if (!promise) return;
-
-                  // On mobile devices, after entering fullscreen, try to lock the orientation to landscape for a better viewing experience.
                   if (window.matchMedia("(max-width: 768px)").matches) {
                       promise.then(() => {
                           try {
                               if (screen.orientation && typeof screen.orientation.lock === 'function') {
-                                  // This is an asynchronous request. We catch potential errors.
                                   screen.orientation.lock('landscape').catch(err => console.warn("Could not lock to landscape:", err));
                               }
                           } catch (e) {
@@ -1055,7 +1058,6 @@
                       });
                   }
               } else {
-                  // Exit fullscreen
                   if (document.exitFullscreen) document.exitFullscreen();
                   else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
               }
@@ -1068,7 +1070,6 @@
                   fullBtn.innerHTML = exitFullscreenSVG();
               } else {
                   fullBtn.innerHTML = fullscreenSVG();
-                  // --- NEW FEATURE: When exiting fullscreen, unlock the screen orientation to allow it to return to normal.
                   try {
                       if (screen.orientation && typeof screen.orientation.unlock === 'function') {
                           screen.orientation.unlock();
@@ -1376,7 +1377,6 @@ function renderPlaylists(){
   if(!playlists || playlists.length === 0){ ul.innerHTML = '<li class="muted">No playlists available.</li>'; return; }
   playlists.forEach(pl=>{
     const li = document.createElement('li'); li.className='list-item ripple';
-    // OPTIMIZATION: Added loading="lazy" to defer loading of off-screen images. Added width/height to prevent layout shift.
     li.innerHTML = `<img src="${escapeHtml(pl.thumbnail)}" alt="${escapeHtml(pl.name)}" loading="lazy" width="150" height="150" /><span class="title">${escapeHtml(pl.name)}</span>`;
     li.addEventListener('click', (ev)=>{ spawnRipple(ev, li); showPlaylistVideos(pl); });
     ul.appendChild(li);
@@ -1399,7 +1399,6 @@ function showPlaylistVideos(pl, skipPush){
   (pl.videos||[]).forEach(v=>{
     const vli = document.createElement('li'); vli.className='list-item ripple';
     const thumb = v.thumbnail || '';
-    // OPTIMIZATION: Added loading="lazy" to defer loading of off-screen images. Added width/height to prevent layout shift.
     vli.innerHTML = `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.name)}" loading="lazy" width="150" height="150" /><span class="title">${escapeHtml(v.name)}</span>`;
     if(v && Array.isArray(v.videos)){
       vli.addEventListener('click',(ev)=>{ spawnRipple(ev, vli); showPlaylistVideos(v); });
