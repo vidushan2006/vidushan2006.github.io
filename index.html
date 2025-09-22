@@ -167,8 +167,6 @@
       background: #000;
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
-      /* ADDED: A powerful performance hint that isolates the player's rendering from the rest of the page, preventing stutter. */
-      contain: strict;
     }
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
@@ -478,7 +476,7 @@
         <h3 id="notification-title">Notifications</h3>
         <button id="notification-close-btn" class="notification-close-btn" aria-label="Close notifications">&times;</button>
     </div>
-<div class="notification-content">
+  <div class="notification-content">
   <p style="margin:0 0 12px 0; font-weight:800; font-size:18px; color: #fff;">
     Ayo, VIDU here. The architect of this whole operation. 👨‍💻
   </p>
@@ -604,20 +602,6 @@
     lastSaveTime: 0,
     videoId: null,
   };
-  
-  /* ADDED: Throttling utility to prevent high-frequency events from causing lag. */
-  function throttle(func, limit) {
-    let inThrottle;
-    return function() {
-      const args = arguments;
-      const context = this;
-      if (!inThrottle) {
-        func.apply(context, args);
-        inThrottle = true;
-        setTimeout(() => inThrottle = false, limit);
-      }
-    }
-  }
 
   function loadYTApi(){
     if(window.YT && window.YT.Player) return Promise.resolve();
@@ -715,7 +699,7 @@
     const playbackMenu = document.createElement('div');
     playbackMenu.className = 'vidu-playback-menu';
     playbackMenu.id = 'vidu_playback_menu';
-    playbackMenu.innerHTML = `<button data-speed="2">2x</button><button data-speed="1.75">1.75x</button><button data-speed="1.5">1.5x</button><button data-speed="1.25">1.25x</button><button data-speed="1" class="active">1x</button>`;
+    playbackMenu.innerHTML = `<button data-speed="5">😎</button><button data-speed="2">2x</button><button data-speed="1.75">1.75x</button><button data-speed="1.5">1.5x</button><button data-speed="1.25">1.25x</button><button data-speed="1" class="active">1x</button>`;
     host.appendChild(playbackMenu);
 
     const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
@@ -903,20 +887,7 @@
             } catch(e) { console.warn('Inactivity timer error', e); }
         }, 3000);
     }
-    
-    function attachActivityListeners(){
-      try {
-        const throttledReset = throttle(resetInactivityTimer, 100);
-        ['mousemove', 'pointermove', 'touchmove'].forEach(ev => {
-          host.addEventListener(ev, throttledReset, { passive: true });
-          document.addEventListener(ev, throttledReset, { passive: true });
-        });
-        ['keydown', 'mousedown', 'touchstart'].forEach(ev => {
-          host.addEventListener(ev, resetInactivityTimer, { passive: true });
-          document.addEventListener(ev, resetInactivityTimer, { passive: true });
-        });
-      } catch(e) { console.warn('Failed to attach activity listeners', e); }
-    }
+    function attachActivityListeners(){ try{ ['mousemove','pointermove','touchstart','touchmove','keydown','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); }); }catch(e){} }
     attachActivityListeners();
 
     function updatePlayerUI() {
