@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIDU // System Upgrade in Progress</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #04060c;
+            --glass: rgba(18, 20, 28, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text: #f2f6ff;
+            --muted: #8a93a8;
+            --accent-glow: #39ff14;
+            --accent-2: #7b61ff;
+            --card-radius: 16px;
+            --ease: cubic-bezier(.16,.84,.24,1);
+        }
+
+        /* --- SCROLLBAR STYLING --- */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-glow);
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: url('https://i.pinimg.com/originals/1b/48/42/1b48427f5028a62a05a8f443997f7423.gif'); /* Futuristic background GIF */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+            color: var(--text);
+            margin: 0;
+            padding: 40px 20px;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow: hidden; /* Prevent body from scrolling */
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(4, 6, 12, 0.5), rgba(4, 6, 12, 0.9) 80%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 800px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--card-radius);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            padding: 35px 40px;
+            animation: fadeIn 1s var(--ease) forwards;
+            
+            /* --- FIX STARTS HERE --- */
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh; /* Control the overall height of the card */
+            /* --- FIX ENDS HERE --- */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 25px;
+            margin-bottom: 25px;
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            font-weight: 900;
+            letter-spacing: -1.5px;
+            color: var(--text);
+            text-shadow: 0 0 15px rgba(255,255,255,0.1);
+        }
+
+        .header h1 span {
+            color: var(--accent-glow);
+            animation: glow 2.5s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 5px var(--accent-glow), 0 0 10px var(--accent-glow); }
+            50% { text-shadow: 0 0 15px var(--accent-glow), 0 0 30px var(--accent-glow); }
+        }
+
+        .header p {
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-glow), var(--accent-2), var(--accent-glow));
+            background-size: 200% 200%;
+            border-radius: 8px;
+            animation: loading-flow 2s linear infinite;
+        }
+
+        @keyframes loading-flow {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .content {
+            /* --- FIX STARTS HERE --- */
+            flex: 1; /* Allow this section to grow and fill available space */
+            /* max-height: 50vh; <-- This was the problem, so it's removed. */
+            /* --- FIX ENDS HERE --- */
+            overflow-y: auto;
+            padding-right: 15px; /* space for scrollbar */
+        }
+
+        .content h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-glow);
+            margin: 0 0 15px; /* Adjusted margin for new layout */
+            border-bottom: 1px solid rgba(57, 255, 20, 0.2);
+            padding-bottom: 8px;
+        }
+
+        .update-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            line-height: 1.7;
+        }
+
+        .update-list li {
+            padding: 10px 0 10px 35px;
+            position: relative;
+            font-size: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .update-list li:last-child {
+            border-bottom: none;
+        }
+
+        .update-list li::before {
+            content: '⚡️';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            font-size: 1.2rem;
+        }
+
+        .update-list strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .update-list span {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid var(--glass-border);
+            flex-shrink: 0; /* Prevent footer from shrinking */
+        }
+        
+        .whatsapp-btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #25D366, #128C7E);
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3);
+            transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .whatsapp-btn:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(37, 211, 102, 0.4);
+        }
+        
+        .whatsapp-btn::before {
+            content: '💬';
+            margin-right: 10px;
+        }
+
+        .footer p {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        /* --- RESPONSIVE DESIGN --- */
+        @media (max-width: 768px) {
+            body { padding: 20px 10px; }
+            .main-container { padding: 25px 20px; max-height: 95vh; }
+            .content { padding-right: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <header class="header">
+            <h1>Site's in its <span>Glow-Up Era</span></h1>
+            <p>Ayo, it's VIDU. I've sent the site to the digital spa. It's getting a full system deep clean, a fresh coat of chrome, and some serious upgrades under the hood. No cap, it's gonna be faster, slicker, and more of a vibe than ever. Hang tight.</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill"></div>
+            </div>
+        </header>
+
+        <div class="content">
+            <h2>Spilling the Tea on the Upgrades 🍵</h2>
+            <ul class="update-list">
+                <li><strong>The VIDU Player™️ is Hitting Hyperdrive:</strong> <span>That custom player I built? It's getting a V12 engine swap. We're talking Picture-in-Picture (PiP) support, Chromecast integration, and buttery-smooth mobile gestures. Double-tap to seek is coming, bet.</span></li>
+                <li><strong>Performance on Overclock:</strong> <span>The site's about to get so fast, it might just time travel. I'm compressing assets, optimizing the code, and basically putting the entire thing on a digital diet. The goal? Zero lag. Pure speed.</span></li>
+                <li><strong>UI Going Super Saiyan:</strong> <span>You liked the glassy look? I'm dialing it to 11. I'm building a whole new design system for an even cleaner, more futuristic feel. Also prepping a sick light/dark mode toggle for all you creatures of the night (and day).</span></li>
+                <li><strong>Fort Knox Security Upgrade:</strong> <span>That old password system was cute, but we're getting serious. I'm beefing up the client-side security to make sure the private content stays private. Your secrets are safe with me. 🤫</span></li>
+                <li><strong>Playlist Importer 2.0:</strong> <span>The YouTube playlist fetcher is getting a massive buff. Faster API calls, smarter caching so you don't have to wait, and I'm even experimenting with adding support for other platforms. The limit does not exist.</span></li>
+                <li><strong>The Tool Shed Gets Power Tools:</strong> <span>The "Video Yoinker" and "Link Glo-Up" are just the start. I'm adding batch processing so you can convert a whole list of links at once. Also, a new GIF maker tool might just be dropping soon. 👀</span></li>
+                <li><strong>Cross-Device Sync incoming:</strong> <span>This is the big one. I'm laying the groundwork for a real backend. Soon, you'll be able to pause a video on your laptop and pick it up right where you left off on your phone. The future is now.</span></li>
+                <li><strong>Mobile Vibe Check:</strong> <span>The experience on phones is getting a complete overhaul. Better navigation, bigger touch targets, and a layout that actually makes sense on a smaller screen. It's gonna be immaculate.</span></li>
+            </ul>
+        </div>
+
+        <footer class="footer">
+            <a href="https://wa.me/254703255099" target="_blank" rel="noopener noreferrer" class="whatsapp-btn">
+                Hit Me Up on WhatsApp
+            </a>
+            <p>&copy; 2025 // Built with 💻 by <strong>VIDU</strong></p>
+        </footer>
+    </div>
+</body>
+</html>
