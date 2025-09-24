@@ -654,7 +654,7 @@
         transform: translateX(-50%) translateY(0px);
     }
     
-    /* POPUP PLAYER MODE */
+    /* POPUP PLAYER MODE STYLES */
     body.popup-mode { padding: 0 !important; background: #000 !important; }
     body.popup-mode::before { display:none; }
     body.popup-mode #wrapper, body.popup-mode #footer, body.popup-mode header#header { display: none !important; }
@@ -664,7 +664,13 @@
     body.popup-mode #player-block { margin-top:0 !important; }
     body.popup-mode .vidu-player-host { border-radius: 0; }
     body.popup-mode .vidu-mount { height: 100vh !important; }
-    body.popup-mode .vidu-overlay { border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0; left: 0 !important; right: 0 !important; bottom: 0 !important; }
+    
+    body.popup-mode #vidu_fullbtn { display: none; }
+    body.popup-mode .vidu-controls-bg { height: 70px; }
+    body.popup-mode .vidu-overlay { padding: 6px 10px; bottom: 6px; left: 6px; right: 6px; border-radius: 8px; }
+    body.popup-mode .vidu-controls-grid { gap: 4px 10px; }
+    body.popup-mode .vidu-playback-menu { bottom: 65px; }
+    body.popup-mode .vidu-volume-panel { bottom: 55px; }
 
   </style>
 </head>
@@ -675,20 +681,35 @@
     try {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('popup') === 'true') {
+            let popupPlayerInstance = null;
             document.body.classList.add('popup-mode');
             const videoId = urlParams.get('videoId');
             const time = parseFloat(urlParams.get('time')) || 0;
+            const title = urlParams.get('title') || 'VIDU Popup';
 
             document.addEventListener('DOMContentLoaded', () => {
-               document.title = "VIDU Popup";
+               document.title = title;
                const modalRoot = document.getElementById('modal-root');
                modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal"><div id="player-block" style="display:block;"><div id="player-wrap"></div></div></div></div>`;
 
                if (window.showViduPlayer && videoId) {
                    window.showViduPlayer(videoId).then(player => {
+                       popupPlayerInstance = player;
                        setTimeout(() => { player.seekTo(time, true); }, 500);
                    });
                }
+            });
+
+            window.addEventListener('beforeunload', () => {
+                if (popupPlayerInstance && typeof popupPlayerInstance.getCurrentTime === 'function') {
+                    const currentTime = popupPlayerInstance.getCurrentTime();
+                    const state = { videoId, time: currentTime, title, timestamp: Date.now() };
+                    try {
+                        localStorage.setItem('vidu_popup_close_state', JSON.stringify(state));
+                    } catch(e) {
+                        console.error("Failed to save popup state to localStorage", e);
+                    }
+                }
             });
         }
     } catch(e) {
@@ -1149,7 +1170,8 @@
             if (!state.player || !state.videoId) return;
 
             const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
-            const url = `${window.location.pathname}?popup=true&videoId=${state.videoId}&time=${currentTime}`;
+            const title = document.getElementById('modal-title') ? document.getElementById('modal-title').textContent : 'VIDU Video';
+            const url = `${window.location.pathname}?popup=true&videoId=${state.videoId}&time=${currentTime}&title=${encodeURIComponent(title)}`;
             
             const popWidth = 400;
             const popHeight = 225;
@@ -1189,6 +1211,19 @@
                         state.popupCheckInterval = null;
                         window.viduPopupWindow = null;
                         if (noticeOverlay) noticeOverlay.classList.remove('show');
+
+                        const closeStateRaw = localStorage.getItem('vidu_popup_close_state');
+                        if (closeStateRaw) {
+                            localStorage.removeItem('vidu_popup_close_state');
+                            try {
+                                const closeState = JSON.parse(closeStateRaw);
+                                if (Date.now() - (closeState.timestamp || 0) < 2000) { // Only act on recent close
+                                    if (window.playVideoWithLoading) {
+                                       window.playVideoWithLoading({ videoId: closeState.videoId, title: closeState.title, startTime: closeState.time });
+                                    }
+                                }
+                            } catch(e) { console.error("Could not restore from popup state", e); }
+                        }
                     }
                 }, 500);
 
@@ -1258,7 +1293,9 @@
     state.keyHandler = function(e){
       const active = document.activeElement; const seekIsActive = (active && active.id === 'vidu_seek');
       if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
-      const root = document.getElementById('modal-root'); if(!root || root.style.display === 'none') return;
+      
+      const root = document.getElementById('modal-root'); 
+      if(!root || (root.style.display === 'none' && !document.body.classList.contains('popup-mode'))) return;
       
       const key = e.key.toLowerCase();
       switch (key) {
@@ -1556,7 +1593,7 @@
               state.mo = new MutationObserver(()=> disableIframeClicks(host));
               state.mo.observe(host, { childList:true, subtree:true });
               resetInactivityTimer();
-              resolve(state.player);
+              resolve(evt.target); // Resolve with the player instance
             },
             onStateChange: function(e){ try{ if(e && e.data === 1){ try{ hideLoading(); }catch(e){} } }catch(err){} },
             onError: function(err){ try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} console.error('YT player error', err); }
@@ -1613,6 +1650,9 @@
  * Playlist data + UI + modal + YouTube playlist fetching
  *************************************************************************/
 (function() {
+    // A global reference to the popup window instance
+    window.viduPopupWindow = null;
+    
     // Store reference to the main wrapper element
     let wrapperElement = null;
 
@@ -1868,7 +1908,7 @@
       contentEl.appendChild(fragment);
     }
 
-    function playVideoWithLoading(videoInfo) {
+    window.playVideoWithLoading = function(videoInfo) {
       // Auto-close existing popup window if a new video is played
       if (window.viduPopupWindow && !window.viduPopupWindow.closed) {
           window.viduPopupWindow.close();
@@ -1909,22 +1949,26 @@
             setTimeout(() => {
               loadingPopup.classList.remove('show');
               root.style.visibility = 'visible';
-
-              const savedTime = getVideoProgress(videoInfo.videoId);
-              if (savedTime && savedTime > 0) {
-                const restoringPopup = document.getElementById('restoring-position-overlay');
-                const restoringBar = document.getElementById('restoring-bar-fill');
-                if(restoringPopup && restoringBar) {
-                  restoringPopup.classList.add('show');
-                  restoringBar.style.transition = 'none';
-                  restoringBar.style.width = '0%';
-                  setTimeout(() => {
-                    restoringBar.style.transition = 'width 2s cubic-bezier(0.25, 1, 0.5, 1)';
-                    restoringBar.style.width = '100%';
-                  }, 10);
-                  setTimeout(() => {
-                    restoringPopup.classList.remove('show');
-                  }, 2000);
+              
+              if(videoInfo.startTime) {
+                player.seekTo(videoInfo.startTime, true);
+              } else {
+                const savedTime = getVideoProgress(videoInfo.videoId);
+                if (savedTime && savedTime > 0) {
+                    const restoringPopup = document.getElementById('restoring-position-overlay');
+                    const restoringBar = document.getElementById('restoring-bar-fill');
+                    if(restoringPopup && restoringBar) {
+                      restoringPopup.classList.add('show');
+                      restoringBar.style.transition = 'none';
+                      restoringBar.style.width = '0%';
+                      setTimeout(() => {
+                        restoringBar.style.transition = 'width 2s cubic-bezier(0.25, 1, 0.5, 1)';
+                        restoringBar.style.width = '100%';
+                      }, 10);
+                      setTimeout(() => {
+                        restoringPopup.classList.remove('show');
+                      }, 2000);
+                    }
                 }
               }
 
