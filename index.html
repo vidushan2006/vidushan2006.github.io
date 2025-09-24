@@ -1213,12 +1213,18 @@
                         window.viduPopupWindow = null;
                         if (noticeOverlay) noticeOverlay.classList.remove('show');
 
+                        if (window.__vidu_prevent_popup_restore) {
+                            window.__vidu_prevent_popup_restore = false; 
+                            localStorage.removeItem('vidu_popup_close_state'); 
+                            return; 
+                        }
+
                         const closeStateRaw = localStorage.getItem('vidu_popup_close_state');
                         if (closeStateRaw) {
                             localStorage.removeItem('vidu_popup_close_state');
                             try {
                                 const closeState = JSON.parse(closeStateRaw);
-                                if (Date.now() - (closeState.timestamp || 0) < 2000) { // Only act on recent close
+                                if (Date.now() - (closeState.timestamp || 0) < 2000) { 
                                     if (window.playVideoWithLoading) {
                                        window.playVideoWithLoading({ videoId: closeState.videoId, title: closeState.title, startTime: closeState.time });
                                     }
@@ -1910,8 +1916,8 @@
     }
 
     window.playVideoWithLoading = function(videoInfo) {
-      // Auto-close existing popup window if a new video is played
       if (window.viduPopupWindow && !window.viduPopupWindow.closed) {
+          window.__vidu_prevent_popup_restore = true;
           window.viduPopupWindow.close();
           window.viduPopupWindow = null;
           const noticeOverlay = document.getElementById('popup-notice-overlay');
