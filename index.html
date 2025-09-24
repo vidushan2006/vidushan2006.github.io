@@ -407,6 +407,9 @@
       transform: scale(1.1);
       background: rgba(30, 32, 40, 0.9);
     }
+    .vidu-popup-btn.hidden {
+      opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
+    }
 
     #close-player { display:none !important; }
 
@@ -857,7 +860,6 @@
     </div>
   </div>
 </div>
-<!-- New overlay for popup player loading -->
 <div id="popup-player-loading-overlay" class="loading-popup-overlay">
   <div class="loading-popup-content">
     <p>Initializing VIDU Popup Player</p>
@@ -867,7 +869,6 @@
   </div>
 </div>
 
-<!-- New notice for when popup player is active -->
 <div id="popup-notice-overlay" class="popup-notice">
   Playing in the VIDU Popup Player
 </div>
@@ -1300,7 +1301,7 @@
       const key = e.key.toLowerCase();
       switch (key) {
         case ' ': e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); resetInactivityTimer(); } break;
-        case 'f': e.preventDefault(); toggleFullscreen(); break;
+        case 'f': if (!document.body.classList.contains('popup-mode')) { e.preventDefault(); toggleFullscreen(); } break;
         case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
         case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
         case 'arrowup': e.preventDefault(); setVolume((state.player.getVolume() || 0) + 5); break;
