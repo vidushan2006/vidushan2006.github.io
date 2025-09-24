@@ -7,16 +7,6 @@
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
 
-/* VIDU FIX START: Globally remove focus outlines and shadows. */
-/* This rule acts as a baseline to prevent the white border on any element, */
-/* including links and buttons, within the Electron app. */
-*:focus, *:focus-visible {
-	outline: none !important;
-	box-shadow: none !important;
-}
-/* VIDU FIX END */
-
-
 html, body, div, span, applet, object,
 iframe, h1, h2, h3, h4, h5, h6, p, blockquote,
 pre, a, abbr, acronym, address, big, cite,
@@ -429,9 +419,6 @@ input, select, textarea {
 			box-shadow: none;
 		}
 
-		/* VIDU FIX START: This is the primary fix. */
-		/* The original "box-shadow" rule created the white border. It has been removed. */
-		/* "outline: 0" has been added to prevent the default browser outline. */
 		input[type="text"]:focus,
 		input[type="password"]:focus,
 		input[type="email"]:focus,
@@ -440,10 +427,8 @@ input, select, textarea {
 		textarea:focus {
 			background: rgba(255, 255, 255, 0.075);
 			border-color: #ffffff;
-			box-shadow: none;
-			outline: 0;
+			box-shadow: 0 0 0 1px #ffffff;
 		}
-		/* VIDU FIX END */
 
 	select {
 		background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' preserveAspectRatio='none' viewBox='0 0 40 40'%3E%3Cpath d='M9.4,12.3l10.4,10.4l10.4-10.4c0.2-0.2,0.5-0.4,0.9-0.4c0.3,0,0.6,0.1,0.9,0.4l3.3,3.3c0.2,0.2,0.4,0.5,0.4,0.9 c0,0.4-0.1,0.6-0.4,0.9L20.7,31.9c-0.2,0.2-0.5,0.4-0.9,0.4c-0.3,0-0.6-0.1-0.9-0.4L4.3,17.3c-0.2-0.2-0.4-0.5-0.4-0.9 c0-0.4,0.1-0.6,0.4-0.9l3.3-3.3c0.2-0.2,0.5-0.4,0.9-0.4S9.1,12.1,9.4,12.3z' fill='%23ffffff' /%3E%3C/svg%3E");
