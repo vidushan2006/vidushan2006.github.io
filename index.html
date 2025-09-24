@@ -417,6 +417,13 @@
     @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
     @media (max-width:540px){ .vidu-controls-grid { grid-template-areas: "seek seek" "left right"; grid-template-columns: 1fr 1fr; } .vidu-time-container { display: none; } }
     
+    /* Hide popup button on mobile/touch devices */
+    @media (hover: none) and (pointer: coarse) {
+      .vidu-popup-btn {
+        display: none !important;
+      }
+    }
+
     .vidu-osd-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
       padding:12px 18px; border-radius:12px; 
@@ -1144,7 +1151,14 @@
             const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
             const url = `${window.location.pathname}?popup=true&videoId=${state.videoId}&time=${currentTime}`;
             
-            const popupWindow = window.open(url, 'VIDU_Popup_Player', 'width=480,height=320,scrollbars=no,resizable=yes');
+            const popWidth = 400;
+            const popHeight = 225;
+            const popTop = window.screen.height - popHeight - 40; /* 40px margin from bottom */
+            const popLeft = window.screen.width - popWidth - 40;  /* 40px margin from right */
+            const features = `width=${popWidth},height=${popHeight},top=${popTop},left=${popLeft},popup=yes,resizable=yes`;
+            
+            window.viduPopupWindow = window.open(url, 'VIDU_Popup_Player', features);
+            const popupWindow = window.viduPopupWindow;
 
             if (popupWindow) {
                 closeModal();
@@ -1170,15 +1184,15 @@
                 const noticeOverlay = document.getElementById('popup-notice-overlay');
                 if(state.popupCheckInterval) clearInterval(state.popupCheckInterval);
                 state.popupCheckInterval = setInterval(() => {
-                    if (popupWindow.closed) {
+                    if (!popupWindow || popupWindow.closed) {
                         clearInterval(state.popupCheckInterval);
                         state.popupCheckInterval = null;
+                        window.viduPopupWindow = null;
                         if (noticeOverlay) noticeOverlay.classList.remove('show');
                     }
                 }, 500);
 
             } else {
-                // Cannot use alert(), so we'll skip this part. In a real scenario, a custom modal would be better.
                 console.warn('Popup blocked by browser.');
             }
         });
@@ -1855,6 +1869,14 @@
     }
 
     function playVideoWithLoading(videoInfo) {
+      // Auto-close existing popup window if a new video is played
+      if (window.viduPopupWindow && !window.viduPopupWindow.closed) {
+          window.viduPopupWindow.close();
+          window.viduPopupWindow = null;
+          const noticeOverlay = document.getElementById('popup-notice-overlay');
+          if (noticeOverlay) noticeOverlay.classList.remove('show');
+      }
+
       window.handlePlayerLaunch();
       const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
       const loadingPopup = document.getElementById('player-loading-overlay');
