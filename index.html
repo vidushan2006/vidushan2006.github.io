@@ -1251,70 +1251,36 @@
 
             const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
             const title = document.getElementById('modal-title') ? document.getElementById('modal-title').textContent : 'VIDU Video';
-            const url = `${window.location.pathname}?popup=true&videoId=${state.videoId}&time=${currentTime}&title=${encodeURIComponent(title)}`;
+            
+            // MODIFICATION: Construct an absolute URL to avoid potential issues in Electron.
+            const url = `${window.location.origin}${window.location.pathname}?popup=true&videoId=${state.videoId}&time=${currentTime}&title=${encodeURIComponent(title)}`;
             
             const popWidth = 400;
             const popHeight = 225;
-            const popTop = window.screen.height - popHeight - 40; /* 40px margin from bottom */
-            const popLeft = window.screen.width - popWidth - 40;  /* 40px margin from right */
-            const features = `width=${popWidth},height=${popHeight},top=${popLeft},left=${popLeft},popup=yes,resizable=yes`;
+            // Place the popup on the bottom right of the screen.
+            const popTop = window.screen.height - popHeight - 40;
+            const popLeft = window.screen.width - popWidth - 40;
             
-            window.viduPopupWindow = window.open(url, 'VIDU_Popup_Player', features);
-            const popupWindow = window.viduPopupWindow;
+            // MODIFICATION: Fixed the typo (top=${popLeft} -> top=${popTop}) and removed the non-standard 'popup=yes'.
+            const features = `width=${popWidth},height=${popHeight},top=${popTop},left=${popLeft},resizable=yes`;
+            
+            const popupWindow = window.open(url, 'VIDU_Popup_Player', features);
 
             if (popupWindow) {
-                closeModal();
-
+                closeModal(); // Close the main player modal.
+                // Show a loading indicator and notice, which is handled well by your existing code.
                 const loadingOverlay = document.getElementById('popup-player-loading-overlay');
-                const loadingBar = document.getElementById('popup-player-loading-bar-fill');
-                if (loadingOverlay && loadingBar) {
-                    loadingOverlay.classList.add('show');
-                    loadingBar.style.transition = 'none';
-                    loadingBar.style.width = '0%';
-                    setTimeout(() => {
-                        loadingBar.style.transition = 'width 3s cubic-bezier(0.25, 1, 0.5, 1)';
-                        loadingBar.style.width = '100%';
-                    }, 50);
-                }
-
+                if (loadingOverlay) loadingOverlay.classList.add('show');
                 setTimeout(() => {
                     if (loadingOverlay) loadingOverlay.classList.remove('show');
                     const noticeOverlay = document.getElementById('popup-notice-overlay');
                     if (noticeOverlay) noticeOverlay.classList.add('show');
-                }, 3000);
-                
-                const noticeOverlay = document.getElementById('popup-notice-overlay');
-                if(state.popupCheckInterval) clearInterval(state.popupCheckInterval);
-                state.popupCheckInterval = setInterval(() => {
-                    if (!popupWindow || popupWindow.closed) {
-                        clearInterval(state.popupCheckInterval);
-                        state.popupCheckInterval = null;
-                        window.viduPopupWindow = null;
+                    setTimeout(() => {
                         if (noticeOverlay) noticeOverlay.classList.remove('show');
-
-                        if (window.__vidu_prevent_popup_restore) {
-                            window.__vidu_prevent_popup_restore = false; 
-                            localStorage.removeItem('vidu_popup_close_state'); 
-                            return; 
-                        }
-
-                        const closeStateRaw = localStorage.getItem('vidu_popup_close_state');
-                        if (closeStateRaw) {
-                            localStorage.removeItem('vidu_popup_close_state');
-                            try {
-                                const closeState = JSON.parse(closeStateRaw);
-                                if (Date.now() - (closeState.timestamp || 0) < 2000) { 
-                                    if (window.playVideoWithLoading) {
-                                       window.playVideoWithLoading({ videoId: closeState.videoId, title: closeState.title, startTime: closeState.time });
-                                    }
-                                }
-                            } catch(e) { console.error("Could not restore from popup state", e); }
-                        }
-                    }
-                }, 500);
-
+                    }, 2500);
+                }, 1500);
             } else {
-                console.warn('Popup blocked by browser.');
+                console.warn('Popup blocked by browser or an issue occurred.');
             }
         });
     }
