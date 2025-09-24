@@ -4,6 +4,8 @@
   <title>VIDU</title>
   <meta charset="utf--8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
       --bg-overlay: rgba(4,6,12,0.46);
@@ -19,8 +21,9 @@
     }
 
     body{
-      /* MODIFIED: Removed external background.png to save data */
-      background-color: #04060c; /* Fallback color is now the main background */
+      background: url('assets/images/background.png') no-repeat center center fixed;
+      background-size: cover;
+      background-color: #04060c; /* Fallback color */
       font-family:"Inter","Helvetica Neue",Arial,sans-serif;
       color:var(--text);
       margin:0;
@@ -69,7 +72,7 @@
 
     .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);user-select:none;position:relative;}
     .logo-circle{width: clamp(72px, 9vw, 120px);aspect-ratio:1/1;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background: rgba(255,255,255,0.03);border: 10px solid rgba(255,255,255,0.06);box-shadow: 0 10px 24px rgba(0,0,0,0.4);transform: translateZ(0);flex-shrink:0;}
-    .logo-circle svg{width:100%;height:100%;object-fit:cover;object-position:center center;display:block;transform: translateZ(0);}
+    .logo-circle img{width:100%;height:100%;object-fit:cover;object-position:center center;display:block;transform: translateZ(0);}
 
     nav ul{list-style:none;margin:0;padding:0;display:flex;gap:10px;align-items:center;}
     
@@ -765,14 +768,9 @@
 </script>
  <div id="wrapper">
   <header id="header">
-    <a href="#" class="logo" aria-label="VIDU home" title="VIDU home">
+    <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
       <div class="logo-circle" aria-hidden="true">
-        <svg width="100%" height="100%" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <style>
-            .vidu-logo-text { font: bold 38px 'Inter', sans-serif; fill: #f2f6ff; }
-          </style>
-          <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" class="vidu-logo-text">VIDU</text>
-        </svg>
+        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
       </div>
     </a>
     <div class="header-right-controls">
@@ -1751,10 +1749,7 @@
         }
     };
 
-    // MODIFIED: Replaced all external thumbnail URLs with a generic, embedded SVG placeholder to save data.
-    const placeholderThumbnail = "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 84'%3e%3crect width='100%' height='100%' fill='%2312141c'/%3e%3ctext x='50%' y='50%' fill='%23f2f6ff' font-size='14' font-family='sans-serif' text-anchor='middle' dominant-baseline='middle'%3eVIDU%3c/text%3e%3c/svg%3e";
-    const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: placeholderThumbnail, videos: [ { id: 1, name: 'ET', thumbnail: placeholderThumbnail, videos: [ { name:'', thumbnail: placeholderThumbnail, type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail: placeholderThumbnail, type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: placeholderThumbnail, videos: [ { name:'', thumbnail: placeholderThumbnail, type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail: placeholderThumbnail, type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail: placeholderThumbnail, type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: placeholderThumbnail, videos: [ { name:'', thumbnail: placeholderThumbnail, type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
-    
+    const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
     function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
     const decodeEnc = (function(){ const key = new TextEncoder().encode('vidu_secret_2025'); function xorDecode(bytes){ const out = new Uint8Array(bytes.length); for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length]; return out; } return function(encStr){ try{ if(!encStr) return ''; const raw = atob(encStr); const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0))); const dec = xorDecode(bytes); return new TextDecoder().decode(dec); }catch(e){ return ''; } }; })();
     function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
@@ -2195,6 +2190,12 @@
     });
 })();
 </script>
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/browser.min.js"></script>
+<script src="assets/js/breakpoints.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/main.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
