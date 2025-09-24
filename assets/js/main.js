@@ -24,6 +24,19 @@
 			xxsmall:  [ null,      '360px'  ]
 		});
 
+	// VIDU FIX START: Inject CSS to remove focus outlines directly from website JS.
+	// This is more reliable than injecting from Electron, as it avoids Content Security Policy (CSP) issues.
+	// This style rule removes the white border that appears on clicked/focused elements in the Electron app.
+		var cssFix =
+			'<style>' +
+				'*:focus, *:focus-visible {' +
+					'outline: none !important;' +
+					'box-shadow: none !important;' +
+				'}' +
+			'</style>';
+		$('head').append(cssFix);
+	// VIDU FIX END
+
 	// Play initial animations on page load.
 		$window.on('load', function() {
 			window.setTimeout(function() {
