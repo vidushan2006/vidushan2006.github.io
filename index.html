@@ -391,6 +391,23 @@
       opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
     }
 
+    .vidu-popup-btn {
+      position:absolute; top:12px; left:12px; z-index:10002;
+      width:38px; height:38px; padding:6px; border-radius:50%;
+      background:rgba(20, 22, 28, 0.85);
+      border:1px solid rgba(255,255,255,0.08); color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+      box-shadow:0 8px 20px rgba(0,0,0,0.5);
+      transition: opacity .3s ease, transform .3s ease, background .3s ease;
+      will-change: opacity, transform;
+    }
+    .vidu-popup-btn svg { width: 20px; height: 20px; }
+    .vidu-popup-btn:hover {
+      transform: scale(1.1);
+      background: rgba(30, 32, 40, 0.9);
+    }
+
     #close-player { display:none !important; }
 
     .vidu-player-host:-webkit-full-screen .vidu-mount, .vidu-player-host:fullscreen .vidu-mount { height:100vh !important; width:100% !important; }
@@ -602,10 +619,76 @@
         border: 0;
         box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
     }
+    
+    .popup-notice {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        background: rgba(20, 22, 28, 0.95);
+        color: var(--text);
+        padding: 10px 20px;
+        border-radius: var(--card-radius);
+        border: 1px solid rgba(57, 255, 20, 0.3);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        z-index: 19000;
+        font-weight: 600;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+        transform: translateX(-50%) translateY(10px);
+        transform-origin: bottom center;
+        will-change: opacity, transform;
+        visibility: hidden;
+    }
+    .popup-notice.show {
+        opacity: 1;
+        pointer-events: auto;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0px);
+    }
+    
+    /* POPUP PLAYER MODE */
+    body.popup-mode { padding: 0 !important; background: #000 !important; }
+    body.popup-mode::before { display:none; }
+    body.popup-mode #wrapper, body.popup-mode #footer, body.popup-mode header#header { display: none !important; }
+    body.popup-mode #modal-root { display: block !important; }
+    body.popup-mode .modal-backdrop { background: transparent !important; }
+    body.popup-mode .modal { width: 100%; height: 100vh; max-width: none; padding: 0; margin: 0; border-radius: 0; background: #000; border:0; box-shadow:none; }
+    body.popup-mode #player-block { margin-top:0 !important; }
+    body.popup-mode .vidu-player-host { border-radius: 0; }
+    body.popup-mode .vidu-mount { height: 100vh !important; }
+    body.popup-mode .vidu-overlay { border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0; left: 0 !important; right: 0 !important; bottom: 0 !important; }
 
   </style>
 </head>
 <body class="landing is-preload">
+<script>
+// POPUP MODE HANDLER
+(function() {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('popup') === 'true') {
+            document.body.classList.add('popup-mode');
+            const videoId = urlParams.get('videoId');
+            const time = parseFloat(urlParams.get('time')) || 0;
+
+            document.addEventListener('DOMContentLoaded', () => {
+               document.title = "VIDU Popup";
+               const modalRoot = document.getElementById('modal-root');
+               modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal"><div id="player-block" style="display:block;"><div id="player-wrap"></div></div></div></div>`;
+
+               if (window.showViduPlayer && videoId) {
+                   window.showViduPlayer(videoId).then(player => {
+                       setTimeout(() => { player.seekTo(time, true); }, 500);
+                   });
+               }
+            });
+        }
+    } catch(e) {
+        console.error("Popup mode initialization failed:", e);
+    }
+})();
+</script>
  <div id="wrapper">
   <header id="header">
     <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
@@ -746,6 +829,20 @@
     </div>
   </div>
 </div>
+<!-- New overlay for popup player loading -->
+<div id="popup-player-loading-overlay" class="loading-popup-overlay">
+  <div class="loading-popup-content">
+    <p>Initializing VIDU Popup Player</p>
+    <div class="loading-bar-container">
+      <div id="popup-player-loading-bar-fill" class="loading-bar-fill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- New notice for when popup player is active -->
+<div id="popup-notice-overlay" class="popup-notice">
+  Playing in the VIDU Popup Player
+</div>
 
 
 <script>
@@ -784,6 +881,7 @@
     touch_swipeMode: null,
     touch_seekStartTime: 0,
     touch_startVolume: 0,
+    popupCheckInterval: null,
   };
 
   function throttle(func, limit) {
@@ -919,6 +1017,15 @@
     const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
     closeBtn.addEventListener('click', ()=> { try{ if(typeof window.closeModal === 'function') window.closeModal(); else { const root = document.getElementById('modal-root'); if(root) root.style.display='none'; if(window.destroyViduPlayer) window.destroyViduPlayer(); } }catch(e){} });
     host.appendChild(closeBtn);
+    
+    const popupBtn = document.createElement('button');
+    popupBtn.className = 'vidu-popup-btn';
+    popupBtn.id = 'vidu_popup_btn';
+    popupBtn.title = 'Popup Player';
+    popupBtn.type = 'button';
+    popupBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg>`;
+    host.appendChild(popupBtn);
+    
     const osdFeedback = document.createElement('div'); osdFeedback.id = 'vidu_osd_feedback'; osdFeedback.className = 'vidu-osd-feedback';
     host.appendChild(osdFeedback);
     const seekFeedbackLeft = document.createElement('div'); seekFeedbackLeft.id = 'vidu_seek_feedback_left'; seekFeedbackLeft.className = 'vidu-seek-feedback left'; seekFeedbackLeft.innerHTML = `${rewindSVG()}<span>10s</span>`;
@@ -927,13 +1034,13 @@
     host.appendChild(seekFeedbackRight);
     
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu };
+    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){} }
 
   function createPlayer(videoId){
-    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu } = createHostElements();
+    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn } = createHostElements();
     state.host = host; state.mount = mount;
     state.videoId = videoId;
     const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -953,6 +1060,7 @@
     const volumeSlider = overlay.querySelector('#vidu_volume_slider');
     const seekFeedbackLeft = host.querySelector('#vidu_seek_feedback_left');
     const seekFeedbackRight = host.querySelector('#vidu_seek_feedback_right');
+    const popupBtnEl = host.querySelector('#vidu_popup_btn');
 
     playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); volumePanel.classList.remove('open'); });
     playbackMenu.addEventListener('click', (e) => {
@@ -1029,18 +1137,72 @@
     document.addEventListener('mozfullscreenchange', state.fsListener);
     document.addEventListener('MSFullscreenChange', state.fsListener);
 
+    if (popupBtnEl) {
+        popupBtnEl.addEventListener('click', () => {
+            if (!state.player || !state.videoId) return;
+
+            const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+            const url = `${window.location.pathname}?popup=true&videoId=${state.videoId}&time=${currentTime}`;
+            
+            const popupWindow = window.open(url, 'VIDU_Popup_Player', 'width=480,height=320,scrollbars=no,resizable=yes');
+
+            if (popupWindow) {
+                closeModal();
+
+                const loadingOverlay = document.getElementById('popup-player-loading-overlay');
+                const loadingBar = document.getElementById('popup-player-loading-bar-fill');
+                if (loadingOverlay && loadingBar) {
+                    loadingOverlay.classList.add('show');
+                    loadingBar.style.transition = 'none';
+                    loadingBar.style.width = '0%';
+                    setTimeout(() => {
+                        loadingBar.style.transition = 'width 3s cubic-bezier(0.25, 1, 0.5, 1)';
+                        loadingBar.style.width = '100%';
+                    }, 50);
+                }
+
+                setTimeout(() => {
+                    if (loadingOverlay) loadingOverlay.classList.remove('show');
+                    const noticeOverlay = document.getElementById('popup-notice-overlay');
+                    if (noticeOverlay) noticeOverlay.classList.add('show');
+                }, 3000);
+                
+                const noticeOverlay = document.getElementById('popup-notice-overlay');
+                if(state.popupCheckInterval) clearInterval(state.popupCheckInterval);
+                state.popupCheckInterval = setInterval(() => {
+                    if (popupWindow.closed) {
+                        clearInterval(state.popupCheckInterval);
+                        state.popupCheckInterval = null;
+                        if (noticeOverlay) noticeOverlay.classList.remove('show');
+                    }
+                }, 500);
+
+            } else {
+                // Cannot use alert(), so we'll skip this part. In a real scenario, a custom modal would be better.
+                console.warn('Popup blocked by browser.');
+            }
+        });
+    }
+
+    if (document.body.classList.contains('popup-mode')) {
+        if(closeBtn) closeBtn.style.display = 'none';
+        if(popupBtnEl) popupBtnEl.style.display = 'none';
+    }
+
     function setOverlayHidden(hidden){ 
         if(hidden){ 
             overlay.classList.add('hidden'); 
             ctrlBg.classList.add('hidden'); 
             if(closeBtn) closeBtn.classList.add('hidden'); 
+            if(popupBtnEl) popupBtnEl.classList.add('hidden');
             if(playbackMenu) playbackMenu.classList.remove('open');
             if(volumePanel) volumePanel.classList.remove('open');
             if(state.host) state.host.style.cursor = 'none';
         } else { 
             overlay.classList.remove('hidden'); 
             ctrlBg.classList.remove('hidden'); 
-            if(closeBtn) closeBtn.classList.remove('hidden'); 
+            if(closeBtn && !document.body.classList.contains('popup-mode')) closeBtn.classList.remove('hidden'); 
+            if(popupBtnEl && !document.body.classList.contains('popup-mode')) popupBtnEl.classList.remove('hidden'); 
             if(state.host) state.host.style.cursor = '';
         } 
     }
@@ -1369,7 +1531,7 @@
               setVolume(state.lastVolume, false);
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
               const savedTime = window.getVideoProgress(state.videoId);
-              if (savedTime && savedTime > 0) {
+              if (savedTime && savedTime > 0 && !document.body.classList.contains('popup-mode')) {
                   evt.target.seekTo(savedTime, true);
               }
               try{ evt.target.playVideo(); }catch(e){}
@@ -1411,6 +1573,7 @@
       if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); document.removeEventListener('mozfullscreenchange', state.fsListener); document.removeEventListener('MSFullscreenChange', state.fsListener); state.fsListener = null; }
       if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
       if(state.osdTimer){ clearTimeout(state.osdTimer); state.osdTimer = null; }
+      if(state.popupCheckInterval) { clearInterval(state.popupCheckInterval); state.popupCheckInterval = null; }
       if(state.host){ 
           try{ 
               state.host.removeEventListener('wheel', null);
@@ -1761,9 +1924,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', function(){
-      createModal();
-      renderPlaylists();
-      (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
+      if (!document.body.classList.contains('popup-mode')) {
+        createModal();
+        renderPlaylists();
+        (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
+      }
       document.getElementById('fs-playlist-close-btn').addEventListener('click', () => {
         document.getElementById('fullscreen-playlist-overlay').classList.remove('show');
         currentItem = null;
@@ -1777,7 +1942,7 @@
         if (e.key === 'Escape') { 
             const root = document.getElementById('modal-root'); 
             const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
-            if (root && root.style.display !== 'none') closeModal();
+            if (root && root.style.display !== 'none' && !document.body.classList.contains('popup-mode')) closeModal();
             else if (fsPlaylist && fsPlaylist.classList.contains('show')) {
                 fsPlaylist.classList.remove('show');
                 currentItem = null;
