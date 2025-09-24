@@ -181,7 +181,7 @@
       width:100%; height:100%; display:block; border:0; pointer-events:none; transition: filter .3s ease;
     }
 
-    .vidu-player-host.vidu-inverted .vidu-mount iframe {
+    .vidu-mount.vidu-inverted iframe {
         filter: invert(1);
     }
 
@@ -935,6 +935,7 @@
     touch_seekStartTime: 0,
     touch_startVolume: 0,
     popupCheckInterval: null,
+    invertBtnEl: null,
   };
 
   function throttle(func, limit) {
@@ -1095,13 +1096,13 @@
     host.appendChild(seekFeedbackRight);
     
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn };
+    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn, invertBtn };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){} }
 
   function createPlayer(videoId){
-    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn } = createHostElements();
+    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn, invertBtn } = createHostElements();
     state.host = host; state.mount = mount;
     state.videoId = videoId;
     const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -1123,6 +1124,8 @@
     const seekFeedbackRight = host.querySelector('#vidu_seek_feedback_right');
     const popupBtnEl = host.querySelector('#vidu_popup_btn');
     const invertBtnEl = host.querySelector('#vidu_invert_btn');
+    state.invertBtnEl = invertBtnEl;
+
 
     playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); volumePanel.classList.remove('open'); });
     playbackMenu.addEventListener('click', (e) => {
@@ -1275,8 +1278,8 @@
 
     if (invertBtnEl) {
         invertBtnEl.addEventListener('click', () => {
-            if (state.host) {
-                state.host.classList.toggle('vidu-inverted');
+            if (state.mount) {
+                state.mount.classList.toggle('vidu-inverted');
             }
             resetInactivityTimer();
         });
@@ -1293,7 +1296,7 @@
             ctrlBg.classList.add('hidden'); 
             if(closeBtn) closeBtn.classList.add('hidden'); 
             if(popupBtnEl) popupBtnEl.classList.add('hidden');
-            if(invertBtnEl) invertBtnEl.classList.add('hidden');
+            if(state.invertBtnEl) state.invertBtnEl.classList.add('hidden');
             if(playbackMenu) playbackMenu.classList.remove('open');
             if(volumePanel) volumePanel.classList.remove('open');
             if(state.host) state.host.style.cursor = 'none';
@@ -1302,7 +1305,7 @@
             ctrlBg.classList.remove('hidden'); 
             if(closeBtn && !document.body.classList.contains('popup-mode')) closeBtn.classList.remove('hidden'); 
             if(popupBtnEl && !document.body.classList.contains('popup-mode')) popupBtnEl.classList.remove('hidden'); 
-            if(invertBtnEl && !document.body.classList.contains('popup-mode')) invertBtnEl.classList.remove('hidden'); 
+            if(state.invertBtnEl && !document.body.classList.contains('popup-mode')) state.invertBtnEl.classList.remove('hidden'); 
             if(state.host) state.host.style.cursor = '';
         } 
     }
@@ -1676,6 +1679,7 @@
       if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
       if(state.osdTimer){ clearTimeout(state.osdTimer); state.osdTimer = null; }
       if(state.popupCheckInterval) { clearInterval(state.popupCheckInterval); state.popupCheckInterval = null; }
+      state.invertBtnEl = null;
       if(state.host){ 
           try{ 
               state.host.removeEventListener('wheel', null);
