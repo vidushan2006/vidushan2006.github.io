@@ -173,15 +173,26 @@
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
       -webkit-tap-highlight-color: transparent;
+      transition: filter .3s ease;
     }
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
     }
     .vidu-mount iframe{
-      width:100%; height:100%; display:block; border:0; pointer-events:none; transition: filter .3s ease;
+      width:100%; height:100%; display:block; border:0; pointer-events:none;
+    }
+    
+    .vidu-player-host.vidu-player-inverted {
+        filter: invert(1);
     }
 
-    .vidu-mount.vidu-inverted iframe {
+    .vidu-player-inverted .vidu-overlay,
+    .vidu-player-inverted .vidu-close-btn,
+    .vidu-player-inverted .vidu-popup-btn,
+    .vidu-player-inverted .vidu-invert-btn,
+    .vidu-player-inverted .vidu-playback-menu,
+    .vidu-player-inverted .vidu-osd-feedback,
+    .vidu-player-inverted .vidu-seek-feedback {
         filter: invert(1);
     }
 
@@ -693,6 +704,7 @@
     body.popup-mode .vidu-mount { height: 100vh !important; }
     
     body.popup-mode #vidu_fullbtn { display: none; }
+    body.popup-mode .vidu-invert-btn { display: none !important; }
     body.popup-mode .vidu-controls-bg { height: 70px; }
     body.popup-mode .vidu-overlay { padding: 6px 10px; bottom: 6px; left: 6px; right: 6px; border-radius: 8px; }
     body.popup-mode .vidu-controls-grid { gap: 4px 10px; }
@@ -1278,8 +1290,8 @@
 
     if (invertBtnEl) {
         invertBtnEl.addEventListener('click', () => {
-            if (state.mount) {
-                state.mount.classList.toggle('vidu-inverted');
+            if (state.host) {
+                state.host.classList.toggle('vidu-player-inverted');
             }
             resetInactivityTimer();
         });
@@ -1288,6 +1300,7 @@
     if (document.body.classList.contains('popup-mode')) {
         if(closeBtn) closeBtn.style.display = 'none';
         if(popupBtnEl) popupBtnEl.style.display = 'none';
+        if(invertBtnEl) invertBtnEl.style.display = 'none';
     }
 
     function setOverlayHidden(hidden){ 
