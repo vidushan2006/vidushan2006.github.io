@@ -455,9 +455,11 @@
     @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
     @media (max-width:540px){ .vidu-controls-grid { grid-template-areas: "seek seek" "left right"; grid-template-columns: 1fr 1fr; } .vidu-time-container { display: none; } }
     
-    /* Hide popup button on mobile/touch devices */
+    /* Hide extra buttons on mobile/touch devices for a cleaner UI */
     @media (hover: none) and (pointer: coarse) {
-      .vidu-popup-btn {
+      .vidu-popup-btn,
+      .vidu-invert-btn,
+      .vidu-volume-container {
         display: none !important;
       }
     }
