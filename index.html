@@ -1,12 +1,40 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>VIDU</title>
-  <meta charset="utf--8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <link rel="stylesheet" href="assets/css/main.css" />
+  <title>VIDU - The Ultimate Hub for Private Video Playlists & Tools</title>
+  <meta charset="utf-8" /> <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="description" content="Welcome to VIDU, your personal, high-performance dashboard for accessing private video playlists with a custom-built player and powerful YouTube tools. Explore, watch, and manage your content seamlessly.">
+  <meta name="keywords" content="VIDU, private video, video playlist, custom player, youtube tools, video downloader, web tools">
+  <link rel="canonical" href="https://vidu2006.netlify.app/" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+  <meta property="og:title" content="VIDU - Your Private Video Hub">
+  <meta property="og:description" content="Explore and watch exclusive video playlists with a feature-rich, custom-built player and handy web tools.">
+  <meta property="og:image" content="https://vidu2006.netlify.app/assets/images/vidu_social_preview.png"> <meta property="og:url" content="https://vidu2006.netlify.app/">
+  <meta property="og:type" content="website">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="VIDU - Your Private Video Hub">
+  <meta name="twitter:description" content="Explore and watch exclusive video playlists with a feature-rich, custom-built player and handy web tools.">
+  <meta name="twitter:image" content="https://vidu2006.netlify.app/assets/images/vidu_social_preview.png"> <link rel="stylesheet" href="assets/css/main.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "VIDU",
+    "url": "https://vidu2006.netlify.app/",
+    "description": "A personal, high-performance dashboard for accessing private video playlists with a custom-built player and powerful YouTube tools.",
+    "creator": {
+      "@type": "Person",
+      "name": "VIDU"
+    }
+  }
+  </script>
+  
   <style>
+    /* [YOUR EXISTING CSS STYLES GO HERE - NO CHANGES NEEDED TO YOUR CSS] */
     :root{
       --bg-overlay: rgba(4,6,12,0.46);
       --glass: rgba(255,255,255,0.04);
@@ -722,7 +750,6 @@
     body.popup-mode .vidu-controls-grid { gap: 4px 10px; }
     body.popup-mode .vidu-playback-menu { bottom: 65px; }
     body.popup-mode .vidu-volume-panel { bottom: 55px; }
-
   </style>
 </head>
 <body class="landing is-preload">
@@ -793,8 +820,12 @@
   </header>
   <section id="home" class="wrapper style1 fade-up">
     <div class="inner">
-      <h2></h2>
-      <ul id="playlist-list" class="list-container"></ul>
+      <h1 style="text-align: center; margin-bottom: 1rem;">Welcome to VIDU</h1>
+      <p style="text-align: center; max-width: 650px; margin: 0 auto 2rem auto; color: var(--muted);">
+        Your personal dashboard for exclusive video content. Browse the curated playlists below, powered by a custom-built, high-performance player with all the features you need.
+      </p>
+      <ul id="playlist-list" class="list-container">
+        </ul>
       <div id="playlist-videos" style="margin-top:2rem; display:none;"></div>
     </div>
   </section>
@@ -937,7 +968,6 @@
     </div>
   </div>
 </div>
-
 <div id="popup-notice-overlay" class="popup-notice">
   Playing in the VIDU Popup Player
 </div>
@@ -945,6 +975,7 @@
 
 <script>
 // PLAYER SCRIPT
+// [YOUR EXISTING PLAYER SCRIPT GOES HERE - NO CHANGES NEEDED]
 (function(){
   if(window.__viduPlayerLoaded) return;
   window.__viduPlayerLoaded = true;
@@ -1716,6 +1747,7 @@
 /*************************************************************************
  * Playlist data + UI + modal + YouTube playlist fetching
  *************************************************************************/
+// [YOUR EXISTING PLAYLIST SCRIPT GOES HERE - NO CHANGES NEEDED]
 (function() {
     // A global reference to the popup window instance
     window.viduPopupWindow = null;
@@ -2092,6 +2124,7 @@
 /*************************************************************************
  * Website Analytics (Visitor & Watch Counter)
  *************************************************************************/
+// [YOUR EXISTING ANALYTICS SCRIPT GOES HERE - NO CHANGES NEEDED]
 (function() {
     const ANALYTICS_KEY = 'vidu_site_analytics';
 
