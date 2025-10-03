@@ -38,10 +38,6 @@
   <style>
     /* [YOUR EXISTING CSS STYLES GO HERE - NO CHANGES NEEDED TO YOUR CSS] */
     :root{
-      /* --- PLAYER CONFIGURATION --- */
-      --sharpen-amount: 1.5; /* Controls video sharpness. 1 = off, 1.2 = default, 1.5 = high. */
-      /* --- END CONFIGURATION --- */
-      
       --bg-overlay: rgba(4,6,12,0.46);
       --glass: rgba(255,255,255,0.04);
       --glass-strong: rgba(255,255,255,0.06);
@@ -208,62 +204,27 @@
       -webkit-font-smoothing: antialiased;
       -webkit-tap-highlight-color: transparent;
       transition: filter .3s ease;
-      
-      /* New Composable Filter System */
-      --filter-invert: none;
-      --filter-sharpen: none;
-      filter: var(--filter-invert) var(--filter-sharpen);
     }
-    
     .vidu-mount {
       width:100%; height:520px; background:#000; display:block;
     }
     .vidu-mount iframe{
       width:100%; height:100%; display:block; border:0; pointer-events:none;
     }
-
-    .vidu-player-host.vidu-player-inverted {
-      --filter-invert: invert(1);
-    }
-
-    /* This class is now added by JS on desktop devices */
-    .vidu-player-host.vidu-player-sharpened {
-      --filter-sharpen: contrast(var(--sharpen-amount));
-    }
-
-    /* Logic to reverse filters on child controls for readability */
-    .vidu-player-host .vidu-overlay,
-    .vidu-player-host .vidu-close-btn,
-    .vidu-player-host .vidu-popup-btn,
-    .vidu-player-host .vidu-invert-btn,
-    .vidu-player-host .vidu-playback-menu,
-    .vidu-player-host .vidu-osd-feedback,
-    .vidu-player-host .vidu-seek-feedback {
-      --child-filter-invert: none;
-      --child-filter-sharpen: none;
-      filter: var(--child-filter-invert) var(--child-filter-sharpen);
-    }
     
-    .vidu-player-host.vidu-player-inverted .vidu-overlay,
-    .vidu-player-host.vidu-player-inverted .vidu-close-btn,
-    .vidu-player-host.vidu-player-inverted .vidu-popup-btn,
-    .vidu-player-host.vidu-player-inverted .vidu-invert-btn,
-    .vidu-player-host.vidu-player-inverted .vidu-playback-menu,
-    .vidu-player-host.vidu-player-inverted .vidu-osd-feedback,
-    .vidu-player-host.vidu-player-inverted .vidu-seek-feedback {
-      --child-filter-invert: invert(1);
+    .vidu-player-host.vidu-player-inverted {
+        filter: invert(1);
     }
 
-    .vidu-player-host.vidu-player-sharpened .vidu-overlay,
-    .vidu-player-host.vidu-player-sharpened .vidu-close-btn,
-    .vidu-player-host.vidu-player-sharpened .vidu-popup-btn,
-    .vidu-player-host.vidu-player-sharpened .vidu-invert-btn,
-    .vidu-player-host.vidu-player-sharpened .vidu-playback-menu,
-    .vidu-player-host.vidu-player-sharpened .vidu-osd-feedback,
-    .vidu-player-host.vidu-player-sharpened .vidu-seek-feedback {
-      --child-filter-sharpen: contrast(calc(1 / var(--sharpen-amount)));
+    .vidu-player-inverted .vidu-overlay,
+    .vidu-player-inverted .vidu-close-btn,
+    .vidu-player-inverted .vidu-popup-btn,
+    .vidu-player-inverted .vidu-invert-btn,
+    .vidu-player-inverted .vidu-playback-menu,
+    .vidu-player-inverted .vidu-osd-feedback,
+    .vidu-player-inverted .vidu-seek-feedback {
+        filter: invert(1);
     }
-
 
     .vidu-loading {
       position:absolute; inset:0; z-index:9995; display:flex; align-items:center; justify-content:center;
@@ -840,7 +801,7 @@
   <header id="header">
     <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
       <div class="logo-circle" aria-hidden="true">
-        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b_556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
       </div>
     </a>
     <div class="header-right-controls">
@@ -1218,13 +1179,6 @@
     const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn, invertBtn } = createHostElements();
     state.host = host; state.mount = mount;
     state.videoId = videoId;
-
-    // By default, enable sharpen filter on desktop devices.
-    const isDesktop = !window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-    if (isDesktop) {
-        host.classList.add('vidu-player-sharpened');
-    }
-
     const playBtn = overlay.querySelector('#vidu_playbtn');
     const curEl = overlay.querySelector('#vidu_cur');
     const durEl = overlay.querySelector('#vidu_dur');
@@ -1827,7 +1781,7 @@
         }
     };
 
-    const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d/9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f/244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
+    const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
     function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
     const decodeEnc = (function(){ const key = new TextEncoder().encode('vidu_secret_2025'); function xorDecode(bytes){ const out = new Uint8Array(bytes.length); for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length]; return out; } return function(encStr){ try{ if(!encStr) return ''; const raw = atob(encStr); const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0))); const dec = xorDecode(bytes); return new TextDecoder().decode(dec); }catch(e){ return ''; } }; })();
     function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
