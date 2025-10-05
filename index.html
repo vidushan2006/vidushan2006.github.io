@@ -257,14 +257,14 @@
 
     .vidu-overlay {
       position:absolute; left:12px; right:12px; bottom:12px; z-index:9999;
-      padding: 10px 16px;
+      padding: 8px 16px; /* MODIFIED: adjusted padding */
       border-radius: 12px;
       box-sizing:border-box;
       transition:opacity .3s var(--ease),transform .3s var(--ease);
       will-change: opacity, transform;
-      background: rgba(20, 22, 28, 0.92);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
+      background: rgba(18, 18, 18, 0.85); /* MODIFIED: Darker, more transparent background */
+      border: 1px solid rgba(255, 255, 255, 0.06); /* MODIFIED: More subtle border */
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4); /* MODIFIED: More subtle shadow */
     }
     .vidu-overlay.hidden {
       opacity:0;
@@ -284,7 +284,7 @@
     }
 
     .vidu-seek-container { grid-area: seek; position: relative; padding: 8px 0; }
-    .vidu-controls-left { grid-area: left; display: flex; align-items: center; gap: 12px; justify-self: start; }
+    .vidu-controls-left { grid-area: left; display: flex; align-items: center; gap: 8px; justify-self: start; } /* MODIFIED: reduced gap */
     .vidu-controls-center { grid-area: center; }
     .vidu-controls-right { grid-area: right; display: flex; align-items: center; gap: 8px; justify-self: end; }
 
@@ -295,63 +295,65 @@
       transition: background .18s var(--ease), transform .12s ease;
       position: relative;
     }
-    .vidu-btn:hover { background: rgba(255,255,255,0.1); }
+    .vidu-btn:hover { background: rgba(255,255,255,0.08); } /* MODIFIED: more subtle hover */
     .vidu-btn:active{ transform: scale(.95); transition-duration: .08s; }
     .vidu-btn svg { width: 22px; height: 22px; transition: transform .2s var(--ease); will-change: transform; }
     .vidu-btn:hover svg { transform: scale(1.1); }
 
     #vidu_playbtn {
-      width: 44px; height: 44px; background: rgba(255, 255, 255, 0.1); border-radius: 12px;
+      width: 44px; height: 44px; 
+      background: transparent; /* MODIFIED: no bg */
+      border-radius: 50%; /* MODIFIED: circular */
     }
-    #vidu_playbtn:hover { background: rgba(255, 255, 255, 0.2); }
+    #vidu_playbtn:hover { background: rgba(255, 255, 255, 0.1); }
     #vidu_playbtn svg { width: 24px; height: 24px; }
     
     .vidu-range {
       -webkit-appearance: none; appearance: none;
-      width: 100%; height: 6px; background: transparent; cursor: pointer;
+      width: 100%; height: 5px; background: transparent; cursor: pointer; /* MODIFIED: thinner */
       position: absolute; top: 0; left: 0; bottom: 0; right: 0; margin: auto 0; padding: 0;
     }
     .vidu-range:focus {
       outline: none;
     }
     .seek-track {
-      position: relative; width: 100%; height: 6px;
-      background: rgba(59, 130, 246, 0.35);
-      border-radius: 6px;
+      position: relative; width: 100%; height: 5px; /* MODIFIED: thinner */
+      background: rgba(255, 255, 255, 0.2); /* MODIFIED: greyish track */
+      border-radius: 5px;
       pointer-events: none; overflow: hidden;
     }
     .seek-progress {
       position: absolute; left: 0; top: 0; height: 100%;
-      background: var(--accent-2); border-radius: 6px;
+      background: var(--accent-2); border-radius: 5px;
       will-change: width;
     }
     .vidu-range::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
+      width: 14px; /* MODIFIED: smaller */
+      height: 14px; /* MODIFIED: smaller */
       background: transparent;
       border: 0;
       cursor: pointer;
     }
     .vidu-range::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       background: transparent;
       border: 0;
       cursor: pointer;
     }
     .seek-thumb {
-      position: absolute; top: 50%; left: 0; width: 16px; height: 16px;
-      background: #00c6ff;
+      position: absolute; top: 50%; left: 0; width: 14px; height: 14px; /* MODIFIED: smaller */
+      background: var(--accent-2); /* MODIFIED: green */
       border-radius: 50%; transform: translateY(-50%) scale(1);
       pointer-events: none; 
-      box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
+      box-shadow: 0 0 8px rgba(57, 255, 20, 0.6); /* MODIFIED: green shadow */
       transition: transform .2s var(--ease);
       will-change: left, transform;
     }
     .vidu-seek-container:hover .seek-thumb {
       transform: translateY(-50%) scale(1.15); 
-      box-shadow: 0 0 16px rgba(0, 198, 255, 1);
+      box-shadow: 0 0 16px rgba(57, 255, 20, 0.8); /* MODIFIED: stronger green shadow */
     }
     
     .seek-preview {
@@ -546,8 +548,9 @@
       bottom: 82px;
       right: 12px;
       z-index: 10001;
-      width: 90px;
-      background: rgba(30, 32, 38, 0.96);
+      width: 110px; /* MODIFIED: wider */
+      background: rgba(28, 28, 28, 0.95); /* MODIFIED: darker */
+      border: 1px solid rgba(255, 255, 255, 0.1); /* MODIFIED: subtle border */
       border-radius: 12px;
       box-shadow: 0 12px 40px rgba(0,0,0,0.5);
       padding: 6px;
@@ -566,9 +569,9 @@
     }
     .vidu-playback-menu button {
         background: transparent; border: none; color: var(--text);
-        padding: 8px 12px;
+        padding: 8px 16px; /* MODIFIED */
         cursor: pointer; font-weight: 700; font-size: 14px;
-        width: 100%; text-align: center; border-radius: 8px;
+        width: 100%; text-align: left; border-radius: 8px; /* MODIFIED */
         transition: background .18s ease, color .18s ease;
     }
     .vidu-playback-menu button:hover {
@@ -577,7 +580,7 @@
     .vidu-playback-menu button.active {
         color: #fff;
         font-weight: 700;
-        background: #4a7453;
+        background: rgba(255, 255, 255, 0.15); /* MODIFIED: light grey highlight */
     }
 
 
@@ -650,7 +653,8 @@
         left: 50%;
         width: 40px;
         height: 150px;
-        background: rgba(30, 32, 38, 0.96);
+        background: rgba(28, 28, 28, 0.95); /* MODIFIED */
+        border: 1px solid rgba(255, 255, 255, 0.1); /* MODIFIED */
         border-radius: 12px;
         box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         opacity: 0;
@@ -679,28 +683,28 @@
     }
     .vidu-volume-slider::-webkit-slider-runnable-track {
         width: 100%;
-        height: 6px;
-        background: rgba(59, 130, 246, 0.6);
-        border-radius: 6px;
+        height: 5px; /* MODIFIED */
+        background: rgba(255, 255, 255, 0.2); /* MODIFIED */
+        border-radius: 5px;
     }
     .vidu-volume-slider::-moz-range-track {
         width: 100%;
-        height: 6px;
-        background: rgba(59, 130, 246, 0.6);
-        border-radius: 6px;
+        height: 5px; /* MODIFIED */
+        background: rgba(255, 255, 255, 0.2); /* MODIFIED */
+        border-radius: 5px;
     }
     .vidu-volume-slider::-webkit-slider-thumb {
         -webkit-appearance: none;
-        height: 16px;
-        width: 16px;
+        height: 14px; /* MODIFIED */
+        width: 14px; /* MODIFIED */
         border-radius: 50%;
         background: var(--accent-2);
-        margin-top: -5px;
+        margin-top: -4.5px;
         box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
     }
     .vidu-volume-slider::-moz-range-thumb {
-        height: 16px;
-        width: 16px;
+        height: 14px; /* MODIFIED */
+        width: 14px; /* MODIFIED */
         border-radius: 50%;
         background: var(--accent-2);
         border: 0;
@@ -1139,7 +1143,8 @@
     const playbackMenu = document.createElement('div');
     playbackMenu.className = 'vidu-playback-menu';
     playbackMenu.id = 'vidu_playback_menu';
-    playbackMenu.innerHTML = `<button data-speed="2x">😎</button><button data-speed="1.75">1.75x</button><button data-speed="1.5">1.5x</button><button data-speed="1.25">1.25x</button><button data-speed="1" class="active">1x</button>`;
+    // MODIFIED: Changed the playback menu options to match the image
+    playbackMenu.innerHTML = `<button data-speed="2">2x</button><button data-speed="1.75">1.75x</button><button data-speed="1.5">1.5x</button><button data-speed="1.25">1.25x</button><button data-speed="1" class="active">1x</button><button data-speed="0.75">0.75x</button><button data-speed="0.5">0.5x</button><button data-speed="0.25">0.25x</button>`;
     host.appendChild(playbackMenu);
 
     const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
