@@ -311,7 +311,7 @@
 
     .vidu-seek-container { grid-area: seek; position: relative; padding: 8px 0; }
     .vidu-controls-left { grid-area: left; display: flex; align-items: center; gap: 12px; justify-self: start; }
-    .vidu-controls-center { grid-area: center; }
+    .vidu-controls-center { grid-area: center; display: flex; align-items: center; gap: 8px; justify-self: center; }
     .vidu-controls-right { grid-area: right; display: flex; align-items: center; gap: 8px; justify-self: end; }
 
 
@@ -559,7 +559,9 @@
       .vidu-popup-btn,
       .vidu-invert-btn,
       .vidu-playlist-toggle-btn,
-      .vidu-volume-container {
+      .vidu-volume-container,
+      #vidu_prevbtn,
+      #vidu_nextbtn {
         display: none !important;
       }
     }
@@ -685,6 +687,35 @@
     .vidu-playlist-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; display: block; }
     .vidu-playlist-item-number { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.75); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; line-height: 1.4; z-index: 1; pointer-events: none;}
     .vidu-playlist-item .title { font-size: 13px; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+    
+    /* NEW: In-Player Playlist Loader */
+    .vidu-playlist-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .vidu-playlist-loader p {
+        margin: 0 0 16px 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--muted);
+    }
+    .vidu-playlist-loader .spinner {
+        width: 36px;
+        height: 36px;
+        border: 4px solid var(--glass-strong);
+        border-top-color: var(--accent-2);
+        border-radius: 50%;
+        animation: vidu-spin 1s linear infinite;
+    }
+    .vidu-playlist-loader .dots::after {
+      content: ".";
+      animation: loading-dots-anim 1.5s steps(3, start) infinite;
+    }
 
 
     .header-icon-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .18s var(--ease); position: relative; width: 38px; height: 38px; }
@@ -1180,56 +1211,70 @@
           return;
       }
 
-      lastRenderedPlaylistId = playlistData.title;
-      let contentHTML = `<div class="vidu-playlist-header"><h3>${escapeHtml(playlistData.title)}</h3></div><div class="vidu-playlist-content">`;
+      panel.innerHTML = `
+          <div class="vidu-playlist-loader">
+              <p>Loading Playlist<span class="dots"></span></p>
+              <div class="spinner"></div>
+          </div>`;
+      
+      setTimeout(() => {
+          if (!panel || !panel.classList.contains('show')) {
+              return;
+          }
 
-      playlistData.videos.forEach((video, index) => {
-          const isActive = video.videoId === currentVideoId ? 'active' : '';
-          contentHTML += `
-              <div class="vidu-playlist-item ${isActive}" data-video-id="${escapeHtml(video.videoId)}" data-video-title="${escapeHtml(video.title)}">
-                  <div class="vidu-playlist-item-thumb-wrapper">
-                      <img src="${escapeHtml(video.thumb)}" alt="">
-                      <span class="vidu-playlist-item-number">${index + 1}</span>
+          lastRenderedPlaylistId = playlistData.title;
+          let contentHTML = `<div class="vidu-playlist-header"><h3>${escapeHtml(playlistData.title)}</h3></div><div class="vidu-playlist-content">`;
+
+          playlistData.videos.forEach((video, index) => {
+              const isActive = video.videoId === currentVideoId ? 'active' : '';
+              contentHTML += `
+                  <div class="vidu-playlist-item ${isActive}" data-video-id="${escapeHtml(video.videoId)}" data-video-title="${escapeHtml(video.title)}">
+                      <div class="vidu-playlist-item-thumb-wrapper">
+                          <img src="${escapeHtml(video.thumb)}" alt="">
+                          <span class="vidu-playlist-item-number">${index + 1}</span>
+                      </div>
+                      <div class="title">${escapeHtml(video.title)}</div>
                   </div>
-                  <div class="title">${escapeHtml(video.title)}</div>
-              </div>
-          `;
-      });
-      contentHTML += `</div>`;
-      panel.innerHTML = contentHTML;
-
-      panel.querySelectorAll('.vidu-playlist-item').forEach(item => {
-          item.addEventListener('click', () => {
-              const videoId = item.dataset.videoId;
-              const videoTitle = item.dataset.videoTitle;
-
-              const loadingPopup = document.getElementById('playlist-video-loading-overlay');
-              const loadingBar = document.getElementById('playlist-loading-bar-fill');
-
-              if (loadingPopup && loadingBar) {
-                  loadingPopup.classList.add('show');
-                  loadingBar.style.transition = 'none';
-                  loadingBar.style.width = '0%';
-
-                  setTimeout(() => {
-                      loadingBar.style.transition = 'width 2s cubic-bezier(0.25, 1, 0.5, 1)';
-                      loadingBar.style.width = '100%';
-                  }, 10);
-
-                  setTimeout(() => {
-                      loadingPopup.classList.remove('show');
-                      setTimeout(() => {
-                          loadingBar.style.transition = 'none';
-                          loadingBar.style.width = '0%';
-                      }, 300);
-                      
-                      loadVideoInPlayer(videoId, videoTitle);
-                  }, 2000);
-              } else {
-                  loadVideoInPlayer(videoId, videoTitle);
-              }
+              `;
           });
-      });
+          contentHTML += `</div>`;
+          panel.innerHTML = contentHTML;
+
+          panel.querySelectorAll('.vidu-playlist-item').forEach(item => {
+              item.addEventListener('click', () => {
+                  const videoId = item.dataset.videoId;
+                  const videoTitle = item.dataset.videoTitle;
+
+                  const loadingPopup = document.getElementById('playlist-video-loading-overlay');
+                  const loadingBar = document.getElementById('playlist-loading-bar-fill');
+                  const loadingMessage = document.getElementById('playlist-loading-message');
+
+                  if (loadingPopup && loadingBar && loadingMessage) {
+                      loadingMessage.innerHTML = 'Loading <span class="dots"></span>';
+                      loadingPopup.classList.add('show');
+                      loadingBar.style.transition = 'none';
+                      loadingBar.style.width = '0%';
+
+                      setTimeout(() => {
+                          loadingBar.style.transition = 'width 2s cubic-bezier(0.25, 1, 0.5, 1)';
+                          loadingBar.style.width = '100%';
+                      }, 10);
+
+                      setTimeout(() => {
+                          loadingPopup.classList.remove('show');
+                          setTimeout(() => {
+                              loadingBar.style.transition = 'none';
+                              loadingBar.style.width = '0%';
+                          }, 300);
+                          
+                          loadVideoInPlayer(videoId, videoTitle);
+                      }, 2000);
+                  } else {
+                      loadVideoInPlayer(videoId, videoTitle);
+                  }
+              });
+          });
+      }, 2000);
   }
 
   function toggleInPlayerPlaylist() {
@@ -1243,6 +1288,53 @@
       }
       panel.classList.toggle('show', shouldShow);
       btn.classList.toggle('active', shouldShow);
+  }
+
+  function playNextOrPreviousVideo(direction) {
+      const playlistData = window.__viduGlobal?.lastOpenedPlaylist;
+      if (!playlistData || !playlistData.videos || playlistData.videos.length <= 1) {
+          return;
+      }
+
+      const currentVideoId = state.videoId;
+      const currentIndex = playlistData.videos.findIndex(v => v.videoId === currentVideoId);
+
+      if (currentIndex === -1) {
+          return;
+      }
+
+      const newIndex = (currentIndex + direction + playlistData.videos.length) % playlistData.videos.length;
+      const nextVideo = playlistData.videos[newIndex];
+      
+      if (nextVideo) {
+          const loadingPopup = document.getElementById('playlist-video-loading-overlay');
+          const loadingBar = document.getElementById('playlist-loading-bar-fill');
+          const loadingMessage = document.getElementById('playlist-loading-message');
+
+          if (loadingPopup && loadingBar && loadingMessage) {
+              loadingMessage.innerHTML = `Loading ${direction > 0 ? 'Next' : 'Previous'} Video<span class="dots"></span>`;
+              loadingPopup.classList.add('show');
+              loadingBar.style.transition = 'none';
+              loadingBar.style.width = '0%';
+
+              setTimeout(() => {
+                  loadingBar.style.transition = 'width 2s cubic-bezier(0.25, 1, 0.5, 1)';
+                  loadingBar.style.width = '100%';
+              }, 10);
+
+              setTimeout(() => {
+                  loadingPopup.classList.remove('show');
+                  setTimeout(() => {
+                      loadingBar.style.transition = 'none';
+                      loadingBar.style.width = '0%';
+                  }, 300);
+                  
+                  loadVideoInPlayer(nextVideo.videoId, nextVideo.title);
+              }, 2000);
+          } else {
+              loadVideoInPlayer(nextVideo.videoId, nextVideo.title);
+          }
+      }
   }
 
   function throttle(func, limit) {
@@ -1306,6 +1398,8 @@
   function volumeMuteSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`;}
   function rewindSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>`; }
   function ffwdSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>`; }
+  function skipPrevSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>`; }
+  function skipNextSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>`; }
   function speedSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 8v8l6-4-6-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>`;}
 
   function createHostElements(){
@@ -1347,7 +1441,6 @@
           <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" aria-label="Video progress"/>
         </div>
         <div class="vidu-controls-left">
-          <button class="vidu-btn" id="vidu_playbtn" aria-label="Play">${playSVG()}</button>
           <div class="vidu-volume-container">
             <button class="vidu-btn" id="vidu_volumebtn" title="Volume" aria-label="Volume">${volumeHighSVG()}</button>
             <div class="vidu-volume-panel" id="vidu_volume_panel">
@@ -1360,7 +1453,11 @@
             <span id="vidu_dur" class="vidu-time">${fmtHHMMSS(0)}</span>
           </div>
         </div>
-        <div class="vidu-controls-center"></div>
+        <div class="vidu-controls-center">
+            <button class="vidu-btn" id="vidu_prevbtn" title="Previous (Shift + <)" aria-label="Previous">${skipPrevSVG()}</button>
+            <button class="vidu-btn" id="vidu_playbtn" aria-label="Play">${playSVG()}</button>
+            <button class="vidu-btn" id="vidu_nextbtn" title="Next (Shift + >)" aria-label="Next">${skipNextSVG()}</button>
+        </div>
         <div class="vidu-controls-right">
           <button class="vidu-btn" id="vidu_playbackbtn" title="Playback speed" aria-label="Playback speed">${gearSVG()}</button>
           <button class="vidu-btn" id="vidu_fullbtn" title="Fullscreen" aria-label="Fullscreen">${fullscreenSVG()}</button>
@@ -1440,6 +1537,8 @@
     const popupBtnEl = host.querySelector('#vidu_popup_btn');
     const invertBtnEl = host.querySelector('#vidu_invert_btn');
     const playlistToggleBtnEl = host.querySelector('#vidu_playlist_toggle_btn');
+    const prevBtn = host.querySelector('#vidu_prevbtn');
+    const nextBtn = host.querySelector('#vidu_nextbtn');
     state.invertBtnEl = invertBtnEl;
     state.seekTrackEl = seekTrackEl;
 
@@ -1448,6 +1547,19 @@
         toggleInPlayerPlaylist();
         resetInactivityTimer();
       });
+    }
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            playNextOrPreviousVideo(-1);
+            resetInactivityTimer();
+        });
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            playNextOrPreviousVideo(1);
+            resetInactivityTimer();
+        });
     }
 
     playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); volumePanel.classList.remove('open'); });
@@ -1686,6 +1798,20 @@
           }
           setPlaybackRate(speeds[nextIndex]);
           break;
+        case '<':
+            if (e.shiftKey) {
+                e.preventDefault();
+                playNextOrPreviousVideo(-1);
+                resetInactivityTimer();
+            }
+            break;
+        case '>':
+            if (e.shiftKey) {
+                e.preventDefault();
+                playNextOrPreviousVideo(1);
+                resetInactivityTimer();
+            }
+            break;
       }
     };
     document.addEventListener('keydown', state.keyHandler);
