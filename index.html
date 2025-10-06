@@ -174,9 +174,8 @@
         background:linear-gradient(180deg, rgba(2,3,8,0.6), rgba(0,0,0,0.75));
         display:flex;
         align-items:center;
-        justify-content:space-between; /* Changed for centering with spacer */
+        justify-content:center; /* CHANGED: This now centers the content wrapper */
         z-index:9999;
-        gap:16px;
         padding:16px;
         box-sizing:border-box;
     }
@@ -668,9 +667,10 @@
     .vidu-playlist-item:hover { background-color: var(--glass-strong); }
     .vidu-playlist-item.active { background-color: rgba(57, 255, 20, 0.15); border-color: rgba(57, 255, 20, 0.5); color: #fff; }
     .vidu-playlist-item.active .title { font-weight: 800; }
-    .vidu-playlist-item img { width: 100px; height: 56.25px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+    .vidu-playlist-item-thumb-wrapper { position: relative; width: 100px; height: 56.25px; flex-shrink: 0; }
+    .vidu-playlist-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; display: block; }
+    .vidu-playlist-item-number { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.75); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; line-height: 1.4; z-index: 1; pointer-events: none;}
     .vidu-playlist-item .title { font-size: 13px; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
-    .vidu-playlist-spacer { width: 320px; flex-shrink: 0; display: none; }
 
 
     .header-icon-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .18s var(--ease); position: relative; width: 38px; height: 38px; }
@@ -1150,11 +1150,14 @@
       lastRenderedPlaylistId = playlistData.title;
       let contentHTML = `<div class="vidu-playlist-header"><h3>${escapeHtml(playlistData.title)}</h3></div><div class="vidu-playlist-content">`;
 
-      playlistData.videos.forEach(video => {
+      playlistData.videos.forEach((video, index) => {
           const isActive = video.videoId === currentVideoId ? 'active' : '';
           contentHTML += `
               <div class="vidu-playlist-item ${isActive}" data-video-id="${escapeHtml(video.videoId)}" data-video-title="${escapeHtml(video.title)}">
-                  <img src="${escapeHtml(video.thumb)}" alt="">
+                  <div class="vidu-playlist-item-thumb-wrapper">
+                      <img src="${escapeHtml(video.thumb)}" alt="">
+                      <span class="vidu-playlist-item-number">${index + 1}</span>
+                  </div>
                   <div class="title">${escapeHtml(video.title)}</div>
               </div>
           `;
@@ -1172,8 +1175,7 @@
   function toggleInPlayerPlaylist() {
       const panel = document.getElementById('vidu_playlist_panel');
       const btn = document.getElementById('vidu_playlist_toggle_btn');
-      const spacer = document.getElementById('vidu_playlist_spacer');
-      if (!panel || !btn || !spacer) return;
+      if (!panel || !btn) return;
 
       const shouldShow = !panel.classList.contains('show');
       if (shouldShow) {
@@ -1181,7 +1183,6 @@
       }
       panel.classList.toggle('show', shouldShow);
       btn.classList.toggle('active', shouldShow);
-      spacer.style.display = shouldShow ? 'block' : 'none';
   }
 
   function throttle(func, limit) {
@@ -1913,9 +1914,7 @@
   function destroyPlayer(){
     try{
       const panel = document.getElementById('vidu_playlist_panel');
-      const spacer = document.getElementById('vidu_playlist_spacer');
       if (panel) { panel.classList.remove('show'); panel.innerHTML = ''; }
-      if (spacer) { spacer.style.display = 'none'; }
       const btn = document.getElementById('vidu_playlist_toggle_btn');
       if (btn) btn.classList.remove('active');
 
@@ -2086,25 +2085,26 @@
     window.createModal = function(){
       const root = document.getElementById('modal-root');
       root.innerHTML = `<div class="modal-backdrop" id="modal-backdrop">
-        <div id="vidu_playlist_spacer" class="vidu-playlist-spacer"></div>
-        <div class="modal" role="dialog" aria-modal="true">
-            <div class="controls">
-                <div><strong id="modal-title">Locked</strong><div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div></div>
-                <div><button id="modal-close" class="btn secondary">Close</button></div>
-            </div>
-            <div id="modal-body">
-                <div id="password-block">
-                    <div style="color:#bbb;margin-bottom:8px;">This item is password-protected.</div>
-                    <div class="password-row">
-                        <input id="password-input" type="password" placeholder="Enter password" />
-                        <button id="password-submit" class="btn">Unlock</button>
-                    </div>
-                    <div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="modal" role="dialog" aria-modal="true">
+                <div class="controls">
+                    <div><strong id="modal-title">Locked</strong><div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div></div>
+                    <div><button id="modal-close" class="btn secondary">Close</button></div>
                 </div>
-                <div id="player-block" style="display:none;margin-top:12px;"><div id="player-wrap"></div></div>
+                <div id="modal-body">
+                    <div id="password-block">
+                        <div style="color:#bbb;margin-bottom:8px;">This item is password-protected.</div>
+                        <div class="password-row">
+                            <input id="password-input" type="password" placeholder="Enter password" />
+                            <button id="password-submit" class="btn">Unlock</button>
+                        </div>
+                        <div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div>
+                    </div>
+                    <div id="player-block" style="display:none;margin-top:12px;"><div id="player-wrap"></div></div>
+                </div>
             </div>
+            <div id="vidu_playlist_panel" class="vidu-playlist-panel"></div>
         </div>
-        <div id="vidu_playlist_panel" class="vidu-playlist-panel"></div>
       </div>`;
       document.getElementById('modal-close').onclick = closeModal;
       document.getElementById('password-submit').onclick = onPasswordSubmit;
