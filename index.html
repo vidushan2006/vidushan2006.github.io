@@ -167,8 +167,8 @@
 
     .list-item .title{display:block;margin-top:0.45rem;color:var(--text);font-weight:700;font-size:14px;text-shadow:0 1px 0 rgba(0,0,0,0.45);}
 
-    .modal-backdrop{position:fixed;inset:0;background:linear-gradient(180deg, rgba(2,3,8,0.6), rgba(0,0,0,0.75));display:flex;align-items:center;justify-content:center;z-index:9999;}
-    .modal{width:min(960px,95%);background:linear-gradient(180deg, rgba(12,12,12,0.96), rgba(6,6,8,0.98));border-radius:14px;padding:18px;color:#fff;border:1px solid rgba(255,255,255,0.035);box-shadow:0 25px 50px rgba(2,6,18,0.7);}
+    .modal-backdrop{position:fixed;inset:0;background:linear-gradient(180deg, rgba(2,3,8,0.6), rgba(0,0,0,0.75));display:flex;align-items:center;justify-content:center;z-index:9999;gap:16px;padding:16px;box-sizing:border-box;}
+    .modal{width:min(960px,95%);background:linear-gradient(180deg, rgba(12,12,12,0.96), rgba(6,6,8,0.98));border-radius:14px;padding:18px;color:#fff;border:1px solid rgba(255,255,255,0.035);box-shadow:0 25px 50px rgba(2,6,18,0.7); flex-shrink: 0;}
 
     .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;}
     .btn{background:linear-gradient(90deg, var(--accent-1), var(--accent-3));color:#fff;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700;}
@@ -325,7 +325,7 @@
       background: var(--accent-2); border-radius: 6px;
       will-change: width;
     }
-    /* --- NEW: GLOWING PROGRESS BAR ON BUFFER --- */
+    /* --- UPDATED: FASTER & MORE VIBRANT GLOW --- */
     .seek-track.buffering .seek-progress {
         background: var(--accent-2);
         position: relative;
@@ -336,16 +336,19 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 200%;
+        width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), #7b61ff, #ff6b6b, #39ff14, rgba(255, 255, 255, 0.4), transparent);
-        animation: vidu-glow-animation 2s linear infinite;
+        background: linear-gradient(90deg, #ff3366, #7b61ff, #39ff14, #00c6ff, #ff3366);
+        background-size: 250% 100%;
+        animation: vidu-glow-animation 1.2s linear infinite;
+        filter: blur(3px);
+        opacity: 0.9;
     }
     @keyframes vidu-glow-animation {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
+        0% { background-position: 125% 0; }
+        100% { background-position: -125% 0; }
     }
-    /* --- END GLOW --- */
+    /* --- END GLOW UPDATE --- */
     .vidu-range::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 16px;
@@ -496,6 +499,32 @@
     .vidu-invert-btn.hidden {
       opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
     }
+    
+    /* --- NEW PLAYLIST BUTTON --- */
+    .vidu-playlist-toggle-btn {
+      position:absolute; top:108px; left:12px; z-index:10002;
+      width:38px; height:38px; padding:6px; border-radius:50%;
+      background:rgba(20, 22, 28, 0.85);
+      border:1px solid rgba(255,255,255,0.08); color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+      box-shadow:0 8px 20px rgba(0,0,0,0.5);
+      transition: opacity .3s ease, transform .3s ease, background .3s ease, color .3s ease, border-color .3s ease;
+      will-change: opacity, transform;
+    }
+     .vidu-playlist-toggle-btn.active {
+      color: var(--accent-2);
+      border-color: rgba(57, 255, 20, 0.4);
+    }
+    .vidu-playlist-toggle-btn svg { width: 22px; height: 22px; }
+    .vidu-playlist-toggle-btn:hover {
+      transform: scale(1.1);
+      background: rgba(30, 32, 40, 0.9);
+    }
+    .vidu-playlist-toggle-btn.hidden {
+      opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
+    }
+    /* --- END NEW PLAYLIST BUTTON --- */
 
     #close-player { display:none !important; }
 
@@ -510,6 +539,7 @@
     @media (hover: none) and (pointer: coarse) {
       .vidu-popup-btn,
       .vidu-invert-btn,
+      .vidu-playlist-toggle-btn, /* ADDED NEW BUTTON HERE */
       .vidu-volume-container {
         display: none !important;
       }
@@ -600,6 +630,59 @@
         font-weight: 700;
         background: #4a7453;
     }
+    
+    /* --- NEW IN-PLAYER PLAYLIST PANEL --- */
+    .vidu-playlist-panel {
+      width: 320px;
+      height: min(558px, 90vh); /* Match player height approx */
+      background: linear-gradient(180deg, rgba(18,20,28,0.97), rgba(8,9,14,0.98));
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 16px 40px rgba(2,6,18,0.6);
+      display: none;
+      flex-direction: column;
+      flex-shrink: 0;
+      color: var(--text);
+    }
+    .vidu-playlist-panel.show {
+      display: flex;
+    }
+    .vidu-playlist-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .vidu-playlist-header h3 { margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vidu-playlist-content {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .vidu-playlist-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      border: 1px solid transparent;
+    }
+    .vidu-playlist-item:hover { background-color: var(--glass-strong); }
+    .vidu-playlist-item.active { 
+      background-color: rgba(57, 255, 20, 0.15);
+      border-color: rgba(57, 255, 20, 0.5);
+      color: #fff;
+    }
+    .vidu-playlist-item.active .title { font-weight: 800; }
+    .vidu-playlist-item img { width: 100px; height: 56.25px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+    .vidu-playlist-item .title { 
+        font-size: 13px; 
+        font-weight: 600;
+        line-height: 1.4;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;
+    }
+    /* --- END PLAYLIST PANEL --- */
 
 
     .header-icon-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .18s var(--ease); position: relative; width: 38px; height: 38px; }
@@ -994,7 +1077,6 @@
 
 <script>
 // PLAYER SCRIPT
-// [YOUR EXISTING PLAYER SCRIPT GOES HERE - NO CHANGES NEEDED]
 (function(){
   if(window.__viduPlayerLoaded) return;
   window.__viduPlayerLoaded = true;
@@ -1006,7 +1088,7 @@
     mo: null,
     host: null,
     mount: null,
-    seekTrackEl: null, // ADDED FOR GLOWING BAR
+    seekTrackEl: null,
     fsResizeHandler: null,
     fsListener: null,
     docClickHandler: null,
@@ -1033,6 +1115,92 @@
     popupCheckInterval: null,
     invertBtnEl: null,
   };
+
+  // Helper function to escape HTML to prevent XSS
+  function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
+
+  // --- NEW IN-PLAYER PLAYLIST FUNCTIONS ---
+  let lastRenderedPlaylistId = null;
+
+  function loadVideoInPlayer(videoId, title) {
+    if (state.player && typeof state.player.loadVideoById === 'function' && videoId !== state.videoId) {
+      state.player.loadVideoById(videoId);
+      state.videoId = videoId;
+      const modalTitle = document.getElementById('modal-title');
+      if (modalTitle) modalTitle.textContent = title;
+      updatePlaylistHighlight();
+      if (typeof window.incrementWatchCount === 'function') {
+        window.incrementWatchCount();
+      }
+      state.lastSaveTime = 0;
+    }
+  }
+
+  function updatePlaylistHighlight() {
+    const panel = document.getElementById('vidu_playlist_panel');
+    const currentVideoId = state.videoId;
+    if (!panel || !panel.classList.contains('show')) return;
+    
+    panel.querySelectorAll('.vidu-playlist-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.videoId === currentVideoId);
+    });
+  }
+
+  function renderInPlayerPlaylist() {
+      const panel = document.getElementById('vidu_playlist_panel');
+      const playlistData = window.__viduGlobal?.lastOpenedPlaylist;
+      if (!panel) return;
+      if (!playlistData || !playlistData.videos || playlistData.videos.length === 0) {
+          panel.innerHTML = `<div class="vidu-playlist-header"><h3>No playlist loaded</h3></div><div class="vidu-playlist-content" style="text-align:center;padding-top:20px;color:var(--muted);">Open a playlist from the main menu first.</div>`;
+          return;
+      }
+
+      const currentVideoId = state.videoId;
+      if (lastRenderedPlaylistId === playlistData.title && panel.querySelector('.vidu-playlist-content')) {
+          updatePlaylistHighlight();
+          return;
+      }
+
+      lastRenderedPlaylistId = playlistData.title;
+      let contentHTML = `<div class="vidu-playlist-header"><h3>${escapeHtml(playlistData.title)}</h3></div><div class="vidu-playlist-content">`;
+
+      playlistData.videos.forEach(video => {
+          const isActive = video.videoId === currentVideoId ? 'active' : '';
+          contentHTML += `
+              <div class="vidu-playlist-item ${isActive}" data-video-id="${escapeHtml(video.videoId)}" data-video-title="${escapeHtml(video.title)}">
+                  <img src="${escapeHtml(video.thumb)}" alt="">
+                  <div class="title">${escapeHtml(video.title)}</div>
+              </div>
+          `;
+      });
+      contentHTML += `</div>`;
+      panel.innerHTML = contentHTML;
+
+      panel.querySelectorAll('.vidu-playlist-item').forEach(item => {
+          item.addEventListener('click', () => {
+              loadVideoInPlayer(item.dataset.videoId, item.dataset.videoTitle);
+          });
+      });
+  }
+
+  function toggleInPlayerPlaylist() {
+      const panel = document.getElementById('vidu_playlist_panel');
+      const btn = document.getElementById('vidu_playlist_toggle_btn');
+      if (!panel || !btn) return;
+
+      const shouldShow = !panel.classList.contains('show');
+      if (shouldShow) {
+          renderInPlayerPlaylist();
+      }
+      panel.classList.toggle('show', shouldShow);
+      btn.classList.toggle('active', shouldShow);
+      
+      const backdrop = document.getElementById('modal-backdrop');
+      if (backdrop) {
+          backdrop.style.justifyContent = shouldShow ? 'space-between' : 'center';
+      }
+  }
+  // --- END NEW FUNCTIONS ---
 
   function throttle(func, limit) {
     let inThrottle;
@@ -1184,6 +1352,16 @@
     invertBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-1.9 1.26 6 6 0 0 1-8.05-5.15A5.5 5.5 0 0 1 13.36 4.1a9 9 0 0 0-1.36-1.1zM12 19a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/></svg>`;
     host.appendChild(invertBtn);
 
+    // --- NEW: PLAYLIST TOGGLE BUTTON ---
+    const playlistToggleBtn = document.createElement('button');
+    playlistToggleBtn.className = 'vidu-playlist-toggle-btn';
+    playlistToggleBtn.id = 'vidu_playlist_toggle_btn';
+    playlistToggleBtn.title = 'Toggle Playlist';
+    playlistToggleBtn.type = 'button';
+    playlistToggleBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h12v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3zm14 12 5-3.5-5-3.5v7z"/></svg>`;
+    host.appendChild(playlistToggleBtn);
+    // --- END NEW BUTTON ---
+
     const osdFeedback = document.createElement('div'); osdFeedback.id = 'vidu_osd_feedback'; osdFeedback.className = 'vidu-osd-feedback';
     host.appendChild(osdFeedback);
     const seekFeedbackLeft = document.createElement('div'); seekFeedbackLeft.id = 'vidu_seek_feedback_left'; seekFeedbackLeft.className = 'vidu-seek-feedback left'; seekFeedbackLeft.innerHTML = `${rewindSVG()}<span>10s</span>`;
@@ -1211,7 +1389,7 @@
     const seekProgressEl = overlay.querySelector('#vidu_seek_progress');
     const seekThumbEl = overlay.querySelector('#vidu_seek_thumb');
     const seekContainer = overlay.querySelector('.vidu-seek-container');
-    const seekTrackEl = overlay.querySelector('.seek-track'); // ADDED FOR GLOWING BAR
+    const seekTrackEl = overlay.querySelector('.seek-track');
     const seekPreview = overlay.querySelector('#vidu_seek_preview');
     const seekPreviewTime = overlay.querySelector('#vidu_seek_preview_time');
     const volumeBtn = overlay.querySelector('#vidu_volumebtn');
@@ -1221,9 +1399,16 @@
     const seekFeedbackRight = host.querySelector('#vidu_seek_feedback_right');
     const popupBtnEl = host.querySelector('#vidu_popup_btn');
     const invertBtnEl = host.querySelector('#vidu_invert_btn');
+    const playlistToggleBtnEl = host.querySelector('#vidu_playlist_toggle_btn');
     state.invertBtnEl = invertBtnEl;
-    state.seekTrackEl = seekTrackEl; // ADDED FOR GLOWING BAR
+    state.seekTrackEl = seekTrackEl;
 
+    if (playlistToggleBtnEl) {
+      playlistToggleBtnEl.addEventListener('click', () => {
+        toggleInPlayerPlaylist();
+        resetInactivityTimer();
+      });
+    }
 
     playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); volumePanel.classList.remove('open'); });
     playbackMenu.addEventListener('click', (e) => {
@@ -1307,32 +1492,23 @@
             const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
             const title = document.getElementById('modal-title') ? document.getElementById('modal-title').textContent : 'VIDU Video';
             
-            // MODIFICATION: Construct an absolute URL to avoid potential issues in Electron.
             const url = `${window.location.origin}${window.location.pathname}?popup=true&videoId=${state.videoId}&time=${currentTime}&title=${encodeURIComponent(title)}`;
             
-            const popWidth = 400;
-            const popHeight = 225;
-            // Place the popup on the bottom right of the screen.
-            const popTop = window.screen.height - popHeight - 40;
-            const popLeft = window.screen.width - popWidth - 40;
-            
-            // MODIFICATION: Fixed the typo (top=${popLeft} -> top=${popTop}) and removed the non-standard 'popup=yes'.
+            const popWidth = 400; const popHeight = 225;
+            const popTop = window.screen.height - popHeight - 40; const popLeft = window.screen.width - popWidth - 40;
             const features = `width=${popWidth},height=${popHeight},top=${popTop},left=${popLeft},resizable=yes`;
             
             const popupWindow = window.open(url, 'VIDU_Popup_Player', features);
 
             if (popupWindow) {
-                closeModal(); // Close the main player modal.
-                // Show a loading indicator and notice, which is handled well by your existing code.
+                closeModal();
                 const loadingOverlay = document.getElementById('popup-player-loading-overlay');
                 if (loadingOverlay) loadingOverlay.classList.add('show');
                 setTimeout(() => {
                     if (loadingOverlay) loadingOverlay.classList.remove('show');
                     const noticeOverlay = document.getElementById('popup-notice-overlay');
                     if (noticeOverlay) noticeOverlay.classList.add('show');
-                    setTimeout(() => {
-                        if (noticeOverlay) noticeOverlay.classList.remove('show');
-                    }, 2500);
+                    setTimeout(() => { if (noticeOverlay) noticeOverlay.classList.remove('show'); }, 2500);
                 }, 1500);
             } else {
                 console.warn('Popup blocked by browser or an issue occurred.');
@@ -1353,24 +1529,26 @@
         if(closeBtn) closeBtn.style.display = 'none';
         if(popupBtnEl) popupBtnEl.style.display = 'none';
         if(invertBtnEl) invertBtnEl.style.display = 'none';
+        if(playlistToggleBtnEl) playlistToggleBtnEl.style.display = 'none';
     }
 
     function setOverlayHidden(hidden){ 
+        const playlistBtn = document.getElementById('vidu_playlist_toggle_btn');
         if(hidden){ 
-            overlay.classList.add('hidden'); 
-            ctrlBg.classList.add('hidden'); 
+            overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); 
             if(closeBtn) closeBtn.classList.add('hidden'); 
             if(popupBtnEl) popupBtnEl.classList.add('hidden');
             if(state.invertBtnEl) state.invertBtnEl.classList.add('hidden');
+            if(playlistBtn) playlistBtn.classList.add('hidden');
             if(playbackMenu) playbackMenu.classList.remove('open');
             if(volumePanel) volumePanel.classList.remove('open');
             if(state.host) state.host.style.cursor = 'none';
         } else { 
-            overlay.classList.remove('hidden'); 
-            ctrlBg.classList.remove('hidden'); 
+            overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); 
             if(closeBtn && !document.body.classList.contains('popup-mode')) closeBtn.classList.remove('hidden'); 
             if(popupBtnEl && !document.body.classList.contains('popup-mode')) popupBtnEl.classList.remove('hidden'); 
             if(state.invertBtnEl && !document.body.classList.contains('popup-mode')) state.invertBtnEl.classList.remove('hidden'); 
+            if(playlistBtn && !document.body.classList.contains('popup-mode')) playlistBtn.classList.remove('hidden');
             if(state.host) state.host.style.cursor = '';
         } 
     }
@@ -1420,7 +1598,6 @@
       switch (key) {
         case ' ': e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); resetInactivityTimer(); } break;
         case 'f': if (!document.body.classList.contains('popup-mode')) { e.preventDefault(); toggleFullscreen(); } break;
-        // --- NEW KEYBOARD SHORTCUTS ---
         case 'n':
           e.preventDefault();
           if (state.host) { state.host.classList.toggle('vidu-player-inverted'); }
@@ -1431,10 +1608,8 @@
           const popupBtn = document.getElementById('vidu_popup_btn');
           if (popupBtn) { popupBtn.click(); }
           break;
-        // --- END NEW SHORTCUTS ---
         case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
         case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
-        // --- MODIFIED VOLUME CONTROL ---
         case 'arrowup':
           e.preventDefault();
           const upAmount = e.ctrlKey ? 1 : 5;
@@ -1445,7 +1620,6 @@
           const downAmount = e.ctrlKey ? 1 : 5;
           setVolume((state.player.getVolume() || 0) - downAmount);
           break;
-        // --- END MODIFIED VOLUME ---
         case 'q':
         case 'e':
         case 'w':
@@ -1721,6 +1895,7 @@
             onReady: function(evt){
               disableIframeClicks(host); showLoading();
               setVolume(state.lastVolume, false);
+              updatePlaylistHighlight();
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
               const savedTime = window.getVideoProgress(state.videoId);
               if (savedTime && savedTime > 0 && !document.body.classList.contains('popup-mode')) {
@@ -1734,28 +1909,19 @@
               state.mo = new MutationObserver(()=> disableIframeClicks(host));
               state.mo.observe(host, { childList:true, subtree:true });
               resetInactivityTimer();
-              resolve(evt.target); // Resolve with the player instance
+              resolve(evt.target);
             },
             onStateChange: function(e){
               try{
-                // Feature: Glowing progress bar on buffer
                 if (state.seekTrackEl) {
-                    if (e.data === 3) { // 3 = Buffering
-                        state.seekTrackEl.classList.add('buffering');
-                    } else {
-                        state.seekTrackEl.classList.remove('buffering');
-                    }
+                    if (e.data === 3) { state.seekTrackEl.classList.add('buffering'); } 
+                    else { state.seekTrackEl.classList.remove('buffering'); }
                 }
-                if(e && e.data === 1){ // Playing
-                  try{ hideLoading(); }catch(e){}
-                }
+                if(e && e.data === 1){ try{ hideLoading(); }catch(e){} } 
               }catch(err){}
             },
             onError: function(err){
-              // Ensure buffering animation stops on error
-              if (state.seekTrackEl) {
-                state.seekTrackEl.classList.remove('buffering');
-              }
+              if (state.seekTrackEl) { state.seekTrackEl.classList.remove('buffering'); }
               try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} console.error('YT player error', err);
             }
           }
@@ -1766,9 +1932,14 @@
 
   function destroyPlayer(){
     try{
-      if (state.seekTrackEl) {
-        state.seekTrackEl.classList.remove('buffering');
-      }
+      const panel = document.getElementById('vidu_playlist_panel');
+      if (panel) { panel.classList.remove('show'); panel.innerHTML = ''; }
+      const btn = document.getElementById('vidu_playlist_toggle_btn');
+      if (btn) btn.classList.remove('active');
+      const backdrop = document.getElementById('modal-backdrop');
+      if (backdrop) backdrop.style.justifyContent = 'center';
+
+      if (state.seekTrackEl) { state.seekTrackEl.classList.remove('buffering'); }
       
       if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
         const cur = state.player.getCurrentTime();
@@ -1793,10 +1964,8 @@
       state.invertBtnEl = null;
       if(state.host){ 
           try{ 
-              state.host.removeEventListener('wheel', null);
-              state.host.removeEventListener('touchstart', null);
-              state.host.removeEventListener('touchmove', null);
-              state.host.removeEventListener('touchend', null);
+              state.host.removeEventListener('wheel', null); state.host.removeEventListener('touchstart', null);
+              state.host.removeEventListener('touchmove', null); state.host.removeEventListener('touchend', null);
           } catch(e){} 
       }
       if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
@@ -1815,7 +1984,6 @@
 /*************************************************************************
  * Playlist data + UI + modal + YouTube playlist fetching
  *************************************************************************/
-// [YOUR EXISTING PLAYLIST SCRIPT GOES HERE - NO CHANGES NEEDED]
 (function() {
     // A global reference to the popup window instance
     window.viduPopupWindow = null;
@@ -1839,15 +2007,12 @@
         const modalRoot = document.getElementById('modal-root');
         const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
         
-        // Check if any player-related overlays are still active
-        const isPlayerActive = (modalRoot && modalRoot.style.display !== 'none') || 
-                               (fsPlaylist && fsPlaylist.classList.contains('show'));
+        const isPlayerActive = (modalRoot && modalRoot.style.display !== 'none') || (fsPlaylist && fsPlaylist.classList.contains('show'));
 
         if (!isPlayerActive && wrapperElement && !document.getElementById('wrapper')) {
             document.body.insertBefore(wrapperElement, document.getElementById('modal-root'));
-            // Re-run stagger animation for playlist items
             (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
-            wrapperElement = null; // Clear the stored element
+            wrapperElement = null;
         }
     };
 
@@ -1945,7 +2110,26 @@
 
     window.createModal = function(){
       const root = document.getElementById('modal-root');
-      root.innerHTML = `<div class="modal-backdrop" id="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><div class="controls"><div><strong id="modal-title">Locked</strong><div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div></div><div><button id="modal-close" class="btn secondary">Close</button></div></div><div id="modal-body"><div id="password-block"><div style="color:#bbb;margin-bottom:8px;">This item is password-protected.</div><div class="password-row"><input id="password-input" type="password" placeholder="Enter password" /><button id="password-submit" class="btn">Unlock</button></div><div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div></div><div id="player-block" style="display:none;margin-top:12px;"><div id="player-wrap"></div></div></div></div></div>`;
+      root.innerHTML = `<div class="modal-backdrop" id="modal-backdrop">
+        <div class="modal" role="dialog" aria-modal="true">
+            <div class="controls">
+                <div><strong id="modal-title">Locked</strong><div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div></div>
+                <div><button id="modal-close" class="btn secondary">Close</button></div>
+            </div>
+            <div id="modal-body">
+                <div id="password-block">
+                    <div style="color:#bbb;margin-bottom:8px;">This item is password-protected.</div>
+                    <div class="password-row">
+                        <input id="password-input" type="password" placeholder="Enter password" />
+                        <button id="password-submit" class="btn">Unlock</button>
+                    </div>
+                    <div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div>
+                </div>
+                <div id="player-block" style="display:none;margin-top:12px;"><div id="player-wrap"></div></div>
+            </div>
+        </div>
+        <div id="vidu_playlist_panel" class="vidu-playlist-panel"></div>
+      </div>`;
       document.getElementById('modal-close').onclick = closeModal;
       document.getElementById('password-submit').onclick = onPasswordSubmit;
       document.getElementById('password-input').onkeydown = (e)=>{ if(e.key === 'Enter') onPasswordSubmit(); };
@@ -2043,6 +2227,8 @@
       const playlistId = rawId.split('&')[0];
       try {
         const videos = await fetchPlaylistVideos(playlistId);
+        if (!window.__viduGlobal) window.__viduGlobal = {};
+        window.__viduGlobal.lastOpenedPlaylist = { videos, title: item.name };
         renderFullScreenPlaylist(videos, item.name);
       } catch (err) {
         console.error('Playlist fetch error', err);
@@ -2192,7 +2378,6 @@
 /*************************************************************************
  * Website Analytics (Visitor & Watch Counter)
  *************************************************************************/
-// [YOUR EXISTING ANALYTICS SCRIPT GOES HERE - NO CHANGES NEEDED]
 (function() {
     const ANALYTICS_KEY = 'vidu_site_analytics';
 
@@ -2227,24 +2412,18 @@
         const todayStr = getTodaysDateString();
 
         if (!data) {
-            // First visit ever for this user, let's initialize with some random "base" numbers to make it look populated.
             data = {
-                totalVisits: Math.floor(Math.random() * (250 - 100 + 1)) + 100, // Random between 100-250
-                totalWatches: Math.floor(Math.random() * (600 - 300 + 1)) + 300, // Random between 300-600
+                totalVisits: Math.floor(Math.random() * (250 - 100 + 1)) + 100,
+                totalWatches: Math.floor(Math.random() * (600 - 300 + 1)) + 300,
                 lastVisitDate: todayStr,
                 dailyStats: {
-                    [todayStr]: {
-                        visits: 1,
-                        watches: 0
-                    }
+                    [todayStr]: { visits: 1, watches: 0 }
                 }
             };
         } else {
-            // It's a return visit. Check if it's a new day.
             if (data.lastVisitDate !== todayStr) {
                 data.totalVisits += 1;
                 data.lastVisitDate = todayStr;
-                // Reset daily stats for the new day
                 data.dailyStats[todayStr] = { visits: 1, watches: 0 };
             }
         }
@@ -2257,7 +2436,6 @@
 
         const todayStr = getTodaysDateString();
 
-        // Ensure today's stats object exists
         if (!data.dailyStats[todayStr]) {
             data.dailyStats[todayStr] = { visits: 1, watches: 0 };
              if(data.lastVisitDate !== todayStr) {
