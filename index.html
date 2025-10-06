@@ -326,6 +326,42 @@
     .vidu-btn svg { width: 22px; height: 22px; transition: transform .2s var(--ease); will-change: transform; }
     .vidu-btn:hover svg { transform: scale(1.1); }
 
+    /* NEW: Custom Tooltip for Buttons */
+    .vidu-custom-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      background: rgba(20, 22, 28, 0.92);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--accent-2);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      border: 1px solid rgba(57, 255, 20, 0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+      transform-origin: bottom center;
+      transform: translateX(-50%) translateY(4px);
+      will-change: opacity, transform;
+      z-index: 10005;
+    }
+
+    .vidu-btn:hover .vidu-custom-tooltip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .vidu-custom-tooltip:empty {
+      display: none;
+    }
+    /* END: Custom Tooltip */
+
+
     #vidu_playbtn {
       width: 44px; height: 44px; background: rgba(255, 255, 255, 0.1); border-radius: 12px;
     }
@@ -956,7 +992,7 @@
   <header id="header">
     <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
       <div class="logo-circle" aria-hidden="true">
-        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b_556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
       </div>
     </a>
     <div class="header-right-controls">
@@ -1177,6 +1213,33 @@
 
   function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
+  function getAdjacentVideoTitle(direction) {
+      const playlistData = window.__viduGlobal?.lastOpenedPlaylist;
+      if (!playlistData || !playlistData.videos || playlistData.videos.length <= 1) {
+          return '';
+      }
+      const currentVideoId = state.videoId;
+      const currentIndex = playlistData.videos.findIndex(v => v.videoId === currentVideoId);
+      if (currentIndex === -1) {
+          return '';
+      }
+      const newIndex = (currentIndex + direction + playlistData.videos.length) % playlistData.videos.length;
+      const adjacentVideo = playlistData.videos[newIndex];
+      return adjacentVideo ? escapeHtml(adjacentVideo.title) : '';
+  }
+
+  function updateNavTooltips() {
+      const prevTooltip = document.getElementById('vidu_prev_tooltip');
+      const nextTooltip = document.getElementById('vidu_next_tooltip');
+
+      if (prevTooltip) {
+          prevTooltip.textContent = getAdjacentVideoTitle(-1);
+      }
+      if (nextTooltip) {
+          nextTooltip.textContent = getAdjacentVideoTitle(1);
+      }
+  }
+
   function loadVideoInPlayer(videoId, title) {
     if (state.player && typeof state.player.loadVideoById === 'function' && videoId !== state.videoId) {
       state.player.loadVideoById(videoId);
@@ -1186,6 +1249,7 @@
       const modalTitle = document.getElementById('modal-title');
       if (modalTitle) modalTitle.textContent = title;
       updatePlaylistHighlight();
+      updateNavTooltips();
       if (typeof window.incrementWatchCount === 'function') {
         window.incrementWatchCount();
       }
@@ -1455,9 +1519,9 @@
           </div>
         </div>
         <div class="vidu-controls-center">
-            <button class="vidu-btn" id="vidu_prevbtn" title="Previous (,)" aria-label="Previous">${skipPrevSVG()}</button>
+            <button class="vidu-btn" id="vidu_prevbtn" aria-label="Previous (,)">${skipPrevSVG()}<span id="vidu_prev_tooltip" class="vidu-custom-tooltip"></span></button>
             <button class="vidu-btn" id="vidu_playbtn" aria-label="Play">${playSVG()}</button>
-            <button class="vidu-btn" id="vidu_nextbtn" title="Next (.)" aria-label="Next">${skipNextSVG()}</button>
+            <button class="vidu-btn" id="vidu_nextbtn" aria-label="Next (.)">${skipNextSVG()}<span id="vidu_next_tooltip" class="vidu-custom-tooltip"></span></button>
         </div>
         <div class="vidu-controls-right">
           <button class="vidu-btn" id="vidu_playbackbtn" title="Playback speed" aria-label="Playback speed">${gearSVG()}</button>
@@ -1674,7 +1738,7 @@
             if (state.host) {
                 state.host.classList.toggle('vidu-player-inverted');
             }
-            resetInactivityTimer();
+            resetInactivityTimer(false);
         });
     }
 
@@ -1754,7 +1818,7 @@
         case 'n':
           e.preventDefault();
           if (state.host) { state.host.classList.toggle('vidu-player-inverted'); }
-          resetInactivityTimer();
+          resetInactivityTimer(false);
           break;
         case 'p':
           e.preventDefault();
@@ -1764,7 +1828,7 @@
         case 'l':
           e.preventDefault();
           toggleInPlayerPlaylist();
-          resetInactivityTimer();
+          resetInactivityTimer(false);
           break;
         case 'ArrowRight': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
         case 'ArrowLeft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
@@ -1785,7 +1849,7 @@
           const buttons = Array.from(playbackMenu.querySelectorAll('button[data-speed]'));
           const speeds = buttons.map(b => parseFloat(b.dataset.speed)).sort((a, b) => a - b);
           
-          if (key.toLowerCase() === 'w') { setPlaybackRate(1); break; }
+          if (key.toLowerCase() === 'w') { setPlaybackRate(1); resetInactivityTimer(); break; }
           
           const currentRate = state.player.getPlaybackRate();
           let currentIndex = speeds.findIndex(s => s === currentRate);
@@ -1798,6 +1862,7 @@
              nextIndex = (currentIndex - 1 + speeds.length) % speeds.length;
           }
           setPlaybackRate(speeds[nextIndex]);
+          resetInactivityTimer();
           break;
         case ',':
             e.preventDefault();
@@ -1875,9 +1940,11 @@
       resetInactivityTimer();
     });
 
-    function resetInactivityTimer(){
+    function resetInactivityTimer(showControls = true){
         state.lastActivity = Date.now();
-        setOverlayHidden(false);
+        if (showControls) {
+          setOverlayHidden(false);
+        }
         if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
         state.inactivityTimer = setTimeout(()=>{
             try {
@@ -2064,6 +2131,7 @@
               disableIframeClicks(host); showLoading();
               setVolume(state.lastVolume, false);
               updatePlaylistHighlight();
+              updateNavTooltips();
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
               const savedTime = window.getVideoProgress(state.videoId);
               if (savedTime && savedTime > 0 && !document.body.classList.contains('popup-mode')) {
