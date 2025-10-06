@@ -167,8 +167,28 @@
 
     .list-item .title{display:block;margin-top:0.45rem;color:var(--text);font-weight:700;font-size:14px;text-shadow:0 1px 0 rgba(0,0,0,0.45);}
 
-    .modal-backdrop{position:fixed;inset:0;background:linear-gradient(180deg, rgba(2,3,8,0.6), rgba(0,0,0,0.75));display:flex;align-items:center;justify-content:center;z-index:9999;gap:16px;padding:16px;box-sizing:border-box;}
-    .modal{width:min(960px,95%);background:linear-gradient(180deg, rgba(12,12,12,0.96), rgba(6,6,8,0.98));border-radius:14px;padding:18px;color:#fff;border:1px solid rgba(255,255,255,0.035);box-shadow:0 25px 50px rgba(2,6,18,0.7); flex-shrink: 0;}
+    /* --- UPDATED: CENTERING LOGIC --- */
+    .modal-backdrop{
+        position:fixed;
+        inset:0;
+        background:linear-gradient(180deg, rgba(2,3,8,0.6), rgba(0,0,0,0.75));
+        display:flex;
+        align-items:center;
+        justify-content:space-between; /* Changed for centering with spacer */
+        z-index:9999;
+        gap:16px;
+        padding:16px;
+        box-sizing:border-box;
+    }
+    .modal{
+        width:min(960px,95%);
+        background:linear-gradient(180deg, rgba(12,12,12,0.96), rgba(6,6,8,0.98));
+        border-radius:14px;
+        padding:18px;color:#fff;
+        border:1px solid rgba(255,255,255,0.035);
+        box-shadow:0 25px 50px rgba(2,6,18,0.7);
+        flex-shrink: 0;
+    }
 
     .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;}
     .btn{background:linear-gradient(90deg, var(--accent-1), var(--accent-3));color:#fff;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700;}
@@ -500,7 +520,6 @@
       opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
     }
     
-    /* --- NEW PLAYLIST BUTTON --- */
     .vidu-playlist-toggle-btn {
       position:absolute; top:108px; left:12px; z-index:10002;
       width:38px; height:38px; padding:6px; border-radius:50%;
@@ -524,7 +543,6 @@
     .vidu-playlist-toggle-btn.hidden {
       opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
     }
-    /* --- END NEW PLAYLIST BUTTON --- */
 
     #close-player { display:none !important; }
 
@@ -535,11 +553,10 @@
     @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
     @media (max-width:540px){ .vidu-controls-grid { grid-template-areas: "seek seek" "left right"; grid-template-columns: 1fr 1fr; } .vidu-time-container { display: none; } }
     
-    /* Hide extra buttons on mobile/touch devices for a cleaner UI */
     @media (hover: none) and (pointer: coarse) {
       .vidu-popup-btn,
       .vidu-invert-btn,
-      .vidu-playlist-toggle-btn, /* ADDED NEW BUTTON HERE */
+      .vidu-playlist-toggle-btn,
       .vidu-volume-container {
         display: none !important;
       }
@@ -631,10 +648,9 @@
         background: #4a7453;
     }
     
-    /* --- NEW IN-PLAYER PLAYLIST PANEL --- */
     .vidu-playlist-panel {
       width: 320px;
-      height: min(558px, 90vh); /* Match player height approx */
+      height: min(558px, 90vh);
       background: linear-gradient(180deg, rgba(18,20,28,0.97), rgba(8,9,14,0.98));
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.05);
@@ -644,45 +660,17 @@
       flex-shrink: 0;
       color: var(--text);
     }
-    .vidu-playlist-panel.show {
-      display: flex;
-    }
-    .vidu-playlist-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      flex-shrink: 0;
-    }
+    .vidu-playlist-panel.show { display: flex; }
+    .vidu-playlist-header { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
     .vidu-playlist-header h3 { margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vidu-playlist-content {
-      flex-grow: 1;
-      overflow-y: auto;
-      padding: 8px;
-    }
-    .vidu-playlist-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      border: 1px solid transparent;
-    }
+    .vidu-playlist-content { flex-grow: 1; overflow-y: auto; padding: 8px; }
+    .vidu-playlist-item { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; border: 1px solid transparent; }
     .vidu-playlist-item:hover { background-color: var(--glass-strong); }
-    .vidu-playlist-item.active { 
-      background-color: rgba(57, 255, 20, 0.15);
-      border-color: rgba(57, 255, 20, 0.5);
-      color: #fff;
-    }
+    .vidu-playlist-item.active { background-color: rgba(57, 255, 20, 0.15); border-color: rgba(57, 255, 20, 0.5); color: #fff; }
     .vidu-playlist-item.active .title { font-weight: 800; }
     .vidu-playlist-item img { width: 100px; height: 56.25px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
-    .vidu-playlist-item .title { 
-        font-size: 13px; 
-        font-weight: 600;
-        line-height: 1.4;
-        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;
-    }
-    /* --- END PLAYLIST PANEL --- */
+    .vidu-playlist-item .title { font-size: 13px; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+    .vidu-playlist-spacer { width: 320px; flex-shrink: 0; display: none; }
 
 
     .header-icon-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .18s var(--ease); position: relative; width: 38px; height: 38px; }
@@ -1116,10 +1104,8 @@
     invertBtnEl: null,
   };
 
-  // Helper function to escape HTML to prevent XSS
   function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
-  // --- NEW IN-PLAYER PLAYLIST FUNCTIONS ---
   let lastRenderedPlaylistId = null;
 
   function loadVideoInPlayer(videoId, title) {
@@ -1186,7 +1172,8 @@
   function toggleInPlayerPlaylist() {
       const panel = document.getElementById('vidu_playlist_panel');
       const btn = document.getElementById('vidu_playlist_toggle_btn');
-      if (!panel || !btn) return;
+      const spacer = document.getElementById('vidu_playlist_spacer');
+      if (!panel || !btn || !spacer) return;
 
       const shouldShow = !panel.classList.contains('show');
       if (shouldShow) {
@@ -1194,13 +1181,8 @@
       }
       panel.classList.toggle('show', shouldShow);
       btn.classList.toggle('active', shouldShow);
-      
-      const backdrop = document.getElementById('modal-backdrop');
-      if (backdrop) {
-          backdrop.style.justifyContent = shouldShow ? 'space-between' : 'center';
-      }
+      spacer.style.display = shouldShow ? 'block' : 'none';
   }
-  // --- END NEW FUNCTIONS ---
 
   function throttle(func, limit) {
     let inThrottle;
@@ -1352,7 +1334,6 @@
     invertBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-1.9 1.26 6 6 0 0 1-8.05-5.15A5.5 5.5 0 0 1 13.36 4.1a9 9 0 0 0-1.36-1.1zM12 19a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/></svg>`;
     host.appendChild(invertBtn);
 
-    // --- NEW: PLAYLIST TOGGLE BUTTON ---
     const playlistToggleBtn = document.createElement('button');
     playlistToggleBtn.className = 'vidu-playlist-toggle-btn';
     playlistToggleBtn.id = 'vidu_playlist_toggle_btn';
@@ -1360,7 +1341,6 @@
     playlistToggleBtn.type = 'button';
     playlistToggleBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h12v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3zm14 12 5-3.5-5-3.5v7z"/></svg>`;
     host.appendChild(playlistToggleBtn);
-    // --- END NEW BUTTON ---
 
     const osdFeedback = document.createElement('div'); osdFeedback.id = 'vidu_osd_feedback'; osdFeedback.className = 'vidu-osd-feedback';
     host.appendChild(osdFeedback);
@@ -1933,11 +1913,11 @@
   function destroyPlayer(){
     try{
       const panel = document.getElementById('vidu_playlist_panel');
+      const spacer = document.getElementById('vidu_playlist_spacer');
       if (panel) { panel.classList.remove('show'); panel.innerHTML = ''; }
+      if (spacer) { spacer.style.display = 'none'; }
       const btn = document.getElementById('vidu_playlist_toggle_btn');
       if (btn) btn.classList.remove('active');
-      const backdrop = document.getElementById('modal-backdrop');
-      if (backdrop) backdrop.style.justifyContent = 'center';
 
       if (state.seekTrackEl) { state.seekTrackEl.classList.remove('buffering'); }
       
@@ -1985,13 +1965,9 @@
  * Playlist data + UI + modal + YouTube playlist fetching
  *************************************************************************/
 (function() {
-    // A global reference to the popup window instance
     window.viduPopupWindow = null;
-    
-    // Store reference to the main wrapper element
     let wrapperElement = null;
 
-    // This function will be called when the player is launched
     window.handlePlayerLaunch = function() {
         if (!wrapperElement) {
             const wrapper = document.getElementById('wrapper');
@@ -2002,7 +1978,6 @@
         }
     };
 
-    // This function will be called when the player UI is closed
     window.handlePlayerClose = function() {
         const modalRoot = document.getElementById('modal-root');
         const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
@@ -2111,6 +2086,7 @@
     window.createModal = function(){
       const root = document.getElementById('modal-root');
       root.innerHTML = `<div class="modal-backdrop" id="modal-backdrop">
+        <div id="vidu_playlist_spacer" class="vidu-playlist-spacer"></div>
         <div class="modal" role="dialog" aria-modal="true">
             <div class="controls">
                 <div><strong id="modal-title">Locked</strong><div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div></div>
