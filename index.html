@@ -351,13 +351,8 @@
       background: var(--accent-2); border-radius: 6px;
       will-change: width;
     }
-    /* --- UPDATED: FASTER & MORE VIBRANT GLOW --- */
-    .seek-track.buffering .seek-progress {
-        background: var(--accent-2);
-        position: relative;
-        overflow: hidden;
-    }
-    .seek-track.buffering .seek-progress::after {
+    /* --- UPDATED: GLOW ON FULL TRACK WHEN BUFFERING --- */
+    .seek-track.buffering::after {
         content: '';
         position: absolute;
         top: 0;
@@ -369,6 +364,7 @@
         animation: vidu-glow-animation 1.2s linear infinite;
         filter: blur(3px);
         opacity: 0.9;
+        border-radius: 6px;
     }
     @keyframes vidu-glow-animation {
         0% { background-position: 125% 0; }
@@ -844,6 +840,15 @@
         transform: translateX(-50%) translateY(0px);
     }
     
+    #playlist-loading-message .dots::after {
+      content: ".";
+      animation: loading-dots-anim 1.5s steps(3, start) infinite;
+    }
+    @keyframes loading-dots-anim {
+      33% { content: ".."; }
+      66% { content: "..."; }
+    }
+
     /* POPUP PLAYER MODE STYLES */
     body.popup-mode { padding: 0 !important; background: #000 !important; }
     body.popup-mode::before { display:none; }
@@ -1076,6 +1081,14 @@
     </div>
   </div>
 </div>
+<div id="playlist-video-loading-overlay" class="loading-popup-overlay">
+  <div class="loading-popup-content">
+    <p id="playlist-loading-message">Loading <span class="dots"></span></p>
+    <div class="loading-bar-container">
+      <div id="playlist-loading-bar-fill" class="loading-bar-fill"></div>
+    </div>
+  </div>
+</div>
 <div id="popup-notice-overlay" class="popup-notice">
   Playing in the VIDU Popup Player
 </div>
@@ -1187,7 +1200,34 @@
 
       panel.querySelectorAll('.vidu-playlist-item').forEach(item => {
           item.addEventListener('click', () => {
-              loadVideoInPlayer(item.dataset.videoId, item.dataset.videoTitle);
+              const videoId = item.dataset.videoId;
+              const videoTitle = item.dataset.videoTitle;
+
+              const loadingPopup = document.getElementById('playlist-video-loading-overlay');
+              const loadingBar = document.getElementById('playlist-loading-bar-fill');
+
+              if (loadingPopup && loadingBar) {
+                  loadingPopup.classList.add('show');
+                  loadingBar.style.transition = 'none';
+                  loadingBar.style.width = '0%';
+
+                  setTimeout(() => {
+                      loadingBar.style.transition = 'width 2s cubic-bezier(0.25, 1, 0.5, 1)';
+                      loadingBar.style.width = '100%';
+                  }, 10);
+
+                  setTimeout(() => {
+                      loadingPopup.classList.remove('show');
+                      setTimeout(() => {
+                          loadingBar.style.transition = 'none';
+                          loadingBar.style.width = '0%';
+                      }, 300);
+                      
+                      loadVideoInPlayer(videoId, videoTitle);
+                  }, 2000);
+              } else {
+                  loadVideoInPlayer(videoId, videoTitle);
+              }
           });
       });
   }
