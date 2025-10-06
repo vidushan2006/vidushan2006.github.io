@@ -179,14 +179,11 @@
         padding:16px;
         box-sizing:border-box;
     }
-    .modal-content-wrapper {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
+    .player-context {
+        position: relative;
     }
     .modal{
-        width:min(960px,95%);
+        width:min(960px, 92vw);
         background:linear-gradient(180deg, rgba(12,12,12,0.96), rgba(6,6,8,0.98));
         border-radius:14px;
         padding:18px;color:#fff;
@@ -204,7 +201,7 @@
     .password-row input:focus{box-shadow:0 0 0 2px var(--accent-1);}
     .muted{color:var(--muted);font-size:13px;}
 
-    @media (max-width:720px){ .list-item{width:calc(50% - 12px);} .modal iframe{height:320px;} }
+    @media (max-width:720px){ .list-item{width:calc(50% - 12px);} }
 
     .list-item{opacity:0;transform-origin:center;animation:floatIn .5s forwards;}
     @keyframes floatIn{from{opacity:0;transform:translateY(12px) scale(.995);}to{opacity:1;transform:translateY(0) scale(1);} }
@@ -231,7 +228,10 @@
       transition: filter .3s ease;
     }
     .vidu-mount {
-      width:100%; height:520px; background:#000; display:block;
+      width:100%; 
+      aspect-ratio: 16 / 9;
+      background:#000; 
+      display:block;
     }
     .vidu-mount iframe{
       width:100%; height:100%; display:block; border:0; pointer-events:none;
@@ -555,7 +555,7 @@
     .vidu-player-host:-webkit-full-screen .vidu-mount iframe, .vidu-player-host:fullscreen .vidu-mount iframe { height:100vh !important; width:100% !important; max-height:none !important; }
     .vidu-player-host:-webkit-full-screen .vidu-overlay, .vidu-player-host:fullscreen .vidu-overlay { left:18px !important; right:18px !important; bottom:18px !important; }
     
-    @media (max-width:720px){ .vidu-mount{ height:320px; } .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
+    @media (max-width:720px){ .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
     @media (max-width:540px){ .vidu-controls-grid { grid-template-areas: "seek seek" "left right"; grid-template-columns: 1fr 1fr; } .vidu-time-container { display: none; } }
     
     @media (hover: none) and (pointer: coarse) {
@@ -653,18 +653,14 @@
         background: #4a7453;
     }
     
-    .vidu-playlist-container {
-        width: 320px;
-        height: min(558px, 90vh);
-        flex-shrink: 0;
-        position: relative;
-    }
     .vidu-playlist-panel {
       position: absolute;
       top: 0;
-      left: 0;
-      width: 100%;
+      left: 100%;
+      margin-left: 16px;
+      width: 320px;
       height: 100%;
+      max-height: min(558px, 90vh);
       background: linear-gradient(180deg, rgba(18,20,28,0.97), rgba(8,9,14,0.98));
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.05);
@@ -678,10 +674,9 @@
     }
     .vidu-playlist-panel:not(.show) {
         opacity: 0;
-        transform: translateX(20px);
+        transform: translateX(-20px);
         pointer-events: none;
     }
-
     .vidu-playlist-header { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
     .vidu-playlist-header h3 { margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .vidu-playlist-content { flex-grow: 1; overflow-y: auto; padding: 8px; }
@@ -915,7 +910,7 @@
   <header id="header">
     <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
       <div class="logo-circle" aria-hidden="true">
-        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b_556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
       </div>
     </a>
     <div class="header-right-controls">
@@ -1285,7 +1280,6 @@
     if(prev) prev.remove();
     const host = document.createElement('div'); host.className = 'vidu-player-host';
     const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
-    mount.style.height = '520px'; mount.style.background = '#000';
     host.appendChild(mount);
     const loadingDiv = document.createElement('div'); loadingDiv.className = 'vidu-loading'; loadingDiv.id = 'vidu_loading';
     loadingDiv.innerHTML = `<div class="vidu-loading-spinner"></div>`;
@@ -1905,7 +1899,6 @@
                   evt.target.seekTo(savedTime, true);
               }
               try{ evt.target.playVideo(); }catch(e){}
-              mount.style.height = mount.style.height || '520px';
               if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
               updatePlayerUI();
               if(state.mo) state.mo.disconnect();
@@ -2012,7 +2005,7 @@
         }
     };
 
-    const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
+    const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d_361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
     function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
     const decodeEnc = (function(){ const key = new TextEncoder().encode('vidu_secret_2025'); function xorDecode(bytes){ const out = new Uint8Array(bytes.length); for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length]; return out; } return function(encStr){ try{ if(!encStr) return ''; const raw = atob(encStr); const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0))); const dec = xorDecode(bytes); return new TextDecoder().decode(dec); }catch(e){ return ''; } }; })();
     function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
@@ -2107,7 +2100,7 @@
     window.createModal = function(){
       const root = document.getElementById('modal-root');
       root.innerHTML = `<div class="modal-backdrop" id="modal-backdrop">
-        <div class="modal-content-wrapper">
+        <div class="player-context">
             <div class="modal" role="dialog" aria-modal="true">
                 <div class="controls">
                     <div><strong id="modal-title">Locked</strong><div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div></div>
@@ -2125,9 +2118,7 @@
                     <div id="player-block" style="display:none;margin-top:12px;"><div id="player-wrap"></div></div>
                 </div>
             </div>
-            <div class="vidu-playlist-container">
-                <div id="vidu_playlist_panel" class="vidu-playlist-panel"></div>
-            </div>
+            <div id="vidu_playlist_panel" class="vidu-playlist-panel"></div>
         </div>
       </div>`;
       document.getElementById('modal-close').onclick = closeModal;
