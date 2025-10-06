@@ -434,13 +434,13 @@
       align-items: baseline;
       justify-content: center;
     }
-    .seeking-dots {
+    .seeking-dots, .playing-dots, .dots {
       display: inline-block;
       width: 1.5em;
       text-align: left;
       vertical-align: bottom;
     }
-    .seeking-dots::after {
+    .seeking-dots::after, .playing-dots::after, .dots::after {
       content: ".";
       animation: seeking-dots-anim 1.5s steps(3, start) infinite;
     }
@@ -712,9 +712,27 @@
         border-radius: 50%;
         animation: vidu-spin 1s linear infinite;
     }
-    .vidu-playlist-loader .dots::after {
-      content: ".";
-      animation: loading-dots-anim 1.5s steps(3, start) infinite;
+    
+    /* NEW: Playing Indicator in Playlist */
+    .vidu-playlist-item-playing-indicator {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 12, 18, 0.9);
+        border-radius: 4px;
+        color: var(--accent-2);
+        font-weight: 700;
+        font-size: 14px;
+        text-shadow: 0 0 4px rgba(57, 255, 20, 0.4);
+    }
+    .vidu-playlist-item.active .vidu-playlist-item-thumb-wrapper img,
+    .vidu-playlist-item.active .vidu-playlist-item-thumb-wrapper .vidu-playlist-item-number {
+        opacity: 0;
+    }
+    .vidu-playlist-item.active .vidu-playlist-item-playing-indicator {
+        display: flex;
     }
 
 
@@ -870,15 +888,6 @@
         visibility: visible;
         transform: translateX(-50%) translateY(0px);
     }
-    
-    #playlist-loading-message .dots::after {
-      content: ".";
-      animation: loading-dots-anim 1.5s steps(3, start) infinite;
-    }
-    @keyframes loading-dots-anim {
-      33% { content: ".."; }
-      66% { content: "..."; }
-    }
 
     /* POPUP PLAYER MODE STYLES */
     body.popup-mode { padding: 0 !important; background: #000 !important; }
@@ -947,7 +956,7 @@
   <header id="header">
     <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
       <div class="logo-circle" aria-hidden="true">
-        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b_556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
       </div>
     </a>
     <div class="header-right-controls">
@@ -1168,8 +1177,6 @@
 
   function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
-  let lastRenderedPlaylistId = null;
-
   function loadVideoInPlayer(videoId, title) {
     if (state.player && typeof state.player.loadVideoById === 'function' && videoId !== state.videoId) {
       state.player.loadVideoById(videoId);
@@ -1204,16 +1211,10 @@
           panel.innerHTML = `<div class="vidu-playlist-header"><h3>No playlist loaded</h3></div><div class="vidu-playlist-content" style="text-align:center;padding-top:20px;color:var(--muted);">Open a playlist from the main menu first.</div>`;
           return;
       }
-
-      const currentVideoId = state.videoId;
-      if (lastRenderedPlaylistId === playlistData.title && panel.querySelector('.vidu-playlist-content')) {
-          updatePlaylistHighlight();
-          return;
-      }
-
+      
       panel.innerHTML = `
           <div class="vidu-playlist-loader">
-              <p>Loading Playlist<span class="dots"></span></p>
+              <p>Loading<span class="dots"></span></p>
               <div class="spinner"></div>
           </div>`;
       
@@ -1222,16 +1223,16 @@
               return;
           }
 
-          lastRenderedPlaylistId = playlistData.title;
           let contentHTML = `<div class="vidu-playlist-header"><h3>${escapeHtml(playlistData.title)}</h3></div><div class="vidu-playlist-content">`;
 
           playlistData.videos.forEach((video, index) => {
-              const isActive = video.videoId === currentVideoId ? 'active' : '';
+              const isActive = video.videoId === state.videoId ? 'active' : '';
               contentHTML += `
                   <div class="vidu-playlist-item ${isActive}" data-video-id="${escapeHtml(video.videoId)}" data-video-title="${escapeHtml(video.title)}">
                       <div class="vidu-playlist-item-thumb-wrapper">
                           <img src="${escapeHtml(video.thumb)}" alt="">
                           <span class="vidu-playlist-item-number">${index + 1}</span>
+                          <div class="vidu-playlist-item-playing-indicator">Playing<span class="playing-dots"></span></div>
                       </div>
                       <div class="title">${escapeHtml(video.title)}</div>
                   </div>
@@ -1454,9 +1455,9 @@
           </div>
         </div>
         <div class="vidu-controls-center">
-            <button class="vidu-btn" id="vidu_prevbtn" title="Previous (Shift + <)" aria-label="Previous">${skipPrevSVG()}</button>
+            <button class="vidu-btn" id="vidu_prevbtn" title="Previous (,)" aria-label="Previous">${skipPrevSVG()}</button>
             <button class="vidu-btn" id="vidu_playbtn" aria-label="Play">${playSVG()}</button>
-            <button class="vidu-btn" id="vidu_nextbtn" title="Next (Shift + >)" aria-label="Next">${skipNextSVG()}</button>
+            <button class="vidu-btn" id="vidu_nextbtn" title="Next (.)" aria-label="Next">${skipNextSVG()}</button>
         </div>
         <div class="vidu-controls-right">
           <button class="vidu-btn" id="vidu_playbackbtn" title="Playback speed" aria-label="Playback speed">${gearSVG()}</button>
@@ -1746,7 +1747,7 @@
       const root = document.getElementById('modal-root'); 
       if(!root || (root.style.display === 'none' && !document.body.classList.contains('popup-mode'))) return;
       
-      const key = e.key.toLowerCase();
+      const key = e.key;
       switch (key) {
         case ' ': e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); resetInactivityTimer(); } break;
         case 'f': if (!document.body.classList.contains('popup-mode')) { e.preventDefault(); toggleFullscreen(); } break;
@@ -1765,14 +1766,14 @@
           toggleInPlayerPlaylist();
           resetInactivityTimer();
           break;
-        case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
-        case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
-        case 'arrowup':
+        case 'ArrowRight': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
+        case 'ArrowLeft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
+        case 'ArrowUp':
           e.preventDefault();
           const upAmount = e.ctrlKey ? 1 : 5;
           setVolume((state.player.getVolume() || 0) + upAmount);
           break;
-        case 'arrowdown':
+        case 'ArrowDown':
           e.preventDefault();
           const downAmount = e.ctrlKey ? 1 : 5;
           setVolume((state.player.getVolume() || 0) - downAmount);
@@ -1784,33 +1785,29 @@
           const buttons = Array.from(playbackMenu.querySelectorAll('button[data-speed]'));
           const speeds = buttons.map(b => parseFloat(b.dataset.speed)).sort((a, b) => a - b);
           
-          if (key === 'w') { setPlaybackRate(1); break; }
+          if (key.toLowerCase() === 'w') { setPlaybackRate(1); break; }
           
           const currentRate = state.player.getPlaybackRate();
           let currentIndex = speeds.findIndex(s => s === currentRate);
           if (currentIndex === -1) currentIndex = speeds.findIndex(s => s === 1);
 
           let nextIndex;
-          if (key === 'e') {
+          if (key.toLowerCase() === 'e') {
              nextIndex = (currentIndex + 1) % speeds.length;
           } else {
              nextIndex = (currentIndex - 1 + speeds.length) % speeds.length;
           }
           setPlaybackRate(speeds[nextIndex]);
           break;
-        case '<':
-            if (e.shiftKey) {
-                e.preventDefault();
-                playNextOrPreviousVideo(-1);
-                resetInactivityTimer();
-            }
+        case ',':
+            e.preventDefault();
+            playNextOrPreviousVideo(-1);
+            resetInactivityTimer();
             break;
-        case '>':
-            if (e.shiftKey) {
-                e.preventDefault();
-                playNextOrPreviousVideo(1);
-                resetInactivityTimer();
-            }
+        case '.':
+            e.preventDefault();
+            playNextOrPreviousVideo(1);
+            resetInactivityTimer();
             break;
       }
     };
