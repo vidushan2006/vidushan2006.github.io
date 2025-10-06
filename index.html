@@ -325,6 +325,27 @@
       background: var(--accent-2); border-radius: 6px;
       will-change: width;
     }
+    /* --- NEW: GLOWING PROGRESS BAR ON BUFFER --- */
+    .seek-track.buffering .seek-progress {
+        background: var(--accent-2);
+        position: relative;
+        overflow: hidden;
+    }
+    .seek-track.buffering .seek-progress::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 200%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), #7b61ff, #ff6b6b, #39ff14, rgba(255, 255, 255, 0.4), transparent);
+        animation: vidu-glow-animation 2s linear infinite;
+    }
+    @keyframes vidu-glow-animation {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    /* --- END GLOW --- */
     .vidu-range::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 16px;
@@ -985,6 +1006,7 @@
     mo: null,
     host: null,
     mount: null,
+    seekTrackEl: null, // ADDED FOR GLOWING BAR
     fsResizeHandler: null,
     fsListener: null,
     docClickHandler: null,
@@ -1149,7 +1171,7 @@
     const popupBtn = document.createElement('button');
     popupBtn.className = 'vidu-popup-btn';
     popupBtn.id = 'vidu_popup_btn';
-    popupBtn.title = 'Popup Player';
+    popupBtn.title = 'Popup Player (P)';
     popupBtn.type = 'button';
     popupBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg>`;
     host.appendChild(popupBtn);
@@ -1157,7 +1179,7 @@
     const invertBtn = document.createElement('button');
     invertBtn.className = 'vidu-invert-btn';
     invertBtn.id = 'vidu_invert_btn';
-    invertBtn.title = 'Invert Colors';
+    invertBtn.title = 'Invert Colors (N)';
     invertBtn.type = 'button';
     invertBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-1.9 1.26 6 6 0 0 1-8.05-5.15A5.5 5.5 0 0 1 13.36 4.1a9 9 0 0 0-1.36-1.1zM12 19a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/></svg>`;
     host.appendChild(invertBtn);
@@ -1189,6 +1211,7 @@
     const seekProgressEl = overlay.querySelector('#vidu_seek_progress');
     const seekThumbEl = overlay.querySelector('#vidu_seek_thumb');
     const seekContainer = overlay.querySelector('.vidu-seek-container');
+    const seekTrackEl = overlay.querySelector('.seek-track'); // ADDED FOR GLOWING BAR
     const seekPreview = overlay.querySelector('#vidu_seek_preview');
     const seekPreviewTime = overlay.querySelector('#vidu_seek_preview_time');
     const volumeBtn = overlay.querySelector('#vidu_volumebtn');
@@ -1199,6 +1222,7 @@
     const popupBtnEl = host.querySelector('#vidu_popup_btn');
     const invertBtnEl = host.querySelector('#vidu_invert_btn');
     state.invertBtnEl = invertBtnEl;
+    state.seekTrackEl = seekTrackEl; // ADDED FOR GLOWING BAR
 
 
     playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); volumePanel.classList.remove('open'); });
@@ -1396,10 +1420,32 @@
       switch (key) {
         case ' ': e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); resetInactivityTimer(); } break;
         case 'f': if (!document.body.classList.contains('popup-mode')) { e.preventDefault(); toggleFullscreen(); } break;
+        // --- NEW KEYBOARD SHORTCUTS ---
+        case 'n':
+          e.preventDefault();
+          if (state.host) { state.host.classList.toggle('vidu-player-inverted'); }
+          resetInactivityTimer();
+          break;
+        case 'p':
+          e.preventDefault();
+          const popupBtn = document.getElementById('vidu_popup_btn');
+          if (popupBtn) { popupBtn.click(); }
+          break;
+        // --- END NEW SHORTCUTS ---
         case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
         case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
-        case 'arrowup': e.preventDefault(); setVolume((state.player.getVolume() || 0) + 5); break;
-        case 'arrowdown': e.preventDefault(); setVolume((state.player.getVolume() || 0) - 5); break;
+        // --- MODIFIED VOLUME CONTROL ---
+        case 'arrowup':
+          e.preventDefault();
+          const upAmount = e.ctrlKey ? 1 : 5;
+          setVolume((state.player.getVolume() || 0) + upAmount);
+          break;
+        case 'arrowdown':
+          e.preventDefault();
+          const downAmount = e.ctrlKey ? 1 : 5;
+          setVolume((state.player.getVolume() || 0) - downAmount);
+          break;
+        // --- END MODIFIED VOLUME ---
         case 'q':
         case 'e':
         case 'w':
@@ -1690,8 +1736,28 @@
               resetInactivityTimer();
               resolve(evt.target); // Resolve with the player instance
             },
-            onStateChange: function(e){ try{ if(e && e.data === 1){ try{ hideLoading(); }catch(e){} } }catch(err){} },
-            onError: function(err){ try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} console.error('YT player error', err); }
+            onStateChange: function(e){
+              try{
+                // Feature: Glowing progress bar on buffer
+                if (state.seekTrackEl) {
+                    if (e.data === 3) { // 3 = Buffering
+                        state.seekTrackEl.classList.add('buffering');
+                    } else {
+                        state.seekTrackEl.classList.remove('buffering');
+                    }
+                }
+                if(e && e.data === 1){ // Playing
+                  try{ hideLoading(); }catch(e){}
+                }
+              }catch(err){}
+            },
+            onError: function(err){
+              // Ensure buffering animation stops on error
+              if (state.seekTrackEl) {
+                state.seekTrackEl.classList.remove('buffering');
+              }
+              try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} console.error('YT player error', err);
+            }
           }
         });
       }catch(err){ reject(err || new Error('YT player creation failed')); }
@@ -1700,6 +1766,10 @@
 
   function destroyPlayer(){
     try{
+      if (state.seekTrackEl) {
+        state.seekTrackEl.classList.remove('buffering');
+      }
+      
       if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
         const cur = state.player.getCurrentTime();
         const dur = state.player.getDuration ? state.player.getDuration() : 0;
