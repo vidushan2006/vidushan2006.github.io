@@ -233,6 +233,7 @@
       background:#000; 
       display:block;
     }
+    /* MODIFICATION: The iframe is now in a shadow DOM, so this rule is less important but kept for clarity */
     .vidu-mount iframe{
       width:100%; height:100%; display:block; border:0; pointer-events:none;
     }
@@ -981,9 +982,8 @@
                modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal"><div id="player-block" style="display:block;"><div id="player-wrap"></div></div></div></div>`;
 
                if (window.showViduPlayer && videoId) {
-                   window.showViduPlayer(videoId).then(player => {
+                   window.showViduPlayer(videoId, time).then(player => {
                        popupPlayerInstance = player;
-                       setTimeout(() => { player.seekTo(time, true); }, 500);
                    });
                }
             });
@@ -1197,7 +1197,6 @@
     player: null,
     animationFrameId: null,
     keyHandler: null,
-    mo: null,
     host: null,
     mount: null,
     seekTrackEl: null,
@@ -1257,13 +1256,12 @@
       }
   }
 
-  // MODIFICATION: Centralized and reliable video loading function
+  // Centralized and reliable video loading function
   function loadVideoInPlayer(videoId, title, startTime = 0) {
     if (state.player && typeof state.player.loadVideoById === 'function' && videoId !== state.videoId) {
         state.videoId = videoId;
         
         // Use the YouTube API's startSeconds parameter for reliability.
-        // This method automatically handles autoplay.
         state.player.loadVideoById({
             videoId: videoId,
             startSeconds: Math.floor(startTime)
@@ -1294,7 +1292,7 @@
     });
   }
   
-  // MODIFICATION: Helper function to show loading/restoring popups
+  // Helper function to show loading/restoring popups
   function showLoadingPopupForNextVideo(startTime) {
       const isRestoring = startTime && startTime > 0;
       const loadingPopup = isRestoring ? document.getElementById('restoring-position-overlay') : document.getElementById('playlist-video-loading-overlay');
@@ -1366,8 +1364,7 @@
               item.addEventListener('click', () => {
                   const videoId = item.dataset.videoId;
                   const videoTitle = item.dataset.videoTitle;
-
-                  // MODIFICATION: Save progress and load next video using the new robust method
+                  
                   if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
                       const cur = state.player.getCurrentTime();
                       const dur = state.player.getDuration ? state.player.getDuration() : 0;
@@ -1380,8 +1377,7 @@
                   
                   const startTime = window.getVideoProgress(videoId) || 0;
                   showLoadingPopupForNextVideo(startTime);
-
-                  // A tiny delay to let the UI update before the video load begins
+                  
                   setTimeout(() => {
                       loadVideoInPlayer(videoId, videoTitle, startTime);
                   }, 50);
@@ -1403,7 +1399,7 @@
       btn.classList.toggle('active', shouldShow);
   }
 
-  // MODIFICATION: Simplified and corrected next/previous video logic
+  // Simplified and corrected next/previous video logic
   function playNextOrPreviousVideo(direction) {
     if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
         const cur = state.player.getCurrentTime();
@@ -1610,8 +1606,6 @@
     wrap.appendChild(host);
     return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn, invertBtn };
   }
-
-  function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){} }
 
   function createPlayer(videoId, startTime = 0){
     const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn, invertBtn } = createHostElements();
@@ -2158,62 +2152,91 @@
         } catch (e) {}
         state.animationFrameId = requestAnimationFrame(updatePlayerUI);
     }
+    
+    // MODIFICATION: This is the core of the Shadow DOM implementation.
+    return loadYTApi().then(() => new Promise((resolve, reject) => {
+        if (state.player && typeof state.player.destroy === 'function') {
+            try { state.player.destroy(); } catch (e) {}
+            state.player = null;
+        }
+        try {
+            const mountPoint = document.getElementById(mount.id);
+            if (!mountPoint) {
+                return reject(new Error('Player mount point not found.'));
+            }
+            mountPoint.innerHTML = ''; // Clear previous content
 
-    return loadYTApi().then(()=> new Promise((resolve,reject)=>{
-      if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
-      try{
-        state.player = new YT.Player(mount.id, { 
-          videoId: videoId, 
-          width: '100%', 
-          height: '100%', 
-          playerVars: { 
-            controls: 0, 
-            disablekb: 1, 
-            rel: 0, 
-            modestbranding: 1, 
-            playsinline: 1, 
-            iv_load_policy: 3, 
-            origin: location.origin,
-            start: Math.floor(startTime) // Use start param for initial load
-          },
-          events: {
-            onReady: function(evt){
-              disableIframeClicks(host); showLoading();
-              setVolume(state.lastVolume, false, false);
-              updatePlaylistHighlight();
-              updateNavTooltips();
-              try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
-              try{ evt.target.playVideo(); }catch(e){}
-              if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
-              updatePlayerUI();
-              if(state.mo) state.mo.disconnect();
-              state.mo = new MutationObserver(()=> disableIframeClicks(host));
-              state.mo.observe(host, { childList:true, subtree:true });
-              resetInactivityTimer();
-              resolve(evt.target);
-            },
-            onStateChange: function(e){
-              try{
-                if (state.seekTrackEl) {
-                    if (e.data === 3) { // Buffering
-                      state.seekTrackEl.classList.add('buffering'); 
-                    } else { 
-                      state.seekTrackEl.classList.remove('buffering'); 
+            // 1. Attach a shadow root to the mount point. This isolates the iframe.
+            const shadowRoot = mountPoint.attachShadow({ mode: 'open' });
+
+            // 2. Create the actual player target div inside the shadow root.
+            const playerTarget = document.createElement('div');
+            playerTarget.id = 'shadow-player-target';
+            shadowRoot.appendChild(playerTarget);
+            
+            // 3. Add styles to the shadow DOM to make the iframe fill its container.
+            const style = document.createElement('style');
+            style.textContent = `
+                #shadow-player-target, iframe {
+                    width: 100%; height: 100%; display: block; border: 0;
+                }
+            `;
+            shadowRoot.appendChild(style);
+
+            // 4. Instantiate the YT.Player on the new target *inside* the shadow DOM.
+            state.player = new YT.Player(playerTarget, { // Pass the element, not an ID string
+                videoId: videoId,
+                playerVars: {
+                    controls: 0, disablekb: 1, rel: 0, modestbranding: 1, 
+                    playsinline: 1, iv_load_policy: 3, origin: location.origin,
+                    start: Math.floor(startTime)
+                },
+                events: {
+                    onReady: function(evt) {
+                        // The iframe is now inside the shadow DOM. We can set attributes on it here.
+                        const iframe = shadowRoot.querySelector('iframe');
+                        if (iframe) {
+                            iframe.style.pointerEvents = 'none';
+                            iframe.setAttribute('tabindex', '-1');
+                        }
+
+                        showLoading();
+                        setVolume(state.lastVolume, false, false);
+                        updatePlaylistHighlight();
+                        updateNavTooltips();
+                        try {
+                            if (typeof evt.target.setPlaybackQuality === 'function') {
+                                evt.target.setPlaybackQuality('default');
+                            }
+                        } catch (e) {}
+                        try { evt.target.playVideo(); } catch (e) {}
+                        
+                        if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+                        updatePlayerUI();
+                        resetInactivityTimer();
+                        resolve(evt.target);
+                    },
+                    onStateChange: function(e) {
+                        try {
+                            if (state.seekTrackEl) {
+                                state.seekTrackEl.classList.toggle('buffering', e.data === 3);
+                            }
+                            if (e.data === 1) { // Playing
+                                hideLoading();
+                            }
+                        } catch (err) {}
+                    },
+                    onError: function(err) {
+                        if (state.seekTrackEl) { state.seekTrackEl.classList.remove('buffering'); }
+                        hideLoading();
+                        console.error('YT player error', err);
                     }
                 }
-                if(e && e.data === 1){ // Playing
-                  try{ hideLoading(); }catch(e){} 
-                }
-              }catch(err){}
-            },
-            onError: function(err){
-              if (state.seekTrackEl) { state.seekTrackEl.classList.remove('buffering'); }
-              try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} console.error('YT player error', err);
-            }
-          }
-        });
-      }catch(err){ reject(err || new Error('YT player creation failed')); }
-    })).catch(err=>{ throw err; }).then(p=>{ setTimeout(()=> resetInactivityTimer(), 40); return p; });
+            });
+        } catch (err) {
+            reject(err || new Error('YT player creation failed'));
+        }
+    })).catch(err => { throw err; }).then(p => { setTimeout(() => resetInactivityTimer(), 40); return p; });
   }
 
   function destroyPlayer(){
@@ -2239,7 +2262,6 @@
       if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
       if(state.docClickHandler){ document.removeEventListener('click', state.docClickHandler); state.docClickHandler = null; }
       if(state.player){ try{ state.player.destroy(); }catch(e){} state.player = null; }
-      if(state.mo){ try{ state.mo.disconnect(); }catch(e){} state.mo = null; }
       if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
       if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); document.removeEventListener('mozfullscreenchange', state.fsListener); document.removeEventListener('MSFullscreenChange', state.fsListener); state.fsListener = null; }
       if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
