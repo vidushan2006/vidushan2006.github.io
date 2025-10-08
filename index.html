@@ -590,26 +590,27 @@
     
     @media (max-width:720px){ .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
     
-    <!-- MODIFICATION START: Player controls fix for mobile -->
     @media (max-width:540px){ 
-      /* On small screens, when not in fullscreen, simplify the control grid */
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-controls-grid { 
           grid-template-areas: "seek seek" "center right"; 
           grid-template-columns: 1fr 1fr;
       }
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-controls-center {
           justify-self: start;
-          padding-left: 8px; /* Add some spacing */
+          padding-left: 8px;
       }
-      /* Always hide time on very small screens to save space */
       .vidu-time-container { display: none; } 
     }
     
     @media (hover: none) and (pointer: coarse) {
+      /* On touch devices, always hide playlist and popup buttons to simplify UI */
+      .vidu-popup-btn,
+      .vidu-playlist-toggle-btn {
+        display: none !important;
+      }
+
       /* On touch devices, hide extra buttons when not in fullscreen to prevent clutter */
-      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-popup-btn,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-invert-btn,
-      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-playlist-toggle-btn,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-volume-container,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_prevbtn,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_nextbtn,
@@ -617,7 +618,6 @@
         display: none !important;
       }
     }
-    <!-- MODIFICATION END -->
 
     .vidu-osd-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
@@ -1260,15 +1260,13 @@
   function loadVideoInPlayer(videoId, title) {
     if (state.player && typeof state.player.loadVideoById === 'function' && videoId !== state.videoId) {
         
-        let hasSoughtOnThisLoad = false; // Flag for this specific load operation
+        const onStateChangeForRestore = (event) => {
+            // We only care about the first time the new video starts playing or buffering
+            if (event.target.getVideoData().video_id === videoId && (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.BUFFERING)) {
+                // This listener has done its job, remove it.
+                state.player.removeEventListener('onStateChange', onStateChangeForRestore);
 
-        const seekListener = (event) => {
-            // Ensure we're acting on the correct video and haven't sought yet
-            if (!hasSoughtOnThisLoad && event.target.getVideoData().video_id === videoId && (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.BUFFERING)) {
-                
-                hasSoughtOnThisLoad = true; // Prevent this from running again
-                state.player.removeEventListener('onStateChange', seekListener); // Try to remove
-
+                // Now, execute the restore logic.
                 const savedTime = window.getVideoProgress(videoId);
                 if (savedTime && savedTime > 0) {
                     const restoringPopup = document.getElementById('restoring-position-overlay');
@@ -1289,7 +1287,9 @@
                 }
             }
         };
-        state.player.addEventListener('onStateChange', seekListener);
+
+        // Add the one-time listener BEFORE loading the new video
+        state.player.addEventListener('onStateChange', onStateChangeForRestore);
         
         // --- Now load the video ---
         state.videoId = videoId;
@@ -2168,10 +2168,6 @@
               updatePlaylistHighlight();
               updateNavTooltips();
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
-              const savedTime = window.getVideoProgress(state.videoId);
-              if (savedTime && savedTime > 0 && !document.body.classList.contains('popup-mode')) {
-                  evt.target.seekTo(savedTime, true);
-              }
               try{ evt.target.playVideo(); }catch(e){}
               if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
               updatePlayerUI();
@@ -2585,6 +2581,7 @@
                       setTimeout(() => {
                         restoringBar.style.transition = 'width 2s cubic-bezier(0.25, 1, 0.5, 1)';
                         restoringBar.style.width = '100%';
+                        player.seekTo(savedTime, true);
                       }, 10);
                       setTimeout(() => {
                         restoringPopup.classList.remove('show');
