@@ -654,11 +654,11 @@
     }
     .vidu-seek-feedback.left { left: 15%; }
     .vidu-seek-feedback.right { right: 15%; }
-    .vidu-seek-feedback.show { animation: vidu-seek-pop 0.6s var(--ease); }
-    @keyframes vidu-seek-pop {
+    .vidu-seek-feedback.show { animation: vidu-seek-pop 3s var(--ease); } /* MODIFIED: Duration changed to 3s */
+    @keyframes vidu-seek-pop { /* MODIFIED: Keyframes adjusted for 3s duration */
         0% { transform: translateY(-50%) scale(0.8); opacity: 0; }
-        20% { transform: translateY(-50%) scale(1.1); opacity: 1; }
-        80% { transform: translateY(-50%) scale(1); opacity: 1; }
+        10% { transform: translateY(-50%) scale(1.1); opacity: 1; }
+        90% { transform: translateY(-50%) scale(1); opacity: 1; }
         100% { transform: translateY(-50%) scale(0.9); opacity: 0; }
     }
     .vidu-seek-feedback svg {
@@ -955,11 +955,16 @@
     
     body.popup-mode #vidu_fullbtn { display: none; }
     body.popup-mode .vidu-invert-btn { display: none !important; }
-    body.popup-mode .vidu-controls-bg { height: 70px; }
-    body.popup-mode .vidu-overlay { padding: 6px 10px; bottom: 6px; left: 6px; right: 6px; border-radius: 8px; }
-    body.popup-mode .vidu-controls-grid { gap: 4px 10px; }
-    body.popup-mode .vidu-playback-menu { bottom: 65px; }
-    body.popup-mode .vidu-volume-panel { bottom: 55px; }
+    
+    /* --- MODIFIED: Popup Player UI Cleanup --- */
+    body.popup-mode .vidu-volume-container { display: none !important; } /* Hide volume button */
+    body.popup-mode .vidu-controls-bg { height: 55px; } /* Reduced background height */
+    body.popup-mode .vidu-overlay { padding: 2px 10px; bottom: 4px; left: 4px; right: 4px; border-radius: 8px; } /* Compacted overlay */
+    body.popup-mode .vidu-controls-grid { gap: 0 10px; } /* Removed vertical gap */
+    body.popup-mode .vidu-seek-container { padding: 4px 0; } /* Reduced padding around seek bar */
+    body.popup-mode .vidu-playback-menu { bottom: 50px; } /* Adjusted menu position */
+    body.popup-mode .vidu-volume-panel { display: none !important; } /* Hide volume panel too */
+    /* --- END MODIFICATION --- */
   </style>
 </head>
 <body class="landing is-preload">
@@ -1229,6 +1234,9 @@
   };
 
   function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
+
+  // MODIFIED: Moved this function to make it globally accessible within the IIFE
+  function getFullscreenElement(){ return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null; }
 
   function getAdjacentVideoTitle(direction) {
       const playlistData = window.__viduGlobal?.lastOpenedPlaylist;
@@ -1691,8 +1699,6 @@
       }
     };
     document.addEventListener('click', state.docClickHandler);
-
-    function getFullscreenElement(){ return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null; }
     
     function toggleFullscreen() {
         const fs = getFullscreenElement();
@@ -2028,16 +2034,19 @@
             const tapX = touch.clientX - rect.left;
             
             if (now - state.touch_lastTapTime < 300 && Math.abs(tapX - state.touch_lastTapX) < 50) {
-                if (!state.player) return;
-                const isRightSide = tapX > rect.width / 2;
-                const currentTime = state.player.getCurrentTime();
-                const duration = state.player.getDuration();
-                if (isRightSide) {
-                    state.player.seekTo(Math.min(duration, currentTime + 10), true);
-                    seekFeedbackRight.classList.remove('show'); void seekFeedbackRight.offsetWidth; seekFeedbackRight.classList.add('show');
-                } else {
-                    state.player.seekTo(Math.max(0, currentTime - 10), true);
-                    seekFeedbackLeft.classList.remove('show'); void seekFeedbackLeft.offsetWidth; seekFeedbackLeft.classList.add('show');
+                // MODIFIED: Added condition to only allow double-tap seek in fullscreen or popup mode
+                if (getFullscreenElement() || document.body.classList.contains('popup-mode')) {
+                    if (!state.player) return;
+                    const isRightSide = tapX > rect.width / 2;
+                    const currentTime = state.player.getCurrentTime();
+                    const duration = state.player.getDuration();
+                    if (isRightSide) {
+                        state.player.seekTo(Math.min(duration, currentTime + 10), true);
+                        seekFeedbackRight.classList.remove('show'); void seekFeedbackRight.offsetWidth; seekFeedbackRight.classList.add('show');
+                    } else {
+                        state.player.seekTo(Math.max(0, currentTime - 10), true);
+                        seekFeedbackLeft.classList.remove('show'); void seekFeedbackLeft.offsetWidth; seekFeedbackLeft.classList.add('show');
+                    }
                 }
             }
             
