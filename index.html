@@ -369,6 +369,9 @@
 
     #vidu_playbtn {
       width: 44px; height: 44px; background: rgba(255, 255, 255, 0.1); border-radius: 12px;
+      /* CHANGE: Added for glow effect */
+      position: relative;
+      overflow: hidden;
     }
     #vidu_playbtn:hover { background: rgba(255, 255, 255, 0.2); }
     #vidu_playbtn svg { width: 24px; height: 24px; }
@@ -980,46 +983,57 @@
         display: none !important;
       }
 
-      /* CHANGE 3: Glowing animations for when video is playing */
+      /* CHANGE 3.2: More noticeable progress bar glow */
       @keyframes rainbow-glow-animation {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
       }
       .vidu-player-host.is-playing .seek-progress {
-        box-shadow: 0 0 5px rgba(57, 255, 20, 0.6), 0 0 10px rgba(0, 198, 255, 0.4);
-        background: linear-gradient(270deg, var(--accent-2), #00c6ff, #7b61ff, var(--accent-2));
-        background-size: 250% 250%;
-        animation: rainbow-glow-animation 2.5s linear infinite;
+        box-shadow: 0 0 8px 1px rgba(255, 107, 107, 0.7), 0 0 12px 2px rgba(57, 255, 20, 0.5), 0 0 16px 3px rgba(0, 198, 255, 0.4);
+        background: linear-gradient(270deg, #ff6b6b, #fcc419, #51cf66, #339af0, #845ef7, #ff6b6b);
+        background-size: 400% 400%;
+        animation: rainbow-glow-animation 3s linear infinite;
       }
 
+      /* CHANGE 3.1: New rotating line glow for play button */
       #vidu_playbtn::before {
         content: '';
         position: absolute;
-        inset: -5px;
-        border-radius: 14px;
-        pointer-events: none;
+        z-index: -2;
+        left: -50%;
+        top: -50%;
+        width: 200%;
+        height: 200%;
+        background-color: #399953;
+        background-repeat: no-repeat;
+        background-size: 50% 50%, 50% 50%;
+        background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+        background-image: linear-gradient(#ff6b6b, #fcc419), linear-gradient(#51cf66, #339af0), linear-gradient(#845ef7, #cc5de8), linear-gradient(#f06595, #ff6b6b);
         opacity: 0;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.3s ease-in-out;
+      }
+      #vidu_playbtn::after {
+        content: '';
+        position: absolute;
+        z-index: -1;
+        left: 3px;
+        top: 3px;
+        width: calc(100% - 6px);
+        height: calc(100% - 6px);
+        background: rgba(30, 33, 42, 0.9); /* Match button bg */
+        border-radius: 10px;
       }
       
-      @keyframes play-button-glow-pulse {
-        0% {
-            box-shadow: 0 0 10px 0px rgba(57, 255, 20, 0.5);
-            opacity: 0.7;
-        }
-        50% {
-            box-shadow: 0 0 16px 4px rgba(57, 255, 20, 0.3);
-            opacity: 1;
-        }
+      @keyframes rotate-glow {
         100% {
-            box-shadow: 0 0 10px 0px rgba(57, 255, 20, 0.5);
-            opacity: 0.7;
+          transform: rotate(1turn);
         }
       }
 
       .vidu-player-host.is-playing #vidu_playbtn::before {
-        animation: play-button-glow-pulse 2.2s infinite ease-in-out;
+        animation: rotate-glow 2.5s linear infinite;
+        opacity: 1;
       }
     }
 
