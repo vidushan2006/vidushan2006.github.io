@@ -589,18 +589,35 @@
     .vidu-player-host:-webkit-full-screen .vidu-overlay, .vidu-player-host:fullscreen .vidu-overlay { left:18px !important; right:18px !important; bottom:18px !important; }
     
     @media (max-width:720px){ .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
-    @media (max-width:540px){ .vidu-controls-grid { grid-template-areas: "seek seek" "left right"; grid-template-columns: 1fr 1fr; } .vidu-time-container { display: none; } }
+    
+    <!-- MODIFICATION START: Player controls fix for mobile -->
+    @media (max-width:540px){ 
+      /* On small screens, when not in fullscreen, simplify the control grid */
+      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-controls-grid { 
+          grid-template-areas: "seek seek" "center right"; 
+          grid-template-columns: 1fr 1fr;
+      }
+      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-controls-center {
+          justify-self: start;
+          padding-left: 8px; /* Add some spacing */
+      }
+      /* Always hide time on very small screens to save space */
+      .vidu-time-container { display: none; } 
+    }
     
     @media (hover: none) and (pointer: coarse) {
-      .vidu-popup-btn,
-      .vidu-invert-btn,
-      .vidu-playlist-toggle-btn,
-      .vidu-volume-container,
-      #vidu_prevbtn,
-      #vidu_nextbtn {
+      /* On touch devices, hide extra buttons when not in fullscreen to prevent clutter */
+      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-popup-btn,
+      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-invert-btn,
+      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-playlist-toggle-btn,
+      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-volume-container,
+      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_prevbtn,
+      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_nextbtn,
+      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_playbackbtn {
         display: none !important;
       }
     }
+    <!-- MODIFICATION END -->
 
     .vidu-osd-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
