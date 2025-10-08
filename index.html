@@ -953,43 +953,17 @@
     body.popup-mode .vidu-player-host { border-radius: 0; }
     body.popup-mode .vidu-mount { height: 100vh !important; }
     
+    body.popup-mode #vidu_fullbtn { display: none; }
     body.popup-mode .vidu-invert-btn { display: none !important; }
     
     /* --- MODIFIED: Popup Player UI Cleanup --- */
-    body.popup-mode .vidu-volume-container,
-    body.popup-mode #vidu_prevbtn,
-    body.popup-mode #vidu_nextbtn {
-        display: none !important;
-    }
-
-    body.popup-mode .vidu-controls-bg { height: 55px; }
-    body.popup-mode .vidu-overlay { padding: 2px 10px; bottom: 4px; left: 4px; right: 4px; border-radius: 8px; }
-    body.popup-mode .vidu-seek-container { padding: 4px 0; }
-
-    body.popup-mode .vidu-controls-grid {
-        gap: 0 10px;
-        grid-template-areas:
-            "seek seek seek"
-            "left center right"; /* Use semantic names for areas */
-        grid-template-columns: auto 1fr auto; /* Col sizes: Play | Time | Right Buttons */
-    }
-
-    /* Remap the grid items to the new layout */
-    body.popup-mode .vidu-controls-center { /* Was prev/play/next, now just play */
-        grid-area: left;
-        justify-self: start;
-    }
-    body.popup-mode .vidu-controls-left { /* Was volume/time, now just time */
-        grid-area: center;
-        justify-self: center; /* Center the time display */
-    }
-    body.popup-mode .vidu-controls-right { /* Holds playback/fullscreen */
-        grid-area: right;
-        justify-self: end;
-    }
-    
-    body.popup-mode .vidu-playback-menu { bottom: 50px; }
-    body.popup-mode .vidu-volume-panel { display: none !important; }
+    body.popup-mode .vidu-volume-container { display: none !important; } /* Hide volume button */
+    body.popup-mode .vidu-controls-bg { height: 55px; } /* Reduced background height */
+    body.popup-mode .vidu-overlay { padding: 2px 10px; bottom: 4px; left: 4px; right: 4px; border-radius: 8px; } /* Compacted overlay */
+    body.popup-mode .vidu-controls-grid { gap: 0 10px; } /* Removed vertical gap */
+    body.popup-mode .vidu-seek-container { padding: 4px 0; } /* Reduced padding around seek bar */
+    body.popup-mode .vidu-playback-menu { bottom: 50px; } /* Adjusted menu position */
+    body.popup-mode .vidu-volume-panel { display: none !important; } /* Hide volume panel too */
     /* --- END MODIFICATION --- */
   </style>
 </head>
