@@ -233,6 +233,9 @@
       background:#000; 
       display:block;
     }
+    .vidu-mount iframe{
+      width:100%; height:100%; display:block; border:0; pointer-events:none;
+    }
     
     .vidu-player-host.vidu-player-inverted {
         filter: invert(1);
@@ -978,8 +981,9 @@
                modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal"><div id="player-block" style="display:block;"><div id="player-wrap"></div></div></div></div>`;
 
                if (window.showViduPlayer && videoId) {
-                   window.showViduPlayer(videoId, time).then(player => {
+                   window.showViduPlayer(videoId).then(player => {
                        popupPlayerInstance = player;
+                       setTimeout(() => { player.seekTo(time, true); }, 500);
                    });
                }
             });
@@ -1193,6 +1197,7 @@
     player: null,
     animationFrameId: null,
     keyHandler: null,
+    mo: null,
     host: null,
     mount: null,
     seekTrackEl: null,
@@ -1252,12 +1257,13 @@
       }
   }
 
-  // Centralized and reliable video loading function
+  // MODIFICATION: Centralized and reliable video loading function
   function loadVideoInPlayer(videoId, title, startTime = 0) {
     if (state.player && typeof state.player.loadVideoById === 'function' && videoId !== state.videoId) {
         state.videoId = videoId;
         
         // Use the YouTube API's startSeconds parameter for reliability.
+        // This method automatically handles autoplay.
         state.player.loadVideoById({
             videoId: videoId,
             startSeconds: Math.floor(startTime)
@@ -1284,13 +1290,11 @@
     if (!panel || !panel.classList.contains('show')) return;
     
     panel.querySelectorAll('.vidu-playlist-item').forEach(item => {
-      // It's safe to decrypt here because it's only for a visual class toggle
-      const itemVideoId = window.decodeEnc(item.dataset.videoIdEnc);
-      item.classList.toggle('active', itemVideoId === currentVideoId);
+      item.classList.toggle('active', item.dataset.videoId === currentVideoId);
     });
   }
   
-  // Helper function to show loading/restoring popups
+  // MODIFICATION: Helper function to show loading/restoring popups
   function showLoadingPopupForNextVideo(startTime) {
       const isRestoring = startTime && startTime > 0;
       const loadingPopup = isRestoring ? document.getElementById('restoring-position-overlay') : document.getElementById('playlist-video-loading-overlay');
@@ -1343,10 +1347,9 @@
           let contentHTML = `<div class="vidu-playlist-header"><h3>${escapeHtml(playlistData.title)}</h3></div><div class="vidu-playlist-content">`;
 
           playlistData.videos.forEach((video, index) => {
-              const itemVideoId = window.decodeEnc(video.videoIdEnc);
-              const isActive = itemVideoId === state.videoId ? 'active' : '';
+              const isActive = video.videoId === state.videoId ? 'active' : '';
               contentHTML += `
-                  <div class="vidu-playlist-item ${isActive}" data-video-id-enc="${escapeHtml(video.videoIdEnc)}" data-video-title="${escapeHtml(video.title)}">
+                  <div class="vidu-playlist-item ${isActive}" data-video-id="${escapeHtml(video.videoId)}" data-video-title="${escapeHtml(video.title)}">
                       <div class="vidu-playlist-item-thumb-wrapper">
                           <img src="${escapeHtml(video.thumb)}" alt="">
                           <span class="vidu-playlist-item-number">${index + 1}</span>
@@ -1361,9 +1364,10 @@
 
           panel.querySelectorAll('.vidu-playlist-item').forEach(item => {
               item.addEventListener('click', () => {
-                  const videoIdEnc = item.dataset.videoIdEnc;
+                  const videoId = item.dataset.videoId;
                   const videoTitle = item.dataset.videoTitle;
-                  
+
+                  // MODIFICATION: Save progress and load next video using the new robust method
                   if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
                       const cur = state.player.getCurrentTime();
                       const dur = state.player.getDuration ? state.player.getDuration() : 0;
@@ -1374,11 +1378,10 @@
                       }
                   }
                   
-                  // Decrypt here to check progress, but pass encrypted ID to the loader
-                  const videoId = window.decodeEnc(videoIdEnc);
                   const startTime = window.getVideoProgress(videoId) || 0;
                   showLoadingPopupForNextVideo(startTime);
-                  
+
+                  // A tiny delay to let the UI update before the video load begins
                   setTimeout(() => {
                       loadVideoInPlayer(videoId, videoTitle, startTime);
                   }, 50);
@@ -1400,6 +1403,7 @@
       btn.classList.toggle('active', shouldShow);
   }
 
+  // MODIFICATION: Simplified and corrected next/previous video logic
   function playNextOrPreviousVideo(direction) {
     if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
         const cur = state.player.getCurrentTime();
@@ -1415,9 +1419,8 @@
     if (!playlistData || !playlistData.videos || playlistData.videos.length <= 1) {
         return;
     }
-    
-    // Decrypt on the fly to find the current index
-    const currentIndex = playlistData.videos.findIndex(v => window.decodeEnc(v.videoIdEnc) === state.videoId);
+    const currentVideoId = state.videoId;
+    const currentIndex = playlistData.videos.findIndex(v => v.videoId === currentVideoId);
 
     if (currentIndex === -1) {
         return;
@@ -1427,11 +1430,10 @@
     const nextVideo = playlistData.videos[newIndex];
       
     if (nextVideo) {
-        const nextVideoId = window.decodeEnc(nextVideo.videoIdEnc);
-        const startTime = window.getVideoProgress(nextVideoId) || 0;
+        const startTime = window.getVideoProgress(nextVideo.videoId) || 0;
         showLoadingPopupForNextVideo(startTime);
         setTimeout(() => {
-            loadVideoInPlayer(nextVideoId, nextVideo.title, startTime);
+            loadVideoInPlayer(nextVideo.videoId, nextVideo.title, startTime);
         }, 50);
     }
   }
@@ -1608,6 +1610,8 @@
     wrap.appendChild(host);
     return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn, invertBtn };
   }
+
+  function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){} }
 
   function createPlayer(videoId, startTime = 0){
     const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn, invertBtn } = createHostElements();
@@ -2154,79 +2158,62 @@
         } catch (e) {}
         state.animationFrameId = requestAnimationFrame(updatePlayerUI);
     }
-    
-    return loadYTApi().then(() => new Promise((resolve, reject) => {
-        if (state.player && typeof state.player.destroy === 'function') {
-            try { state.player.destroy(); } catch (e) {}
-            state.player = null;
-        }
-        try {
-            const mountPoint = document.getElementById(mount.id);
-            if (!mountPoint) {
-                return reject(new Error('Player mount point not found.'));
-            }
-            mountPoint.innerHTML = ''; 
 
-            const shadowRoot = mountPoint.attachShadow({ mode: 'open' });
-            const playerTarget = document.createElement('div');
-            shadowRoot.appendChild(playerTarget);
-            
-            const style = document.createElement('style');
-            style.textContent = `div, iframe { width: 100%; height: 100%; display: block; border: 0; }`;
-            shadowRoot.appendChild(style);
-
-            state.player = new YT.Player(playerTarget, {
-                videoId: videoId,
-                playerVars: {
-                    controls: 0, disablekb: 1, rel: 0, modestbranding: 1, 
-                    playsinline: 1, iv_load_policy: 3, origin: location.origin,
-                    start: Math.floor(startTime)
-                },
-                events: {
-                    onReady: function(evt) {
-                        const iframe = shadowRoot.querySelector('iframe');
-                        if (iframe) {
-                            iframe.style.pointerEvents = 'none';
-                            iframe.setAttribute('tabindex', '-1');
-                        }
-
-                        showLoading();
-                        setVolume(state.lastVolume, false, false);
-                        updatePlaylistHighlight();
-                        updateNavTooltips();
-                        try {
-                            if (typeof evt.target.setPlaybackQuality === 'function') {
-                                evt.target.setPlaybackQuality('default');
-                            }
-                        } catch (e) {}
-                        try { evt.target.playVideo(); } catch (e) {}
-                        
-                        if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
-                        updatePlayerUI();
-                        resetInactivityTimer();
-                        resolve(evt.target);
-                    },
-                    onStateChange: function(e) {
-                        try {
-                            if (state.seekTrackEl) {
-                                state.seekTrackEl.classList.toggle('buffering', e.data === 3);
-                            }
-                            if (e.data === 1) { // Playing
-                                hideLoading();
-                            }
-                        } catch (err) {}
-                    },
-                    onError: function(err) {
-                        if (state.seekTrackEl) { state.seekTrackEl.classList.remove('buffering'); }
-                        hideLoading();
-                        console.error('YT player error', err);
+    return loadYTApi().then(()=> new Promise((resolve,reject)=>{
+      if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
+      try{
+        state.player = new YT.Player(mount.id, { 
+          videoId: videoId, 
+          width: '100%', 
+          height: '100%', 
+          playerVars: { 
+            controls: 0, 
+            disablekb: 1, 
+            rel: 0, 
+            modestbranding: 1, 
+            playsinline: 1, 
+            iv_load_policy: 3, 
+            origin: location.origin,
+            start: Math.floor(startTime) // Use start param for initial load
+          },
+          events: {
+            onReady: function(evt){
+              disableIframeClicks(host); showLoading();
+              setVolume(state.lastVolume, false, false);
+              updatePlaylistHighlight();
+              updateNavTooltips();
+              try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
+              try{ evt.target.playVideo(); }catch(e){}
+              if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+              updatePlayerUI();
+              if(state.mo) state.mo.disconnect();
+              state.mo = new MutationObserver(()=> disableIframeClicks(host));
+              state.mo.observe(host, { childList:true, subtree:true });
+              resetInactivityTimer();
+              resolve(evt.target);
+            },
+            onStateChange: function(e){
+              try{
+                if (state.seekTrackEl) {
+                    if (e.data === 3) { // Buffering
+                      state.seekTrackEl.classList.add('buffering'); 
+                    } else { 
+                      state.seekTrackEl.classList.remove('buffering'); 
                     }
                 }
-            });
-        } catch (err) {
-            reject(err || new Error('YT player creation failed'));
-        }
-    })).catch(err => { throw err; }).then(p => { setTimeout(() => resetInactivityTimer(), 40); return p; });
+                if(e && e.data === 1){ // Playing
+                  try{ hideLoading(); }catch(e){} 
+                }
+              }catch(err){}
+            },
+            onError: function(err){
+              if (state.seekTrackEl) { state.seekTrackEl.classList.remove('buffering'); }
+              try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} console.error('YT player error', err);
+            }
+          }
+        });
+      }catch(err){ reject(err || new Error('YT player creation failed')); }
+    })).catch(err=>{ throw err; }).then(p=>{ setTimeout(()=> resetInactivityTimer(), 40); return p; });
   }
 
   function destroyPlayer(){
@@ -2252,6 +2239,7 @@
       if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
       if(state.docClickHandler){ document.removeEventListener('click', state.docClickHandler); state.docClickHandler = null; }
       if(state.player){ try{ state.player.destroy(); }catch(e){} state.player = null; }
+      if(state.mo){ try{ state.mo.disconnect(); }catch(e){} state.mo = null; }
       if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
       if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); document.removeEventListener('mozfullscreenchange', state.fsListener); document.removeEventListener('MSFullscreenChange', state.fsListener); state.fsListener = null; }
       if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
@@ -2306,53 +2294,10 @@
             wrapperElement = null;
         }
     };
-    
-    // --- START ENCRYPTION LOGIC ---
-    const CRYPT_KEY = 'vidu_secret_2025';
-    const textEncoder = new TextEncoder();
-    const textDecoder = new TextDecoder();
-    
-    const keyBytes = textEncoder.encode(CRYPT_KEY);
 
-    function xor(bytes) {
-        const out = new Uint8Array(bytes.length);
-        for(let i=0; i < bytes.length; i++) {
-            out[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
-        }
-        return out;
-    }
-    
-    // Globally accessible encode/decode functions
-    window.encodeEnc = function(str) {
-        try {
-            if (!str) return '';
-            const bytes = textEncoder.encode(str);
-            const encrypted = xor(bytes);
-            // Convert Uint8Array to a binary string, then base64 encode
-            const binaryString = String.fromCharCode.apply(null, encrypted);
-            return btoa(binaryString);
-        } catch(e) { return ''; }
-    };
-    
-    window.decodeEnc = function(encStr) {
-        try {
-            if (!encStr) return '';
-            // Base64 decode to a binary string, then convert to Uint8Array
-            const binaryString = atob(encStr);
-            const bytes = new Uint8Array(binaryString.length);
-            for(let i=0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            const decrypted = xor(bytes);
-            return textDecoder.decode(decrypted);
-        } catch (e) { return ''; }
-    };
-    // --- END ENCRYPTION LOGIC ---
-
-    // NOTE: The IDs below are now encrypted using the logic above.
     const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
     function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
-    
+    const decodeEnc = (function(){ const key = new TextEncoder().encode('vidu_secret_2025'); function xorDecode(bytes){ const out = new Uint8Array(bytes.length); for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length]; return out; } return function(encStr){ try{ if(!encStr) return ''; const raw = atob(encStr); const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0))); const dec = xorDecode(bytes); return new TextDecoder().decode(dec); }catch(e){ return ''; } }; })();
     function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
     window.getVideoProgress = function(videoId) {
@@ -2476,8 +2421,8 @@
       if (item.type === 'playlist') {
         openFullScreenPlaylist(item);
       } else {
-        // Pass the encrypted ID to the player loader
-        playVideoWithLoading({ videoIdEnc: item.idEnc, title: item.name || 'Video' });
+        const id = decodeEnc(item.idEnc || '');
+        playVideoWithLoading({ videoId: id, title: item.name || 'Video' });
       }
     }
 
@@ -2525,8 +2470,7 @@
     }
 
     const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
-    async function fetchPlaylistVideos(playlistIdEnc){
-      const playlistId = window.decodeEnc(playlistIdEnc);
+    async function fetchPlaylistVideos(playlistId){
       if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
       if (currentPlaylistCache[playlistId]) return currentPlaylistCache[playlistId];
       const items=[]; let pageToken='';
@@ -2539,12 +2483,7 @@
           const sn = it.snippet || {};
           if(sn.resourceId && sn.resourceId.videoId && sn.title !== 'Private video' && sn.title !== 'Deleted video'){
             const thumb = (sn.thumbnails && (sn.thumbnails.high||sn.thumbnails.medium||sn.thumbnails.default))||{};
-            // Encrypt the ID immediately upon fetching
-            items.push({ 
-                videoIdEnc: window.encodeEnc(sn.resourceId.videoId), 
-                title: sn.title||'Untitled', 
-                thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` 
-            });
+            items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
           }
         });
         pageToken = data.nextPageToken || '';
@@ -2565,11 +2504,11 @@
       contentEl.innerHTML = '';
       loaderEl.style.display = 'flex';
       overlay.classList.add('show');
-      
+      const rawId = decodeEnc(item.idEnc);
+      const playlistId = rawId.split('&')[0];
       try {
-        const videos = await fetchPlaylistVideos(item.idEnc);
+        const videos = await fetchPlaylistVideos(playlistId);
         if (!window.__viduGlobal) window.__viduGlobal = {};
-        // Store the already-encrypted video list
         window.__viduGlobal.lastOpenedPlaylist = { videos, title: item.name };
         renderFullScreenPlaylist(videos, item.name);
       } catch (err) {
@@ -2597,8 +2536,7 @@
             </div>
             <div class="title">${escapeHtml(video.title)}</div>
         `;
-        // Pass the encrypted ID to the loader
-        li.onclick = () => playVideoWithLoading({ videoIdEnc: video.videoIdEnc, title: video.title });
+        li.onclick = () => playVideoWithLoading({ videoId: video.videoId, title: video.title });
         fragment.appendChild(li);
       });
       contentEl.appendChild(fragment);
@@ -2624,9 +2562,7 @@
 
       fsPlaylist.classList.remove('show');
       
-      // Decrypt ONLY when needed
-      const videoId = window.decodeEnc(videoInfo.videoIdEnc);
-      const savedTime = videoInfo.startTime || getVideoProgress(videoId) || 0;
+      const savedTime = videoInfo.startTime || getVideoProgress(videoInfo.videoId) || 0;
       const isRestoring = savedTime > 0;
       
       const restoringPopup = isRestoring ? document.getElementById('restoring-position-overlay') : null;
@@ -2661,8 +2597,7 @@
       document.getElementById('player-block').style.display = 'block';
 
       if (window.showViduPlayer) {
-        // Pass the clean ID to the player
-        window.showViduPlayer(videoId, savedTime)
+        window.showViduPlayer(videoInfo.videoId, savedTime)
           .then(player => {
             if (!isRestoring) {
               loadingBar.style.transition = 'width 0.3s ease-out';
