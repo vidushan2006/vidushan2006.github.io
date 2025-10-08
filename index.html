@@ -1226,6 +1226,7 @@
     touch_startVolume: 0,
     popupCheckInterval: null,
     invertBtnEl: null,
+    pendingRestoreVideoId: null, // MODIFICATION: Added flag for restore logic
   };
 
   function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
@@ -1257,41 +1258,9 @@
       }
   }
 
+  // MODIFICATION: Simplified loadVideoInPlayer
   function loadVideoInPlayer(videoId, title) {
     if (state.player && typeof state.player.loadVideoById === 'function' && videoId !== state.videoId) {
-        
-        const onStateChangeForRestore = (event) => {
-            // We only care about the first time the new video starts playing or buffering
-            if (event.target.getVideoData().video_id === videoId && (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.BUFFERING)) {
-                // This listener has done its job, remove it.
-                state.player.removeEventListener('onStateChange', onStateChangeForRestore);
-
-                // Now, execute the restore logic.
-                const savedTime = window.getVideoProgress(videoId);
-                if (savedTime && savedTime > 0) {
-                    const restoringPopup = document.getElementById('restoring-position-overlay');
-                    const restoringBar = document.getElementById('restoring-bar-fill');
-                    if(restoringPopup && restoringBar) {
-                      restoringPopup.classList.add('show');
-                      restoringBar.style.transition = 'none';
-                      restoringBar.style.width = '0%';
-                      setTimeout(() => {
-                        restoringBar.style.transition = 'width 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
-                        restoringBar.style.width = '100%';
-                      }, 10);
-                      setTimeout(() => {
-                        restoringPopup.classList.remove('show');
-                      }, 1500);
-                    }
-                    state.player.seekTo(savedTime, true);
-                }
-            }
-        };
-
-        // Add the one-time listener BEFORE loading the new video
-        state.player.addEventListener('onStateChange', onStateChangeForRestore);
-        
-        // --- Now load the video ---
         state.videoId = videoId;
         state.player.loadVideoById(videoId);
         state.player.playVideo();
@@ -1360,6 +1329,18 @@
               item.addEventListener('click', () => {
                   const videoId = item.dataset.videoId;
                   const videoTitle = item.dataset.videoTitle;
+
+                  // MODIFICATION: Save progress and set flag before loading
+                  if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
+                      const cur = state.player.getCurrentTime();
+                      const dur = state.player.getDuration ? state.player.getDuration() : 0;
+                      if (cur > 1 && dur > 0 && dur - cur > 5) {
+                          window.saveVideoProgress(state.videoId, cur);
+                      } else {
+                          window.saveVideoProgress(state.videoId, 0);
+                      }
+                  }
+                  state.pendingRestoreVideoId = videoId;
 
                   const loadingPopup = document.getElementById('playlist-video-loading-overlay');
                   const loadingBar = document.getElementById('playlist-loading-bar-fill');
@@ -1432,6 +1413,7 @@
     const nextVideo = playlistData.videos[newIndex];
       
     if (nextVideo) {
+        state.pendingRestoreVideoId = nextVideo.videoId; // MODIFICATION: Set flag for restore
         loadVideoInPlayer(nextVideo.videoId, nextVideo.title);
     }
   }
@@ -2183,7 +2165,32 @@
                     if (e.data === 3) { state.seekTrackEl.classList.add('buffering'); } 
                     else { state.seekTrackEl.classList.remove('buffering'); }
                 }
-                if(e && e.data === 1){ try{ hideLoading(); }catch(e){} } 
+                if(e && e.data === 1){ try{ hideLoading(); }catch(e){} }
+                
+                // MODIFICATION: Centralized restore logic
+                if (state.pendingRestoreVideoId && e.target.getVideoData().video_id === state.pendingRestoreVideoId && (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING)) {
+                    const videoIdToRestore = state.pendingRestoreVideoId;
+                    state.pendingRestoreVideoId = null; // Clear flag immediately
+
+                    const savedTime = window.getVideoProgress(videoIdToRestore);
+                    if (savedTime && savedTime > 0) {
+                        const restoringPopup = document.getElementById('restoring-position-overlay');
+                        const restoringBar = document.getElementById('restoring-bar-fill');
+                        if (restoringPopup && restoringBar) {
+                            restoringPopup.classList.add('show');
+                            restoringBar.style.transition = 'none';
+                            restoringBar.style.width = '0%';
+                            setTimeout(() => {
+                                restoringBar.style.transition = 'width 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
+                                restoringBar.style.width = '100%';
+                            }, 10);
+                            setTimeout(() => {
+                                restoringPopup.classList.remove('show');
+                            }, 1500);
+                        }
+                        e.target.seekTo(savedTime, true);
+                    }
+                }
               }catch(err){}
             },
             onError: function(err){
@@ -2586,6 +2593,8 @@
                       setTimeout(() => {
                         restoringPopup.classList.remove('show');
                       }, 2000);
+                    } else {
+                      player.seekTo(savedTime, true);
                     }
                 }
               }
