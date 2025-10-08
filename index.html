@@ -233,10 +233,6 @@
       background:#000; 
       display:block;
     }
-    /* MODIFICATION: The iframe is now in a shadow DOM, so this rule is less important but kept for clarity */
-    .vidu-mount iframe{
-      width:100%; height:100%; display:block; border:0; pointer-events:none;
-    }
     
     .vidu-player-host.vidu-player-inverted {
         filter: invert(1);
@@ -1288,7 +1284,9 @@
     if (!panel || !panel.classList.contains('show')) return;
     
     panel.querySelectorAll('.vidu-playlist-item').forEach(item => {
-      item.classList.toggle('active', item.dataset.videoId === currentVideoId);
+      // It's safe to decrypt here because it's only for a visual class toggle
+      const itemVideoId = window.decodeEnc(item.dataset.videoIdEnc);
+      item.classList.toggle('active', itemVideoId === currentVideoId);
     });
   }
   
@@ -1345,9 +1343,10 @@
           let contentHTML = `<div class="vidu-playlist-header"><h3>${escapeHtml(playlistData.title)}</h3></div><div class="vidu-playlist-content">`;
 
           playlistData.videos.forEach((video, index) => {
-              const isActive = video.videoId === state.videoId ? 'active' : '';
+              const itemVideoId = window.decodeEnc(video.videoIdEnc);
+              const isActive = itemVideoId === state.videoId ? 'active' : '';
               contentHTML += `
-                  <div class="vidu-playlist-item ${isActive}" data-video-id="${escapeHtml(video.videoId)}" data-video-title="${escapeHtml(video.title)}">
+                  <div class="vidu-playlist-item ${isActive}" data-video-id-enc="${escapeHtml(video.videoIdEnc)}" data-video-title="${escapeHtml(video.title)}">
                       <div class="vidu-playlist-item-thumb-wrapper">
                           <img src="${escapeHtml(video.thumb)}" alt="">
                           <span class="vidu-playlist-item-number">${index + 1}</span>
@@ -1362,7 +1361,7 @@
 
           panel.querySelectorAll('.vidu-playlist-item').forEach(item => {
               item.addEventListener('click', () => {
-                  const videoId = item.dataset.videoId;
+                  const videoIdEnc = item.dataset.videoIdEnc;
                   const videoTitle = item.dataset.videoTitle;
                   
                   if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
@@ -1375,6 +1374,8 @@
                       }
                   }
                   
+                  // Decrypt here to check progress, but pass encrypted ID to the loader
+                  const videoId = window.decodeEnc(videoIdEnc);
                   const startTime = window.getVideoProgress(videoId) || 0;
                   showLoadingPopupForNextVideo(startTime);
                   
@@ -1399,7 +1400,6 @@
       btn.classList.toggle('active', shouldShow);
   }
 
-  // Simplified and corrected next/previous video logic
   function playNextOrPreviousVideo(direction) {
     if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
         const cur = state.player.getCurrentTime();
@@ -1415,8 +1415,9 @@
     if (!playlistData || !playlistData.videos || playlistData.videos.length <= 1) {
         return;
     }
-    const currentVideoId = state.videoId;
-    const currentIndex = playlistData.videos.findIndex(v => v.videoId === currentVideoId);
+    
+    // Decrypt on the fly to find the current index
+    const currentIndex = playlistData.videos.findIndex(v => window.decodeEnc(v.videoIdEnc) === state.videoId);
 
     if (currentIndex === -1) {
         return;
@@ -1426,10 +1427,11 @@
     const nextVideo = playlistData.videos[newIndex];
       
     if (nextVideo) {
-        const startTime = window.getVideoProgress(nextVideo.videoId) || 0;
+        const nextVideoId = window.decodeEnc(nextVideo.videoIdEnc);
+        const startTime = window.getVideoProgress(nextVideoId) || 0;
         showLoadingPopupForNextVideo(startTime);
         setTimeout(() => {
-            loadVideoInPlayer(nextVideo.videoId, nextVideo.title, startTime);
+            loadVideoInPlayer(nextVideoId, nextVideo.title, startTime);
         }, 50);
     }
   }
@@ -2153,7 +2155,6 @@
         state.animationFrameId = requestAnimationFrame(updatePlayerUI);
     }
     
-    // MODIFICATION: This is the core of the Shadow DOM implementation.
     return loadYTApi().then(() => new Promise((resolve, reject) => {
         if (state.player && typeof state.player.destroy === 'function') {
             try { state.player.destroy(); } catch (e) {}
@@ -2164,27 +2165,17 @@
             if (!mountPoint) {
                 return reject(new Error('Player mount point not found.'));
             }
-            mountPoint.innerHTML = ''; // Clear previous content
+            mountPoint.innerHTML = ''; 
 
-            // 1. Attach a shadow root to the mount point. This isolates the iframe.
             const shadowRoot = mountPoint.attachShadow({ mode: 'open' });
-
-            // 2. Create the actual player target div inside the shadow root.
             const playerTarget = document.createElement('div');
-            playerTarget.id = 'shadow-player-target';
             shadowRoot.appendChild(playerTarget);
             
-            // 3. Add styles to the shadow DOM to make the iframe fill its container.
             const style = document.createElement('style');
-            style.textContent = `
-                #shadow-player-target, iframe {
-                    width: 100%; height: 100%; display: block; border: 0;
-                }
-            `;
+            style.textContent = `div, iframe { width: 100%; height: 100%; display: block; border: 0; }`;
             shadowRoot.appendChild(style);
 
-            // 4. Instantiate the YT.Player on the new target *inside* the shadow DOM.
-            state.player = new YT.Player(playerTarget, { // Pass the element, not an ID string
+            state.player = new YT.Player(playerTarget, {
                 videoId: videoId,
                 playerVars: {
                     controls: 0, disablekb: 1, rel: 0, modestbranding: 1, 
@@ -2193,7 +2184,6 @@
                 },
                 events: {
                     onReady: function(evt) {
-                        // The iframe is now inside the shadow DOM. We can set attributes on it here.
                         const iframe = shadowRoot.querySelector('iframe');
                         if (iframe) {
                             iframe.style.pointerEvents = 'none';
@@ -2316,10 +2306,53 @@
             wrapperElement = null;
         }
     };
+    
+    // --- START ENCRYPTION LOGIC ---
+    const CRYPT_KEY = 'vidu_secret_2025';
+    const textEncoder = new TextEncoder();
+    const textDecoder = new TextDecoder();
+    
+    const keyBytes = textEncoder.encode(CRYPT_KEY);
 
+    function xor(bytes) {
+        const out = new Uint8Array(bytes.length);
+        for(let i=0; i < bytes.length; i++) {
+            out[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+        }
+        return out;
+    }
+    
+    // Globally accessible encode/decode functions
+    window.encodeEnc = function(str) {
+        try {
+            if (!str) return '';
+            const bytes = textEncoder.encode(str);
+            const encrypted = xor(bytes);
+            // Convert Uint8Array to a binary string, then base64 encode
+            const binaryString = String.fromCharCode.apply(null, encrypted);
+            return btoa(binaryString);
+        } catch(e) { return ''; }
+    };
+    
+    window.decodeEnc = function(encStr) {
+        try {
+            if (!encStr) return '';
+            // Base64 decode to a binary string, then convert to Uint8Array
+            const binaryString = atob(encStr);
+            const bytes = new Uint8Array(binaryString.length);
+            for(let i=0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            const decrypted = xor(bytes);
+            return textDecoder.decode(decrypted);
+        } catch (e) { return ''; }
+    };
+    // --- END ENCRYPTION LOGIC ---
+
+    // NOTE: The IDs below are now encrypted using the logic above.
     const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
     function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
-    const decodeEnc = (function(){ const key = new TextEncoder().encode('vidu_secret_2025'); function xorDecode(bytes){ const out = new Uint8Array(bytes.length); for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length]; return out; } return function(encStr){ try{ if(!encStr) return ''; const raw = atob(encStr); const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0))); const dec = xorDecode(bytes); return new TextDecoder().decode(dec); }catch(e){ return ''; } }; })();
+    
     function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
     window.getVideoProgress = function(videoId) {
@@ -2443,8 +2476,8 @@
       if (item.type === 'playlist') {
         openFullScreenPlaylist(item);
       } else {
-        const id = decodeEnc(item.idEnc || '');
-        playVideoWithLoading({ videoId: id, title: item.name || 'Video' });
+        // Pass the encrypted ID to the player loader
+        playVideoWithLoading({ videoIdEnc: item.idEnc, title: item.name || 'Video' });
       }
     }
 
@@ -2492,7 +2525,8 @@
     }
 
     const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
-    async function fetchPlaylistVideos(playlistId){
+    async function fetchPlaylistVideos(playlistIdEnc){
+      const playlistId = window.decodeEnc(playlistIdEnc);
       if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
       if (currentPlaylistCache[playlistId]) return currentPlaylistCache[playlistId];
       const items=[]; let pageToken='';
@@ -2505,7 +2539,12 @@
           const sn = it.snippet || {};
           if(sn.resourceId && sn.resourceId.videoId && sn.title !== 'Private video' && sn.title !== 'Deleted video'){
             const thumb = (sn.thumbnails && (sn.thumbnails.high||sn.thumbnails.medium||sn.thumbnails.default))||{};
-            items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
+            // Encrypt the ID immediately upon fetching
+            items.push({ 
+                videoIdEnc: window.encodeEnc(sn.resourceId.videoId), 
+                title: sn.title||'Untitled', 
+                thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` 
+            });
           }
         });
         pageToken = data.nextPageToken || '';
@@ -2526,11 +2565,11 @@
       contentEl.innerHTML = '';
       loaderEl.style.display = 'flex';
       overlay.classList.add('show');
-      const rawId = decodeEnc(item.idEnc);
-      const playlistId = rawId.split('&')[0];
+      
       try {
-        const videos = await fetchPlaylistVideos(playlistId);
+        const videos = await fetchPlaylistVideos(item.idEnc);
         if (!window.__viduGlobal) window.__viduGlobal = {};
+        // Store the already-encrypted video list
         window.__viduGlobal.lastOpenedPlaylist = { videos, title: item.name };
         renderFullScreenPlaylist(videos, item.name);
       } catch (err) {
@@ -2558,7 +2597,8 @@
             </div>
             <div class="title">${escapeHtml(video.title)}</div>
         `;
-        li.onclick = () => playVideoWithLoading({ videoId: video.videoId, title: video.title });
+        // Pass the encrypted ID to the loader
+        li.onclick = () => playVideoWithLoading({ videoIdEnc: video.videoIdEnc, title: video.title });
         fragment.appendChild(li);
       });
       contentEl.appendChild(fragment);
@@ -2584,7 +2624,9 @@
 
       fsPlaylist.classList.remove('show');
       
-      const savedTime = videoInfo.startTime || getVideoProgress(videoInfo.videoId) || 0;
+      // Decrypt ONLY when needed
+      const videoId = window.decodeEnc(videoInfo.videoIdEnc);
+      const savedTime = videoInfo.startTime || getVideoProgress(videoId) || 0;
       const isRestoring = savedTime > 0;
       
       const restoringPopup = isRestoring ? document.getElementById('restoring-position-overlay') : null;
@@ -2619,7 +2661,8 @@
       document.getElementById('player-block').style.display = 'block';
 
       if (window.showViduPlayer) {
-        window.showViduPlayer(videoInfo.videoId, savedTime)
+        // Pass the clean ID to the player
+        window.showViduPlayer(videoId, savedTime)
           .then(player => {
             if (!isRestoring) {
               loadingBar.style.transition = 'width 0.3s ease-out';
