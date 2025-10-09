@@ -36,7 +36,7 @@
   </script>
   
   <style>
-    /* [YOUR EXISTING CSS STYLES GO HERE - NO CHANGES NEEDED TO YOUR CSS] */
+    /* [YOUR EXISTING CSS STYLES GO HERE] */
     :root{
       --bg-overlay: rgba(4,6,12,0.46);
       --glass: rgba(255,255,255,0.04);
@@ -48,6 +48,12 @@
       --text: #f2f6ff;
       --card-radius: 10px;
       --ease: cubic-bezier(.16,.84,.24,1);
+    }
+
+    /* FIX 2: Remove focus outline from all buttons and links */
+    a:focus, button:focus, input[type="submit"]:focus, input[type="reset"]:focus, input[type="button"]:focus {
+        outline: none;
+        box-shadow: none;
     }
 
     body{
@@ -62,7 +68,6 @@
       overflow-x:hidden;
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
-      /* CHANGE 2: Disable text selection */
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
@@ -136,7 +141,7 @@
       border-color: rgba(57, 255, 20, 0.5);
       box-shadow: inset 0 0 12px rgba(57, 255, 20, 0.3), 0 0 20px rgba(57, 255, 20, 0.3);
     }
-    
+
     .wrapper.style1{padding-top:12px;}
     .inner{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:3;}
 
@@ -155,7 +160,6 @@
 
     .list-item .title{display:block;margin-top:0.45rem;color:var(--text);font-weight:700;font-size:14px;text-shadow:0 1px 0 rgba(0,0,0,0.45);}
 
-    /* --- UPDATED: CENTERING LOGIC --- */
     .modal-backdrop{
         position:fixed;
         inset:0;
@@ -203,7 +207,7 @@
     @keyframes btnPulse{0%{box-shadow:0 0 0 rgba(57,255,20,0.28);}50%{box-shadow:0 0 30px rgba(57,255,20,0.22);}100%{box-shadow:0 0 0 rgba(57,255,20,0);} }
 
 
-    /* --- FUTURISTIC PLAYER CSS (PERFORMANCE OPTIMIZED) --- */
+    /* --- FUTURISTIC PLAYER CSS --- */
     .vidu-player-host {
       position: relative;
       width: 100%;
@@ -314,7 +318,6 @@
     .vidu-btn svg { width: 22px; height: 22px; transition: transform .2s var(--ease); will-change: transform; }
     .vidu-btn:hover svg { transform: scale(1.1); }
 
-    /* NEW: Custom Tooltip for Buttons */
     .vidu-custom-tooltip {
       position: absolute;
       bottom: calc(100% + 8px);
@@ -347,12 +350,9 @@
     .vidu-custom-tooltip:empty {
       display: none;
     }
-    /* END: Custom Tooltip */
-
 
     #vidu_playbtn {
       width: 44px; height: 44px; background: rgba(255, 255, 255, 0.1); border-radius: 12px;
-      /* CHANGE: Added for glow effect */
       position: relative;
       overflow: hidden;
     }
@@ -377,9 +377,8 @@
       position: absolute; left: 0; top: 0; height: 100%;
       background: var(--accent-2); border-radius: 6px;
       will-change: width;
-      transition: box-shadow 0.3s ease, background 0.3s ease; /* Added for smooth transition */
+      transition: box-shadow 0.3s ease, background 0.3s ease;
     }
-    /* --- UPDATED: GLOW ON FULL TRACK WHEN BUFFERING --- */
     .seek-track.buffering::after {
         content: '';
         position: absolute;
@@ -398,7 +397,6 @@
         0% { background-position: 125% 0; }
         100% { background-position: -125% 0; }
     }
-    /* --- END GLOW UPDATE --- */
     .vidu-range::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 16px;
@@ -595,13 +593,10 @@
     }
     
     @media (hover: none) and (pointer: coarse) {
-      /* On touch devices, always hide playlist and popup buttons to simplify UI */
       .vidu-popup-btn,
       .vidu-playlist-toggle-btn {
         display: none !important;
       }
-
-      /* On touch devices, hide extra buttons when not in fullscreen to prevent clutter */
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-invert-btn,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-volume-container,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_prevbtn,
@@ -646,8 +641,8 @@
     }
     .vidu-seek-feedback.left { left: 15%; }
     .vidu-seek-feedback.right { right: 15%; }
-    .vidu-seek-feedback.show { animation: vidu-seek-pop 3s var(--ease); } /* MODIFIED: Duration changed to 3s */
-    @keyframes vidu-seek-pop { /* MODIFIED: Keyframes adjusted for 3s duration */
+    .vidu-seek-feedback.show { animation: vidu-seek-pop 3s var(--ease); }
+    @keyframes vidu-seek-pop {
         0% { transform: translateY(-50%) scale(0.8); opacity: 0; }
         10% { transform: translateY(-50%) scale(1.1); opacity: 1; }
         90% { transform: translateY(-50%) scale(1); opacity: 1; }
@@ -733,7 +728,6 @@
     .vidu-playlist-item-number { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.75); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; line-height: 1.4; z-index: 1; pointer-events: none;}
     .vidu-playlist-item .title { font-size: 13px; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
     
-    /* NEW: In-Player Playlist Loader */
     .vidu-playlist-loader {
         display: flex;
         flex-direction: column;
@@ -758,7 +752,6 @@
         animation: vidu-spin 1s linear infinite;
     }
     
-    /* NEW: Playing Indicator in Playlist */
     .vidu-playlist-item-playing-indicator {
         position: absolute;
         inset: 0;
@@ -949,25 +942,20 @@
     body.popup-mode #vidu_fullbtn { display: none; }
     body.popup-mode .vidu-invert-btn { display: none !important; }
     
-    /* --- MODIFIED: Popup Player UI Cleanup --- */
-    body.popup-mode .vidu-volume-container { display: none !important; } /* Hide volume button */
-    body.popup-mode .vidu-controls-bg { height: 55px; } /* Reduced background height */
-    body.popup-mode .vidu-overlay { padding: 2px 10px; bottom: 4px; left: 4px; right: 4px; border-radius: 8px; } /* Compacted overlay */
-    body.popup-mode .vidu-controls-grid { gap: 0 10px; } /* Removed vertical gap */
-    body.popup-mode .vidu-seek-container { padding: 4px 0; } /* Reduced padding around seek bar */
-    body.popup-mode .vidu-playback-menu { bottom: 50px; } /* Adjusted menu position */
-    body.popup-mode .vidu-volume-panel { display: none !important; } /* Hide volume panel too */
-    /* --- END MODIFICATION --- */
+    body.popup-mode .vidu-volume-container { display: none !important; }
+    body.popup-mode .vidu-controls-bg { height: 55px; }
+    body.popup-mode .vidu-overlay { padding: 2px 10px; bottom: 4px; left: 4px; right: 4px; border-radius: 8px; }
+    body.popup-mode .vidu-controls-grid { gap: 0 10px; }
+    body.popup-mode .vidu-seek-container { padding: 4px 0; }
+    body.popup-mode .vidu-playback-menu { bottom: 50px; }
+    body.popup-mode .vidu-volume-panel { display: none !important; }
     
-    /* --- NEW DESKTOP-ONLY STYLES --- */
     @media (hover: hover) and (min-width: 1024px) {
-      /* CHANGE 1: Hide playlist button in fullscreen */
       .vidu-player-host:-webkit-full-screen .vidu-playlist-toggle-btn,
       .vidu-player-host:fullscreen .vidu-playlist-toggle-btn {
         display: none !important;
       }
 
-      /* CHANGE 3.2: More noticeable progress bar glow */
       @keyframes rainbow-glow-animation {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
@@ -980,7 +968,6 @@
         animation: rainbow-glow-animation 3s linear infinite;
       }
 
-      /* CHANGE 3.1: New rotating line glow for play button */
       #vidu_playbtn::before {
         content: '';
         position: absolute;
@@ -1005,7 +992,7 @@
         top: 3px;
         width: calc(100% - 6px);
         height: calc(100% - 6px);
-        background: rgba(30, 33, 42, 0.9); /* Match button bg */
+        background: rgba(30, 33, 42, 0.9);
         border-radius: 10px;
       }
       
@@ -1291,7 +1278,6 @@
 
   function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
-  // MODIFIED: Moved this function to make it globally accessible within the IIFE
   function getFullscreenElement(){ return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null; }
 
   function getAdjacentVideoTitle(direction) {
@@ -1321,13 +1307,10 @@
       }
   }
 
-  // MODIFICATION: Centralized and reliable video loading function
   function loadVideoInPlayer(videoId, title, startTime = 0) {
     if (state.player && typeof state.player.loadVideoById === 'function' && videoId !== state.videoId) {
         state.videoId = videoId;
         
-        // Use the YouTube API's startSeconds parameter for reliability.
-        // This method automatically handles autoplay.
         state.player.loadVideoById({
             videoId: videoId,
             startSeconds: Math.floor(startTime)
@@ -1344,7 +1327,7 @@
         if (typeof window.incrementWatchCount === 'function') {
             window.incrementWatchCount();
         }
-        state.lastSaveTime = 0; // Reset save timer for the new video
+        state.lastSaveTime = 0;
     }
   }
 
@@ -1358,7 +1341,6 @@
     });
   }
   
-  // MODIFICATION: Helper function to show loading/restoring popups
   function showLoadingPopupForNextVideo(startTime) {
       const isRestoring = startTime && startTime > 0;
       const loadingPopup = isRestoring ? document.getElementById('restoring-position-overlay') : document.getElementById('playlist-video-loading-overlay');
@@ -1431,7 +1413,6 @@
                   const videoId = item.dataset.videoId;
                   const videoTitle = item.dataset.videoTitle;
 
-                  // MODIFICATION: Save progress and load next video using the new robust method
                   if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
                       const cur = state.player.getCurrentTime();
                       const dur = state.player.getDuration ? state.player.getDuration() : 0;
@@ -1445,7 +1426,6 @@
                   const startTime = window.getVideoProgress(videoId) || 0;
                   showLoadingPopupForNextVideo(startTime);
 
-                  // A tiny delay to let the UI update before the video load begins
                   setTimeout(() => {
                       loadVideoInPlayer(videoId, videoTitle, startTime);
                   }, 50);
@@ -1467,7 +1447,6 @@
       btn.classList.toggle('active', shouldShow);
   }
 
-  // MODIFICATION: Simplified and corrected next/previous video logic
   function playNextOrPreviousVideo(direction) {
     if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
         const cur = state.player.getCurrentTime();
@@ -2090,7 +2069,6 @@
             const tapX = touch.clientX - rect.left;
             
             if (now - state.touch_lastTapTime < 300 && Math.abs(tapX - state.touch_lastTapX) < 50) {
-                // MODIFIED: Added condition to only allow double-tap seek in fullscreen or popup mode
                 if (getFullscreenElement() || document.body.classList.contains('popup-mode')) {
                     if (!state.player) return;
                     const isRightSide = tapX > rect.width / 2;
@@ -2129,7 +2107,7 @@
                     if (Math.abs(deltaX) > Math.abs(deltaY)) {
                         state.touch_swipeMode = 'seek';
                     } else {
-                        state.touch_swipeMode = null; // Vertical swipe does nothing
+                        state.touch_swipeMode = null;
                     }
                 }
             }
@@ -2239,7 +2217,7 @@
             playsinline: 1, 
             iv_load_policy: 3, 
             origin: location.origin,
-            start: Math.floor(startTime) // Use start param for initial load
+            start: Math.floor(startTime)
           },
           events: {
             onReady: function(evt){
@@ -2259,9 +2237,8 @@
             },
             onStateChange: function(e){
               try{
-                // CHANGE 3: Add/remove 'is-playing' class based on player state
                 if (state.host) {
-                    if (e.data === 1) { // YT.PlayerState.PLAYING
+                    if (e.data === 1) { 
                         state.host.classList.add('is-playing');
                     } else {
                         state.host.classList.remove('is-playing');
@@ -2269,13 +2246,13 @@
                 }
                 
                 if (state.seekTrackEl) {
-                    if (e.data === 3) { // Buffering
+                    if (e.data === 3) {
                       state.seekTrackEl.classList.add('buffering'); 
                     } else { 
                       state.seekTrackEl.classList.remove('buffering'); 
                     }
                 }
-                if(e && e.data === 1){ // Playing
+                if(e && e.data === 1){
                   try{ hideLoading(); }catch(e){} 
                 }
               }catch(err){}
@@ -2321,7 +2298,6 @@
       if(state.popupCheckInterval) { clearInterval(state.popupCheckInterval); state.popupCheckInterval = null; }
       state.invertBtnEl = null;
       if(state.host){ 
-          // CHANGE 3: Ensure 'is-playing' class is removed on destroy
           state.host.classList.remove('is-playing');
           try{ 
               state.host.removeEventListener('wheel', null); state.host.removeEventListener('touchstart', null);
