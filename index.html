@@ -627,19 +627,19 @@
       appearance: none;
       width: 16px;
       height: 16px;
-      background: #fcc419;
+      background: #FF5722;
       cursor: pointer;
       border-radius: 50%;
-      box-shadow: 0 0 8px rgba(252, 196, 25, 0.7);
+      box-shadow: 0 0 8px rgba(255, 87, 34, 0.7);
     }
     .vidu-night-slider::-moz-range-thumb {
       width: 16px;
       height: 16px;
-      background: #fcc419;
+      background: #FF5722;
       cursor: pointer;
       border-radius: 50%;
       border: 0;
-      box-shadow: 0 0 8px rgba(252, 196, 25, 0.7);
+      box-shadow: 0 0 8px rgba(255, 87, 34, 0.7);
     }
 
     .vidu-playlist-toggle-btn {
@@ -1069,7 +1069,15 @@
     
     body.popup-mode .vidu-controls-bg { height: 55px; }
     body.popup-mode .vidu-overlay { padding: 2px 10px; bottom: 4px; left: 4px; right: 4px; border-radius: 8px; }
-    body.popup-mode .vidu-controls-grid { gap: 0 10px; }
+    body.popup-mode .vidu-controls-grid { 
+        grid-template-areas: "seek seek" "center right"; 
+        grid-template-columns: 1fr 1fr;
+    }
+    body.popup-mode .vidu-controls-center {
+        justify-self: start;
+        padding-left: 8px;
+    }
+    body.popup-mode .vidu-time-container { display: none; }
     body.popup-mode .vidu-seek-container { padding: 4px 0; }
     body.popup-mode .vidu-playback-menu { bottom: 50px; }
     body.popup-mode .vidu-volume-panel { display: none !important; }
@@ -1883,17 +1891,42 @@
         setVolume(newVolume, true, true);
     });
     
-    nightBtnEl.addEventListener('click', (e) => { e.stopPropagation(); nightPanelEl.classList.toggle('open'); playbackMenu.classList.remove('open'); volumePanel.classList.remove('open'); });
+    function setNightFilter(value, save = false) { 
+        if (!state.nightOverlayEl || !state.nightBtnEl || !state.nightSliderEl) return;
+        value = Math.max(0, Math.min(100, value));
+        
+        const intensity = value / 100;
+        state.nightOverlayEl.style.backgroundColor = `rgba(255, 87, 34, ${intensity * 0.4})`;
+        
+        state.nightBtnEl.classList.toggle('disabled', value === 0);
+        state.nightSliderEl.value = value;
+        
+        state.lastNightValue = value; 
+        
+        if (save) {
+             try { localStorage.setItem('vidu_player_night_value', value); } catch(e){}
+        }
+    }
+
+    nightBtnEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const newValue = state.lastNightValue > 0 ? 0 : 70;
+        setNightFilter(newValue, true);
+        nightPanelEl.classList.toggle('open', newValue > 0);
+        playbackMenu.classList.remove('open');
+        volumePanel.classList.remove('open');
+        resetInactivityTimer();
+    });
+
     nightSliderEl.addEventListener('input', () => {
         const newValue = parseFloat(nightSliderEl.value);
         setNightFilter(newValue, false);
     });
     nightSliderEl.addEventListener('change', () => {
         const newValue = parseFloat(nightSliderEl.value);
-        try { localStorage.setItem('vidu_player_night_value', newValue); } catch(e){}
+        setNightFilter(newValue, true);
     });
     
-
     state.docClickHandler = (e) => {
       if (playbackMenu.classList.contains('open') && !playbackMenu.contains(e.target) && !playbackBtn.contains(e.target)) {
         playbackMenu.classList.remove('open');
@@ -1998,6 +2031,8 @@
         if(playlistToggleBtnEl) playlistToggleBtnEl.style.display = 'none';
         if(nightBtnEl) nightBtnEl.style.display = 'none';
         if(nightPanelEl) nightPanelEl.style.display = 'none';
+        if(prevBtn) prevBtn.style.display = 'none';
+        if(nextBtn) nextBtn.style.display = 'none';
     }
 
     function setOverlayHidden(hidden){ 
@@ -2046,21 +2081,6 @@
         if (showOsd) showOSDFeedback({ icon: volumeHighSVG(), text: `${Math.round(newVolume)}%` });
         resetInactivityTimer(showControls);
     }
-
-    function setNightFilter(value, isInitializing = false) {
-        if (!state.nightOverlayEl || !state.nightBtnEl || !state.nightSliderEl) return;
-        value = Math.max(0, Math.min(100, value));
-        
-        const intensity = value / 100;
-        state.nightOverlayEl.style.backgroundColor = `rgba(255, 190, 0, ${intensity * 0.3})`;
-        
-        state.nightBtnEl.classList.toggle('disabled', value === 0);
-        state.nightSliderEl.value = value;
-        
-        if (!isInitializing) {
-            state.lastNightValue = value;
-        }
-    }
     
     function setPlaybackRate(speed) {
         if (state.player && typeof state.player.setPlaybackRate === 'function') {
@@ -2091,9 +2111,8 @@
           break;
         case 'b':
           e.preventDefault();
-          const currentNightValue = state.lastNightValue > 0 ? 0 : 70; // Toggle between 0 and 70
-          setNightFilter(currentNightValue, false);
-          try { localStorage.setItem('vidu_player_night_value', currentNightValue); } catch(e){}
+          const newValue = state.lastNightValue > 0 ? 0 : 70;
+          setNightFilter(newValue, true);
           resetInactivityTimer(false);
           break;
         case 'p':
@@ -2421,8 +2440,8 @@
           events: {
             onReady: function(evt){
               disableIframeClicks(host); showLoading();
-              setVolume(state.lastVolume, false, false);
-              setNightFilter(state.lastNightValue, true);
+              setVolume(state.lastVolume, false);
+              setNightFilter(state.lastNightValue, false);
               updatePlaylistHighlight();
               updateNavTooltips();
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
