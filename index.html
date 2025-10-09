@@ -111,7 +111,20 @@
     }
 
     .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);user-select:none;position:relative;}
-    .logo-circle{width: clamp(72px, 9vw, 120px);aspect-ratio:1/1;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background: rgba(255,255,255,0.03);border: 10px solid rgba(255,255,255,0.06);box-shadow: 0 10px 24px rgba(0,0,0,0.4);transform: translateZ(0);flex-shrink:0;}
+    .logo-circle{
+      width: clamp(72px, 9vw, 120px);
+      aspect-ratio:1/1;
+      border-radius:50%;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(255,255,255,0.03);
+      /* FIX: Replaced border with inset box-shadow to prevent rendering artifacts */
+      box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.06), 0 10px 24px rgba(0,0,0,0.4);
+      transform: translateZ(0);
+      flex-shrink:0;
+    }
     .logo-circle img{width:100%;height:100%;object-fit:cover;object-position:center center;display:block;transform: translateZ(0);}
 
     nav ul{list-style:none;margin:0;padding:0;display:flex;gap:10px;align-items:center;}
@@ -237,8 +250,6 @@
     .vidu-player-inverted .vidu-close-btn,
     .vidu-player-inverted .vidu-popup-btn,
     .vidu-player-inverted .vidu-invert-btn,
-    .vidu-player-inverted .vidu-night-btn,
-    .vidu-player-inverted .vidu-night-panel,
     .vidu-player-inverted .vidu-playlist-toggle-btn,
     .vidu-player-inverted .vidu-playback-menu,
     .vidu-player-inverted .vidu-osd-feedback,
@@ -549,101 +560,9 @@
     .vidu-invert-btn.hidden {
       opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
     }
-    
-    /* NIGHT LIGHT BUTTON */
-    .vidu-night-btn {
-      position:absolute; top:108px; left:12px; z-index:10002;
-      width:38px; height:38px; padding:6px; border-radius:50%;
-      background:rgba(20, 22, 28, 0.85);
-      border:1px solid rgba(255,255,255,0.08); color:#fff;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
-      box-shadow:0 8px 20px rgba(0,0,0,0.5);
-      transition: opacity .3s ease, transform .3s ease, background .3s ease;
-      will-change: opacity, transform;
-      overflow: hidden; /* for the disabled line */
-    }
-    .vidu-night-btn svg { width: 22px; height: 22px; }
-    .vidu-night-btn:hover {
-      transform: scale(1.1);
-      background: rgba(30, 32, 40, 0.9);
-    }
-    .vidu-night-btn.hidden {
-      opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
-    }
-    .vidu-night-btn.disabled::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 15%;
-      right: 15%;
-      height: 2px;
-      border-radius: 1px;
-      background: #ff6b6b;
-      transform: translate(0, -50%) rotate(45deg);
-      box-shadow: 0 0 4px #ff6b6b;
-    }
-    
-    /* NIGHT LIGHT PANEL & SLIDER */
-    .vidu-night-panel {
-      position: absolute;
-      top: 100px;
-      left: 58px;
-      width: 150px;
-      height: 40px;
-      background: rgba(30, 32, 38, 0.96);
-      border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity .2s var(--ease), transform .2s var(--ease);
-      transform-origin: left center;
-      transform: translateX(-10px) scale(0.95);
-      pointer-events: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 15px;
-      z-index: 10001;
-    }
-    .vidu-night-panel.open {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(0) scale(1);
-      pointer-events: auto;
-    }
-    .vidu-night-slider {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 6px;
-      background: rgba(59, 130, 246, 0.35);
-      border-radius: 6px;
-      cursor: pointer;
-      outline: none;
-    }
-    .vidu-night-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      background: #fcc419;
-      cursor: pointer;
-      border-radius: 50%;
-      box-shadow: 0 0 8px rgba(252, 196, 25, 0.7);
-    }
-    .vidu-night-slider::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      background: #fcc419;
-      cursor: pointer;
-      border-radius: 50%;
-      border: 0;
-      box-shadow: 0 0 8px rgba(252, 196, 25, 0.7);
-    }
 
     .vidu-playlist-toggle-btn {
-      position:absolute; top:156px; left:12px; z-index:10002;
+      position:absolute; top:108px; left:12px; z-index:10002;
       width:38px; height:38px; padding:6px; border-radius:50%;
       background:rgba(20, 22, 28, 0.85);
       border:1px solid rgba(255,255,255,0.08); color:#fff;
@@ -692,8 +611,6 @@
         display: none !important;
       }
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-invert-btn,
-      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-night-btn,
-      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-night-panel,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-volume-container,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_prevbtn,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_nextbtn,
@@ -1059,8 +976,6 @@
     
     body.popup-mode #vidu_fullbtn,
     body.popup-mode .vidu-invert-btn,
-    body.popup-mode .vidu-night-btn,
-    body.popup-mode .vidu-night-panel,
     body.popup-mode .vidu-volume-container,
     body.popup-mode #vidu_prevbtn,
     body.popup-mode #vidu_nextbtn {
@@ -1069,7 +984,15 @@
     
     body.popup-mode .vidu-controls-bg { height: 55px; }
     body.popup-mode .vidu-overlay { padding: 2px 10px; bottom: 4px; left: 4px; right: 4px; border-radius: 8px; }
-    body.popup-mode .vidu-controls-grid { gap: 0 10px; }
+    body.popup-mode .vidu-controls-grid { 
+        grid-template-areas: "seek seek" "center right"; 
+        grid-template-columns: 1fr 1fr;
+    }
+    body.popup-mode .vidu-controls-center {
+        justify-self: start;
+        padding-left: 8px;
+    }
+    body.popup-mode .vidu-time-container { display: none; }
     body.popup-mode .vidu-seek-container { padding: 4px 0; }
     body.popup-mode .vidu-playback-menu { bottom: 50px; }
     body.popup-mode .vidu-volume-panel { display: none !important; }
@@ -1380,7 +1303,6 @@
     lastActivity: Date.now(),
     desiredPlaying: null,
     lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
-    lastNightValue: (() => { try { const v = localStorage.getItem('vidu_player_night_value'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 0; } catch(e) { return 0; } })(),
     osdTimer: null,
     _menuOpenTs: 0,
     lastSaveTime: 0,
@@ -1399,10 +1321,6 @@
     touch_startVolume: 0,
     popupCheckInterval: null,
     invertBtnEl: null,
-    nightBtnEl: null,
-    nightPanelEl: null,
-    nightSliderEl: null,
-    nightOverlayEl: null,
   };
 
   function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
@@ -1690,11 +1608,6 @@
     if(prev) prev.remove();
     const host = document.createElement('div'); host.className = 'vidu-player-host';
     
-    const nightOverlay = document.createElement('div');
-    nightOverlay.id = 'vidu_night_overlay';
-    nightOverlay.style.cssText = 'position:absolute; inset:0; z-index:1; pointer-events:none; background-color: transparent; transition: background-color .3s ease;';
-    host.appendChild(nightOverlay);
-    
     const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
     host.appendChild(mount);
     const loadingDiv = document.createElement('div'); loadingDiv.className = 'vidu-loading'; loadingDiv.id = 'vidu_loading';
@@ -1770,20 +1683,6 @@
     invertBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-1.9 1.26 6 6 0 0 1-8.05-5.15A5.5 5.5 0 0 1 13.36 4.1a9 9 0 0 0-1.36-1.1zM12 19a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/></svg>`;
     host.appendChild(invertBtn);
 
-    const nightBtn = document.createElement('button');
-    nightBtn.className = 'vidu-night-btn';
-    nightBtn.id = 'vidu_night_btn';
-    nightBtn.title = 'Night Light (B)';
-    nightBtn.type = 'button';
-    nightBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM12 5c-3.86 0-7 3.14-7 7s3.14 7 7 7V5z"/></svg>`;
-    host.appendChild(nightBtn);
-    
-    const nightPanel = document.createElement('div');
-    nightPanel.className = 'vidu-night-panel';
-    nightPanel.id = 'vidu_night_panel';
-    nightPanel.innerHTML = `<input type="range" min="0" max="100" value="0" class="vidu-night-slider" id="vidu_night_slider" />`;
-    host.appendChild(nightPanel);
-
     const playlistToggleBtn = document.createElement('button');
     playlistToggleBtn.className = 'vidu-playlist-toggle-btn';
     playlistToggleBtn.id = 'vidu_playlist_toggle_btn';
@@ -1800,13 +1699,13 @@
     host.appendChild(seekFeedbackRight);
     
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn, invertBtn, nightBtn, nightPanel, nightOverlay };
+    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn, invertBtn };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){} }
 
   function createPlayer(videoId, startTime = 0){
-    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn, invertBtn, nightBtn, nightPanel, nightOverlay } = createHostElements();
+    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, playbackMenu, popupBtn, invertBtn } = createHostElements();
     state.host = host; state.mount = mount;
     state.videoId = videoId;
     const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -1829,20 +1728,12 @@
     const seekFeedbackRight = host.querySelector('#vidu_seek_feedback_right');
     const popupBtnEl = host.querySelector('#vidu_popup_btn');
     const invertBtnEl = host.querySelector('#vidu_invert_btn');
-    const nightBtnEl = host.querySelector('#vidu_night_btn');
-    const nightPanelEl = host.querySelector('#vidu_night_panel');
-    const nightSliderEl = host.querySelector('#vidu_night_slider');
-    const nightOverlayEl = host.querySelector('#vidu_night_overlay');
     const playlistToggleBtnEl = host.querySelector('#vidu_playlist_toggle_btn');
     const prevBtn = host.querySelector('#vidu_prevbtn');
     const nextBtn = host.querySelector('#vidu_nextbtn');
     
     state.invertBtnEl = invertBtnEl;
     state.seekTrackEl = seekTrackEl;
-    state.nightBtnEl = nightBtnEl;
-    state.nightPanelEl = nightPanelEl;
-    state.nightSliderEl = nightSliderEl;
-    state.nightOverlayEl = nightOverlayEl;
 
     if (playlistToggleBtnEl) {
       playlistToggleBtnEl.addEventListener('click', () => {
@@ -1864,7 +1755,7 @@
         });
     }
 
-    playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); volumePanel.classList.remove('open'); nightPanelEl.classList.remove('open'); });
+    playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); playbackMenu.classList.toggle('open'); volumePanel.classList.remove('open'); });
     playbackMenu.addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON' && e.target.dataset.speed) {
             const speed = parseFloat(e.target.dataset.speed);
@@ -1873,7 +1764,7 @@
         }
     });
     
-    volumeBtn.addEventListener('click', (e) => { e.stopPropagation(); volumePanel.classList.toggle('open'); playbackMenu.classList.remove('open'); nightPanelEl.classList.remove('open'); });
+    volumeBtn.addEventListener('click', (e) => { e.stopPropagation(); volumePanel.classList.toggle('open'); playbackMenu.classList.remove('open'); });
     volumeSlider.addEventListener('input', () => {
         const newVolume = parseFloat(volumeSlider.value);
         setVolume(newVolume, false, true);
@@ -1882,17 +1773,6 @@
         const newVolume = parseFloat(volumeSlider.value);
         setVolume(newVolume, true, true);
     });
-    
-    nightBtnEl.addEventListener('click', (e) => { e.stopPropagation(); nightPanelEl.classList.toggle('open'); playbackMenu.classList.remove('open'); volumePanel.classList.remove('open'); });
-    nightSliderEl.addEventListener('input', () => {
-        const newValue = parseFloat(nightSliderEl.value);
-        setNightFilter(newValue, false);
-    });
-    nightSliderEl.addEventListener('change', () => {
-        const newValue = parseFloat(nightSliderEl.value);
-        try { localStorage.setItem('vidu_player_night_value', newValue); } catch(e){}
-    });
-    
 
     state.docClickHandler = (e) => {
       if (playbackMenu.classList.contains('open') && !playbackMenu.contains(e.target) && !playbackBtn.contains(e.target)) {
@@ -1900,9 +1780,6 @@
       }
       if (volumePanel.classList.contains('open') && !volumePanel.contains(e.target) && !volumeBtn.contains(e.target)) {
         volumePanel.classList.remove('open');
-      }
-      if (state.nightPanelEl && state.nightPanelEl.classList.contains('open') && !state.nightPanelEl.contains(e.target) && !state.nightBtnEl.contains(e.target)) {
-        state.nightPanelEl.classList.remove('open');
       }
     };
     document.addEventListener('click', state.docClickHandler);
@@ -1996,8 +1873,8 @@
         if(popupBtnEl) popupBtnEl.style.display = 'none';
         if(invertBtnEl) invertBtnEl.style.display = 'none';
         if(playlistToggleBtnEl) playlistToggleBtnEl.style.display = 'none';
-        if(nightBtnEl) nightBtnEl.style.display = 'none';
-        if(nightPanelEl) nightPanelEl.style.display = 'none';
+        if(prevBtn) prevBtn.style.display = 'none';
+        if(nextBtn) nextBtn.style.display = 'none';
     }
 
     function setOverlayHidden(hidden){ 
@@ -2007,18 +1884,15 @@
             if(closeBtn) closeBtn.classList.add('hidden'); 
             if(popupBtnEl) popupBtnEl.classList.add('hidden');
             if(state.invertBtnEl) state.invertBtnEl.classList.add('hidden');
-            if(state.nightBtnEl) state.nightBtnEl.classList.add('hidden');
             if(playlistBtn) playlistBtn.classList.add('hidden');
             if(playbackMenu) playbackMenu.classList.remove('open');
             if(volumePanel) volumePanel.classList.remove('open');
-            if(state.nightPanelEl) state.nightPanelEl.classList.remove('open');
             if(state.host) state.host.style.cursor = 'none';
         } else { 
             overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); 
             if(closeBtn && !document.body.classList.contains('popup-mode')) closeBtn.classList.remove('hidden'); 
             if(popupBtnEl && !document.body.classList.contains('popup-mode')) popupBtnEl.classList.remove('hidden'); 
             if(state.invertBtnEl && !document.body.classList.contains('popup-mode')) state.invertBtnEl.classList.remove('hidden'); 
-            if(state.nightBtnEl && !document.body.classList.contains('popup-mode')) state.nightBtnEl.classList.remove('hidden');
             if(playlistBtn && !document.body.classList.contains('popup-mode')) playlistBtn.classList.remove('hidden');
             if(state.host) state.host.style.cursor = '';
         } 
@@ -2046,21 +1920,6 @@
         if (showOsd) showOSDFeedback({ icon: volumeHighSVG(), text: `${Math.round(newVolume)}%` });
         resetInactivityTimer(showControls);
     }
-
-    function setNightFilter(value, isInitializing = false) {
-        if (!state.nightOverlayEl || !state.nightBtnEl || !state.nightSliderEl) return;
-        value = Math.max(0, Math.min(100, value));
-        
-        const intensity = value / 100;
-        state.nightOverlayEl.style.backgroundColor = `rgba(255, 190, 0, ${intensity * 0.3})`;
-        
-        state.nightBtnEl.classList.toggle('disabled', value === 0);
-        state.nightSliderEl.value = value;
-        
-        if (!isInitializing) {
-            state.lastNightValue = value;
-        }
-    }
     
     function setPlaybackRate(speed) {
         if (state.player && typeof state.player.setPlaybackRate === 'function') {
@@ -2087,13 +1946,6 @@
         case 'n':
           e.preventDefault();
           if (state.host) { state.host.classList.toggle('vidu-player-inverted'); }
-          resetInactivityTimer(false);
-          break;
-        case 'b':
-          e.preventDefault();
-          const currentNightValue = state.lastNightValue > 0 ? 0 : 70; // Toggle between 0 and 70
-          setNightFilter(currentNightValue, false);
-          try { localStorage.setItem('vidu_player_night_value', currentNightValue); } catch(e){}
           resetInactivityTimer(false);
           break;
         case 'p':
@@ -2225,7 +2077,7 @@
         if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
         state.inactivityTimer = setTimeout(()=>{
             try {
-                const isMenuOpen = playbackMenu.classList.contains('open') || volumePanel.classList.contains('open') || (state.nightPanelEl && state.nightPanelEl.classList.contains('open'));
+                const isMenuOpen = playbackMenu.classList.contains('open') || volumePanel.classList.contains('open');
                 const isDragging = seekEl._drag;
                 if (!isMenuOpen && !isDragging) {
                     setOverlayHidden(true);
@@ -2421,8 +2273,7 @@
           events: {
             onReady: function(evt){
               disableIframeClicks(host); showLoading();
-              setVolume(state.lastVolume, false, false);
-              setNightFilter(state.lastNightValue, true);
+              setVolume(state.lastVolume, false);
               updatePlaylistHighlight();
               updateNavTooltips();
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
@@ -2501,10 +2352,6 @@
       if(state.popupCheckInterval) { clearInterval(state.popupCheckInterval); state.popupCheckInterval = null; }
       
       state.invertBtnEl = null;
-      state.nightBtnEl = null;
-      state.nightPanelEl = null;
-      state.nightSliderEl = null;
-      state.nightOverlayEl = null;
 
       if(state.host){ 
           state.host.classList.remove('is-playing');
