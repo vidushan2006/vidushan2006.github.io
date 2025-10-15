@@ -1343,6 +1343,7 @@
     inactivityTimer: null,
     lastActivity: Date.now(),
     desiredPlaying: null,
+    isBuffering: false,
     lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
     osdTimer: null,
     _menuOpenTs: 0,
@@ -1808,11 +1809,11 @@
     volumeBtn.addEventListener('click', (e) => { e.stopPropagation(); volumePanel.classList.toggle('open'); playbackMenu.classList.remove('open'); });
     volumeSlider.addEventListener('input', () => {
         const newVolume = parseFloat(volumeSlider.value);
-        setVolume(newVolume, false, true);
+        setVolume(newVolume, false);
     });
     volumeSlider.addEventListener('change', () => {
         const newVolume = parseFloat(volumeSlider.value);
-        setVolume(newVolume, true, true);
+        setVolume(newVolume, true);
     });
 
     state.docClickHandler = (e) => {
@@ -1905,7 +1906,7 @@
             if (state.host) {
                 state.host.classList.toggle('vidu-player-inverted');
             }
-            resetInactivityTimer(false);
+            resetInactivityTimer();
         });
     }
 
@@ -1918,26 +1919,6 @@
         if(nextBtn) nextBtn.style.display = 'none';
     }
 
-    function setOverlayHidden(hidden){ 
-        const playlistBtn = document.getElementById('vidu_playlist_toggle_btn');
-        if(hidden){ 
-            overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); 
-            if(closeBtn) closeBtn.classList.add('hidden'); 
-            if(popupBtnEl) popupBtnEl.classList.add('hidden');
-            if(state.invertBtnEl) state.invertBtnEl.classList.add('hidden');
-            if(playlistBtn) playlistBtn.classList.add('hidden');
-            if(playbackMenu) playbackMenu.classList.remove('open');
-            if(volumePanel) volumePanel.classList.remove('open');
-            if(state.host) state.host.style.cursor = 'none';
-        } else { 
-            overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); 
-            if(closeBtn && !document.body.classList.contains('popup-mode')) closeBtn.classList.remove('hidden'); 
-            if(popupBtnEl && !document.body.classList.contains('popup-mode')) popupBtnEl.classList.remove('hidden'); 
-            if(state.invertBtnEl && !document.body.classList.contains('popup-mode')) state.invertBtnEl.classList.remove('hidden'); 
-            if(playlistBtn && !document.body.classList.contains('popup-mode')) playlistBtn.classList.remove('hidden');
-            if(state.host) state.host.style.cursor = '';
-        } 
-    }
     function showLoading(){ try{ if(loadingDiv){ loadingDiv.classList.remove('hidden'); loadingDiv.style.display = 'flex'; } }catch(e){} }
     function hideLoading(){ try{ if(loadingDiv){ loadingDiv.classList.add('hidden'); setTimeout(()=> { try{ loadingDiv.style.display = 'none'; }catch(e){} }, 320); } }catch(e){} }
 
@@ -1950,7 +1931,7 @@
         }, duration);
     }
     
-    function setVolume(newVolume, showOsd = true, showControls = true) {
+    function setVolume(newVolume, showOsd = true) {
         if (!state.player || typeof state.player.getVolume !== 'function') return;
         newVolume = Math.max(0, Math.min(100, newVolume));
         state.player.setVolume(newVolume);
@@ -1959,7 +1940,7 @@
         if (newVolume > 0 && typeof state.player.unMute === 'function') state.player.unMute();
         if (newVolume === 0 && typeof state.player.mute === 'function') state.player.mute();
         if (showOsd) showOSDFeedback({ icon: volumeHighSVG(), text: `${Math.round(newVolume)}%` });
-        resetInactivityTimer(showControls);
+        resetInactivityTimer();
     }
     
     function setPlaybackRate(speed) {
@@ -1987,30 +1968,30 @@
         case 'n':
           e.preventDefault();
           if (state.host) { state.host.classList.toggle('vidu-player-inverted'); }
-          resetInactivityTimer(false);
+          resetInactivityTimer();
           break;
         case 'p':
           e.preventDefault();
           const popupBtn = document.getElementById('vidu_popup_btn');
           if (popupBtn) { popupBtn.click(); }
-          resetInactivityTimer(false);
+          resetInactivityTimer();
           break;
         case 'l':
           e.preventDefault();
           toggleInPlayerPlaylist();
-          resetInactivityTimer(false);
+          resetInactivityTimer();
           break;
         case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
         case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
         case 'arrowup':
           e.preventDefault();
           const upAmount = e.ctrlKey ? 1 : 5;
-          setVolume((state.player.getVolume() || 0) + upAmount, true, false);
+          setVolume((state.player.getVolume() || 0) + upAmount, true);
           break;
         case 'arrowdown':
           e.preventDefault();
           const downAmount = e.ctrlKey ? 1 : 5;
-          setVolume((state.player.getVolume() || 0) - downAmount, true, false);
+          setVolume((state.player.getVolume() || 0) - downAmount, true);
           break;
         case 'q':
         case 'e':
@@ -2019,7 +2000,7 @@
           const buttons = Array.from(playbackMenu.querySelectorAll('button[data-speed]'));
           const speeds = buttons.map(b => parseFloat(b.dataset.speed)).sort((a, b) => a - b);
           
-          if (key === 'w') { setPlaybackRate(1); resetInactivityTimer(false); break; }
+          if (key === 'w') { setPlaybackRate(1); resetInactivityTimer(); break; }
           
           const currentRate = state.player.getPlaybackRate();
           let currentIndex = speeds.findIndex(s => s === currentRate);
@@ -2032,7 +2013,7 @@
              nextIndex = (currentIndex - 1 + speeds.length) % speeds.length;
           }
           setPlaybackRate(speeds[nextIndex]);
-          resetInactivityTimer(false);
+          resetInactivityTimer();
           break;
         case ',':
             e.preventDefault();
@@ -2110,54 +2091,67 @@
       resetInactivityTimer();
     });
 
-    function resetInactivityTimer(showControls = true){
+    function resetInactivityTimer() {
         state.lastActivity = Date.now();
-        if (showControls) {
-          setOverlayHidden(false);
+        
+        // On any activity, show all controls
+        const { host } = state;
+        if (host) {
+            host.querySelector('.vidu-overlay')?.classList.remove('hidden');
+            host.querySelector('.vidu-controls-bg')?.classList.remove('hidden');
+            host.style.cursor = '';
+            
+            const topControls = [
+                host.querySelector('#vidu_closebtn'),
+                host.querySelector('#vidu_popup_btn'),
+                host.querySelector('#vidu_invert_btn'),
+                host.querySelector('#vidu_playlist_toggle_btn')
+            ];
+            topControls.forEach(el => {
+                if (el && !document.body.classList.contains('popup-mode')) {
+                    el.classList.remove('hidden');
+                }
+            });
         }
-    
-        if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); }
-    
-        const hideInactiveControls = () => {
-            try {
-                const isMenuOpen = playbackMenu.classList.contains('open') || volumePanel.classList.contains('open');
-                const isDragging = seekEl._drag;
-    
-                if (isMenuOpen || isDragging) {
-                    state.inactivityTimer = setTimeout(hideInactiveControls, 3000);
-                    return;
-                }
-    
-                // Always hide top shortcut controls
-                if(closeBtn) closeBtn.classList.add('hidden');
-                if(popupBtnEl) popupBtnEl.classList.add('hidden');
-                if(state.invertBtnEl) state.invertBtnEl.classList.add('hidden');
-                if(playlistToggleBtnEl) playlistToggleBtnEl.classList.add('hidden');
-    
-                let isBuffering = false;
-                if (state.player && typeof state.player.getPlayerState === 'function') {
-                    isBuffering = (state.player.getPlayerState() === 3);
-                }
-    
-                if (!isBuffering) {
-                    // Hide bottom controls if not buffering
-                    overlay.classList.add('hidden');
-                    ctrlBg.classList.add('hidden');
-                    if(state.host) state.host.style.cursor = 'none';
-                } else {
-                    // If buffering, reschedule the check to keep controls visible
-                    state.inactivityTimer = setTimeout(hideInactiveControls, 3000);
-                }
-    
-                if(playbackMenu) playbackMenu.classList.remove('open');
-                if(volumePanel) volumePanel.classList.remove('open');
-    
-            } catch(e) {
-                console.error("Error in hideInactiveControls:", e);
+
+        // Clear any existing timer
+        if (state.inactivityTimer) clearTimeout(state.inactivityTimer);
+
+        // Set the new timer
+        state.inactivityTimer = setTimeout(() => {
+            const { host } = state;
+            if (!host) return;
+
+            const isMenuOpen = host.querySelector('#vidu_playback_menu')?.classList.contains('open') ||
+                               host.querySelector('#vidu_volume_panel')?.classList.contains('open');
+            const isDragging = host.querySelector('#vidu_seek')?._drag;
+
+            // If user is actively interacting (menu, dragging), just restart the timer and do nothing else.
+            if (isMenuOpen || isDragging) {
+                resetInactivityTimer();
+                return;
             }
-        };
-    
-        state.inactivityTimer = setTimeout(hideInactiveControls, 3000);
+
+            // Hide top controls unconditionally after 3s of no interaction.
+            const topControls = [
+                host.querySelector('#vidu_closebtn'),
+                host.querySelector('#vidu_popup_btn'),
+                host.querySelector('#vidu_invert_btn'),
+                host.querySelector('#vidu_playlist_toggle_btn')
+            ];
+            topControls.forEach(el => el?.classList.add('hidden'));
+            
+            // Now, decide about the bottom controls.
+            if (state.isBuffering) {
+                // If buffering, we keep the bottom controls visible but restart the timer to check again.
+                resetInactivityTimer();
+            } else {
+                // If not buffering and not interacting, hide the bottom controls.
+                host.querySelector('.vidu-overlay')?.classList.add('hidden');
+                host.querySelector('.vidu-controls-bg')?.classList.add('hidden');
+                host.style.cursor = 'none';
+            }
+        }, 3000);
     }
     
     function attachActivityListeners(){ 
@@ -2165,7 +2159,7 @@
         
         const throttledWheelHandler = throttle((e) => {
             const delta = e.deltaY > 0 ? -5 : 5;
-            setVolume(state.player.getVolume() + delta, true, false);
+            setVolume(state.player.getVolume() + delta, true);
         }, 50);
         host.addEventListener('wheel', (e) => {
             e.preventDefault();
@@ -2238,7 +2232,7 @@
             }
             if(state.touch_isSwiping){
               e.preventDefault();
-              setOverlayHidden(true);
+              resetInactivityTimer();
               throttledTouchMoveHandler(e);
             }
         }, { passive: false });
@@ -2361,6 +2355,7 @@
               resolve(evt.target);
             },
             onStateChange: function(e){
+              state.isBuffering = (e.data === 3);
               try{
                 if (state.host) {
                     if (e.data === 1) { 
