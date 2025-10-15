@@ -331,7 +331,6 @@
     .vidu-btn svg { width: 22px; height: 22px; transition: transform .2s var(--ease); will-change: transform; }
     .vidu-btn:hover svg { transform: scale(1.1); }
 
-    /* MODIFIED: Updated tooltip style for a more modern look */
     .vidu-custom-tooltip {
       position: absolute;
       bottom: calc(100% + 8px);
@@ -832,18 +831,44 @@
     .fs-playlist-close-btn { margin-left: auto; background: none; border: none; color: var(--muted); font-size: 32px; line-height: 1; cursor: pointer; transition: color .2s ease, transform .2s ease; }
     .fs-playlist-close-btn:hover { color: var(--text); transform: scale(1.1) rotate(90deg); }
     .fs-playlist-content { flex: 1; overflow-y: auto; padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; align-content: start; }
-    /* FIX 1: Changed background from yellow tint to neutral glass */
     .fs-playlist-item { position: relative; background: var(--glass); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--card-radius); padding: 12px; cursor: pointer; transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), background 0.25s var(--ease); will-change: transform; }
     .fs-playlist-item:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); background: var(--glass-strong); }
     
-    .video-number-thumbnail {
-        width: 100%; aspect-ratio: 16/9; border-radius: 6px; margin-bottom: 12px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.3); background: #000;
-        display: flex; align-items: center; justify-content: center; overflow: hidden;
+    /* REVERTED: Re-added thumbnail styles for the fullscreen playlist */
+    .fs-video-thumbnail {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16/9;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        background: #000;
+        overflow: hidden;
     }
-    .video-number-thumbnail span {
-        font-family: 'Inter', sans-serif; font-weight: 800; font-size: clamp(3.5rem, 8vw, 5rem);
-        color: var(--accent-2); text-shadow: 0 0 12px rgba(57, 255, 20, 0.7); line-height: 1;
+    .fs-video-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.3s ease;
+    }
+    .fs-playlist-item:hover .fs-video-thumbnail img {
+        transform: scale(1.05);
+    }
+    .fs-video-number {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        background: rgba(0,0,0,0.75);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 4px;
+        line-height: 1.4;
+        z-index: 1;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
     }
 
     .fs-playlist-item .title { font-weight: 700; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
@@ -1026,7 +1051,6 @@
         top: -50%;
         width: 200%;
         height: 200%;
-        /* MODIFIED: Switched to a single conic-gradient for a smooth, mixed color effect. */
         background: conic-gradient(
           from 180deg at 50% 50%,
           #ff6b6b, #fcc419, #51cf66, #339af0, #845ef7, #cc5de8, #f06595, #ff6b6b
@@ -1052,56 +1076,32 @@
         }
       }
       
-      /* ADDED: Keyframes for the new paused button glow effect. */
-      @keyframes pulsate-glow-paused {
-        0%, 100% {
-          opacity: 0.8;
-          filter: blur(5px) saturate(1.2);
-          transform: scale(1.0);
-        }
-        50% {
-          opacity: 1;
-          filter: blur(8px) saturate(1.5);
-          transform: scale(1.05);
-        }
-      }
-
-      /* ADDED: Keyframes for the new paused progress bar aurora effect. */
-      @keyframes aurora-glow-paused {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-      }
-      
-      /* ADDED: New glowing style for the progress bar when the video is paused. */
+      /* MODIFIED: Glowing style for the progress bar when the video is paused. */
       .vidu-player-host:not(.is-playing) .seek-track::after {
           content: '';
           position: absolute;
           inset: -2px;
           border-radius: 8px;
-          background: linear-gradient(-45deg, #845ef7, #5c7cfa, #339af0, #00c6ff, #51cf66, #845ef7);
+          background: linear-gradient(270deg, #ff6b6b, #fcc419, #51cf66, #339af0, #845ef7, #ff6b6b);
           background-size: 400% 400%;
-          animation: aurora-glow-paused 10s ease-in-out infinite;
+          animation: rainbow-glow-animation 8s linear infinite; /* Slower animation */
           filter: blur(5px);
-          opacity: 0; /* Hidden by default, transitioned in below */
+          opacity: 0;
           z-index: -1;
           transition: opacity 0.5s ease;
       }
       
-      /* Show the paused glow only if not buffering. */
       .vidu-player-host:not(.is-playing) .seek-track:not(.buffering)::after {
-          opacity: 0.85;
+          opacity: 0.75;
       }
 
-      /* ADDED: New glow style for the play button when the video is paused. */
+      /* MODIFIED: Glow style for the play button when the video is paused. */
       .vidu-player-host:not(.is-playing) #vidu_playbtn::before {
-        background: radial-gradient(circle, rgba(0, 198, 255, 0.6) 0%, rgba(132, 94, 247, 0) 65%);
-        animation: pulsate-glow-paused 4s ease-in-out infinite;
+        animation: rotate-glow 5s linear infinite; /* Slower rotation */
         opacity: 0.8;
       }
 
       .vidu-player-host.is-playing #vidu_playbtn::before {
-        /* MODIFIED: Faster animation for a more dynamic feel. */
         animation: rotate-glow 1.8s linear infinite;
         opacity: 1;
       }
@@ -2409,7 +2409,8 @@
           state.host.classList.remove('is-playing');
           try{ 
               state.host.removeEventListener('wheel', null); state.host.removeEventListener('touchstart', null);
-              state.host.removeEventListener('touchmove', null); state.host.removeEventListener('touchend', null);
+              state.host.removeEventListener('touchmove', null);
+              state.host.removeEventListener('touchend', null);
           } catch(e){} 
       }
       if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
@@ -2690,9 +2691,11 @@
       videos.forEach((video, index) => {
         const li = document.createElement('div');
         li.className = 'fs-playlist-item';
+        // REVERTED: Changed back to using thumbnails for the fullscreen playlist items.
         li.innerHTML = `
-            <div class="video-number-thumbnail">
-                <span>${index + 1}</span>
+            <div class="fs-video-thumbnail">
+                <img src="${escapeHtml(video.thumb)}" alt="">
+                <span class="fs-video-number">${index + 1}</span>
             </div>
             <div class="title">${escapeHtml(video.title)}</div>
         `;
