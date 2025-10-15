@@ -2115,16 +2115,49 @@
         if (showControls) {
           setOverlayHidden(false);
         }
-        if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
-        state.inactivityTimer = setTimeout(()=>{
+    
+        if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); }
+    
+        const hideInactiveControls = () => {
             try {
                 const isMenuOpen = playbackMenu.classList.contains('open') || volumePanel.classList.contains('open');
                 const isDragging = seekEl._drag;
-                if (!isMenuOpen && !isDragging) {
-                    setOverlayHidden(true);
+    
+                if (isMenuOpen || isDragging) {
+                    state.inactivityTimer = setTimeout(hideInactiveControls, 3000);
+                    return;
                 }
-            } catch(e) {}
-        }, 3000);
+    
+                // Always hide top shortcut controls
+                if(closeBtn) closeBtn.classList.add('hidden');
+                if(popupBtnEl) popupBtnEl.classList.add('hidden');
+                if(state.invertBtnEl) state.invertBtnEl.classList.add('hidden');
+                if(playlistToggleBtnEl) playlistToggleBtnEl.classList.add('hidden');
+    
+                let isBuffering = false;
+                if (state.player && typeof state.player.getPlayerState === 'function') {
+                    isBuffering = (state.player.getPlayerState() === 3);
+                }
+    
+                if (!isBuffering) {
+                    // Hide bottom controls if not buffering
+                    overlay.classList.add('hidden');
+                    ctrlBg.classList.add('hidden');
+                    if(state.host) state.host.style.cursor = 'none';
+                } else {
+                    // If buffering, reschedule the check to keep controls visible
+                    state.inactivityTimer = setTimeout(hideInactiveControls, 3000);
+                }
+    
+                if(playbackMenu) playbackMenu.classList.remove('open');
+                if(volumePanel) volumePanel.classList.remove('open');
+    
+            } catch(e) {
+                console.error("Error in hideInactiveControls:", e);
+            }
+        };
+    
+        state.inactivityTimer = setTimeout(hideInactiveControls, 3000);
     }
     
     function attachActivityListeners(){ 
