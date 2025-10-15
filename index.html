@@ -394,6 +394,8 @@
       will-change: width;
       transition: box-shadow 0.3s ease, background 0.3s ease;
     }
+    
+    /* RE-ADDED: Restored the buffering glow effect for the progress bar track. */
     .seek-track.buffering::after {
         content: '';
         position: absolute;
@@ -834,7 +836,6 @@
     .fs-playlist-item { position: relative; background: var(--glass); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--card-radius); padding: 12px; cursor: pointer; transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), background 0.25s var(--ease); will-change: transform; }
     .fs-playlist-item:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); background: var(--glass-strong); }
     
-    /* REVERTED: Re-added thumbnail styles for the fullscreen playlist */
     .fs-video-thumbnail {
         position: relative;
         width: 100%;
@@ -1076,25 +1077,13 @@
         }
       }
       
-      /* MODIFIED: Glowing style for the progress bar when the video is paused. */
-      .vidu-player-host:not(.is-playing) .seek-track::after {
-          content: '';
-          position: absolute;
-          inset: -2px;
-          border-radius: 8px;
-          background: linear-gradient(270deg, #ff6b6b, #fcc419, #51cf66, #339af0, #845ef7, #ff6b6b);
-          background-size: 400% 400%;
-          animation: rainbow-glow-animation 8s linear infinite; /* Slower animation */
-          filter: blur(5px);
-          opacity: 0;
-          z-index: -1;
-          transition: opacity 0.5s ease;
+      /* MODIFIED: Glowing style for the filled progress bar when paused. */
+      .vidu-player-host:not(.is-playing) .seek-progress {
+        background: linear-gradient(270deg, #ff6b6b, #fcc419, #51cf66, #339af0, #845ef7, #ff6b6b);
+        background-size: 400% 400%;
+        animation: rainbow-glow-animation 5s linear infinite; /* Matches pause button speed */
       }
       
-      .vidu-player-host:not(.is-playing) .seek-track:not(.buffering)::after {
-          opacity: 0.75;
-      }
-
       /* MODIFIED: Glow style for the play button when the video is paused. */
       .vidu-player-host:not(.is-playing) #vidu_playbtn::before {
         animation: rotate-glow 5s linear infinite; /* Slower rotation */
@@ -2691,7 +2680,6 @@
       videos.forEach((video, index) => {
         const li = document.createElement('div');
         li.className = 'fs-playlist-item';
-        // REVERTED: Changed back to using thumbnails for the fullscreen playlist items.
         li.innerHTML = `
             <div class="fs-video-thumbnail">
                 <img src="${escapeHtml(video.thumb)}" alt="">
