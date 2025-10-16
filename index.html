@@ -279,7 +279,8 @@
 
     .vidu-controls-bg {
       position:absolute; left:0; right:0; bottom:0; height:120px;
-      background:linear-gradient(180deg, transparent, rgba(0,0,0,0.85));
+      /* MODIFIED: Changed background to transparent to remove the shadow */
+      background: transparent;
       pointer-events:none; z-index:9996;
       transition:opacity .3s var(--ease);
       will-change:opacity;
@@ -291,9 +292,7 @@
       padding: 10px 16px;
       border-radius: 12px;
       box-sizing:border-box;
-      /* MODIFIED: Added left and right to transition for smooth fullscreen width change */
       transition:opacity .3s var(--ease),transform .3s var(--ease), left .3s var(--ease), right .3s var(--ease);
-      /* MODIFIED: Added left and right to will-change for performance */
       will-change: opacity, transform, left, right;
       background: rgba(20, 22, 28, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -595,7 +594,6 @@
 
     .vidu-player-host:-webkit-full-screen .vidu-mount, .vidu-player-host:fullscreen .vidu-mount { height:100vh !important; width:100% !important; }
     .vidu-player-host:-webkit-full-screen .vidu-mount iframe, .vidu-player-host:fullscreen .vidu-mount iframe { height:100vh !important; width:100% !important; max-height:none !important; }
-    .vidu-player-host:-webkit-full-screen .vidu-overlay, .vidu-player-host:fullscreen .vidu-overlay { left:18px !important; right:18px !important; bottom:18px !important; }
     
     @media (max-width:720px){ .vidu-overlay{ left:8px; right:8px; bottom:8px; } }
     
@@ -660,13 +658,16 @@
     }
     .vidu-seek-feedback.left { left: 15%; }
     .vidu-seek-feedback.right { right: 15%; }
-    .vidu-seek-feedback.show { animation: vidu-seek-pop 3s var(--ease); }
-    @keyframes vidu-seek-pop {
-        0% { transform: translateY(-50%) scale(0.8); opacity: 0; }
-        10% { transform: translateY(-50%) scale(1.1); opacity: 1; }
-        90% { transform: translateY(-50%) scale(1); opacity: 1; }
-        100% { transform: translateY(-50%) scale(0.9); opacity: 0; }
+    
+    /* MODIFIED: Changed animation to a more modern pop effect */
+    .vidu-seek-feedback.show { animation: vidu-seek-arrow-pop 0.8s var(--ease) forwards; }
+    @keyframes vidu-seek-arrow-pop {
+        0% { transform: translateY(-50%) scale(0.7); opacity: 0; }
+        20% { transform: translateY(-50%) scale(1.1); opacity: 1; }
+        80% { transform: translateY(-50%) scale(1); opacity: 1; }
+        100% { transform: translateY(-50%) scale(0.85); opacity: 0; }
     }
+    
     .vidu-seek-feedback svg {
         width: 48px; height: 48px;
         fill: rgba(255, 255, 255, 0.8);
@@ -1034,7 +1035,6 @@
         display: none !important;
       }
 
-      /* ADDED: Squeezes the control bar horizontally in fullscreen on desktop for a cleaner look */
       .vidu-player-host:-webkit-full-screen .vidu-overlay,
       .vidu-player-host:fullscreen .vidu-overlay {
         left: 15% !important;
@@ -1354,6 +1354,8 @@
     lastActivity: Date.now(),
     desiredPlaying: null,
     lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
+    // ADDED: State to remember volume before muting
+    lastNonMuteVolume: 100,
     osdTimer: null,
     _menuOpenTs: 0,
     lastSaveTime: 0,
@@ -1963,12 +1965,19 @@
     function setVolume(newVolume, showOsd = true, showControls = true) {
         if (!state.player || typeof state.player.getVolume !== 'function') return;
         newVolume = Math.max(0, Math.min(100, newVolume));
+        
+        // ADDED: Store the last volume if it's not being muted
+        const currentVolume = state.player.getVolume();
+        if (currentVolume > 0 && newVolume > 0) {
+            state.lastNonMuteVolume = currentVolume;
+        }
+
         state.player.setVolume(newVolume);
         state.lastVolume = newVolume;
         try { localStorage.setItem('vidu_player_volume', newVolume); } catch(e){}
         if (newVolume > 0 && typeof state.player.unMute === 'function') state.player.unMute();
         if (newVolume === 0 && typeof state.player.mute === 'function') state.player.mute();
-        if (showOsd) showOSDFeedback({ icon: volumeHighSVG(), text: `${Math.round(newVolume)}%` });
+        if (showOsd) showOSDFeedback({ icon: newVolume > 0 ? volumeHighSVG() : volumeMuteSVG(), text: `${Math.round(newVolume)}%` });
         resetInactivityTimer(showControls);
     }
     
@@ -1994,6 +2003,19 @@
       switch (key) {
         case ' ': e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); resetInactivityTimer(); } break;
         case 'f': if (!document.body.classList.contains('popup-mode')) { e.preventDefault(); toggleFullscreen(); } break;
+        // ADDED: Mute toggle functionality
+        case 'm':
+            e.preventDefault();
+            if (state.player && typeof state.player.getVolume === 'function') {
+                const currentVolume = state.player.getVolume();
+                if (currentVolume > 0) {
+                    state.lastNonMuteVolume = currentVolume;
+                    setVolume(0, true, false);
+                } else {
+                    setVolume(state.lastNonMuteVolume > 0 ? state.lastNonMuteVolume : 100, true, false);
+                }
+            }
+            break;
         case 'n':
           e.preventDefault();
           if (state.host) { state.host.classList.toggle('vidu-player-inverted'); }
@@ -2010,8 +2032,8 @@
           toggleInPlayerPlaylist();
           resetInactivityTimer(false);
           break;
-        case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
-        case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); } }catch(err){} break;
+        case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); if (seekFeedbackRight) { seekFeedbackRight.classList.remove('show'); void seekFeedbackRight.offsetWidth; seekFeedbackRight.classList.add('show'); } } }catch(err){} break;
+        case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); if (seekFeedbackLeft) { seekFeedbackLeft.classList.remove('show'); void seekFeedbackLeft.offsetWidth; seekFeedbackLeft.classList.add('show'); }} }catch(err){} break;
         case 'arrowup':
           e.preventDefault();
           const upAmount = e.ctrlKey ? 1 : 5;
@@ -2488,7 +2510,7 @@
         }
     };
 
-    const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
+    const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d/9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
     function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
     const decodeEnc = (function(){ const key = new TextEncoder().encode('vidu_secret_2025'); function xorDecode(bytes){ const out = new Uint8Array(bytes.length); for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length]; return out; } return function(encStr){ try{ if(!encStr) return ''; const raw = atob(encStr); const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0))); const dec = xorDecode(bytes); return new TextDecoder().decode(dec); }catch(e){ return ''; } }; })();
     function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
