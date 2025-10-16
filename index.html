@@ -291,8 +291,9 @@
       padding: 10px 16px;
       border-radius: 12px;
       box-sizing:border-box;
-      transition:opacity .3s var(--ease),transform .3s var(--ease), left .3s var(--ease), right .3s var(--ease);
-      will-change: opacity, transform, left, right;
+      /* FIX 1: Removed transition on `left` and `right` to prevent animation glitch */
+      transition: opacity .3s var(--ease), transform .3s var(--ease);
+      will-change: opacity, transform;
       background: rgba(20, 22, 28, 0.8);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -643,19 +644,28 @@
     }
     .vidu-osd-feedback svg { width: 28px; height: 28px; fill: currentColor; }
     
+    /* FIX 2: Added background and improved styling for better visibility */
     .vidu-seek-feedback {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
         z-index: 10003;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 14px;
-        font-weight: 600;
+        color: var(--text);
+        font-size: 16px;
+        font-weight: 700;
         display: flex;
         flex-direction: column;
         align-items: center;
+        gap: 4px;
         opacity: 0;
         pointer-events: none;
+        background: rgba(20, 22, 28, 0.9);
+        padding: 16px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        min-width: 100px;
+        box-sizing: border-box;
     }
     .vidu-seek-feedback.left { left: 15%; }
     .vidu-seek-feedback.right { right: 15%; }
@@ -670,7 +680,7 @@
     
     .vidu-seek-feedback svg {
         width: 48px; height: 48px;
-        fill: rgba(255, 255, 255, 0.8);
+        fill: #fff; /* Solid white for better contrast */
     }
 
     /* --- NEW: High-End Playback Speed Menu --- */
