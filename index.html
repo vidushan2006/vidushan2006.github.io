@@ -291,8 +291,10 @@
       padding: 10px 16px;
       border-radius: 12px;
       box-sizing:border-box;
-      transition:opacity .3s var(--ease),transform .3s var(--ease);
-      will-change: opacity, transform;
+      /* MODIFIED: Added left and right to transition for smooth fullscreen width change */
+      transition:opacity .3s var(--ease),transform .3s var(--ease), left .3s var(--ease), right .3s var(--ease);
+      /* MODIFIED: Added left and right to will-change for performance */
+      will-change: opacity, transform, left, right;
       background: rgba(20, 22, 28, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 8px 32px rgba(2, 4, 12, 0.3);
@@ -1030,6 +1032,14 @@
       .vidu-player-host:-webkit-full-screen .vidu-playlist-toggle-btn,
       .vidu-player-host:fullscreen .vidu-playlist-toggle-btn {
         display: none !important;
+      }
+
+      /* ADDED: Squeezes the control bar horizontally in fullscreen on desktop for a cleaner look */
+      .vidu-player-host:-webkit-full-screen .vidu-overlay,
+      .vidu-player-host:fullscreen .vidu-overlay {
+        left: 15% !important;
+        right: 15% !important;
+        bottom: 24px !important;
       }
 
       @keyframes rainbow-glow-animation {
