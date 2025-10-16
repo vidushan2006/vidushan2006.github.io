@@ -839,7 +839,8 @@
     .header-icon-btn:hover { color: var(--text); background: var(--glass); transform: scale(1.1); }
     .header-icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
 
-    .notification-panel { position: fixed; top: 80px; right: 22px; width: 340px; max-width: 90vw; background: rgba(20, 22, 28, 0.95); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--card-radius); box-shadow: 0 16px 50px rgba(2, 4, 12, 0.6); z-index: 10000; color: var(--text); opacity: 0; transform: translateY(-10px) scale(0.98); transition: opacity .25s var(--ease), transform .25s var(--ease); pointer-events: none; will-change: opacity, transform; }
+    .notification-panel { position: fixed; top: 80px; width: 340px; max-width: 90vw; background: rgba(20, 22, 28, 0.95); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--card-radius); box-shadow: 0 16px 50px rgba(2, 4, 12, 0.6); z-index: 10000; color: var(--text); opacity: 0; transform: translateY(-10px) scale(0.98); transition: opacity .25s var(--ease), transform .25s var(--ease); pointer-events: none; will-change: opacity, transform; }
+    #notification-panel { right: 22px; } /* Default to right for notifications */
     .notification-panel.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
     .notification-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
     .notification-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
@@ -1165,7 +1166,7 @@
     /* NEW: Download Panel Styles */
     #download-panel {
         left: 22px;
-        right: auto; /* Override right positioning */
+        right: auto; /* IMPORTANT: Override right positioning */
     }
     .download-list { 
         list-style: none; 
@@ -3189,80 +3190,65 @@ function updateSpeedIndicator(activeButton) {
 <script src="assets/js/main.js"></script>
 
 <script>
-// **FIXED**: Panel UI logic
+// **REWRITTEN & FIXED**: Panel UI logic
 document.addEventListener('DOMContentLoaded', function() {
     
-    // --- Notification Panel Logic ---
     const notificationBtn = document.getElementById('notification-btn');
     const notificationPanel = document.getElementById('notification-panel');
     const notificationCloseBtn = document.getElementById('notification-close-btn');
 
-    if (notificationBtn && notificationPanel && notificationCloseBtn) {
-        function showNotificationPanel() {
-            if (typeof window.updateStatsUI === 'function') { window.updateStatsUI(); }
-            notificationPanel.classList.add('show');
-            notificationPanel.setAttribute('aria-hidden', 'false');
-        }
-        function hideNotificationPanel() {
-            notificationPanel.classList.remove('show');
-            notificationPanel.setAttribute('aria-hidden', 'true');
-        }
-        notificationBtn.addEventListener('click', (event) => {
-            event.stopPropagation();
-            // Hide the other panel if it's open
-            const downloadPanel = document.getElementById('download-panel');
-            if (downloadPanel) downloadPanel.classList.remove('show');
-            // Toggle this panel
-            notificationPanel.classList.contains('show') ? hideNotificationPanel() : showNotificationPanel();
-        });
-        notificationCloseBtn.addEventListener('click', hideNotificationPanel);
-        document.addEventListener('click', (event) => {
-            if (notificationPanel.classList.contains('show') && !notificationPanel.contains(event.target) && !notificationBtn.contains(event.target)) {
-                hideNotificationPanel();
-            }
-        });
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && notificationPanel.classList.contains('show')) {
-                hideNotificationPanel();
-            }
-        });
-    }
-
-    // --- Download Panel Logic ---
     const downloadBtn = document.getElementById('download-btn-header');
     const downloadPanel = document.getElementById('download-panel');
     const downloadCloseBtn = document.getElementById('download-close-btn');
 
-    if (downloadBtn && downloadPanel && downloadCloseBtn) {
-        function showDownloadPanel() {
-            if (typeof window.renderDownloads === 'function') { window.renderDownloads(); }
-            downloadPanel.classList.add('show');
-            downloadPanel.setAttribute('aria-hidden', 'false');
-        }
-        function hideDownloadPanel() {
-            downloadPanel.classList.remove('show');
-            downloadPanel.setAttribute('aria-hidden', 'true');
-        }
-        downloadBtn.addEventListener('click', (event) => {
+    function hideAllPanels() {
+        if (notificationPanel) notificationPanel.classList.remove('show');
+        if (downloadPanel) downloadPanel.classList.remove('show');
+    }
+
+    function setupPanel(btn, panel, closeBtn, renderCallback) {
+        if (!btn || !panel || !closeBtn) return;
+
+        btn.addEventListener('click', (event) => {
             event.stopPropagation();
-            // Hide the other panel if it's open
-            const notificationPanel = document.getElementById('notification-panel');
-            if (notificationPanel) notificationPanel.classList.remove('show');
-            // Toggle this panel
-            downloadPanel.classList.contains('show') ? hideDownloadPanel() : showDownloadPanel();
-        });
-        downloadCloseBtn.addEventListener('click', hideDownloadPanel);
-        document.addEventListener('click', (event) => {
-            if (downloadPanel.classList.contains('show') && !downloadPanel.contains(event.target) && !downloadBtn.contains(event.target)) {
-                hideDownloadPanel();
+            const isAlreadyOpen = panel.classList.contains('show');
+            hideAllPanels(); // Close all panels first
+            if (!isAlreadyOpen) {
+                if (renderCallback) renderCallback();
+                panel.classList.add('show');
+                panel.setAttribute('aria-hidden', 'false');
+            } else {
+                panel.setAttribute('aria-hidden', 'true');
             }
         });
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && downloadPanel.classList.contains('show')) {
-                hideDownloadPanel();
-            }
+
+        closeBtn.addEventListener('click', () => {
+            panel.classList.remove('show');
+            panel.setAttribute('aria-hidden', 'true');
         });
     }
+
+    // Setup Notification Panel
+    setupPanel(notificationBtn, notificationPanel, notificationCloseBtn, window.updateStatsUI);
+
+    // Setup Download Panel
+    setupPanel(downloadBtn, downloadPanel, downloadCloseBtn, window.renderDownloads);
+
+    // Global listeners to close panels
+    document.addEventListener('click', (event) => {
+        if (notificationPanel && notificationPanel.classList.contains('show') && !notificationPanel.contains(event.target) && !notificationBtn.contains(event.target)) {
+            hideAllPanels();
+        }
+        if (downloadPanel && downloadPanel.classList.contains('show') && !downloadPanel.contains(event.target) && !downloadBtn.contains(event.target)) {
+            hideAllPanels();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && (notificationPanel.classList.contains('show') || downloadPanel.classList.contains('show'))) {
+            hideAllPanels();
+        }
+    });
 
     // Data and rendering for Download Panel
     const downloadsData = [
@@ -3276,7 +3262,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!contentEl) return;
         if(contentEl.dataset.rendered) return; // Prevent re-rendering
 
-        const downloadSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>`;
+        const downloadSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>`;
         const listHtml = downloadsData.map(item => `
             <li class="download-item">
                 <span class="download-item-title">${escapeHtml(item.title)}</span>
