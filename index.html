@@ -719,7 +719,7 @@
         font-size: 13px;
         width: 100%;
         text-align: center;
-        border-radius: 14px;
+        border-radius: 20px;
         transition: color .2s ease;
         z-index: 2;
         position: relative;
@@ -734,7 +734,7 @@
       left: 5px;
       right: 5px;
       width: auto;
-      height: 0; /* Updated by JS */
+      height: 5; /* Updated by JS */
       background: rgba(57, 255, 20, 0.4);
       border-radius: 14px;
       box-shadow: 0 0 12px rgba(57, 255, 20, 0.3);
@@ -1856,7 +1856,7 @@ function updateSpeedIndicator(activeButton) {
     // --- START OF EDIT ---
 
     const buttonHeight = activeButton.offsetHeight;
-    const indicatorHeight = 26; // <-- You can adjust this value! Lower it to make the rectangle shorter.
+    const indicatorHeight = 30; // <-- You can adjust this value! Lower it to make the rectangle shorter.
 
     // This calculates the correct top position to keep it centered
     const newTop = activeButton.offsetTop + (buttonHeight - indicatorHeight) / 2;
