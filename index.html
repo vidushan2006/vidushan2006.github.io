@@ -486,13 +486,13 @@
       text-align: left;
       vertical-align: bottom;
     }
-    .seeking-dots::after, .playing-dots::after, .dots::after {
-      content: ".";
-      animation: seeking-dots-anim 1.5s steps(3, start) infinite;
-    }
     @keyframes seeking-dots-anim {
       33% { content: ".."; }
       66% { content: "..."; }
+    }
+    .seeking-dots::after, .playing-dots::after, .dots::after {
+      content: ".";
+      animation: seeking-dots-anim 1.5s steps(3, start) infinite;
     }
     .seek-preview-time {
         display: block;
@@ -1395,14 +1395,6 @@
     </div>
 </div>
 
- <div id="loading-popup-overlay" class="loading-popup-overlay">
-  <div class="loading-popup-content">
-    <p id="loading-popup-message">Downloading VIDU For Windows(x64) please wait...</p>
-    <div class="loading-bar-container">
-      <div id="loading-bar-fill" class="loading-bar-fill"></div>
-    </div>
-  </div>
-</div>
 <div id="fullscreen-playlist-overlay" class="fs-playlist-overlay">
   <div class="fs-playlist-header">
     <h3 id="fs-playlist-title"></h3>
@@ -3197,51 +3189,80 @@ function updateSpeedIndicator(activeButton) {
 <script src="assets/js/main.js"></script>
 
 <script>
-// NEW: Panel UI logic
+// **FIXED**: Panel UI logic
 document.addEventListener('DOMContentLoaded', function() {
-    function setupPanel(btnId, panelId, closeBtnId) {
-        const btn = document.getElementById(btnId);
-        const panel = document.getElementById(panelId);
-        const closeBtn = document.getElementById(closeBtnId);
-        if (!btn || !panel || !closeBtn) return;
-        
-        function showPanel() {
-            if (panelId === 'notification-panel' && typeof window.updateStatsUI === 'function') {
-                window.updateStatsUI();
-            }
-            if (panelId === 'download-panel' && typeof window.renderDownloads === 'function') {
-                window.renderDownloads();
-            }
-            panel.classList.add('show');
-            panel.setAttribute('aria-hidden', 'false');
-        }
-        function hidePanel() {
-            panel.classList.remove('show');
-            panel.setAttribute('aria-hidden', 'true');
-        }
+    
+    // --- Notification Panel Logic ---
+    const notificationBtn = document.getElementById('notification-btn');
+    const notificationPanel = document.getElementById('notification-panel');
+    const notificationCloseBtn = document.getElementById('notification-close-btn');
 
-        btn.addEventListener('click', (event) => {
+    if (notificationBtn && notificationPanel && notificationCloseBtn) {
+        function showNotificationPanel() {
+            if (typeof window.updateStatsUI === 'function') { window.updateStatsUI(); }
+            notificationPanel.classList.add('show');
+            notificationPanel.setAttribute('aria-hidden', 'false');
+        }
+        function hideNotificationPanel() {
+            notificationPanel.classList.remove('show');
+            notificationPanel.setAttribute('aria-hidden', 'true');
+        }
+        notificationBtn.addEventListener('click', (event) => {
             event.stopPropagation();
-            panel.classList.contains('show') ? hidePanel() : showPanel();
+            // Hide the other panel if it's open
+            const downloadPanel = document.getElementById('download-panel');
+            if (downloadPanel) downloadPanel.classList.remove('show');
+            // Toggle this panel
+            notificationPanel.classList.contains('show') ? hideNotificationPanel() : showNotificationPanel();
         });
-        closeBtn.addEventListener('click', hidePanel);
+        notificationCloseBtn.addEventListener('click', hideNotificationPanel);
         document.addEventListener('click', (event) => {
-            if (panel.classList.contains('show') && !panel.contains(event.target) && !btn.contains(event.target)) {
-                hidePanel();
+            if (notificationPanel.classList.contains('show') && !notificationPanel.contains(event.target) && !notificationBtn.contains(event.target)) {
+                hideNotificationPanel();
             }
         });
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && panel.classList.contains('show')) {
-                hidePanel();
+            if (event.key === 'Escape' && notificationPanel.classList.contains('show')) {
+                hideNotificationPanel();
             }
         });
     }
 
-    // Setup Notification Panel
-    setupPanel('notification-btn', 'notification-panel', 'notification-close-btn');
-    
-    // Setup Download Panel
-    setupPanel('download-btn-header', 'download-panel', 'download-close-btn');
+    // --- Download Panel Logic ---
+    const downloadBtn = document.getElementById('download-btn-header');
+    const downloadPanel = document.getElementById('download-panel');
+    const downloadCloseBtn = document.getElementById('download-close-btn');
+
+    if (downloadBtn && downloadPanel && downloadCloseBtn) {
+        function showDownloadPanel() {
+            if (typeof window.renderDownloads === 'function') { window.renderDownloads(); }
+            downloadPanel.classList.add('show');
+            downloadPanel.setAttribute('aria-hidden', 'false');
+        }
+        function hideDownloadPanel() {
+            downloadPanel.classList.remove('show');
+            downloadPanel.setAttribute('aria-hidden', 'true');
+        }
+        downloadBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            // Hide the other panel if it's open
+            const notificationPanel = document.getElementById('notification-panel');
+            if (notificationPanel) notificationPanel.classList.remove('show');
+            // Toggle this panel
+            downloadPanel.classList.contains('show') ? hideDownloadPanel() : showDownloadPanel();
+        });
+        downloadCloseBtn.addEventListener('click', hideDownloadPanel);
+        document.addEventListener('click', (event) => {
+            if (downloadPanel.classList.contains('show') && !downloadPanel.contains(event.target) && !downloadBtn.contains(event.target)) {
+                hideDownloadPanel();
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && downloadPanel.classList.contains('show')) {
+                hideDownloadPanel();
+            }
+        });
+    }
 
     // Data and rendering for Download Panel
     const downloadsData = [
