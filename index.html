@@ -1850,11 +1850,22 @@
     }
 
     // --- REWORKED: Playback speed menu logic ---
-    function updateSpeedIndicator(activeButton) {
-        if (!activeButton || !speedIndicator) return;
-        speedIndicator.style.top = `${activeButton.offsetTop}px`;
-        speedIndicator.style.height = `${activeButton.offsetHeight}px`;
-    }
+function updateSpeedIndicator(activeButton) {
+    if (!activeButton || !speedIndicator) return;
+
+    // --- START OF EDIT ---
+
+    const buttonHeight = activeButton.offsetHeight;
+    const indicatorHeight = 20; // <-- You can adjust this value! Lower it to make the rectangle shorter.
+
+    // This calculates the correct top position to keep it centered
+    const newTop = activeButton.offsetTop + (buttonHeight - indicatorHeight) / 2;
+
+    speedIndicator.style.top = `${newTop}px`;
+    speedIndicator.style.height = `${indicatorHeight}px`;
+
+    // --- END OF EDIT ---
+}
 
     playbackBtn.addEventListener('click', (e) => { 
         e.stopPropagation(); 
