@@ -1445,7 +1445,7 @@
 </div>
 
 <script>
-// Global utility function
+// Global utility function, accessible by all scripts.
 function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 </script>
 
@@ -3194,6 +3194,44 @@ function updateSpeedIndicator(activeButton) {
 // **REWRITTEN & FIXED**: Panel UI logic
 document.addEventListener('DOMContentLoaded', function() {
     
+    // --- GROUND UP REWORK ---
+    // REASONING: The original issue was that the function to render the downloads (`renderDownloads`)
+    // was being passed as a callback to set up the button's click event, but it was `undefined` at the time
+    // of setup. This is a classic JavaScript execution order problem.
+    // SOLUTION: Define all data and functions FIRST, then get DOM elements, then wire up the event listeners.
+    // This guarantees that when an event listener is created, the function it needs to call already exists.
+
+    // 1. DEFINE DATA AND RENDERER
+    // This data needs to be accessible to the rendering function.
+    const downloadsData = [
+        { title: "VIDU For Windows (x64)", link: "https://drive.google.com/file/d/1a4dCeHuqWYp9DpQbupofFdW6hQezN1Qd/view?usp=drive_link" },
+        // You can easily add more items here in the future. For example:
+        // { title: "Another File (e.g., PDF)", link: "https://example.com/file.pdf" },
+    ];
+
+    // This function builds the HTML for the download list. It's now defined before it's ever needed.
+    window.renderDownloads = function() {
+        const contentEl = document.getElementById('download-content');
+        if (!contentEl) {
+            console.error("Download content element not found!");
+            return;
+        }
+
+        const downloadSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>`;
+        
+        const listHtml = downloadsData.map(item => `
+            <li class="download-item">
+                <span class="download-item-title">${escapeHtml(item.title)}</span>
+                <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" class="download-item-btn" aria-label="Download ${escapeHtml(item.title)}" title="Download">
+                    ${downloadSVG}
+                </a>
+            </li>
+        `).join('');
+        
+        contentEl.innerHTML = `<ul class="download-list">${listHtml}</ul>`;
+    };
+
+    // 2. GET DOM ELEMENTS
     const notificationBtn = document.getElementById('notification-btn');
     const notificationPanel = document.getElementById('notification-panel');
     const notificationCloseBtn = document.getElementById('notification-close-btn');
@@ -3202,6 +3240,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadPanel = document.getElementById('download-panel');
     const downloadCloseBtn = document.getElementById('download-close-btn');
 
+    // 3. DEFINE PANEL CONTROL LOGIC
     function hideAllPanels() {
         if (notificationPanel) notificationPanel.classList.remove('show');
         if (downloadPanel) downloadPanel.classList.remove('show');
@@ -3213,9 +3252,11 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', (event) => {
             event.stopPropagation();
             const isAlreadyOpen = panel.classList.contains('show');
-            hideAllPanels(); // Close all panels first
+            hideAllPanels(); // Close all panels first to avoid overlap
             if (!isAlreadyOpen) {
-                if (renderCallback) renderCallback();
+                if (renderCallback) {
+                    renderCallback(); // This will now correctly call the pre-defined function
+                }
                 panel.classList.add('show');
                 panel.setAttribute('aria-hidden', 'false');
             } else {
@@ -3229,13 +3270,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Setup Notification Panel
+    // 4. INITIALIZE PANELS
+    // Now we call setupPanel, passing the functions that are guaranteed to exist.
     setupPanel(notificationBtn, notificationPanel, notificationCloseBtn, window.updateStatsUI);
-
-    // Setup Download Panel
     setupPanel(downloadBtn, downloadPanel, downloadCloseBtn, window.renderDownloads);
 
-    // Global listeners to close panels
+    // 5. INITIALIZE GLOBAL LISTENERS
+    // These listeners handle closing the panels when clicking outside or pressing Escape.
     document.addEventListener('click', (event) => {
         if (notificationPanel && notificationPanel.classList.contains('show') && !notificationPanel.contains(event.target) && !notificationBtn.contains(event.target)) {
             hideAllPanels();
@@ -3250,35 +3291,6 @@ document.addEventListener('DOMContentLoaded', function() {
             hideAllPanels();
         }
     });
-
-    // Data and rendering for Download Panel
-    const downloadsData = [
-        { title: "VIDU For Windows (x64)", link: "https://drive.google.com/file/d/1a4dCeHuqWYp9DpQbupofFdW6hQezN1Qd/view?usp=drive_link" },
-        // Add more items here in the future like this:
-        // { title: "Another File (e.g., PDF)", link: "https://example.com/file.pdf" },
-    ];
-
-    window.renderDownloads = function() {
-        const contentEl = document.getElementById('download-content');
-        if (!contentEl) return;
-        // This check was preventing the content from showing on second click.
-        // The content is already there, but we ensure it renders at least once.
-        // A better approach is to not prevent re-rendering if it's simple.
-        // Let's remove the check to ensure it always renders if the panel is opened.
-        // if(contentEl.dataset.rendered) return; 
-
-        const downloadSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>`;
-        const listHtml = downloadsData.map(item => `
-            <li class="download-item">
-                <span class="download-item-title">${escapeHtml(item.title)}</span>
-                <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" class="download-item-btn" aria-label="Download ${escapeHtml(item.title)}" title="Download">
-                    ${downloadSVG}
-                </a>
-            </li>
-        `).join('');
-        contentEl.innerHTML = `<ul class="download-list">${listHtml}</ul>`;
-        contentEl.dataset.rendered = 'true';
-    }
 });
 </script>
 </body>
