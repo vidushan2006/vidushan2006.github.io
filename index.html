@@ -251,7 +251,7 @@
     .vidu-player-inverted .vidu-popup-btn,
     .vidu-player-inverted .vidu-invert-btn,
     .vidu-player-inverted .vidu-playlist-toggle-btn,
-    .vidu-player-inverted .vidu-playback-menu-container,
+    .vidu-player-inverted .vidu-settings-panel,
     .vidu-player-inverted .vidu-osd-feedback,
     .vidu-player-inverted .vidu-seek-feedback {
         filter: invert(1);
@@ -617,68 +617,50 @@
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-volume-container,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_prevbtn,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_nextbtn,
-      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-playback-menu-container {
+      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-settings-container {
         display: none !important;
       }
     }
 
-    /* === IMPROVED OSD (visible over any video) ===
-       - stronger, darker background and blur
-       - added multi-layer shadow and subtle stroke so white videos won't wash it out
-       - preserved animation & hiding behavior
-    */
     .vidu-osd-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
       padding:12px 18px; border-radius:12px; 
-      background: linear-gradient(180deg, rgba(8,10,12,0.98), rgba(18,20,24,0.94));
-      border: 1px solid rgba(255,255,255,0.06);
-      backdrop-filter: blur(8px) saturate(1.1);
-      -webkit-backdrop-filter: blur(8px) saturate(1.1);
-      font-weight:800; font-size:18px; color:#fff;
-      text-shadow: 0 4px 18px rgba(0,0,0,0.65), 0 1px 0 rgba(255,255,255,0.02);
-      box-shadow:
-         0 22px 50px rgba(0,0,0,0.7),
-         0 6px 18px rgba(0,0,0,0.45),
-         inset 0 0 20px rgba(255,255,255,0.02);
+      background:rgba(20, 22, 28, 0.9);
+      border:1px solid rgba(255,255,255,0.08);
+      font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5);
       pointer-events:none; opacity:0;
-      transition:opacity .22s ease, transform .18s var(--ease);
+      transition:opacity .28s ease; 
       display:flex; align-items:center; justify-content:center; gap: 10px;
-      min-width: 96px;
+      min-width: 90px;
       visibility: hidden;
-      will-change: opacity, transform;
+      will-change: opacity;
+      text-shadow: 0 0 8px rgba(0,0,0,0.7); /* OSD Visibility Fix */
     }
     .vidu-osd-feedback.visible {
         opacity: 1;
         visibility: visible;
-        transform: translate(-50%,-50%) scale(1.02);
     }
-    .vidu-osd-feedback svg { width: 28px; height: 28px; fill: currentColor; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6)); }
-
-    /* Outline/glow pseudo element (gives separation from bright content) */
-    .vidu-osd-feedback::before{
-      content: '';
-      position: absolute;
-      inset: -2px;
-      border-radius: inherit;
-      pointer-events: none;
-      box-shadow: 0 22px 48px rgba(0,0,0,0.65), 0 8px 20px rgba(0,0,0,0.45);
-      mix-blend-mode: normal;
-      z-index: -1;
+    .vidu-osd-feedback svg { 
+        width: 28px; 
+        height: 28px; 
+        fill: currentColor;
+        filter: drop-shadow(0 0 5px rgba(0,0,0,0.6)); /* OSD Visibility Fix */
     }
-
+    
     .vidu-seek-feedback {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
         z-index: 10003;
-        color: rgba(255, 255, 255, 0.95);
+        color: rgba(255, 255, 255, 0.9); /* Increased opacity */
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700; /* Increased weight */
         display: flex;
         flex-direction: column;
         align-items: center;
         opacity: 0;
         pointer-events: none;
+        text-shadow: 0 0 10px rgba(0, 0, 0, 0.8); /* OSD Visibility Fix */
     }
     .vidu-seek-feedback.left { left: 15%; }
     .vidu-seek-feedback.right { right: 15%; }
@@ -694,101 +676,512 @@
     .vidu-seek-feedback svg {
         width: 48px; height: 48px;
         fill: rgba(255, 255, 255, 0.9);
+        filter: drop-shadow(0 0 8px rgba(0,0,0,0.7)); /* OSD Visibility Fix */
     }
 
-    /* --- NEW: High-End Playback Speed Menu (visuals) --- */
-    .vidu-playback-menu-container {
+    /* --- REWORKED: High-End Settings Menu --- */
+    .vidu-settings-container {
       position: relative;
-      /* keep relative so absolute menu can be positioned; JS will set exact top/left */
     }
-    .vidu-playback-menu {
+    .vidu-settings-panel {
       position: absolute;
-      /* default fallback position (JS will compute proper top/left when open) */
-      bottom: calc(100% + 12px);
+      bottom: calc(100% + 12px); /* Position above the button */
       right: 50%;
       transform: translateX(50%);
-      width: 300px;
-      background: rgba(28, 30, 38, 0.95);
-      backdrop-filter: blur(12px) saturate(1.05);
-      -webkit-backdrop-filter: blur(12px) saturate(1.05);
+      width: 280px;
+      background: rgba(28, 30, 38, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-radius: 12px;
-      box-shadow: 0 18px 48px rgba(0,0,0,0.6), 0 6px 18px rgba(0,0,0,0.45);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      padding: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
       opacity: 0;
       transform-origin: bottom center;
-      transition: opacity .18s var(--ease), transform .18s var(--ease);
+      transition: opacity .2s var(--ease), transform .2s var(--ease);
       pointer-events: none;
       will-change: opacity, transform;
-      transform: translateX(50%) translateY(10px) scale(0.96);
-      z-index: 11000;
+      transform: translateX(50%) translateY(10px) scale(0.95);
+      z-index: 10006;
     }
-    .vidu-playback-menu.open {
+    .vidu-settings-panel.open {
         opacity: 1;
         transform: translateX(50%) translateY(0) scale(1);
         pointer-events: auto;
     }
-    .playback-menu-header {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--muted);
-      text-align: center;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: transparent;
+      transition: background .2s ease;
     }
-    .speed-selector {
+    .settings-row:hover {
+        background: rgba(255,255,255,0.05);
+    }
+    .settings-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .settings-label svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--muted);
+    }
+    .settings-control {
+      flex-shrink: 0;
+    }
+    .settings-speed-selector {
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: relative;
-      background: linear-gradient(180deg, rgba(10,12,14,0.6), rgba(8,9,12,0.5));
-      border-radius: 10px;
-      padding: 6px;
-      border: 1px solid rgba(255,255,255,0.03);
+      background: rgba(10, 12, 18, 0.7);
+      border-radius: 8px;
+      padding: 4px;
+      width: 150px;
     }
     .speed-option {
         background: transparent;
         border: none;
         color: var(--muted);
-        padding: 8px 0;
+        padding: 4px 0;
         cursor: pointer;
-        font-weight: 800;
-        font-size: 14px;
+        font-weight: 700;
+        font-size: 13px;
         flex: 1;
         text-align: center;
-        border-radius: 8px;
-        transition: color .18s ease, transform .12s ease;
+        border-radius: 6px;
+        transition: color .2s ease;
         z-index: 2;
         position: relative;
     }
-    .speed-option:hover { transform: translateY(-3px); color:#fff; }
     .speed-option.active {
       color: #fff;
     }
-    .speed-selector-indicator {
+    .speed-indicator {
       position: absolute;
-      top: 6px;
-      bottom: 6px;
-      left: 6px; /* Will be updated by JS */
+      top: 4px;
+      bottom: 4px;
+      left: 4px; /* Will be updated by JS */
       width: 0; /* Will be updated by JS */
-      background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-      border-radius: 8px;
-      box-shadow: inset 0 2px 10px rgba(0,0,0,0.45);
-      transition: left .22s var(--ease), width .22s var(--ease);
+      background: var(--accent-1);
+      border-radius: 6px;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.2), 0 0 10px rgba(123, 97, 255, 0.5);
+      border: 1px solid rgba(123, 97, 255, 0.7);
+      transition: left .25s var(--ease), width .25s var(--ease);
       z-index: 1;
     }
+    
+    .vidu-playlist-panel {
+      position: absolute;
+      top: 0;
+      left: 100%;
+      margin-left: 16px;
+      width: 320px;
+      height: 100%;
+      max-height: min(558px, 90vh);
+      background: linear-gradient(180deg, rgba(18,20,28,0.97), rgba(8,9,14,0.98));
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 16px 40px rgba(2,6,18,0.6);
+      display: flex;
+      flex-direction: column;
+      color: var(--text);
+      transition: opacity .35s var(--ease), transform .35s var(--ease);
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .vidu-playlist-panel:not(.show) {
+        opacity: 0;
+        transform: translateX(-20px);
+        pointer-events: none;
+    }
+    .vidu-playlist-header { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
+    .vidu-playlist-header h3 { margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vidu-playlist-content { flex-grow: 1; overflow-y: auto; padding: 8px; }
+    .vidu-playlist-item { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; border: 1px solid transparent; }
+    .vidu-playlist-item:hover { background-color: var(--glass-strong); }
+    .vidu-playlist-item.active { background-color: rgba(57, 255, 20, 0.15); border-color: rgba(57, 255, 20, 0.5); color: #fff; }
+    .vidu-playlist-item.active .title { font-weight: 800; }
+    .vidu-playlist-item-thumb-wrapper { position: relative; width: 100px; height: 56.25px; flex-shrink: 0; }
+    .vidu-playlist-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; display: block; }
+    .vidu-playlist-item-number { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.75); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; line-height: 1.4; z-index: 1; pointer-events: none;}
+    .vidu-playlist-item .title { font-size: 13px; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+    
+    .vidu-playlist-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .vidu-playlist-loader p {
+        margin: 0 0 16px 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--muted);
+    }
+    .vidu-playlist-loader .spinner {
+        width: 36px;
+        height: 36px;
+        border: 4px solid var(--glass-strong);
+        border-top-color: var(--accent-2);
+        border-radius: 50%;
+        animation: vidu-spin 1s linear infinite;
+    }
+    
+    .vidu-playlist-item-playing-indicator {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10, 12, 18, 0.9);
+        border-radius: 4px;
+        color: var(--accent-2);
+        font-weight: 700;
+        font-size: 14px;
+        text-shadow: 0 0 4px rgba(57, 255, 20, 0.4);
+    }
+    .vidu-playlist-item.active .vidu-playlist-item-thumb-wrapper img,
+    .vidu-playlist-item.active .vidu-playlist-item-thumb-wrapper .vidu-playlist-item-number {
+        opacity: 0;
+    }
+    .vidu-playlist-item.active .vidu-playlist-item-playing-indicator {
+        display: flex;
+    }
 
-    /* playlist panel, notifications etc - unchanged... */
-    /* (rest of original CSS continues unchanged) */
+
+    .header-icon-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all .18s var(--ease); position: relative; width: 38px; height: 38px; }
+    .header-icon-btn:hover { color: var(--text); background: var(--glass); transform: scale(1.1); }
+    .header-icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+    .notification-panel { position: fixed; top: 80px; right: 22px; width: 340px; max-width: 90vw; background: rgba(20, 22, 28, 0.95); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--card-radius); box-shadow: 0 16px 50px rgba(2, 4, 12, 0.6); z-index: 10000; color: var(--text); opacity: 0; transform: translateY(-10px) scale(0.98); transition: opacity .25s var(--ease), transform .25s var(--ease); pointer-events: none; will-change: opacity, transform; }
+    .notification-panel.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+    .notification-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+    .notification-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
+    .notification-close-btn { background: none; border: none; color: var(--muted); font-size: 26px; line-height: 1; cursor: pointer; padding: 0 4px; transition: color .18s ease, transform .18s ease; }
+    .notification-close-btn:hover { color: var(--text); transform: scale(1.1); }
+    .notification-content { padding: 18px; font-size: 14px; max-height: 400px; overflow-y: auto; }
+    .notification-content p { margin: 0; line-height: 1.6; }
+
+    .notification-stats { display: flex; align-items: center; gap: 16px; padding: 12px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); background: rgba(255, 255, 255, 0.02); }
+    .stats-icon svg { width: 24px; height: 24px; fill: var(--accent-2); }
+    .stats-group { text-align: center; }
+    .stats-label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .stats-value { font-size: 16px; font-weight: 800; color: var(--text); }
+    .stats-watched-values { display: flex; align-items: baseline; justify-content: center; }
+    .stats-watched-values .stats-value-separator { color: var(--muted); font-size: 12px; margin: 0 4px; font-weight: 600; }
+    .stats-watched-values .stats-value-today { color: var(--accent-2); }
+    .stats-watched-values .stats-value-total { font-size: 13px; color: var(--muted);}
+
+    .loading-popup-overlay { position: fixed; inset: 0; background: rgba(4, 6, 12, 0.7); z-index: 20000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease); will-change: opacity; }
+    .loading-popup-overlay.show { opacity: 1; pointer-events: auto; }
+    .loading-popup-content { background: linear-gradient(180deg, #1c1c20, #121214); padding: 28px 35px; border-radius: var(--card-radius); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 12px 40px rgba(0,0,0,0.5); text-align: center; max-width: 400px; width: 90%; color: var(--text); }
+    .loading-popup-content p { margin: 0 0 18px 0; font-size: 16px; font-weight: 600; line-height: 1.6; }
+    .loading-bar-container { width: 100%; height: 8px; background: var(--glass-strong); border-radius: 8px; overflow: hidden; }
+    .loading-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); border-radius: 8px; }
+    
+    #restoring-position-overlay.loading-popup-overlay {
+        background: rgba(4, 6, 12, 0.85);
+    }
+
+    .fs-playlist-overlay { position: fixed; inset: 0; background: rgba(8, 9, 14, 0.9); z-index: 15000; display: none; flex-direction: column; color: var(--text); opacity: 0; transform: scale(1.02); transition: opacity 0.3s var(--ease), transform 0.3s var(--ease); will-change: opacity, transform; }
+    .fs-playlist-overlay.show { display: flex; opacity: 1; transform: scale(1); }
+    .fs-playlist-header { display: flex; align-items: center; padding: 18px 24px; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.08); flex-shrink: 0; }
+    .fs-playlist-header h3 { margin: 0; font-size: 18px; font-weight: 800; }
+    .fs-playlist-count { margin-left: 16px; font-size: 14px; font-weight: 600; color: var(--muted); background: var(--glass-strong); padding: 4px 10px; border-radius: 16px; }
+    .fs-playlist-close-btn { margin-left: auto; background: none; border: none; color: var(--muted); font-size: 32px; line-height: 1; cursor: pointer; transition: color .2s ease, transform .2s ease; }
+    .fs-playlist-close-btn:hover { color: var(--text); transform: scale(1.1) rotate(90deg); }
+    .fs-playlist-content { flex: 1; overflow-y: auto; padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; align-content: start; }
+    .fs-playlist-item { position: relative; background: var(--glass); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--card-radius); padding: 12px; cursor: pointer; transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), background 0.25s var(--ease); will-change: transform; }
+    .fs-playlist-item:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); background: var(--glass-strong); }
+    
+    .fs-video-thumbnail {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16/9;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        background: #000;
+        overflow: hidden;
+    }
+    .fs-video-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.3s ease;
+    }
+    .fs-playlist-item:hover .fs-video-thumbnail img {
+        transform: scale(1.05);
+    }
+    .fs-video-number {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        background: rgba(0,0,0,0.75);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 4px;
+        line-height: 1.4;
+        z-index: 1;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .fs-playlist-item .title { font-weight: 700; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+    
+    .fs-playlist-loader { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(8, 9, 14, 0.7); }
+    .fs-playlist-loader .spinner { width: 50px; height: 50px; border: 4px solid var(--glass-strong); border-top-color: var(--accent-2); border-radius: 50%; animation: spin 1s linear infinite; }
+    .fs-playlist-loader p { margin-top: 16px; font-weight: 600; color: var(--muted); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .vidu-volume-container { position: relative; }
+    .vidu-volume-panel {
+        position: absolute;
+        bottom: 50px;
+        left: 50%;
+        width: 40px;
+        height: 150px;
+        background: rgba(30, 32, 38, 0.96);
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .2s var(--ease), transform .2s var(--ease);
+        transform-origin: bottom center;
+        transform: translateX(-50%) translateY(10px) scale(0.95);
+        pointer-events: none;
+        z-index: 10006;
+    }
+    .vidu-volume-panel.open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    .vidu-volume-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 120px;
+        cursor: pointer;
+        background: transparent;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-90deg);
+    }
+    .vidu-volume-slider::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 6px;
+        background: rgba(59, 130, 246, 0.6);
+        border-radius: 6px;
+    }
+    .vidu-volume-slider::-moz-range-track {
+        width: 100%;
+        height: 6px;
+        background: rgba(59, 130, 246, 0.6);
+        border-radius: 6px;
+    }
+    .vidu-volume-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        background: var(--accent-2);
+        margin-top: -5px;
+        box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+    }
+    .vidu-volume-slider::-moz-range-thumb {
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        background: var(--accent-2);
+        border: 0;
+        box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+    }
+    
+    .popup-notice {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        background: rgba(20, 22, 28, 0.95);
+        color: var(--text);
+        padding: 10px 20px;
+        border-radius: var(--card-radius);
+        border: 1px solid rgba(57, 255, 20, 0.3);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        z-index: 19000;
+        font-weight: 600;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+        transform: translateX(-50%) translateY(10px);
+        transform-origin: bottom center;
+        will-change: opacity, transform;
+        visibility: hidden;
+    }
+    .popup-notice.show {
+        opacity: 1;
+        pointer-events: auto;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0px);
+    }
+
+    /* POPUP PLAYER MODE STYLES */
+    body.popup-mode { padding: 0 !important; background: #000 !important; overflow: hidden; }
+    body.popup-mode::before { display:none; }
+    body.popup-mode #wrapper, body.popup-mode #footer, body.popup-mode header#header { display: none !important; }
+    body.popup-mode #modal-root { display: block !important; }
+    body.popup-mode .modal-backdrop { background: transparent !important; padding: 0; }
+    body.popup-mode .modal { 
+        width: 100vw; height: 100vh; max-width: none; 
+        padding: 0; margin: 0; border-radius: 0; 
+        background: #000; border:0; box-shadow:none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    body.popup-mode #player-block { margin-top:0 !important; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+    body.popup-mode .vidu-player-host {
+        border-radius: 0;
+        width: 100vw;
+        height: calc(100vw * 9 / 16);
+        max-height: 100vh;
+        max-width: 100vw;
+    }
+    @media (min-aspect-ratio: 16/9) {
+        body.popup-mode .vidu-player-host {
+            height: 100vh;
+            width: calc(100vh * 16 / 9);
+        }
+    }
+    body.popup-mode .vidu-mount {
+        width: 100%; height: 100%;
+        aspect-ratio: unset;
+    }
+    
+    body.popup-mode #vidu_fullbtn,
+    body.popup-mode .vidu-invert-btn,
+    body.popup-mode .vidu-volume-container,
+    body.popup-mode #vidu_prevbtn,
+    body.popup-mode #vidu_nextbtn {
+        display: none !important;
+    }
+    
+    body.popup-mode .vidu-controls-bg { height: 55px; }
+    body.popup-mode .vidu-overlay { padding: 2px 10px; bottom: 4px; left: 4px; right: 4px; border-radius: 8px; }
+    body.popup-mode .vidu-controls-grid { 
+        grid-template-areas: "seek seek" "center right"; 
+        grid-template-columns: 1fr 1fr;
+    }
+    body.popup-mode .vidu-controls-center {
+        justify-self: start;
+        padding-left: 8px;
+    }
+    body.popup-mode .vidu-time-container { display: none; }
+    body.popup-mode .vidu-seek-container { padding: 4px 0; }
+    body.popup-mode .vidu-settings-panel { bottom: 50px; }
+    body.popup-mode .vidu-volume-panel { display: none !important; }
+    
+    @media (hover: hover) and (min-width: 1024px) {
+      .vidu-player-host:-webkit-full-screen .vidu-playlist-toggle-btn,
+      .vidu-player-host:fullscreen .vidu-playlist-toggle-btn {
+        display: none !important;
+      }
+
+      .vidu-player-host:-webkit-full-screen .vidu-overlay,
+      .vidu-player-host:fullscreen .vidu-overlay {
+        left: 15% !important;
+        right: 15% !important;
+        bottom: 24px !important;
+      }
+
+      @keyframes rainbow-glow-animation {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      .vidu-player-host.is-playing .seek-progress {
+        box-shadow: 0 0 8px 1px rgba(255, 107, 107, 0.7), 0 0 12px 2px rgba(57, 255, 20, 0.5), 0 0 16px 3px rgba(0, 198, 255, 0.4);
+        background: linear-gradient(270deg, #ff6b6b, #fcc419, #51cf66, #339af0, #845ef7, #ff6b6b);
+        background-size: 400% 400%;
+        animation: rainbow-glow-animation 3s linear infinite;
+      }
+
+      #vidu_playbtn::before {
+        content: '';
+        position: absolute;
+        z-index: -2;
+        left: -50%;
+        top: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(
+          from 180deg at 50% 50%,
+          #ff6b6b, #fcc419, #51cf66, #339af0, #845ef7, #cc5de8, #f06595, #ff6b6b
+        );
+        opacity: 0;
+        transition: opacity 0.4s ease-in-out, background 0.4s ease;
+      }
+      #vidu_playbtn::after {
+        content: '';
+        position: absolute;
+        z-index: -1;
+        left: 3px;
+        top: 3px;
+        width: calc(100% - 6px);
+        height: calc(100% - 6px);
+        background: rgba(30, 33, 42, 0.9);
+        border-radius: 10px;
+      }
+      
+      @keyframes rotate-glow {
+        100% {
+          transform: rotate(1turn);
+        }
+      }
+      
+      /* MODIFIED: Glowing style for the filled progress bar when paused. */
+      .vidu-player-host:not(.is-playing) .seek-progress {
+        background: linear-gradient(270deg, #ff6b6b, #fcc419, #51cf66, #339af0, #845ef7, #ff6b6b);
+        background-size: 400% 400%;
+        animation: rainbow-glow-animation 5s linear infinite; /* Matches pause button speed */
+      }
+      
+      /* MODIFIED: Glow style for the play button when the video is paused. */
+      .vidu-player-host:not(.is-playing) #vidu_playbtn::before {
+        animation: rotate-glow 5s linear infinite; /* Slower rotation */
+        opacity: 0.8;
+      }
+
+      .vidu-player-host.is-playing #vidu_playbtn::before {
+        animation: rotate-glow 1.8s linear infinite;
+        opacity: 1;
+      }
+    }
 
   </style>
 </head>
 <body class="landing is-preload">
 <script>
-// POPUP MODE HANDLER (unchanged)
+// POPUP MODE HANDLER
 (function() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -927,196 +1320,1824 @@
       <strong>YT Playlist Importer:</strong> This is the big one. I'm using the official YouTube Data API. When you paste a link, my code makes a `fetch` call, pulls all the video data, and then dynamically builds that slick fullscreen playlist view for you to scroll through.
     </li>
   </ul>
-  </div>
+
+  <h4 style="color: #00ff8a; margin: 20px 0 10px 0; border-bottom: 1px solid rgba(0, 255, 138, 0.2); padding-bottom: 5px;">🛠️ The VIDU Tool Shed</h4>
+  <ul style="padding-left: 20px; line-height: 1.7; list-style-type: '✅ '; margin-bottom: 20px;">
+    <li>
+      <strong>The Video Yoinker (YT Downloader):</strong> Need a video offline? Just paste one or more links. I use a clever bit of code called a Regular Expression (regex) to instantly find the video ID from any link format. Then I just hand it off to a download service for you.
+    </li>
+    <li>
+      <strong>Link Glo-Up (YT Converter):</strong> Long, ugly YouTube links are a crime. This tool also uses regex to find the video ID and then rebuilds the URL into the clean `youtu.be` format. So much better for sharing.
+    </li>
+  </ul>
+  
+  <h4 style="color: #00ff8a; margin: 20px 0 10px 0; border-bottom: 1px solid rgba(0, 255, 138, 0.2); padding-bottom: 5px;">✨ The Vibe (UI/UX)</h4>
+  <ul style="padding-left: 20px; line-height: 1.7; list-style-type: '✅ '; margin-bottom: 20px;">
+    <li>
+      <strong>Glassy Everything:</strong> That cool, see-through blur effect on the modals and header? That's a CSS property called `backdrop-filter: blur()`. Makes everything look premium.
+    </li>
+    <li>
+      <strong>Buttery Smooth Animations:</strong> Every fade-in, every sliding card, every loading bar—that's all custom CSS `transitions` and `animations` I wrote to make the experience feel alive and responsive. No jank here.
+    </li>
+  </ul>
+
+  <p style="margin:20px 0 0 0; font-size:13px; color:#aeb8d0; text-align: center;">
+    <em>Literally coded the soul into this site. Hope you dig it.</em><br/>
+    <strong>- VIDU ✌️</strong>
+  </p>
+</div>
+</div>
+ <div id="loading-popup-overlay" class="loading-popup-overlay">
+  <div class="loading-popup-content">
+    <p id="loading-popup-message">Downloading VIDU For Windows(x64) please wait...</p>
+    <div class="loading-bar-container">
+      <div id="loading-bar-fill" class="loading-bar-fill"></div>
+    </div>
   </div>
 </div>
+<div id="fullscreen-playlist-overlay" class="fs-playlist-overlay">
+  <div class="fs-playlist-header">
+    <h3 id="fs-playlist-title"></h3>
+    <span id="fs-playlist-count" class="fs-playlist-count">0 Videos</span>
+    <button id="fs-playlist-close-btn" class="fs-playlist-close-btn" aria-label="Close Playlist">&times;</button>
+  </div>
+  <div id="fs-playlist-content" class="fs-playlist-content"></div>
+  <div id="fs-playlist-loader" class="fs-playlist-loader" style="display: none;">
+    <div class="spinner"></div>
+    <p>Initializing VIDU Fetcher...</p>
+  </div>
+</div>
+<div id="player-loading-overlay" class="loading-popup-overlay">
+  <div class="loading-popup-content">
+    <p>Initializing VIDU Player</p>
+    <div class="loading-bar-container">
+      <div id="player-loading-bar-fill" class="loading-bar-fill"></div>
+    </div>
+  </div>
+</div>
+<div id="restoring-position-overlay" class="loading-popup-overlay">
+  <div class="loading-popup-content">
+    <p>Restoring Last Position</p>
+    <div class="loading-bar-container">
+      <div id="restoring-bar-fill" class="loading-bar-fill"></div>
+    </div>
+  </div>
+</div>
+<div id="popup-player-loading-overlay" class="loading-popup-overlay">
+  <div class="loading-popup-content">
+    <p>Initializing VIDU Popup Player</p>
+    <div class="loading-bar-container">
+      <div id="popup-player-loading-bar-fill" class="loading-bar-fill"></div>
+    </div>
+  </div>
+</div>
+<div id="playlist-video-loading-overlay" class="loading-popup-overlay">
+  <div class="loading-popup-content">
+    <p id="playlist-loading-message">Loading <span class="dots"></span></p>
+    <div class="loading-bar-container">
+      <div id="playlist-loading-bar-fill" class="loading-bar-fill"></div>
+    </div>
+  </div>
+</div>
+<div id="popup-notice-overlay" class="popup-notice">
+  Playing in the VIDU Popup Player
+</div>
 
-<!-- IMPORTANT: Player script is long and mostly unchanged. Below are only the relevant changed bits
-     (I left the rest of the original player code intact.) -->
 
 <script>
-/*************************************************************************
- * PLAYER SCRIPT (excerpt)
- * The original file had a createHostElements() function that builds the overlay.
- * I fixed the playback menu markup (removed duplicate class attribute),
- * enhanced the OSD style (in CSS above), and added robust positioning logic for the speed menu.
- *************************************************************************/
-
+// PLAYER SCRIPT
 (function(){
-  // (existing initialization code unchanged...)
+  if(window.__viduPlayerLoaded) return;
+  window.__viduPlayerLoaded = true;
 
-  // createHostElements includes overlay.innerHTML; I corrected the markup for speed-option 1x (active class)
-  // The overlay.innerHTML now contains:
-  //  ... <div class="vidu-playback-menu" id="vidu_playback_menu">
-  //           <div class="playback-menu-header">Playback Speed</div>
-  //           <div class="speed-selector">
-  //               <div class="speed-selector-indicator" id="vidu_speed_indicator"></div>
-  //               <button class="speed-option" data-speed="0.5">0.5x</button>
-  //               <button class="speed-option active" data-speed="1">1x</button>
-  //               <button class="speed-option" data-speed="1.25">1.25x</button>
-  //               <button class="speed-option" data-speed="1.5">1.5x</button>
-  //               <button class="speed-option" data-speed="2">2x</button>
-  //           </div>
-  //        </div>
-  //
-  // (Note: 1x starts as active to match player default.)
+  const state = {
+    player: null,
+    animationFrameId: null,
+    keyHandler: null,
+    mo: null,
+    host: null,
+    mount: null,
+    seekTrackEl: null,
+    fsResizeHandler: null,
+    fsListener: null,
+    docClickHandler: null,
+    inactivityTimer: null,
+    lastActivity: Date.now(),
+    desiredPlaying: null,
+    lastVolume: (() => { try { const v = localStorage.getItem('vidu_player_volume'); return (v !== null && !isNaN(v)) ? parseFloat(v) : 100; } catch(e) { return 100; } })(),
+    lastNonMuteVolume: 100,
+    osdTimer: null,
+    _menuOpenTs: 0,
+    lastSaveTime: 0,
+    videoId: null,
+    lastTime: -1,
+    lastDuration: -1,
+    lastPlayerState: -1,
+    lastVolumeLevel: -1,
+    touch_lastTapTime: 0,
+    touch_lastTapX: 0,
+    touch_isSwiping: false,
+    touch_startX: 0,
+    touch_startY: 0,
+    touch_swipeMode: null,
+    touch_seekStartTime: 0,
+    touch_startVolume: 0,
+    popupCheckInterval: null,
+    invertBtnEl: null,
+  };
 
-  // ... later inside createPlayer() where playback menu elements are wired up:
+  function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
 
-  // --- REWORKED: Playback speed menu logic (robust positioning + indicator) ---
-  function setupPlaybackMenu(playbackBtn, playbackMenu, host, speedIndicator, speedOptions) {
-      if(!playbackBtn || !playbackMenu) return;
+  function getFullscreenElement(){ return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || null; }
 
-      // Ensure menu uses absolute positioning relative to host
-      playbackMenu.style.position = 'absolute';
-      playbackMenu.style.left = '';
-      playbackMenu.style.top = '';
-      playbackMenu.style.right = '';
-      playbackMenu.style.bottom = '';
-
-      // Position function: compute top/left so it sits above the button and within host bounds
-      function positionPlaybackMenu() {
-          // The host is the .vidu-player-host (positioned)
-          const hostRect = host.getBoundingClientRect();
-          const btnRect = playbackBtn.getBoundingClientRect();
-
-          // Ensure menu is measured (if display:none, make it temporarily visible)
-          const wasOpen = playbackMenu.classList.contains('open');
-          if(!wasOpen) {
-              playbackMenu.style.visibility = 'hidden';
-              playbackMenu.classList.add('open'); // to ensure offsetWidth/Height are available
-          }
-
-          const menuW = playbackMenu.offsetWidth || 260;
-          const menuH = playbackMenu.offsetHeight || 120;
-
-          // Calculate horizontal center aligned to button
-          let left = (btnRect.left + btnRect.width / 2) - (menuW / 2) - hostRect.left;
-          // Keep padding inside host
-          const minLeft = 8;
-          const maxLeft = hostRect.width - menuW - 8;
-          left = Math.max(minLeft, Math.min(maxLeft, left));
-
-          // Calculate top: try above button first
-          let top = (btnRect.top - menuH - 10) - hostRect.top;
-          // If not enough space above, place below the button
-          if (top < 6) {
-              top = (btnRect.bottom + 10) - hostRect.top;
-              // small shift if it overflows
-              if (top + menuH > hostRect.height - 6) {
-                  top = Math.max(6, hostRect.height - menuH - 8);
-              }
-          }
-
-          // Apply inline styles
-          playbackMenu.style.left = `${Math.round(left)}px`;
-          playbackMenu.style.top = `${Math.round(top)}px`;
-
-          // restore visibility state
-          if(!wasOpen) {
-              playbackMenu.classList.remove('open');
-              playbackMenu.style.visibility = '';
-          }
+  function getAdjacentVideoTitle(direction) {
+      const playlistData = window.__viduGlobal?.lastOpenedPlaylist;
+      if (!playlistData || !playlistData.videos || playlistData.videos.length <= 1) {
+          return '';
       }
-
-      // update indicator position & width
-      function updateSpeedIndicator(activeButton) {
-          if (!activeButton || !speedIndicator) return;
-          // offset relative to playbackMenu
-          const btnRect = activeButton.getBoundingClientRect();
-          const menuRect = playbackMenu.getBoundingClientRect();
-          const left = btnRect.left - menuRect.left;
-          speedIndicator.style.left = `${Math.max(4, left)}px`;
-          speedIndicator.style.width = `${Math.max(20, activeButton.offsetWidth)}px`;
+      const currentVideoId = state.videoId;
+      const currentIndex = playlistData.videos.findIndex(v => v.videoId === currentVideoId);
+      if (currentIndex === -1) {
+          return '';
       }
-
-      // open/close handler
-      playbackBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const nowOpen = !playbackMenu.classList.contains('open');
-          // Close other panels if present
-          const volumePanel = host.querySelector('#vidu_volume_panel');
-          if(volumePanel) volumePanel.classList.remove('open');
-
-          if (nowOpen) {
-              // Make sure menu is positioned before showing
-              positionPlaybackMenu();
-              playbackMenu.classList.add('open');
-              // Set active indicator
-              const activeButton = playbackMenu.querySelector('.speed-option.active') || playbackMenu.querySelector('.speed-option[data-speed="1"]');
-              if (activeButton) updateSpeedIndicator(activeButton);
-
-              // attach one-time doc click handler to close
-              setTimeout(() => {
-                  document.addEventListener('click', docClickClose);
-              }, 0);
-          } else {
-              playbackMenu.classList.remove('open');
-              document.removeEventListener('click', docClickClose);
-          }
-      });
-
-      // speed option selection
-      speedOptions.forEach(button => {
-          button.addEventListener('click', (ev) => {
-              ev.stopPropagation();
-              const speed = parseFloat(button.dataset.speed);
-              try { 
-                  // call existing setPlaybackRate (global player function in this script)
-                  if (typeof setPlaybackRate === 'function') setPlaybackRate(speed);
-              } catch (err) { console.warn('setPlaybackRate failed', err); }
-              // visual
-              playbackMenu.querySelectorAll('.speed-option').forEach(b => b.classList.remove('active'));
-              button.classList.add('active');
-              updateSpeedIndicator(button);
-
-              // small close delay for nice UX
-              setTimeout(()=> playbackMenu.classList.remove('open'), 220);
-              setTimeout(()=> document.removeEventListener('click', docClickClose), 320);
-          });
-      });
-
-      // doc click close
-      function docClickClose(e) {
-          if (!playbackMenu.contains(e.target) && !playbackBtn.contains(e.target)) {
-              playbackMenu.classList.remove('open');
-              document.removeEventListener('click', docClickClose);
-          }
-      }
-
-      // reposition on resize / scroll if open
-      const reposition = () => { if (playbackMenu.classList.contains('open')) positionPlaybackMenu(); };
-      window.addEventListener('resize', reposition);
-      window.addEventListener('scroll', reposition, true);
-
-      // Expose helper for external calls
-      return {
-          positionPlaybackMenu,
-          updateSpeedIndicator
-      };
+      const newIndex = (currentIndex + direction + playlistData.videos.length) % playlistData.videos.length;
+      const adjacentVideo = playlistData.videos[newIndex];
+      return adjacentVideo ? escapeHtml(adjacentVideo.title) : '';
   }
 
-  // --- During player creation (inside createPlayer) the script finds:
-  // const playbackBtn = overlay.querySelector('#vidu_playbackbtn');
-  // const playbackMenu = overlay.querySelector('#vidu_playback_menu');
-  // const speedOptions = playbackMenu.querySelectorAll('.speed-option');
-  // const speedIndicator = playbackMenu.querySelector('#vidu_speed_indicator');
-  // then call setupPlaybackMenu(playbackBtn, playbackMenu, host, speedIndicator, Array.from(speedOptions));
+  function updateNavTooltips() {
+      const prevTooltip = document.getElementById('vidu_prev_tooltip');
+      const nextTooltip = document.getElementById('vidu_next_tooltip');
 
-  // --- OSD usage ---
-  // showOSDFeedback() already used by keyboard handlers for arrowleft/arrowright and speed changes.
-  // The OSD styling above guarantees strong contrast over bright video frames.
+      if (prevTooltip) {
+          prevTooltip.textContent = getAdjacentVideoTitle(-1);
+      }
+      if (nextTooltip) {
+          nextTooltip.textContent = getAdjacentVideoTitle(1);
+      }
+  }
 
+  function loadVideoInPlayer(videoId, title, startTime = 0) {
+    if (state.player && typeof state.player.loadVideoById === 'function' && videoId !== state.videoId) {
+        state.videoId = videoId;
+        
+        state.player.loadVideoById({
+            videoId: videoId,
+            startSeconds: Math.floor(startTime)
+        });
+
+        state.desiredPlaying = true;
+        
+        const modalTitle = document.getElementById('modal-title');
+        if (modalTitle) modalTitle.textContent = title;
+
+        updatePlaylistHighlight();
+        updateNavTooltips();
+        
+        if (typeof window.incrementWatchCount === 'function') {
+            window.incrementWatchCount();
+        }
+        state.lastSaveTime = 0;
+    }
+  }
+
+  function updatePlaylistHighlight() {
+    const panel = document.getElementById('vidu_playlist_panel');
+    const currentVideoId = state.videoId;
+    if (!panel || !panel.classList.contains('show')) return;
+    
+    panel.querySelectorAll('.vidu-playlist-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.videoId === currentVideoId);
+    });
+  }
+  
+  function showLoadingPopupForNextVideo(startTime) {
+      const isRestoring = startTime && startTime > 0;
+      const loadingPopup = isRestoring ? document.getElementById('restoring-position-overlay') : document.getElementById('playlist-video-loading-overlay');
+      const loadingBar = isRestoring ? document.getElementById('restoring-bar-fill') : document.getElementById('playlist-loading-bar-fill');
+      
+      if (loadingPopup && loadingBar) {
+          if (!isRestoring) {
+               const loadingMessage = document.getElementById('playlist-loading-message');
+               if(loadingMessage) loadingMessage.innerHTML = 'Loading <span class="dots"></span>';
+          }
+          loadingPopup.classList.add('show');
+          loadingBar.style.transition = 'none';
+          loadingBar.style.width = '0%';
+
+          setTimeout(() => {
+              loadingBar.style.transition = 'width 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
+              loadingBar.style.width = '100%';
+          }, 10);
+
+          setTimeout(() => {
+              loadingPopup.classList.remove('show');
+              setTimeout(() => {
+                  loadingBar.style.transition = 'none';
+                  loadingBar.style.width = '0%';
+              }, 300);
+          }, 1500);
+      }
+  }
+
+  function renderInPlayerPlaylist() {
+      const panel = document.getElementById('vidu_playlist_panel');
+      const playlistData = window.__viduGlobal?.lastOpenedPlaylist;
+      if (!panel) return;
+      if (!playlistData || !playlistData.videos || playlistData.videos.length === 0) {
+          panel.innerHTML = `<div class="vidu-playlist-header"><h3>No playlist loaded</h3></div><div class="vidu-playlist-content" style="text-align:center;padding-top:20px;color:var(--muted);">Open a playlist from the main menu first.</div>`;
+          return;
+      }
+      
+      panel.innerHTML = `
+          <div class="vidu-playlist-loader">
+              <p>Loading<span class="dots"></span></p>
+              <div class="spinner"></div>
+          </div>`;
+      
+      setTimeout(() => {
+          if (!panel || !panel.classList.contains('show')) {
+              return;
+          }
+
+          let contentHTML = `<div class="vidu-playlist-header"><h3>${escapeHtml(playlistData.title)}</h3></div><div class="vidu-playlist-content">`;
+
+          playlistData.videos.forEach((video, index) => {
+              const isActive = video.videoId === state.videoId ? 'active' : '';
+              contentHTML += `
+                  <div class="vidu-playlist-item ${isActive}" data-video-id="${escapeHtml(video.videoId)}" data-video-title="${escapeHtml(video.title)}">
+                      <div class="vidu-playlist-item-thumb-wrapper">
+                          <img src="${escapeHtml(video.thumb)}" alt="">
+                          <span class="vidu-playlist-item-number">${index + 1}</span>
+                          <div class="vidu-playlist-item-playing-indicator">Playing<span class="playing-dots"></span></div>
+                      </div>
+                      <div class="title">${escapeHtml(video.title)}</div>
+                  </div>
+              `;
+          });
+          contentHTML += `</div>`;
+          panel.innerHTML = contentHTML;
+
+          panel.querySelectorAll('.vidu-playlist-item').forEach(item => {
+              item.addEventListener('click', () => {
+                  const videoId = item.dataset.videoId;
+                  const videoTitle = item.dataset.videoTitle;
+
+                  if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
+                      const cur = state.player.getCurrentTime();
+                      const dur = state.player.getDuration ? state.player.getDuration() : 0;
+                      if (cur > 1 && dur > 0 && dur - cur > 5) {
+                          window.saveVideoProgress(state.videoId, cur);
+                      } else {
+                          window.saveVideoProgress(state.videoId, 0);
+                      }
+                  }
+                  
+                  const startTime = window.getVideoProgress(videoId) || 0;
+                  showLoadingPopupForNextVideo(startTime);
+
+                  setTimeout(() => {
+                      loadVideoInPlayer(videoId, videoTitle, startTime);
+                  }, 50);
+              });
+          });
+      }, 2000);
+  }
+
+  function toggleInPlayerPlaylist() {
+      const panel = document.getElementById('vidu_playlist_panel');
+      const btn = document.getElementById('vidu_playlist_toggle_btn');
+      if (!panel || !btn) return;
+
+      const shouldShow = !panel.classList.contains('show');
+      if (shouldShow) {
+          renderInPlayerPlaylist();
+      }
+      panel.classList.toggle('show', shouldShow);
+      btn.classList.toggle('active', shouldShow);
+  }
+
+  function playNextOrPreviousVideo(direction) {
+    if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
+        const cur = state.player.getCurrentTime();
+        const dur = state.player.getDuration ? state.player.getDuration() : 0;
+        if (cur > 1 && dur > 0 && dur - cur > 5) {
+            window.saveVideoProgress(state.videoId, cur);
+        } else {
+            window.saveVideoProgress(state.videoId, 0);
+        }
+    }
+
+    const playlistData = window.__viduGlobal?.lastOpenedPlaylist;
+    if (!playlistData || !playlistData.videos || playlistData.videos.length <= 1) {
+        return;
+    }
+    const currentVideoId = state.videoId;
+    const currentIndex = playlistData.videos.findIndex(v => v.videoId === currentVideoId);
+
+    if (currentIndex === -1) {
+        return;
+    }
+
+    const newIndex = (currentIndex + direction + playlistData.videos.length) % playlistData.videos.length;
+    const nextVideo = playlistData.videos[newIndex];
+      
+    if (nextVideo) {
+        const startTime = window.getVideoProgress(nextVideo.videoId) || 0;
+        showLoadingPopupForNextVideo(startTime);
+        setTimeout(() => {
+            loadVideoInPlayer(nextVideo.videoId, nextVideo.title, startTime);
+        }, 50);
+    }
+  }
+
+  function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+      const args = arguments;
+      const context = this;
+      if (!inThrottle) {
+        func.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    }
+  }
+
+  function loadYTApi(){
+    if(window.YT && window.YT.Player) return Promise.resolve();
+    if(window._vidu_loading_yt){
+      return new Promise((res, rej)=>{
+        const t = setInterval(()=>{ if(window.YT && window.YT.Player){ clearInterval(t); res(); } },80);
+        setTimeout(()=>{ clearInterval(t); rej(new Error('YT load timeout')); },20000);
+      });
+    }
+    window._vidu_loading_yt = true;
+    return new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='https://www.youtube.com/iframe_api';
+      s.async=true;
+      s.onerror = ()=> reject(new Error('YT API failed to load'));
+      document.head.appendChild(s);
+      window.onYouTubeIframeAPIReady = function(){ resolve(); };
+      setTimeout(()=>{ if(window.YT && window.YT.Player) resolve(); },1200);
+      setTimeout(()=>{ if(!(window.YT && window.YT.Player)) reject(new Error('YT API timed out')); },20000);
+    });
+  }
+  try{ window.loadYTApi = loadYTApi; }catch(e){}
+
+  function pad2(n){
+    n = Math.max(0, Math.floor(n||0));
+    return (n < 10 ? '0' + n : String(n));
+  }
+  function fmtHHMMSS(s){
+    s = Math.max(0, Math.floor(s||0));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) {
+        return pad2(h) + ':' + pad2(m) + ':' + pad2(sec);
+    }
+    return pad2(m) + ':' + pad2(sec);
+  }
+  
+  function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
+  function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
+  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19-.15-.24-.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22-.07-.49-.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
+  function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
+  function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
+  function volumeHighSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;}
+  function volumeMidSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM3 9v6h4l5 5V4L7 9H3z"/></svg>`;}
+  function volumeLowSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>`;}
+  function volumeMuteSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`; }
+  function rewindSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>`; }
+  function ffwdSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>`; }
+  function skipPrevSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>`; }
+  function skipNextSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>`; }
+  function speedSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 8v8l6-4-6-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>`;}
+
+  function createHostElements(){
+    let wrap = document.getElementById('player-wrap');
+    if(!wrap){
+      const root = document.getElementById('modal-root') || document.body;
+      const modalEl = (root && root.querySelector && root.querySelector('.modal')) ? root.querySelector('.modal') : root;
+      wrap = document.createElement('div');
+      wrap.id = 'player-wrap';
+      wrap.style.minWidth = '320px';
+      try{ if(modalEl) modalEl.appendChild(wrap); else document.body.appendChild(wrap); }
+      catch(e){ try{ document.body.appendChild(wrap); }catch(_){} }
+    }
+    const prev = wrap.querySelector('.vidu-player-host');
+    if(prev) prev.remove();
+    const host = document.createElement('div'); host.className = 'vidu-player-host';
+    
+    const mount = document.createElement('div'); mount.className = 'vidu-mount'; mount.id = 'vidu_mount_'+Math.floor(Math.random()*1e6);
+    host.appendChild(mount);
+    const loadingDiv = document.createElement('div'); loadingDiv.className = 'vidu-loading'; loadingDiv.id = 'vidu_loading';
+    loadingDiv.innerHTML = `<div class="vidu-loading-spinner"></div>`;
+    host.appendChild(loadingDiv);
+    const ctrlBg = document.createElement('div'); ctrlBg.className = 'vidu-controls-bg';
+    host.appendChild(ctrlBg);
+    const overlay = document.createElement('div'); overlay.className = 'vidu-overlay';
+    
+    overlay.innerHTML = `
+      <div class="vidu-controls-grid">
+        <div class="vidu-seek-container">
+          <div id="vidu_seek_preview" class="seek-preview">
+             <div class="seek-preview-box">
+                <div class="seeking-text-inner">Seeking<span class="seeking-dots"></span></div>
+                <span id="vidu_seek_preview_time" class="seek-preview-time">00:00</span>
+            </div>
+          </div>
+          <div class="seek-track">
+            <div id="vidu_seek_progress" class="seek-progress"></div>
+          </div>
+          <div id="vidu_seek_thumb" class="seek-thumb"></div>
+          <input id="vidu_seek" class="vidu-range" type="range" min="0" max="100" step="0.1" value="0" aria-label="Video progress"/>
+        </div>
+        <div class="vidu-controls-left">
+          <div class="vidu-volume-container">
+            <button class="vidu-btn" id="vidu_volumebtn" title="Volume" aria-label="Volume">${volumeHighSVG()}</button>
+            <div class="vidu-volume-panel" id="vidu_volume_panel">
+              <input type="range" min="0" max="100" value="100" class="vidu-volume-slider" id="vidu_volume_slider" />
+            </div>
+          </div>
+          <div class="vidu-time-container">
+            <span id="vidu_cur" class="vidu-time">${fmtHHMMSS(0)}</span>
+            <span class="vidu-time-separator">/</span>
+            <span id="vidu_dur" class="vidu-time">${fmtHHMMSS(0)}</span>
+          </div>
+        </div>
+        <div class="vidu-controls-center">
+            <button class="vidu-btn" id="vidu_prevbtn" aria-label="Previous (,)">${skipPrevSVG()}<span id="vidu_prev_tooltip" class="vidu-custom-tooltip"></span></button>
+            <button class="vidu-btn" id="vidu_playbtn" aria-label="Play">${playSVG()}</button>
+            <button class="vidu-btn" id="vidu_nextbtn" aria-label="Next (.)">${skipNextSVG()}<span id="vidu_next_tooltip" class="vidu-custom-tooltip"></span></button>
+        </div>
+        <div class="vidu-controls-right">
+          <div class="vidu-settings-container">
+            <button class="vidu-btn" id="vidu_settingsbtn" title="Settings" aria-label="Settings">${gearSVG()}</button>
+            <div class="vidu-settings-panel" id="vidu_settings_panel">
+                <div class="settings-row">
+                    <span class="settings-label">${speedSVG()} Speed</span>
+                    <div class="settings-control">
+                        <div class="settings-speed-selector">
+                            <div class="speed-indicator" id="vidu_speed_indicator"></div>
+                            <button class="speed-option" data-speed="0.5">0.5x</button>
+                            <button class="speed-option" data-speed="1">1x</button>
+                            <button class="speed-option" data-speed="1.5">1.5x</button>
+                            <button class="speed-option" data-speed="2">2x</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+          <button class="vidu-btn" id="vidu_fullbtn" title="Fullscreen" aria-label="Fullscreen">${fullscreenSVG()}</button>
+        </div>
+      </div>`;
+    host.appendChild(overlay);
+    
+    const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
+    closeBtn.addEventListener('click', ()=> { try{ if(typeof window.closeModal === 'function') window.closeModal(); else { const root = document.getElementById('modal-root'); if(root) root.style.display='none'; if(window.destroyViduPlayer) window.destroyViduPlayer(); } }catch(e){} });
+    host.appendChild(closeBtn);
+    
+    const popupBtn = document.createElement('button');
+    popupBtn.className = 'vidu-popup-btn';
+    popupBtn.id = 'vidu_popup_btn';
+    popupBtn.title = 'Popup Player (P)';
+    popupBtn.type = 'button';
+    popupBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg>`;
+    host.appendChild(popupBtn);
+    
+    const invertBtn = document.createElement('button');
+    invertBtn.className = 'vidu-invert-btn';
+    invertBtn.id = 'vidu_invert_btn';
+    invertBtn.title = 'Invert Colors (N)';
+    invertBtn.type = 'button';
+    invertBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-1.9 1.26 6 6 0 0 1-8.05-5.15A5.5 5.5 0 0 1 13.36 4.1a9 9 0 0 0-1.36-1.1zM12 19a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/></svg>`;
+    host.appendChild(invertBtn);
+
+    const playlistToggleBtn = document.createElement('button');
+    playlistToggleBtn.className = 'vidu-playlist-toggle-btn';
+    playlistToggleBtn.id = 'vidu_playlist_toggle_btn';
+    playlistToggleBtn.title = 'Toggle Playlist';
+    playlistToggleBtn.type = 'button';
+    playlistToggleBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h12v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3zm14 12 5-3.5-5-3.5v7z"/></svg>`;
+    host.appendChild(playlistToggleBtn);
+
+    const osdFeedback = document.createElement('div'); osdFeedback.id = 'vidu_osd_feedback'; osdFeedback.className = 'vidu-osd-feedback';
+    host.appendChild(osdFeedback);
+    const seekFeedbackLeft = document.createElement('div'); seekFeedbackLeft.id = 'vidu_seek_feedback_left'; seekFeedbackLeft.className = 'vidu-seek-feedback left'; seekFeedbackLeft.innerHTML = `${rewindSVG()}<span>10s</span>`;
+    host.appendChild(seekFeedbackLeft);
+    const seekFeedbackRight = document.createElement('div'); seekFeedbackRight.id = 'vidu_seek_feedback_right'; seekFeedbackRight.className = 'vidu-seek-feedback right'; seekFeedbackRight.innerHTML = `${ffwdSVG()}<span>10s</span>`;
+    host.appendChild(seekFeedbackRight);
+    
+    wrap.appendChild(host);
+    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, popupBtn, invertBtn };
+  }
+
+  function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){} }
+
+  function createPlayer(videoId, startTime = 0){
+    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, popupBtn, invertBtn } = createHostElements();
+    state.host = host; state.mount = mount;
+    state.videoId = videoId;
+    const playBtn = overlay.querySelector('#vidu_playbtn');
+    const curEl = overlay.querySelector('#vidu_cur');
+    const durEl = overlay.querySelector('#vidu_dur');
+    const seekEl = overlay.querySelector('#vidu_seek');
+    const fullBtn = overlay.querySelector('#vidu_fullbtn');
+    const osdFeedbackEl = host.querySelector('#vidu_osd_feedback');
+    const seekProgressEl = overlay.querySelector('#vidu_seek_progress');
+    const seekThumbEl = overlay.querySelector('#vidu_seek_thumb');
+    const seekContainer = overlay.querySelector('.vidu-seek-container');
+    const seekTrackEl = overlay.querySelector('.seek-track');
+    const seekPreview = overlay.querySelector('#vidu_seek_preview');
+    const seekPreviewTime = overlay.querySelector('#vidu_seek_preview_time');
+    const volumeBtn = overlay.querySelector('#vidu_volumebtn');
+    const volumePanel = overlay.querySelector('#vidu_volume_panel');
+    const volumeSlider = overlay.querySelector('#vidu_volume_slider');
+    const seekFeedbackLeft = host.querySelector('#vidu_seek_feedback_left');
+    const seekFeedbackRight = host.querySelector('#vidu_seek_feedback_right');
+    const popupBtnEl = host.querySelector('#vidu_popup_btn');
+    const invertBtnEl = host.querySelector('#vidu_invert_btn');
+    const playlistToggleBtnEl = host.querySelector('#vidu_playlist_toggle_btn');
+    const prevBtn = host.querySelector('#vidu_prevbtn');
+    const nextBtn = host.querySelector('#vidu_nextbtn');
+    
+    // REWORKED Settings Menu elements
+    const settingsBtn = overlay.querySelector('#vidu_settingsbtn');
+    const settingsPanel = overlay.querySelector('#vidu_settings_panel');
+    const speedOptions = settingsPanel.querySelectorAll('.speed-option');
+    const speedIndicator = settingsPanel.querySelector('#vidu_speed_indicator');
+
+    state.invertBtnEl = invertBtnEl;
+    state.seekTrackEl = seekTrackEl;
+
+    if (playlistToggleBtnEl) {
+      playlistToggleBtnEl.addEventListener('click', () => {
+        toggleInPlayerPlaylist();
+        resetInactivityTimer();
+      });
+    }
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            playNextOrPreviousVideo(-1);
+            resetInactivityTimer();
+        });
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            playNextOrPreviousVideo(1);
+            resetInactivityTimer();
+        });
+    }
+
+    // --- REWORKED: Settings menu logic ---
+    function updateSpeedIndicator(activeButton) {
+        if (!activeButton || !speedIndicator) return;
+        const container = activeButton.parentElement;
+        if (!container) return;
+        const containerRect = container.getBoundingClientRect();
+        const buttonRect = activeButton.getBoundingClientRect();
+        
+        speedIndicator.style.left = `${buttonRect.left - containerRect.left}px`;
+        speedIndicator.style.width = `${buttonRect.width}px`;
+    }
+
+    settingsBtn.addEventListener('click', (e) => { 
+        e.stopPropagation(); 
+        settingsPanel.classList.toggle('open');
+        volumePanel.classList.remove('open');
+        // Set initial position of indicator when opening
+        if (settingsPanel.classList.contains('open')) {
+            const activeButton = settingsPanel.querySelector('.speed-option.active');
+            updateSpeedIndicator(activeButton);
+        }
+    });
+
+    speedOptions.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const speed = parseFloat(e.target.dataset.speed);
+            setPlaybackRate(speed);
+            speedOptions.forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            updateSpeedIndicator(e.target);
+            setTimeout(() => settingsPanel.classList.remove('open'), 250);
+        });
+    });
+    
+    volumeBtn.addEventListener('click', (e) => { 
+        e.stopPropagation(); 
+        volumePanel.classList.toggle('open'); 
+        settingsPanel.classList.remove('open'); 
+    });
+
+    volumeSlider.addEventListener('input', () => {
+        const newVolume = parseFloat(volumeSlider.value);
+        setVolume(newVolume, false, true);
+    });
+    volumeSlider.addEventListener('change', () => {
+        const newVolume = parseFloat(volumeSlider.value);
+        setVolume(newVolume, true, true);
+    });
+
+    state.docClickHandler = (e) => {
+      if (settingsPanel.classList.contains('open') && !settingsPanel.contains(e.target) && !settingsBtn.contains(e.target)) {
+        settingsPanel.classList.remove('open');
+      }
+      if (volumePanel.classList.contains('open') && !volumePanel.contains(e.target) && !volumeBtn.contains(e.target)) {
+        volumePanel.classList.remove('open');
+      }
+    };
+    document.addEventListener('click', state.docClickHandler);
+    
+    function toggleFullscreen() {
+        const fs = getFullscreenElement();
+        if (fs === host) {
+            const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+            if (exit) {
+                exit.call(document);
+                if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+                    screen.orientation.unlock();
+                }
+            }
+        } else {
+            const req = host.requestFullscreen || host.webkitRequestFullscreen || host.mozRequestFullScreen || host.msRequestFullscreen;
+            if (req) {
+                req.call(host).then(() => {
+                    if (window.screen && screen.orientation && typeof screen.orientation.lock === 'function') {
+                        if (window.innerWidth < 1024) { 
+                            screen.orientation.lock('landscape').catch(err => {});
+                        }
+                    }
+                }).catch(err => {});
+            }
+        }
+    }
+    fullBtn.addEventListener('click', toggleFullscreen);
+
+    state.fsListener = function() {
+      const fullBtn = document.getElementById('vidu_fullbtn');
+      if (!fullBtn) return;
+      const isFullscreen = !!getFullscreenElement();
+      if (isFullscreen) {
+        fullBtn.innerHTML = exitFullscreenSVG();
+        fullBtn.title = 'Exit Fullscreen';
+        fullBtn.setAttribute('aria-label', 'Exit Fullscreen');
+      } else {
+        fullBtn.innerHTML = fullscreenSVG();
+        fullBtn.title = 'Fullscreen';
+        fullBtn.setAttribute('aria-label', 'Fullscreen');
+      }
+    };
+    document.addEventListener('fullscreenchange', state.fsListener);
+    document.addEventListener('webkitfullscreenchange', state.fsListener);
+    document.addEventListener('mozfullscreenchange', state.fsListener);
+    document.addEventListener('MSFullscreenChange', state.fsListener);
+
+    if (popupBtnEl) {
+        popupBtnEl.addEventListener('click', () => {
+            if (!state.player || !state.videoId) return;
+
+            const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+            const title = document.getElementById('modal-title') ? document.getElementById('modal-title').textContent : 'VIDU Video';
+            
+            const url = `${window.location.origin}${window.location.pathname}?popup=true&videoId=${state.videoId}&time=${currentTime}&title=${encodeURIComponent(title)}`;
+            
+            const popWidth = 400; const popHeight = 225;
+            const popTop = window.screen.height - popHeight - 40; const popLeft = window.screen.width - popWidth - 40;
+            const features = `width=${popWidth},height=${popHeight},top=${popTop},left=${popLeft},resizable=yes`;
+            
+            const popupWindow = window.open(url, 'VIDU_Popup_Player', features);
+
+            if (popupWindow) {
+                closeModal();
+                const loadingOverlay = document.getElementById('popup-player-loading-overlay');
+                if (loadingOverlay) loadingOverlay.classList.add('show');
+                setTimeout(() => {
+                    if (loadingOverlay) loadingOverlay.classList.remove('show');
+                    const noticeOverlay = document.getElementById('popup-notice-overlay');
+                    if (noticeOverlay) noticeOverlay.classList.add('show');
+                    setTimeout(() => { if (noticeOverlay) noticeOverlay.classList.remove('show'); }, 2500);
+                }, 1500);
+            } else {
+                console.warn('Popup blocked by browser or an issue occurred.');
+            }
+        });
+    }
+
+    if (invertBtnEl) {
+        invertBtnEl.addEventListener('click', () => {
+            if (state.host) {
+                state.host.classList.toggle('vidu-player-inverted');
+            }
+            resetInactivityTimer(false);
+        });
+    }
+
+    if (document.body.classList.contains('popup-mode')) {
+        if(closeBtn) closeBtn.style.display = 'none';
+        if(popupBtnEl) popupBtnEl.style.display = 'none';
+        if(invertBtnEl) invertBtnEl.style.display = 'none';
+        if(playlistToggleBtnEl) playlistToggleBtnEl.style.display = 'none';
+        if(prevBtn) prevBtn.style.display = 'none';
+        if(nextBtn) nextBtn.style.display = 'none';
+    }
+
+    function setOverlayHidden(hidden){ 
+        const playlistBtn = document.getElementById('vidu_playlist_toggle_btn');
+        if(hidden){ 
+            overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); 
+            if(closeBtn) closeBtn.classList.add('hidden'); 
+            if(popupBtnEl) popupBtnEl.classList.add('hidden');
+            if(state.invertBtnEl) state.invertBtnEl.classList.add('hidden');
+            if(playlistBtn) playlistBtn.classList.add('hidden');
+            if(settingsPanel) settingsPanel.classList.remove('open');
+            if(volumePanel) volumePanel.classList.remove('open');
+            if(state.host) state.host.style.cursor = 'none';
+        } else { 
+            overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); 
+            if(closeBtn && !document.body.classList.contains('popup-mode')) closeBtn.classList.remove('hidden'); 
+            if(popupBtnEl && !document.body.classList.contains('popup-mode')) popupBtnEl.classList.remove('hidden'); 
+            if(state.invertBtnEl && !document.body.classList.contains('popup-mode')) state.invertBtnEl.classList.remove('hidden'); 
+            if(playlistBtn && !document.body.classList.contains('popup-mode')) playlistBtn.classList.remove('hidden');
+            if(state.host) state.host.style.cursor = '';
+        } 
+    }
+    function showLoading(){ try{ if(loadingDiv){ loadingDiv.classList.remove('hidden'); loadingDiv.style.display = 'flex'; } }catch(e){} }
+    function hideLoading(){ try{ if(loadingDiv){ loadingDiv.classList.add('hidden'); setTimeout(()=> { try{ loadingDiv.style.display = 'none'; }catch(e){} }, 320); } }catch(e){} }
+
+    function showOSDFeedback({ icon, text, duration = 1500 }) {
+        if (state.osdTimer) clearTimeout(state.osdTimer);
+        osdFeedbackEl.innerHTML = `${icon}<span>${text}</span>`;
+        osdFeedbackEl.classList.add('visible');
+        state.osdTimer = setTimeout(() => {
+            osdFeedbackEl.classList.remove('visible');
+        }, duration);
+    }
+    
+    function setVolume(newVolume, showOsd = true, showControls = true) {
+        if (!state.player || typeof state.player.getVolume !== 'function') return;
+        newVolume = Math.max(0, Math.min(100, newVolume));
+        
+        const currentVolume = state.player.getVolume();
+        if (currentVolume > 0 && newVolume > 0) {
+            state.lastNonMuteVolume = currentVolume;
+        }
+
+        state.player.setVolume(newVolume);
+        state.lastVolume = newVolume;
+        try { localStorage.setItem('vidu_player_volume', newVolume); } catch(e){}
+        if (newVolume > 0 && typeof state.player.unMute === 'function') state.player.unMute();
+        if (newVolume === 0 && typeof state.player.mute === 'function') state.player.mute();
+        if (showOsd) showOSDFeedback({ icon: newVolume > 0 ? volumeHighSVG() : volumeMuteSVG(), text: `${Math.round(newVolume)}%` });
+        resetInactivityTimer(showControls);
+    }
+    
+    function setPlaybackRate(speed) {
+        if (state.player && typeof state.player.setPlaybackRate === 'function') {
+            state.player.setPlaybackRate(speed);
+            showOSDFeedback({ icon: speedSVG(), text: `${speed}x` });
+        }
+    }
+
+    state.keyHandler = function(e){
+      const active = document.activeElement; const seekIsActive = (active && active.id === 'vidu_seek');
+      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
+      
+      const root = document.getElementById('modal-root'); 
+      if(!root || (root.style.display === 'none' && !document.body.classList.contains('popup-mode'))) return;
+      
+      const key = e.key.toLowerCase();
+      switch (key) {
+        case ' ': e.preventDefault(); if(state.player){ let st = -1; try{ st = state.player.getPlayerState ? state.player.getPlayerState() : -1; }catch(e){} state.desiredPlaying = !(st === 1); resetInactivityTimer(); } break;
+        case 'f': if (!document.body.classList.contains('popup-mode')) { e.preventDefault(); toggleFullscreen(); } break;
+        case 'm':
+            e.preventDefault();
+            if (state.player && typeof state.player.getVolume === 'function') {
+                const currentVolume = state.player.getVolume();
+                if (currentVolume > 0) {
+                    state.lastNonMuteVolume = currentVolume;
+                    setVolume(0, true, false);
+                } else {
+                    setVolume(state.lastNonMuteVolume > 0 ? state.lastNonMuteVolume : 100, true, false);
+                }
+            }
+            break;
+        case 'n':
+          e.preventDefault();
+          if (state.host) { state.host.classList.toggle('vidu-player-inverted'); }
+          resetInactivityTimer(false);
+          break;
+        case 'p':
+          e.preventDefault();
+          const popupBtn = document.getElementById('vidu_popup_btn');
+          if (popupBtn) { popupBtn.click(); }
+          resetInactivityTimer(false);
+          break;
+        case 'l':
+          e.preventDefault();
+          toggleInPlayerPlaylist();
+          resetInactivityTimer(false);
+          break;
+        case 'arrowright': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const dur = (typeof state.player.getDuration === 'function') ? Number(state.player.getDuration() || 0) : NaN; const target = Number.isFinite(dur) ? Math.min(dur, cur + 10) : cur + 10; if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); if (seekFeedbackRight) { seekFeedbackRight.classList.remove('show'); void seekFeedbackRight.offsetWidth; seekFeedbackRight.classList.add('show'); } } }catch(err){} break;
+        case 'arrowleft': e.preventDefault(); try{ if(state.player && typeof state.player.getCurrentTime === 'function'){ const cur = Number(state.player.getCurrentTime() || 0); const target = Math.max(0, cur - 10); if(typeof state.player.seekTo === 'function') state.player.seekTo(target, true); resetInactivityTimer(); if (seekFeedbackLeft) { seekFeedbackLeft.classList.remove('show'); void seekFeedbackLeft.offsetWidth; seekFeedbackLeft.classList.add('show'); }} }catch(err){} break;
+        case 'arrowup':
+          e.preventDefault();
+          const upAmount = e.ctrlKey ? 1 : 5;
+          setVolume((state.player.getVolume() || 0) + upAmount, true, false);
+          break;
+        case 'arrowdown':
+          e.preventDefault();
+          const downAmount = e.ctrlKey ? 1 : 5;
+          setVolume((state.player.getVolume() || 0) - downAmount, true, false);
+          break;
+        case 'q':
+        case 'e':
+        case 'w':
+          e.preventDefault();
+          if(!settingsPanel) break;
+          const buttons = Array.from(settingsPanel.querySelectorAll('button[data-speed]'));
+          const speeds = buttons.map(b => parseFloat(b.dataset.speed)).sort((a, b) => a - b);
+          
+          if (key === 'w') {
+            const normalSpeedBtn = settingsPanel.querySelector('button[data-speed="1"]');
+            if(normalSpeedBtn) normalSpeedBtn.click();
+            resetInactivityTimer(false); 
+            break; 
+          }
+          
+          const currentRate = state.player.getPlaybackRate();
+          let currentIndex = -1;
+          for(let i=0; i<buttons.length; i++) {
+              if (buttons[i].classList.contains('active')) {
+                  currentIndex = i;
+                  break;
+              }
+          }
+          if (currentIndex === -1) currentIndex = buttons.findIndex(b => b.dataset.speed === "1");
+
+          let nextIndex;
+          if (key === 'e') {
+             nextIndex = (currentIndex + 1) % buttons.length;
+          } else {
+             nextIndex = (currentIndex - 1 + buttons.length) % buttons.length;
+          }
+          if (buttons[nextIndex]) {
+            buttons[nextIndex].click();
+          }
+          resetInactivityTimer(false);
+          break;
+        case ',':
+            e.preventDefault();
+            playNextOrPreviousVideo(-1);
+            resetInactivityTimer();
+            break;
+        case '.':
+            e.preventDefault();
+            playNextOrPreviousVideo(1);
+            resetInactivityTimer();
+            break;
+      }
+    };
+    document.addEventListener('keydown', state.keyHandler);
+
+    seekEl.addEventListener('pointerdown', ()=> seekEl._drag=true, {passive:true});
+    seekEl.addEventListener('pointerup', ()=>{ seekEl._drag=false; }, {passive:true});
+    seekEl.addEventListener('change', ()=>{ 
+      if(!state.player) return; 
+      const dur = state.player.getDuration ? state.player.getDuration() : 0; 
+      if(dur) state.player.seekTo(dur * (parseFloat(seekEl.value)/100), true);
+      seekEl._drag=false; 
+    }, {passive:true});
+
+    function updateSeekUI(el){
+      try{
+        const v = Math.max(0, Math.min(100, parseFloat(el.value) || 0));
+        if(seekProgressEl) seekProgressEl.style.width = `${v}%`;
+        if(seekThumbEl) seekThumbEl.style.left = `${v}%`;
+      }catch(e){}
+    }
+    
+    seekEl.addEventListener('input', () => {
+        if (seekEl._drag) {
+            updateSeekUI(seekEl);
+            if (state.player) {
+                const dur = state.player.getDuration ? state.player.getDuration() : 0;
+                if (dur && seekPreviewTime) {
+                    const time = dur * (parseFloat(seekEl.value) / 100);
+                    seekPreviewTime.textContent = fmtHHMMSS(time);
+                }
+            }
+        }
+    }, { passive: true });
+    updateSeekUI(seekEl);
+
+    seekContainer.addEventListener('pointermove', (e) => {
+        if (!state.player || typeof state.player.getDuration !== 'function' || !seekPreview) return;
+        const duration = state.player.getDuration();
+        if (!duration || !isFinite(duration)) return;
+
+        const rect = seekContainer.getBoundingClientRect();
+        const hoverX = e.clientX - rect.left;
+        
+        const hoverFraction = Math.max(0, Math.min(1, hoverX / rect.width));
+        const time = hoverFraction * duration;
+        if (seekPreviewTime) {
+            seekPreviewTime.textContent = fmtHHMMSS(time);
+        }
+
+        const previewWidth = seekPreview.offsetWidth;
+        let previewLeft = hoverX - (previewWidth / 2);
+        
+        previewLeft = Math.max(0, previewLeft);
+        previewLeft = Math.min(rect.width - previewWidth, previewLeft);
+        
+        seekPreview.style.setProperty('--preview-x', `${previewLeft}px`);
+    });
+
+    playBtn.addEventListener('click', ()=>{
+      if(!state.player) return;
+      let st = -1;
+      try { st = state.player.getPlayerState ? state.player.getPlayerState() : -1; } catch(e){}
+      state.desiredPlaying = !(st === 1);
+      resetInactivityTimer();
+    });
+
+    function resetInactivityTimer(showControls = true){
+        state.lastActivity = Date.now();
+        if (showControls) {
+          setOverlayHidden(false);
+        }
+    
+        if(state.inactivityTimer) { clearTimeout(state.inactivityTimer); }
+    
+        const hideInactiveControls = () => {
+            try {
+                const isMenuOpen = settingsPanel.classList.contains('open') || volumePanel.classList.contains('open');
+                const isDragging = seekEl._drag;
+    
+                if (isMenuOpen || isDragging) {
+                    state.inactivityTimer = setTimeout(hideInactiveControls, 3000);
+                    return;
+                }
+    
+                // Always hide top shortcut controls
+                if(closeBtn) closeBtn.classList.add('hidden');
+                if(popupBtnEl) popupBtnEl.classList.add('hidden');
+                if(state.invertBtnEl) state.invertBtnEl.classList.add('hidden');
+                if(playlistToggleBtnEl) playlistToggleBtnEl.classList.add('hidden');
+    
+                let isBuffering = false;
+                if (state.player && typeof state.player.getPlayerState === 'function') {
+                    isBuffering = (state.player.getPlayerState() === 3);
+                }
+    
+                if (!isBuffering) {
+                    // Hide bottom controls if not buffering
+                    overlay.classList.add('hidden');
+                    ctrlBg.classList.add('hidden');
+                    if(state.host) state.host.style.cursor = 'none';
+                } else {
+                    // If buffering, reschedule the check to keep controls visible
+                    state.inactivityTimer = setTimeout(hideInactiveControls, 3000);
+                }
+    
+                if(settingsPanel) settingsPanel.classList.remove('open');
+                if(volumePanel) volumePanel.classList.remove('open');
+    
+            } catch(e) {
+                console.error("Error in hideInactiveControls:", e);
+            }
+        };
+    
+        state.inactivityTimer = setTimeout(hideInactiveControls, 3000);
+    }
+    
+    function attachActivityListeners(){ 
+        ['mousemove','pointermove','touchstart','touchmove','mousedown'].forEach(ev=>{ host.addEventListener(ev, resetInactivityTimer, {passive:true}); document.addEventListener(ev, resetInactivityTimer, {passive:true}); });
+        
+        const throttledWheelHandler = throttle((e) => {
+            const delta = e.deltaY > 0 ? -5 : 5;
+            setVolume(state.player.getVolume() + delta, true, false);
+        }, 50);
+        host.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            throttledWheelHandler(e);
+        }, { passive: false });
+        
+        const throttledTouchMoveHandler = throttle((e) => {
+            if (!state.touch_isSwiping || state.touch_swipeMode !== 'seek') return;
+            const touch = e.touches[0];
+            const rect = host.getBoundingClientRect();
+            
+            const deltaX = touch.clientX - state.touch_startX;
+            const duration = state.player.getDuration();
+            const seekChange = (deltaX / rect.width) * (duration / 2);
+            const targetTime = Math.max(0, Math.min(duration, state.touch_seekStartTime + seekChange));
+            const seekText = fmtHHMMSS(targetTime) + " / " + fmtHHMMSS(duration);
+            showOSDFeedback({ icon: (seekChange > 0 ? ffwdSVG() : rewindSVG()), text: seekText, duration: 500 });
+            
+        }, 50);
+
+        host.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) return;
+            const now = Date.now();
+            const touch = e.touches[0];
+            const rect = host.getBoundingClientRect();
+            const tapX = touch.clientX - rect.left;
+            
+            if (now - state.touch_lastTapTime < 300 && Math.abs(tapX - state.touch_lastTapX) < 50) {
+                if (getFullscreenElement() || document.body.classList.contains('popup-mode')) {
+                    if (!state.player) return;
+                    const isRightSide = tapX > rect.width / 2;
+                    const currentTime = state.player.getCurrentTime();
+                    const duration = state.player.getDuration();
+                    if (isRightSide) {
+                        state.player.seekTo(Math.min(duration, currentTime + 10), true);
+                        seekFeedbackRight.classList.remove('show'); void seekFeedbackRight.offsetWidth; seekFeedbackRight.classList.add('show');
+                    } else {
+                        state.player.seekTo(Math.max(0, currentTime - 10), true);
+                        seekFeedbackLeft.classList.remove('show'); void seekFeedbackLeft.offsetWidth; seekFeedbackLeft.classList.add('show');
+                    }
+                }
+            }
+            
+            state.touch_lastTapTime = now;
+            state.touch_lastTapX = tapX;
+            state.touch_startX = touch.clientX;
+            state.touch_startY = touch.clientY;
+            state.touch_isSwiping = false;
+            state.touch_swipeMode = null;
+            if (state.player) {
+                state.touch_seekStartTime = state.player.getCurrentTime();
+                state.touch_startVolume = state.player.getVolume();
+            }
+            resetInactivityTimer();
+        }, { passive: true });
+        
+        host.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) return;
+            if (!state.touch_isSwiping) {
+                const deltaX = e.touches[0].clientX - state.touch_startX;
+                const deltaY = e.touches[0].clientY - state.touch_startY;
+                if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+                    state.touch_isSwiping = true;
+                    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                        state.touch_swipeMode = 'seek';
+                    } else {
+                        state.touch_swipeMode = null;
+                    }
+                }
+            }
+            if(state.touch_isSwiping){
+              e.preventDefault();
+              setOverlayHidden(true);
+              throttledTouchMoveHandler(e);
+            }
+        }, { passive: false });
+
+        host.addEventListener('touchend', (e) => {
+            if (state.touch_isSwiping && state.touch_swipeMode === 'seek') {
+                const rect = host.getBoundingClientRect();
+                const deltaX = e.changedTouches[0].clientX - state.touch_startX;
+                const duration = state.player.getDuration();
+                const seekChange = (deltaX / rect.width) * (duration / 2);
+                const targetTime = Math.max(0, Math.min(duration, state.touch_seekStartTime + seekChange));
+                state.player.seekTo(targetTime, true);
+            }
+            if (state.osdTimer) clearTimeout(state.osdTimer);
+            state.osdTimer = setTimeout(() => { osdFeedbackEl.classList.remove('visible'); }, 500);
+            
+            state.touch_isSwiping = false;
+            state.touch_swipeMode = null;
+            resetInactivityTimer();
+        }, { passive: true });
+    }
+    attachActivityListeners();
+
+    function updatePlayerUI() {
+        if (!state.player || !document.body.contains(state.host)) { destroyPlayer(); return; }
+        try {
+            const st = state.player.getPlayerState ? state.player.getPlayerState() : -1;
+            const dur = state.player.getDuration ? state.player.getDuration() : 0;
+            const cur = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+            const vol = state.player.getVolume ? Math.round(state.player.getVolume()) : state.lastVolume;
+
+            if (vol !== state.lastVolumeLevel) {
+                let icon;
+                if (vol === 0 || state.player.isMuted()) icon = volumeMuteSVG();
+                else if (vol <= 33) icon = volumeLowSVG();
+                else if (vol <= 66) icon = volumeMidSVG();
+                else icon = volumeHighSVG();
+                volumeBtn.innerHTML = icon;
+                volumeSlider.value = vol;
+                state.lastVolumeLevel = vol;
+            }
+
+            const flooredCur = Math.floor(cur);
+            if (flooredCur !== state.lastTime) {
+                curEl.textContent = fmtHHMMSS(flooredCur);
+                state.lastTime = flooredCur;
+            }
+
+            const flooredDur = Math.floor(dur);
+            if (dur && isFinite(dur) && flooredDur !== state.lastDuration) {
+                durEl.textContent = fmtHHMMSS(flooredDur);
+                state.lastDuration = flooredDur;
+            }
+
+            if (!seekEl._drag && dur && isFinite(dur)) {
+                seekEl.value = (cur / Math.max(1, dur)) * 100;
+                updateSeekUI(seekEl);
+            }
+            
+            if (state.desiredPlaying !== null) {
+              if(state.desiredPlaying && st !== 1){
+                try{ state.player.playVideo(); }catch(e){}
+              } else if(!state.desiredPlaying && st === 1){
+                try{ state.player.pauseVideo(); }catch(e){}
+              }
+            }
+
+            if (st !== state.lastPlayerState) {
+                const isPlaying = (st === 1);
+                const currentIcon = isPlaying ? pauseSVG() : playSVG();
+                playBtn.innerHTML = currentIcon;
+                playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
+                state.lastPlayerState = st;
+            }
+
+            const now = Date.now();
+            const isPlaying = (st === 1);
+            if (state.videoId && isPlaying && now - (state.lastSaveTime || 0) > 60000) {
+                if (cur > 1) {
+                    window.saveVideoProgress(state.videoId, cur);
+                    state.lastSaveTime = now;
+                }
+            }
+
+        } catch (e) {}
+        state.animationFrameId = requestAnimationFrame(updatePlayerUI);
+    }
+
+    return loadYTApi().then(()=> new Promise((resolve,reject)=>{
+      if(state.player && typeof state.player.destroy === 'function'){ try{ state.player.destroy(); }catch(e){} state.player = null; }
+      try{
+        state.player = new YT.Player(mount.id, { 
+          videoId: videoId, 
+          width: '100%', 
+          height: '100%', 
+          playerVars: { 
+            controls: 0, 
+            disablekb: 1, 
+            rel: 0, 
+            modestbranding: 1, 
+            playsinline: 1, 
+            iv_load_policy: 3, 
+            origin: location.origin,
+            start: Math.floor(startTime)
+          },
+          events: {
+            onReady: function(evt){
+              disableIframeClicks(host); showLoading();
+              setVolume(state.lastVolume, false);
+              
+              // Set initial active speed button
+              const initialSpeed = state.player.getPlaybackRate();
+              const initialActiveButton = settingsPanel.querySelector(`.speed-option[data-speed="${initialSpeed}"]`) || settingsPanel.querySelector('.speed-option[data-speed="1"]');
+              if(initialActiveButton) {
+                speedOptions.forEach(btn => btn.classList.remove('active'));
+                initialActiveButton.classList.add('active');
+              }
+
+              updatePlaylistHighlight();
+              updateNavTooltips();
+              try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
+              try{ evt.target.playVideo(); }catch(e){}
+              if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+              updatePlayerUI();
+              if(state.mo) state.mo.disconnect();
+              state.mo = new MutationObserver(()=> disableIframeClicks(host));
+              state.mo.observe(host, { childList:true, subtree:true });
+              resetInactivityTimer();
+              resolve(evt.target);
+            },
+            onStateChange: function(e){
+              try{
+                if (state.host) {
+                    if (e.data === 1) { 
+                        state.host.classList.add('is-playing');
+                    } else {
+                        state.host.classList.remove('is-playing');
+                    }
+                }
+                
+                if (state.seekTrackEl) {
+                    if (e.data === 3) {
+                      state.seekTrackEl.classList.add('buffering'); 
+                    } else { 
+                      state.seekTrackEl.classList.remove('buffering'); 
+                    }
+                }
+                if(e && e.data === 1){
+                  try{ hideLoading(); }catch(e){} 
+                }
+                 if(e.data === 0) { // Video ended
+                    playNextOrPreviousVideo(1);
+                 }
+              }catch(err){}
+            },
+            onError: function(err){
+              if (state.seekTrackEl) { state.seekTrackEl.classList.remove('buffering'); }
+              try{ const ld = document.getElementById('vidu_loading'); if(ld){ ld.classList.add('hidden'); ld.style.display='none'; } }catch(_){} console.error('YT player error', err);
+            }
+          }
+        });
+      }catch(err){ reject(err || new Error('YT player creation failed')); }
+    })).catch(err=>{ throw err; }).then(p=>{ setTimeout(()=> resetInactivityTimer(), 40); return p; });
+  }
+
+  function destroyPlayer(){
+    try{
+      const panel = document.getElementById('vidu_playlist_panel');
+      if (panel) { panel.classList.remove('show'); panel.innerHTML = ''; }
+      const btn = document.getElementById('vidu_playlist_toggle_btn');
+      if (btn) btn.classList.remove('active');
+
+      if (state.seekTrackEl) { state.seekTrackEl.classList.remove('buffering'); }
+      
+      if (state.player && state.videoId && typeof state.player.getCurrentTime === 'function') {
+        const cur = state.player.getCurrentTime();
+        const dur = state.player.getDuration ? state.player.getDuration() : 0;
+        if (cur > 1 && dur > 0 && dur - cur > 5) {
+          window.saveVideoProgress(state.videoId, cur);
+        } else {
+          window.saveVideoProgress(state.videoId, 0);
+        }
+      }
+
+      if(state.animationFrameId){ cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
+      if(state.keyHandler){ document.removeEventListener('keydown', state.keyHandler); state.keyHandler = null; }
+      if(state.docClickHandler){ document.removeEventListener('click', state.docClickHandler); state.docClickHandler = null; }
+      if(state.player){ try{ state.player.destroy(); }catch(e){} state.player = null; }
+      if(state.mo){ try{ state.mo.disconnect(); }catch(e){} state.mo = null; }
+      if(state.fsResizeHandler){ window.removeEventListener('resize', state.fsResizeHandler); state.fsResizeHandler = null; }
+      if(state.fsListener){ document.removeEventListener('fullscreenchange', state.fsListener); document.removeEventListener('webkitfullscreenchange', state.fsListener); document.removeEventListener('mozfullscreenchange', state.fsListener); document.removeEventListener('MSFullscreenChange', state.fsListener); state.fsListener = null; }
+      if(state.inactivityTimer){ clearTimeout(state.inactivityTimer); state.inactivityTimer = null; }
+      if(state.osdTimer){ clearTimeout(state.osdTimer); state.osdTimer = null; }
+      if(state.popupCheckInterval) { clearInterval(state.popupCheckInterval); state.popupCheckInterval = null; }
+      
+      state.invertBtnEl = null;
+
+      if(state.host){ 
+          state.host.classList.remove('is-playing');
+          try{ 
+              state.host.removeEventListener('wheel', null); state.host.removeEventListener('touchstart', null);
+              state.host.removeEventListener('touchmove', null);
+              state.host.removeEventListener('touchend', null);
+          } catch(e){} 
+      }
+      if(state.host){ try{ state.host.remove(); }catch(e){} state.host = null; state.mount = null; }
+      
+      state.videoId = null;
+      state.lastSaveTime = 0;
+    }catch(e){}
+  }
+
+  window.showViduPlayer = function(videoId, startTime = 0){ if(typeof window.loadYTApi !== 'function') { window.loadYTApi = loadYTApi; } return createPlayer(videoId, startTime).catch(err => { console.error('createPlayer failed', err); throw err; }); };
+  window.destroyViduPlayer = function(){ destroyPlayer(); const w = document.getElementById('player-wrap'); if(w) w.innerHTML = ''; };
+  window.addEventListener('beforeunload', ()=> { try{ window.destroyViduPlayer(); }catch(e){} }, {passive:true});
+})();
+</script>
+<script>
+/*************************************************************************
+ * Playlist data + UI + modal + YouTube playlist fetching
+ *************************************************************************/
+(function() {
+    window.viduPopupWindow = null;
+    let wrapperElement = null;
+
+    window.handlePlayerLaunch = function() {
+        if (!wrapperElement) {
+            const wrapper = document.getElementById('wrapper');
+            if (wrapper) {
+                wrapperElement = wrapper;
+                wrapper.remove();
+            }
+        }
+    };
+
+    window.handlePlayerClose = function() {
+        const modalRoot = document.getElementById('modal-root');
+        const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
+        
+        const isPlayerActive = (modalRoot && modalRoot.style.display !== 'none') || (fsPlaylist && fsPlaylist.classList.contains('show'));
+
+        if (!isPlayerActive && wrapperElement && !document.getElementById('wrapper')) {
+            document.body.insertBefore(wrapperElement, document.getElementById('modal-root'));
+            (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
+            wrapperElement = null;
+        }
+    };
+
+    const playlists = [ { id: 0, name: 'SUBJECTS', thumbnail: 'https://i.pinimg.com/736x/71/82/6e/71826ec9ece9f33d9034bb0acd3b8d1f.jpg', videos: [ { id: 1, name: 'ET', thumbnail: 'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/19/b2/42/19b2424009813fc558e8a785c794cbdf.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82enZEX0A4SQVvRzEEFj8eAEZGAlA/WkIGNk4VIgs9WWlhent5Pl81JjhB", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/ea/60/d8/ea60d83595332fe2a7d11f1844072251.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dFNrdjcTAhYmOlUACF0XEFRJZVkiCkIGNk4LOUBXQDRCQnRSMi4wMmYp", passEnc: "" } ] }, { id: 2, name: 'SFT', thumbnail: 'https://i.pinimg.com/736x/b8/de/57/b8de57f639bb30fd9f48cda542dd96d2.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/2d/9d/1a/2d/9d1a4affd566269879267ca70b74b8.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dQkGUzsDJUIpXlMNBVBBN0ZnWAM6IUIGNk41NioUP21FXHtcGDYQIAUe", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/42/9d/84/429d847241cfba744292224956707f45.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82d11cAxxZK01oQz06HiMmPkFpc3cyW0IGNk4TCT08RCt5AHdYQyU+AywV", passEnc: "" }, { name:'', thumbnail:'https://i.pinimg.com/736x/1f/24/4e/1f244ec99cab31c5d72348a736d361df.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dUQDDD4zXQIlOhIgXzMlAHN+Ak9PIkIGNk5VCTgGQRdmUQQNIQwVTWpC", passEnc: "" } ] }, { id: 3, name: 'ICT', thumbnail: 'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', videos: [ { name:'', thumbnail:'https://i.pinimg.com/736x/81/f4/0d/81f40de2906f0c61f2f17d6db61d7271.jpg', type:'playlist', idEnc: "JiVdDwdDMwE8CD82dGVabCUtAhwaJTMuBycWPABxW0IGKkIGNk5UBEpVGytfan1tEhlVHRos", passEnc: "" } ] } ] } ];
+    function b64decode(s){ try{ return atob(s); }catch(e){ return s; } }
+    const decodeEnc = (function(){ const key = new TextEncoder().encode('vidu_secret_2025'); function xorDecode(bytes){ const out = new Uint8Array(bytes.length); for(let i=0;i<bytes.length;i++) out[i] = bytes[i] ^ key[i % key.length]; return out; } return function(encStr){ try{ if(!encStr) return ''; const raw = atob(encStr); const bytes = new Uint8Array(raw.split('').map(c=>c.charCodeAt(0))); const dec = xorDecode(bytes); return new TextDecoder().decode(dec); }catch(e){ return ''; } }; })();
+    function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
+
+    window.getVideoProgress = function(videoId) {
+        if (!videoId) return 0;
+        try {
+            const progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
+            return progress[videoId] || 0;
+        } catch (e) {
+            console.warn('Could not get video progress', e);
+            return 0;
+        }
+    }
+
+    window.saveVideoProgress = function(videoId, time) {
+        if (!videoId) return;
+        try {
+            const progress = JSON.parse(localStorage.getItem('vidu_video_progress') || '{}');
+            if (time > 1) {
+                progress[videoId] = time;
+            } else {
+                delete progress[videoId];
+            }
+            localStorage.setItem('vidu_video_progress', JSON.stringify(progress));
+        } catch (e) {
+            console.error("Failed to save video progress", e);
+        }
+    }
+
+    function renderPlaylists(){
+      const ul = document.getElementById('playlist-list');
+      if(!ul) return;
+      ul.innerHTML = '';
+      if(!playlists || playlists.length === 0){ ul.innerHTML = '<li class="muted">No playlists available.</li>'; return; }
+      playlists.forEach(pl=>{
+        const li = document.createElement('li'); li.className='list-item ripple';
+        li.innerHTML = `<img src="${escapeHtml(pl.thumbnail)}" alt="${escapeHtml(pl.name)}" /><span class="title">${escapeHtml(pl.name)}</span>`;
+        li.addEventListener('click', (ev)=>{ spawnRipple(ev, li); showPlaylistVideos(pl); });
+        ul.appendChild(li);
+      });
+      ul.style.display = 'flex';
+    }
+
+    function showPlaylistVideos(pl, skipPush){
+      const ul = document.getElementById('playlist-list');
+      const container = document.getElementById('playlist-videos');
+      if(!container || !ul) return;
+      if(!window.__viduGlobal) window.__viduGlobal = {};
+      if(!window.__viduGlobal.playlistStack) window.__viduGlobal.playlistStack = [];
+      if(!skipPush){ window.__viduGlobal.playlistStack.push(window.__viduGlobal.currentPl || null); }
+      window.__viduGlobal.currentPl = pl;
+      ul.style.display = 'none';
+      container.style.display = 'block';
+      container.innerHTML = `<h3 style="text-align:center;color:#fff;">${escapeHtml(pl.name)}</h3>`;
+      const vids = document.createElement('ul'); vids.className='list-container';
+      (pl.videos||[]).forEach(v=>{
+        const vli = document.createElement('li'); vli.className='list-item ripple';
+        const thumb = v.thumbnail || '';
+        vli.innerHTML = `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(v.name)}" /><span class="title">${escapeHtml(v.name)}</span>`;
+        if(v && Array.isArray(v.videos)){
+          vli.addEventListener('click',(ev)=>{ spawnRipple(ev, vli); showPlaylistVideos(v); });
+        } else {
+          vli.addEventListener('click',(ev)=>{
+            spawnRipple(ev, vli);
+            const expectedPassword = b64decode(v.passEnc || '');
+            if (expectedPassword === '') {
+              currentItem = v;
+              showUnlockedItem(v);
+            } else {
+              openPasswordModal(v);
+            }
+          });
+        }
+        vids.appendChild(vli);
+      });
+      const back = document.createElement('div'); back.style.textAlign='center'; back.style.marginTop='16px';
+      back.innerHTML = `<button id="back-to-playlists" class="btn secondary">Back</button>`;
+      container.appendChild(vids); container.appendChild(back);
+      document.getElementById('back-to-playlists').onclick = ()=>{
+        const prev = (window.__viduGlobal.playlistStack && window.__viduGlobal.playlistStack.length) ? window.__viduGlobal.playlistStack.pop() : null;
+        if(prev === null){ ul.style.display='flex'; container.style.display='none'; window.__viduGlobal.currentPl = null; }
+        else { showPlaylistVideos(prev, true); }
+      };
+    }
+
+    function spawnRipple(ev,target){ const rect = target.getBoundingClientRect(); const drop = document.createElement('div'); drop.className = 'drop'; drop.style.left = (ev.clientX - rect.left) + 'px'; drop.style.top = (ev.clientY - rect.top) + 'px'; target.appendChild(drop); setTimeout(()=> drop.remove(),700); }
+
+    let currentItem = null;
+    let currentPlaylistCache = {};
+
+    window.createModal = function(){
+      const root = document.getElementById('modal-root');
+      root.innerHTML = `<div class="modal-backdrop" id="modal-backdrop">
+        <div class="player-context">
+            <div class="modal" role="dialog" aria-modal="true">
+                <div class="controls">
+                    <div><strong id="modal-title">Locked</strong><div class="muted" id="modal-subtitle" style="color:#bbb;font-size:12px;"></div></div>
+                    <div><button id="modal-close" class="btn secondary">Close</button></div>
+                </div>
+                <div id="modal-body">
+                    <div id="password-block">
+                        <div style="color:#bbb;margin-bottom:8px;">This item is password-protected.</div>
+                        <div class="password-row">
+                            <input id="password-input" type="password" placeholder="Enter password" />
+                            <button id="password-submit" class="btn">Unlock</button>
+                        </div>
+                        <div id="password-error" style="margin-top:8px;color:#f66;display:none;"></div>
+                    </div>
+                    <div id="player-block" style="display:none;margin-top:12px;"><div id="player-wrap"></div></div>
+                </div>
+            </div>
+            <div id="vidu_playlist_panel" class="vidu-playlist-panel"></div>
+        </div>
+      </div>`;
+      document.getElementById('modal-close').onclick = closeModal;
+      document.getElementById('password-submit').onclick = onPasswordSubmit;
+      document.getElementById('password-input').onkeydown = (e)=>{ if(e.key === 'Enter') onPasswordSubmit(); };
+      document.getElementById('modal-backdrop').onclick = function(e){ if(e.target === this) closeModal(); };
+    }
+
+    function showUnlockedItem(item) {
+      if (item.type === 'playlist') {
+        openFullScreenPlaylist(item);
+      } else {
+        const id = decodeEnc(item.idEnc || '');
+        playVideoWithLoading({ videoId: id, title: item.name || 'Video' });
+      }
+    }
+
+    function openPasswordModal(item){
+      window.handlePlayerLaunch();
+      currentItem = item;
+      const root = document.getElementById('modal-root');
+      root.style.display = 'block';
+      document.getElementById('modal-title').textContent = item.name || 'Protected';
+      document.getElementById('modal-subtitle').textContent = (item.type || 'video') + ' — password required';
+      document.getElementById('password-input').value = '';
+      document.getElementById('password-error').style.display = 'none';
+      document.getElementById('password-block').style.display = 'block';
+      document.getElementById('player-block').style.display = 'none';
+      setTimeout(()=>document.getElementById('password-input').focus(), 50);
+    }
+
+    window.closeModal = function(){
+      const root = document.getElementById('modal-root');
+      if(root) {
+        root.style.display = 'none';
+        root.style.visibility = 'visible';
+      }
+      if(window.destroyViduPlayer) try{ window.destroyViduPlayer(); }catch(e){}
+      if (currentItem && currentItem.type === 'playlist') {
+        const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
+        if (fsPlaylist) fsPlaylist.classList.add('show');
+      } else {
+        currentItem = null;
+      }
+      window.handlePlayerClose();
+    }
+
+    function onPasswordSubmit(){
+      const val = (document.getElementById('password-input').value || '').trim();
+      if(!currentItem) return;
+      const expected = b64decode(currentItem.passEnc || '');
+      if(val === expected){
+        const root = document.getElementById('modal-root');
+        if(root) root.style.display = 'none';
+        showUnlockedItem(currentItem);
+      } else {
+        const err = document.getElementById('password-error'); err.style.display = 'block'; err.textContent = 'Incorrect password — try again.';
+      }
+    }
+
+    const YT_API_KEY = 'AIzaSyB8UVKOZOnUnYdqbFGOtlg6BPfR9HpD35c';
+    async function fetchPlaylistVideos(playlistId){
+      if(!YT_API_KEY || YT_API_KEY === 'YOUR_API_KEY_HERE') throw new Error('No API key configured.');
+      if (currentPlaylistCache[playlistId]) return currentPlaylistCache[playlistId];
+      const items=[]; let pageToken='';
+      do{
+        const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(YT_API_KEY)}` + (pageToken?`&pageToken=${pageToken}`:'');
+        const res = await fetch(url);
+        if(!res.ok){ const txt = await res.text().catch(()=>null); throw new Error(`YouTube API error: ${res.status} ${txt||''}`); }
+        const data = await res.json();
+        (data.items||[]).forEach(it=>{
+          const sn = it.snippet || {};
+          if(sn.resourceId && sn.resourceId.videoId && sn.title !== 'Private video' && sn.title !== 'Deleted video'){
+            const thumb = (sn.thumbnails && (sn.thumbnails.high||sn.thumbnails.medium||sn.thumbnails.default))||{};
+            items.push({ videoId: sn.resourceId.videoId, title: sn.title||'Untitled', thumb: thumb.url||`https://img.youtube.com/vi/${sn.resourceId.videoId}/hqdefault.jpg` });
+          }
+        });
+        pageToken = data.nextPageToken || '';
+      } while(pageToken);
+      currentPlaylistCache[playlistId] = items;
+      return items;
+    }
+
+    async function openFullScreenPlaylist(item) {
+      window.handlePlayerLaunch();
+      const overlay = document.getElementById('fullscreen-playlist-overlay');
+      const titleEl = document.getElementById('fs-playlist-title');
+      const countEl = document.getElementById('fs-playlist-count');
+      const contentEl = document.getElementById('fs-playlist-content');
+      const loaderEl = document.getElementById('fs-playlist-loader');
+      titleEl.textContent = item.name || 'Playlist';
+      countEl.textContent = '... Videos';
+      contentEl.innerHTML = '';
+      loaderEl.style.display = 'flex';
+      overlay.classList.add('show');
+      const rawId = decodeEnc(item.idEnc);
+      const playlistId = rawId.split('&')[0];
+      try {
+        const videos = await fetchPlaylistVideos(playlistId);
+        if (!window.__viduGlobal) window.__viduGlobal = {};
+        window.__viduGlobal.lastOpenedPlaylist = { videos, title: item.name };
+        renderFullScreenPlaylist(videos, item.name);
+      } catch (err) {
+        console.error('Playlist fetch error', err);
+        contentEl.innerHTML = `<p style="text-align:center; color: var(--muted);">Failed to load playlist: ${escapeHtml(err.message)}</p>`;
+      } finally {
+        loaderEl.style.display = 'none';
+      }
+    }
+
+    function renderFullScreenPlaylist(videos, title) {
+      const titleEl = document.getElementById('fs-playlist-title');
+      const countEl = document.getElementById('fs-playlist-count');
+      const contentEl = document.getElementById('fs-playlist-content');
+      titleEl.textContent = title || 'Playlist';
+      countEl.textContent = `${videos.length} Videos`;
+      contentEl.innerHTML = '';
+      const fragment = document.createDocumentFragment();
+      videos.forEach((video, index) => {
+        const li = document.createElement('div');
+        li.className = 'fs-playlist-item';
+        li.innerHTML = `
+            <div class="fs-video-thumbnail">
+                <img src="${escapeHtml(video.thumb)}" alt="">
+                <span class="fs-video-number">${index + 1}</span>
+            </div>
+            <div class="title">${escapeHtml(video.title)}</div>
+        `;
+        li.onclick = () => playVideoWithLoading({ videoId: video.videoId, title: video.title });
+        fragment.appendChild(li);
+      });
+      contentEl.appendChild(fragment);
+    }
+
+    window.playVideoWithLoading = function(videoInfo) {
+      if (typeof window.incrementWatchCount === 'function') {
+        window.incrementWatchCount();
+      }
+      if (window.viduPopupWindow && !window.viduPopupWindow.closed) {
+          window.__vidu_prevent_popup_restore = true;
+          window.viduPopupWindow.close();
+          window.viduPopupWindow = null;
+          const noticeOverlay = document.getElementById('popup-notice-overlay');
+          if (noticeOverlay) noticeOverlay.classList.remove('show');
+      }
+
+      window.handlePlayerLaunch();
+      const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
+      const loadingPopup = document.getElementById('player-loading-overlay');
+      const loadingBar = document.getElementById('player-loading-bar-fill');
+      const root = document.getElementById('modal-root');
+
+      fsPlaylist.classList.remove('show');
+      
+      const savedTime = videoInfo.startTime || getVideoProgress(videoInfo.videoId) || 0;
+      const isRestoring = savedTime > 0;
+      
+      const restoringPopup = isRestoring ? document.getElementById('restoring-position-overlay') : null;
+      const restoringBar = isRestoring ? document.getElementById('restoring-bar-fill') : null;
+
+      if (isRestoring && restoringPopup) {
+        restoringPopup.classList.add('show');
+        restoringBar.style.transition = 'none';
+        restoringBar.style.width = '0%';
+        setTimeout(() => {
+          restoringBar.style.transition = 'width 1.5s cubic-bezier(0.25, 1, 0.5, 1)';
+          restoringBar.style.width = '100%';
+        }, 10);
+        setTimeout(() => {
+          restoringPopup.classList.remove('show');
+        }, 1500);
+      } else {
+          loadingPopup.classList.add('show');
+          loadingBar.style.transition = 'none';
+          loadingBar.style.width = '0%';
+          setTimeout(() => {
+            loadingBar.style.transition = 'width 2s cubic-bezier(0.25, 0.1, 0.25, 1)';
+            loadingBar.style.width = '90%';
+          }, 50);
+      }
+
+      root.style.display = 'block';
+      root.style.visibility = 'hidden';
+      document.getElementById('modal-title').textContent = videoInfo.title;
+      document.getElementById('modal-subtitle').textContent = 'Now Playing';
+      document.getElementById('password-block').style.display = 'none';
+      document.getElementById('player-block').style.display = 'block';
+
+      if (window.showViduPlayer) {
+        window.showViduPlayer(videoInfo.videoId, savedTime)
+          .then(player => {
+            if (!isRestoring) {
+              loadingBar.style.transition = 'width 0.3s ease-out';
+              loadingBar.style.width = '100%';
+            }
+
+            setTimeout(() => {
+              if (!isRestoring) loadingPopup.classList.remove('show');
+              root.style.visibility = 'visible';
+              setTimeout(() => {
+                loadingBar.style.transition = 'none';
+                loadingBar.style.width = '0%';
+              }, 300);
+            }, isRestoring ? 50 : 300);
+          })
+          .catch(err => {
+            console.error('showViduPlayer failed', err);
+            loadingPopup.classList.remove('show');
+            if(restoringPopup) restoringPopup.classList.remove('show');
+            root.style.visibility = 'visible';
+            window.handlePlayerClose();
+            const wrap = document.getElementById('player-wrap');
+            if (wrap) wrap.innerHTML = `<div class="muted">Failed to load player: ${escapeHtml(err.message || '')}</div>`;
+          });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      if (!document.body.classList.contains('popup-mode')) {
+        createModal();
+        renderPlaylists();
+        (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
+      }
+      document.getElementById('fs-playlist-close-btn').addEventListener('click', () => {
+        document.getElementById('fullscreen-playlist-overlay').classList.remove('show');
+        currentItem = null;
+        window.handlePlayerClose();
+      });
+    });
+
+    document.addEventListener('contextmenu', e => e.preventDefault(), false);
+    document.addEventListener('keydown', e => { if ((e.ctrlKey && e.shiftKey && (e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')) || (e.ctrlKey && (e.key==='U'||e.key==='u')) || (e.key==='F12')) e.preventDefault(); });
+    document.addEventListener('keydown', e => { 
+        if (e.key === 'Escape') { 
+            const root = document.getElementById('modal-root'); 
+            const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
+            if (root && root.style.display !== 'none' && !document.body.classList.contains('popup-mode')) closeModal();
+            else if (fsPlaylist && fsPlaylist.classList.contains('show')) {
+                fsPlaylist.classList.remove('show');
+                currentItem = null;
+                window.handlePlayerClose();
+            }
+        } 
+    });
+})();
+</script>
+<script>
+/*************************************************************************
+ * Website Analytics (Visitor & Watch Counter)
+ *************************************************************************/
+(function() {
+    const ANALYTICS_KEY = 'vidu_site_analytics';
+
+    function getTodaysDateString() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function getAnalyticsData() {
+        try {
+            const data = localStorage.getItem(ANALYTICS_KEY);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            console.error("Failed to read analytics data:", e);
+            return null;
+        }
+    }
+
+    function saveAnalyticsData(data) {
+        try {
+            localStorage.setItem(ANALYTICS_KEY, JSON.stringify(data));
+        } catch (e) {
+            console.error("Failed to save analytics data:", e);
+        }
+    }
+
+    function initAnalytics() {
+        let data = getAnalyticsData();
+        const todayStr = getTodaysDateString();
+
+        if (!data) {
+            data = {
+                totalVisits: Math.floor(Math.random() * (250 - 100 + 1)) + 100,
+                totalWatches: Math.floor(Math.random() * (600 - 300 + 1)) + 300,
+                lastVisitDate: todayStr,
+                dailyStats: {
+                    [todayStr]: { visits: 1, watches: 0 }
+                }
+            };
+        } else {
+            if (data.lastVisitDate !== todayStr) {
+                data.totalVisits += 1;
+                data.lastVisitDate = todayStr;
+                data.dailyStats[todayStr] = { visits: 1, watches: 0 };
+            }
+        }
+        saveAnalyticsData(data);
+    }
+
+    window.incrementWatchCount = function() {
+        let data = getAnalyticsData();
+        if (!data) return; 
+
+        const todayStr = getTodaysDateString();
+
+        if (!data.dailyStats[todayStr]) {
+            data.dailyStats[todayStr] = { visits: 1, watches: 0 };
+             if(data.lastVisitDate !== todayStr) {
+                data.totalVisits += 1;
+                data.lastVisitDate = todayStr;
+            }
+        }
+
+        data.totalWatches += 1;
+        data.dailyStats[todayStr].watches += 1;
+        saveAnalyticsData(data);
+        updateStatsUI();
+    };
+
+    function updateStatsUI() {
+        const data = getAnalyticsData();
+        if (!data) return;
+
+        const todayStr = getTodaysDateString();
+        const todayStats = data.dailyStats[todayStr] || { visits: 1, watches: 0 };
+
+        document.getElementById('stats-visits-today').textContent = todayStats.visits;
+        document.getElementById('stats-visits-total').textContent = data.totalVisits;
+        document.getElementById('stats-watched-today').textContent = todayStats.watches;
+        document.getElementById('stats-watched-total').textContent = data.totalWatches;
+    }
+    
+    window.updateStatsUI = updateStatsUI;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initAnalytics();
+        updateStatsUI();
+    });
 })();
 </script>
 
-<!-- original scripts & rest of file unchanged (player wiring, YT API loading, etc.) -->
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/browser.min.js"></script>
+<script src="assets/js/breakpoints.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/main.js"></script>
 
 <script>
-/*************************************************************************
- * (Remainder of the original page scripts)
- * I preserved everything except the parts shown above.
- *************************************************************************/
+document.addEventListener('DOMContentLoaded', function() {
+    const notificationBtn = document.getElementById('notification-btn'), notificationPanel = document.getElementById('notification-panel'), notificationCloseBtn = document.getElementById('notification-close-btn');
+    if (notificationBtn && notificationPanel && notificationCloseBtn) {
+        function showPanel() { 
+          if(typeof window.updateStatsUI === 'function') {
+            window.updateStatsUI();
+          }
+          notificationPanel.classList.add('show'); 
+          notificationPanel.setAttribute('aria-hidden', 'false'); 
+        }
+        function hidePanel() { notificationPanel.classList.remove('show'); notificationPanel.setAttribute('aria-hidden', 'true'); }
+        notificationBtn.addEventListener('click', (event) => { event.stopPropagation(); notificationPanel.classList.contains('show') ? hidePanel() : showPanel(); });
+        notificationCloseBtn.addEventListener('click', hidePanel);
+        document.addEventListener('click', (event) => { if (notificationPanel.classList.contains('show') && !notificationPanel.contains(event.target) && !notificationBtn.contains(event.target)) hidePanel(); });
+        document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && notificationPanel.classList.contains('show')) hidePanel(); });
+    }
+    const downloadBtn = document.getElementById('download-btn-header'), loadingPopup = document.getElementById('loading-popup-overlay'), loadingBar = document.getElementById('loading-bar-fill');
+    if (downloadBtn && loadingPopup && loadingBar) {
+        downloadBtn.addEventListener('click', () => {
+            const url = downloadBtn.dataset.link;
+            loadingBar.style.transition = 'none'; loadingBar.style.width = '0%';
+            loadingPopup.classList.add('show');
+            setTimeout(() => { loadingBar.style.transition = 'width 3s linear'; loadingBar.style.width = '100%'; }, 50);
+            setTimeout(() => {
+                window.open(url, '_blank', 'noopener,noreferrer');
+                loadingPopup.classList.remove('show');
+                setTimeout(() => { loadingBar.style.transition = 'none'; loadingBar.style.width = '0%'; }, 300);
+            }, 3000);
+        });
+    }
+});
 </script>
 </body>
 </html>
