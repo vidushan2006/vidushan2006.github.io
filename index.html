@@ -291,11 +291,7 @@
       padding: 10px 16px;
       border-radius: 12px;
       box-sizing:border-box;
-      /* FIX: Forcing the overlay onto its own GPU layer with `transform: translateZ(0)`.
-         This is a common technique to eliminate rendering glitches and "flickering"
-         during complex animations, such as this slide-in effect. It provides a stable
-         rendering context, preventing the temporary "squish" distortion you observed. */
-      transform: translateZ(0);
+      /* FIX 1: Removed transition on `left` and `right` to prevent animation glitch */
       transition: opacity .3s var(--ease), transform .3s var(--ease);
       will-change: opacity, transform;
       background: rgba(20, 22, 28, 0.8);
@@ -306,8 +302,7 @@
     }
     .vidu-overlay.hidden {
       opacity:0;
-      /* We combine the transforms to maintain the GPU layer promotion in the hidden state */
-      transform: translateY(100%) translateZ(0);
+      transform: translateY(100%);
       pointer-events:none;
     }
     
