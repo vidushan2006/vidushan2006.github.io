@@ -681,18 +681,9 @@
       position: absolute;
       bottom: calc(100% + 12px);
       right: 50%;
-      transform: translateX(50%);
-      width: 90px;
-      background: rgba(28, 30, 38, 0.8);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 20px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 8px;
+      width: auto;
       display: flex;
       flex-direction: column;
-      gap: 6px;
       opacity: 0;
       transform-origin: bottom center;
       transition: opacity .2s var(--ease), transform .2s var(--ease);
@@ -705,51 +696,47 @@
         transform: translateX(50%) translateY(0) scale(1);
         pointer-events: auto;
     }
-    .playback-menu-header {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--muted);
-      text-align: center;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      display: none; /* Header hidden for cleaner vertical look */
-    }
     .speed-selector {
       display: flex;
       flex-direction: column;
       position: relative;
-      background: rgba(10, 12, 18, 0.5);
-      border-radius: 16px;
-      padding: 4px;
-      gap: 4px;
+      background: rgba(28, 30, 38, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 5px;
+      gap: 3px;
     }
     .speed-option {
         background: transparent;
         border: none;
         color: var(--muted);
-        padding: 8px 12px;
+        padding: 7px 14px;
         cursor: pointer;
         font-weight: 700;
-        font-size: 13px;
+        font-size: 14px;
         width: 100%;
         text-align: center;
-        border-radius: 12px;
+        border-radius: 14px;
         transition: color .2s ease;
         z-index: 2;
         position: relative;
+        line-height: 1;
     }
     .speed-option.active {
       color: #fff;
     }
     .speed-selector-indicator {
       position: absolute;
-      top: 4px; /* Will be updated by JS */
-      left: 4px;
-      right: 4px;
+      top: 5px; /* Updated by JS */
+      left: 5px;
+      right: 5px;
       width: auto;
-      height: 0; /* Will be updated by JS */
+      height: 0; /* Updated by JS */
       background: rgba(57, 255, 20, 0.4);
-      border-radius: 12px;
+      border-radius: 14px;
       box-shadow: 0 0 12px rgba(57, 255, 20, 0.3);
       border: 1px solid rgba(57, 255, 20, 0.5);
       transition: top .25s var(--ease), height .25s var(--ease);
@@ -1199,7 +1186,7 @@
   <header id="header">
     <a href="index.html" class="logo" aria-label="VIDU home" title="VIDU home">
       <div class="logo-circle" aria-hidden="true">
-        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
+        <img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b_556f257b4a2e4f8fc8fa.jpg" alt="VIDU Logo" />
       </div>
     </a>
     <div class="header-right-controls">
@@ -1676,7 +1663,7 @@
   
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
-  function gearSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61-.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19-.15-.24-.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49 1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59-1.69.98l2.49 1c.23.09.49 0 .61.22l2-3.46c.12-.22-.07-.49-.12.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>`; }
+  function speedometerSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10 0 0,0 2,12C2,15.86 4.47,19.17 8,20.41V18.33C5.76,17.2 4,14.76 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12C20,14.76 18.24,17.2 16,18.33V20.41C19.53,19.17 22,15.86 22,12A10,10 0 0,0 12,2M13.5,13.5A1.5,1.5 0 0,1 12,12A1.5,1.5 0 0,1 13.5,10.5L17,7L18.5,8.5L13.5,13.5Z" /></svg>`; }
   function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
   function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
   function volumeHighSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;}
@@ -1748,16 +1735,15 @@
         </div>
         <div class="vidu-controls-right">
           <div class="vidu-playback-menu-container">
-            <button class="vidu-btn" id="vidu_playbackbtn" title="Playback speed" aria-label="Playback speed">${gearSVG()}</button>
+            <button class="vidu-btn" id="vidu_playbackbtn" title="Playback speed" aria-label="Playback speed">${speedometerSVG()}</button>
             <div class="vidu-playback-menu" id="vidu_playback_menu">
-                <div class="playback-menu-header">Playback Speed</div>
                 <div class="speed-selector">
                     <div class="speed-selector-indicator" id="vidu_speed_indicator"></div>
-                    <button class="speed-option" data-speed="1" class="active">1x</button>
-                    <button class="speed-option" data-speed="1.25">1.25x</button>
-                    <button class="speed-option" data-speed="1.5">1.5x</button>
-                    <button class="speed-option" data-speed="1.75">1.75x</button>
-                    <button class="speed-option" data-speed="2">2x</button>
+                    <button class="speed-option" data-speed="1" class="active">1</button>
+                    <button class="speed-option" data-speed="1.25">1.25</button>
+                    <button class="speed-option" data-speed="1.5">1.5</button>
+                    <button class="speed-option" data-speed="1.75">1.75</button>
+                    <button class="speed-option" data-speed="2">2</button>
                 </div>
             </div>
           </div>
