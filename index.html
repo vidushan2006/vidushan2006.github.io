@@ -248,10 +248,8 @@
 
     .vidu-player-inverted .vidu-overlay,
     .vidu-player-inverted .vidu-close-btn,
-    .vidu-player-inverted .vidu-popup-btn,
-    .vidu-player-inverted .vidu-invert-btn,
     .vidu-player-inverted .vidu-playlist-toggle-btn,
-    .vidu-player-inverted .vidu-speed-dial,
+    .vidu-player-inverted .vidu-settings-menu,
     .vidu-player-inverted .vidu-osd-feedback,
     .vidu-player-inverted .vidu-seek-feedback {
         filter: invert(1);
@@ -338,16 +336,16 @@
       background: rgba(20, 22, 28, 0.92);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      color: #e5e7eb;
+      color: #e5e7eb; /* Modern off-white */
       padding: 6px 12px;
       border-radius: 8px;
       font-size: 13px;
       font-weight: 700;
-      letter-spacing: -0.5px;
-      text-shadow: 0 0 8px rgba(229, 231, 235, 0.3);
+      letter-spacing: -0.5px; /* Compacted letters */
+      text-shadow: 0 0 8px rgba(229, 231, 235, 0.3); /* Subtle glow */
       white-space: nowrap;
       box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.15); /* Neutral border */
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
@@ -395,6 +393,7 @@
       transition: box-shadow 0.3s ease, background 0.3s ease;
     }
     
+    /* RE-ADDED: Restored the buffering glow effect for the progress bar track. */
     .seek-track.buffering::after {
         content: '';
         position: absolute;
@@ -524,48 +523,8 @@
       opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
     }
 
-    .vidu-popup-btn {
-      position:absolute; top:12px; left:12px; z-index:10002;
-      width:38px; height:38px; padding:6px; border-radius:50%;
-      background:rgba(20, 22, 28, 0.85);
-      border:1px solid rgba(255,255,255,0.08); color:#fff;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
-      box-shadow:0 8px 20px rgba(0,0,0,0.5);
-      transition: opacity .3s ease, transform .3s ease, background .3s ease;
-      will-change: opacity, transform;
-    }
-    .vidu-popup-btn svg { width: 20px; height: 20px; }
-    .vidu-popup-btn:hover {
-      transform: scale(1.1);
-      background: rgba(30, 32, 40, 0.9);
-    }
-    .vidu-popup-btn.hidden {
-      opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
-    }
-
-    .vidu-invert-btn {
-      position:absolute; top:60px; left:12px; z-index:10002;
-      width:38px; height:38px; padding:6px; border-radius:50%;
-      background:rgba(20, 22, 28, 0.85);
-      border:1px solid rgba(255,255,255,0.08); color:#fff;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
-      box-shadow:0 8px 20px rgba(0,0,0,0.5);
-      transition: opacity .3s ease, transform .3s ease, background .3s ease;
-      will-change: opacity, transform;
-    }
-    .vidu-invert-btn svg { width: 22px; height: 22px; }
-    .vidu-invert-btn:hover {
-      transform: scale(1.1);
-      background: rgba(30, 32, 40, 0.9);
-    }
-    .vidu-invert-btn.hidden {
-      opacity:0; transform: translateY(-8px) scale(0.95); pointer-events:none;
-    }
-
     .vidu-playlist-toggle-btn {
-      position:absolute; top:108px; left:12px; z-index:10002;
+      position:absolute; top:12px; left:12px; z-index:10002;
       width:38px; height:38px; padding:6px; border-radius:50%;
       background:rgba(20, 22, 28, 0.85);
       border:1px solid rgba(255,255,255,0.08); color:#fff;
@@ -608,25 +567,27 @@
     }
     
     @media (hover: none) and (pointer: coarse) {
-      .vidu-popup-btn,
       .vidu-playlist-toggle-btn {
         display: none !important;
       }
-      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-invert-btn,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) .vidu-volume-container,
       .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_prevbtn,
-      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_nextbtn,
-      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_playbackbtn {
+      .vidu-player-host:not(:-webkit-full-screen):not(:fullscreen) #vidu_nextbtn {
         display: none !important;
       }
     }
-
+    
+    /* MODIFIED: OSD Visibility Fix */
     .vidu-osd-feedback{
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:10003;
       padding:12px 18px; border-radius:12px; 
-      background:rgba(20, 22, 28, 0.9);
-      border:1px solid rgba(255,255,255,0.08);
-      font-weight:800; font-size:18px; color:var(--text); box-shadow:0 10px 25px rgba(0,0,0,0.5);
+      background:rgba(28, 30, 38, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border:1px solid rgba(255,255,255,0.12);
+      font-weight:800; font-size:18px; color:var(--text);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      box-shadow:0 10px 25px rgba(0,0,0,0.5);
       pointer-events:none; opacity:0;
       transition:opacity .28s ease; 
       display:flex; align-items:center; justify-content:center; gap: 10px;
@@ -640,23 +601,26 @@
     }
     .vidu-osd-feedback svg { width: 28px; height: 28px; fill: currentColor; }
     
+    /* MODIFIED: Seek OSD Visibility Fix */
     .vidu-seek-feedback {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
         z-index: 10003;
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(255, 255, 255, 0.95);
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700;
         display: flex;
         flex-direction: column;
         align-items: center;
         opacity: 0;
         pointer-events: none;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
     }
     .vidu-seek-feedback.left { left: 15%; }
     .vidu-seek-feedback.right { right: 15%; }
-
+    
     .vidu-seek-feedback.show { animation: vidu-seek-arrow-pop 0.8s var(--ease) forwards; }
     @keyframes vidu-seek-arrow-pop {
         0% { transform: translateY(-50%) scale(0.7); opacity: 0; }
@@ -667,51 +631,137 @@
     
     .vidu-seek-feedback svg {
         width: 48px; height: 48px;
-        fill: rgba(255, 255, 255, 0.8);
+        fill: rgba(255, 255, 255, 0.95);
     }
 
-    /* REDESIGNED: New Speed Dial Styles */
-    .vidu-speed-dial {
-      position: absolute;
-      bottom: 75px;
-      right: 52px;
-      z-index: 10001;
-      width: 40px;
-      height: 40px;
-      pointer-events: none;
-      transition: transform .3s var(--ease);
+    /* --- NEW: High-End Settings Menu --- */
+    .vidu-settings-container {
+      position: relative;
     }
-    .vidu-speed-dial-item {
+    .vidu-settings-menu {
       position: absolute;
-      top:0; left:0; right:0; bottom:0;
-      width: 36px; height: 36px;
-      background: rgba(30, 32, 38, 0.96);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 13px;
-      color: var(--text);
-      cursor: pointer;
+      bottom: calc(100% + 12px);
+      right: 0;
+      width: 280px;
+      background: rgba(28, 30, 38, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 6px;
       opacity: 0;
-      transform-origin: center center;
-      transform: scale(0.5);
-      transition: all .25s var(--ease);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      transform-origin: bottom right;
+      transition: opacity .2s var(--ease), transform .2s var(--ease);
+      pointer-events: none;
+      will-change: opacity, transform;
+      transform: translateY(10px) scale(0.95);
+      z-index: 10001; /* Above other controls */
     }
-    .vidu-speed-dial.open { pointer-events: auto; }
-    .vidu-speed-dial.open .vidu-speed-dial-item { opacity: 1; transform: scale(1); }
-    .vidu-speed-dial-item:hover { background: var(--glass-strong); transform: scale(1.15) !important; border-color: #fff; }
-    .vidu-speed-dial-item.active { background: #4a7453; color: #fff; font-weight: 800; border-color: var(--accent-2); }
-    
-    /* Staggered animation for the fan-out effect */
-    .vidu-speed-dial.open .vidu-speed-dial-item:nth-child(1) { transition-delay: 0.0s; transform: translateY(-50px) scale(1); }
-    .vidu-speed-dial.open .vidu-speed-dial-item:nth-child(2) { transition-delay: 0.05s; transform: translateY(-95px) scale(1); }
-    .vidu-speed-dial.open .vidu-speed-dial-item:nth-child(3) { transition-delay: 0.1s; transform: translateY(-140px) scale(1); }
-    .vidu-speed-dial.open .vidu-speed-dial-item:nth-child(4) { transition-delay: 0.15s; transform: translateY(-185px) scale(1); }
-    .vidu-speed-dial.open .vidu-speed-dial-item:nth-child(5) { transition-delay: 0.2s; transform: translateY(-230px) scale(1); }
+    .vidu-settings-menu.open {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    .settings-menu-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color .2s ease;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+    }
+    .settings-menu-item:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+    .settings-menu-item .item-icon {
+        margin-right: 12px;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+    }
+    .settings-menu-item .item-icon svg { width: 100%; height: 100%; }
+    .settings-menu-item .item-label {
+        flex-grow: 1;
+    }
+    .settings-menu-item .item-value {
+        color: var(--muted);
+        font-weight: 500;
+        margin-right: 8px;
+    }
+    .settings-menu-item .item-arrow-right {
+        color: var(--muted);
+        transform: scaleX(0.7);
+        width: 16px;
+        height: 16px;
+    }
+    .submenu-header {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 4px;
+    }
+    .submenu-header:hover .back-arrow {
+        color: #fff;
+    }
+    .submenu-header .back-arrow {
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+        color: var(--muted);
+        transition: color .2s ease;
+    }
+    .settings-speed-option {
+        padding-left: 42px; /* to align with label text */
+    }
+    .settings-speed-option.active {
+        color: var(--accent-2);
+        font-weight: 800;
+    }
+    .settings-speed-option.active::before {
+      content: '✓';
+      margin-left: -24px;
+      margin-right: 10px;
+      font-weight: 800;
+    }
+    /* Toggle switch for invert */
+    .settings-toggle-switch {
+        width: 40px;
+        height: 22px;
+        background: rgba(0,0,0,0.3);
+        border-radius: 22px;
+        position: relative;
+        cursor: pointer;
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: background-color .2s ease;
+    }
+    .settings-toggle-switch-knob {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 18px;
+        height: 18px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform .2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .settings-toggle-switch.active {
+        background: var(--accent-2);
+    }
+    .settings-toggle-switch.active .settings-toggle-switch-knob {
+        transform: translateX(18px);
+    }
     
     .vidu-playlist-panel {
       position: absolute;
@@ -1008,7 +1058,6 @@
     }
     
     body.popup-mode #vidu_fullbtn,
-    body.popup-mode .vidu-invert-btn,
     body.popup-mode .vidu-volume-container,
     body.popup-mode #vidu_prevbtn,
     body.popup-mode #vidu_nextbtn {
@@ -1027,7 +1076,7 @@
     }
     body.popup-mode .vidu-time-container { display: none; }
     body.popup-mode .vidu-seek-container { padding: 4px 0; }
-    body.popup-mode .vidu-speed-dial { bottom: 50px; }
+    body.popup-mode .vidu-settings-menu { bottom: 50px; }
     body.popup-mode .vidu-volume-panel { display: none !important; }
     
     @media (hover: hover) and (min-width: 1024px) {
@@ -1088,14 +1137,16 @@
         }
       }
       
+      /* MODIFIED: Glowing style for the filled progress bar when paused. */
       .vidu-player-host:not(.is-playing) .seek-progress {
         background: linear-gradient(270deg, #ff6b6b, #fcc419, #51cf66, #339af0, #845ef7, #ff6b6b);
         background-size: 400% 400%;
-        animation: rainbow-glow-animation 5s linear infinite;
+        animation: rainbow-glow-animation 5s linear infinite; /* Matches pause button speed */
       }
       
+      /* MODIFIED: Glow style for the play button when the video is paused. */
       .vidu-player-host:not(.is-playing) #vidu_playbtn::before {
-        animation: rotate-glow 5s linear infinite;
+        animation: rotate-glow 5s linear infinite; /* Slower rotation */
         opacity: 0.8;
       }
 
@@ -1371,7 +1422,7 @@
     touch_seekStartTime: 0,
     touch_startVolume: 0,
     popupCheckInterval: null,
-    invertBtnEl: null,
+    currentPlaybackRate: 1,
   };
 
   function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","`":"&#96;"}[ch])); }
@@ -1631,6 +1682,7 @@
   
   function playSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>`; }
   function pauseSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }
+  function settingsSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>`; }
   function fullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>`; }
   function exitFullscreenSVG(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>`; }
   function volumeHighSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;}
@@ -1641,8 +1693,11 @@
   function ffwdSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>`; }
   function skipPrevSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>`; }
   function skipNextSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>`; }
-  function speedSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor" style="transform: rotate(90deg);"><path d="M10 8v8l6-4-6-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>`;}
-  function speedometerSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>`;}
+  function speedSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 8v8l6-4-6-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>`;}
+  function popupSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg>`; }
+  function invertSVG() { return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-1.9 1.26 6 6 0 0 1-8.05-5.15A5.5 5.5 0 0 1 13.36 4.1a9 9 0 0 0-1.36-1.1zM12 19a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/></svg>`; }
+  function backArrowSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path></svg>`; }
+  function rightArrowSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"></path></svg>`; }
 
   function createHostElements(){
     let wrap = document.getElementById('player-wrap');
@@ -1702,44 +1757,18 @@
             <button class="vidu-btn" id="vidu_nextbtn" aria-label="Next (.)">${skipNextSVG()}<span id="vidu_next_tooltip" class="vidu-custom-tooltip"></span></button>
         </div>
         <div class="vidu-controls-right">
-          <button class="vidu-btn" id="vidu_playbackbtn" title="Playback speed" aria-label="Playback speed">${speedometerSVG()}</button>
-          <button class="vidu-btn" id="vidu_fullbtn" title="Fullscreen" aria-label="Fullscreen">${fullscreenSVG()}</button>
+            <div class="vidu-settings-container">
+                <button class="vidu-btn" id="vidu_settings_btn" title="Settings" aria-label="Settings">${settingsSVG()}</button>
+                <div class="vidu-settings-menu" id="vidu_settings_menu"></div>
+            </div>
+            <button class="vidu-btn" id="vidu_fullbtn" title="Fullscreen" aria-label="Fullscreen">${fullscreenSVG()}</button>
         </div>
       </div>`;
     host.appendChild(overlay);
     
-    // ADDED: New Speed Dial HTML
-    const speedDial = document.createElement('div');
-    speedDial.className = 'vidu-speed-dial';
-    speedDial.id = 'vidu_speed_dial';
-    speedDial.innerHTML = `
-        <div class="vidu-speed-dial-item" data-speed="2">2x</div>
-        <div class="vidu-speed-dial-item" data-speed="1.75">1.75</div>
-        <div class="vidu-speed-dial-item" data-speed="1.5">1.5</div>
-        <div class="vidu-speed-dial-item" data-speed="1.25">1.25</div>
-        <div class="vidu-speed-dial-item active" data-speed="1">1x</div>
-    `;
-    host.appendChild(speedDial);
-
     const closeBtn = document.createElement('button'); closeBtn.className = 'vidu-close-btn'; closeBtn.id = 'vidu_closebtn'; closeBtn.title = 'Close'; closeBtn.type = 'button'; closeBtn.innerHTML = '✕';
     closeBtn.addEventListener('click', ()=> { try{ if(typeof window.closeModal === 'function') window.closeModal(); else { const root = document.getElementById('modal-root'); if(root) root.style.display='none'; if(window.destroyViduPlayer) window.destroyViduPlayer(); } }catch(e){} });
     host.appendChild(closeBtn);
-    
-    const popupBtn = document.createElement('button');
-    popupBtn.className = 'vidu-popup-btn';
-    popupBtn.id = 'vidu_popup_btn';
-    popupBtn.title = 'Popup Player (P)';
-    popupBtn.type = 'button';
-    popupBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg>`;
-    host.appendChild(popupBtn);
-    
-    const invertBtn = document.createElement('button');
-    invertBtn.className = 'vidu-invert-btn';
-    invertBtn.id = 'vidu_invert_btn';
-    invertBtn.title = 'Invert Colors (N)';
-    invertBtn.type = 'button';
-    invertBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-1.9 1.26 6 6 0 0 1-8.05-5.15A5.5 5.5 0 0 1 13.36 4.1a9 9 0 0 0-1.36-1.1zM12 19a7 7 0 1 1 7-7 7 7 0 0 1-7 7z"/></svg>`;
-    host.appendChild(invertBtn);
 
     const playlistToggleBtn = document.createElement('button');
     playlistToggleBtn.className = 'vidu-playlist-toggle-btn';
@@ -1757,13 +1786,13 @@
     host.appendChild(seekFeedbackRight);
     
     wrap.appendChild(host);
-    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, speedDial, popupBtn, invertBtn };
+    return { host, mount, overlay, ctrlBg, closeBtn, loadingDiv };
   }
 
   function disableIframeClicks(host){ try{ const ifr = host.querySelector('iframe'); if(ifr){ ifr.style.pointerEvents = 'none'; ifr.setAttribute('allow','autoplay; encrypted-media; fullscreen'); ifr.setAttribute('allowfullscreen',''); ifr.setAttribute('tabindex','-1'); } }catch(e){} }
 
   function createPlayer(videoId, startTime = 0){
-    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv, speedDial, popupBtn, invertBtn } = createHostElements();
+    const { host, mount, overlay, ctrlBg, closeBtn, loadingDiv } = createHostElements();
     state.host = host; state.mount = mount;
     state.videoId = videoId;
     const playBtn = overlay.querySelector('#vidu_playbtn');
@@ -1771,7 +1800,6 @@
     const durEl = overlay.querySelector('#vidu_dur');
     const seekEl = overlay.querySelector('#vidu_seek');
     const fullBtn = overlay.querySelector('#vidu_fullbtn');
-    const playbackBtn = overlay.querySelector('#vidu_playbackbtn');
     const osdFeedbackEl = host.querySelector('#vidu_osd_feedback');
     const seekProgressEl = overlay.querySelector('#vidu_seek_progress');
     const seekThumbEl = overlay.querySelector('#vidu_seek_thumb');
@@ -1784,13 +1812,14 @@
     const volumeSlider = overlay.querySelector('#vidu_volume_slider');
     const seekFeedbackLeft = host.querySelector('#vidu_seek_feedback_left');
     const seekFeedbackRight = host.querySelector('#vidu_seek_feedback_right');
-    const popupBtnEl = host.querySelector('#vidu_popup_btn');
-    const invertBtnEl = host.querySelector('#vidu_invert_btn');
     const playlistToggleBtnEl = host.querySelector('#vidu_playlist_toggle_btn');
     const prevBtn = host.querySelector('#vidu_prevbtn');
     const nextBtn = host.querySelector('#vidu_nextbtn');
     
-    state.invertBtnEl = invertBtnEl;
+    // NEW Settings Menu elements
+    const settingsBtn = overlay.querySelector('#vidu_settings_btn');
+    const settingsMenu = overlay.querySelector('#vidu_settings_menu');
+
     state.seekTrackEl = seekTrackEl;
 
     if (playlistToggleBtnEl) {
@@ -1813,18 +1842,116 @@
         });
     }
 
-    // UPDATED: Event listeners for the new speed dial
-    playbackBtn.addEventListener('click', (e) => { e.stopPropagation(); speedDial.classList.toggle('open'); volumePanel.classList.remove('open'); });
-    speedDial.addEventListener('click', (e) => {
-        const target = e.target.closest('.vidu-speed-dial-item');
-        if (target && target.dataset.speed) {
-            const speed = parseFloat(target.dataset.speed);
-            setPlaybackRate(speed);
-            speedDial.classList.remove('open');
-        }
-    });
+    // --- REWORKED: Settings menu logic ---
+    const speedRates = [
+        { rate: 0.25, label: '0.25x' }, { rate: 0.5, label: '0.5x' }, 
+        { rate: 0.75, label: '0.75x' }, { rate: 1, label: 'Normal' }, 
+        { rate: 1.25, label: '1.25x' }, { rate: 1.5, label: '1.5x' }, 
+        { rate: 1.75, label: '1.75x' }, { rate: 2, label: '2x' }
+    ];
+
+    function renderMainMenu() {
+        const speedLabel = speedRates.find(s => s.rate === state.currentPlaybackRate)?.label || `${state.currentPlaybackRate}x`;
+        const isInverted = state.host.classList.contains('vidu-player-inverted');
+        
+        settingsMenu.innerHTML = `
+            <div class="settings-menu-item" data-action="speed">
+                <span class="item-icon">${speedSVG()}</span>
+                <span class="item-label">Playback Speed</span>
+                <span class="item-value">${speedLabel}</span>
+                <span class="item-arrow-right">${rightArrowSVG()}</span>
+            </div>
+            <div class="settings-menu-item" data-action="popup">
+                <span class="item-icon">${popupSVG()}</span>
+                <span class="item-label">Popup Player</span>
+            </div>
+            <div class="settings-menu-item" data-action="invert">
+                <span class="item-icon">${invertSVG()}</span>
+                <span class="item-label">Invert Colors</span>
+                <div class="settings-toggle-switch ${isInverted ? 'active' : ''}" id="invert-toggle">
+                    <div class="settings-toggle-switch-knob"></div>
+                </div>
+            </div>
+        `;
+
+        settingsMenu.querySelector('[data-action="speed"]').addEventListener('click', renderSpeedMenu);
+        settingsMenu.querySelector('[data-action="popup"]').addEventListener('click', openPopupPlayer);
+        settingsMenu.querySelector('[data-action="invert"]').addEventListener('click', (e) => {
+            // Allow clicking the entire row to toggle
+            if (e.target.closest('.settings-menu-item')) {
+                toggleInvertColors();
+            }
+        });
+    }
+
+    function renderSpeedMenu() {
+        let speedOptionsHTML = speedRates.map(s => `
+            <div class="settings-menu-item settings-speed-option ${state.currentPlaybackRate === s.rate ? 'active' : ''}" data-speed="${s.rate}">
+                ${s.label}
+            </div>
+        `).join('');
+
+        settingsMenu.innerHTML = `
+            <div class="submenu-header" data-action="back">
+                <span class="back-arrow">${backArrowSVG()}</span>
+                <span>Playback Speed</span>
+            </div>
+            ${speedOptionsHTML}
+        `;
+        
+        settingsMenu.querySelector('[data-action="back"]').addEventListener('click', renderMainMenu);
+        settingsMenu.querySelectorAll('.settings-speed-option').forEach(el => {
+            el.addEventListener('click', (e) => {
+                const newSpeed = parseFloat(e.currentTarget.dataset.speed);
+                setPlaybackRate(newSpeed);
+                renderMainMenu(); // Go back to main menu after selection
+                setTimeout(() => settingsMenu.classList.remove('open'), 200);
+            });
+        });
+    }
     
-    volumeBtn.addEventListener('click', (e) => { e.stopPropagation(); volumePanel.classList.toggle('open'); speedDial.classList.remove('open'); });
+    function toggleInvertColors() {
+        if (state.host) {
+            state.host.classList.toggle('vidu-player-inverted');
+            renderMainMenu(); // Re-render to update the toggle switch state
+        }
+        resetInactivityTimer(false);
+    }
+    
+    function openPopupPlayer() {
+        if (!state.player || !state.videoId) return;
+        const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
+        const title = document.getElementById('modal-title') ? document.getElementById('modal-title').textContent : 'VIDU Video';
+        const url = `${window.location.origin}${window.location.pathname}?popup=true&videoId=${state.videoId}&time=${currentTime}&title=${encodeURIComponent(title)}`;
+        const popWidth = 400; const popHeight = 225;
+        const popTop = window.screen.height - popHeight - 40; const popLeft = window.screen.width - popWidth - 40;
+        const features = `width=${popWidth},height=${popHeight},top=${popTop},left=${popLeft},resizable=yes`;
+        const popupWindow = window.open(url, 'VIDU_Popup_Player', features);
+        if (popupWindow) {
+            closeModal();
+            const loadingOverlay = document.getElementById('popup-player-loading-overlay');
+            if (loadingOverlay) loadingOverlay.classList.add('show');
+            setTimeout(() => {
+                if (loadingOverlay) loadingOverlay.classList.remove('show');
+                const noticeOverlay = document.getElementById('popup-notice-overlay');
+                if (noticeOverlay) noticeOverlay.classList.add('show');
+                setTimeout(() => { if (noticeOverlay) noticeOverlay.classList.remove('show'); }, 2500);
+            }, 1500);
+        } else {
+            console.warn('Popup blocked by browser or an issue occurred.');
+        }
+    }
+
+    settingsBtn.addEventListener('click', (e) => { 
+        e.stopPropagation(); 
+        const isOpen = settingsMenu.classList.toggle('open');
+        if (isOpen) {
+            renderMainMenu();
+        }
+        volumePanel.classList.remove('open');
+    });
+
+    volumeBtn.addEventListener('click', (e) => { e.stopPropagation(); volumePanel.classList.toggle('open'); settingsMenu.classList.remove('open'); });
     volumeSlider.addEventListener('input', () => {
         const newVolume = parseFloat(volumeSlider.value);
         setVolume(newVolume, false, true);
@@ -1835,8 +1962,8 @@
     });
 
     state.docClickHandler = (e) => {
-      if (speedDial.classList.contains('open') && !speedDial.contains(e.target) && !playbackBtn.contains(e.target)) {
-        speedDial.classList.remove('open');
+      if (settingsMenu.classList.contains('open') && !settingsMenu.contains(e.target) && !settingsBtn.contains(e.target)) {
+        settingsMenu.classList.remove('open');
       }
       if (volumePanel.classList.contains('open') && !volumePanel.contains(e.target) && !volumeBtn.contains(e.target)) {
         volumePanel.classList.remove('open');
@@ -1888,50 +2015,8 @@
     document.addEventListener('mozfullscreenchange', state.fsListener);
     document.addEventListener('MSFullscreenChange', state.fsListener);
 
-    if (popupBtnEl) {
-        popupBtnEl.addEventListener('click', () => {
-            if (!state.player || !state.videoId) return;
-
-            const currentTime = state.player.getCurrentTime ? state.player.getCurrentTime() : 0;
-            const title = document.getElementById('modal-title') ? document.getElementById('modal-title').textContent : 'VIDU Video';
-            
-            const url = `${window.location.origin}${window.location.pathname}?popup=true&videoId=${state.videoId}&time=${currentTime}&title=${encodeURIComponent(title)}`;
-            
-            const popWidth = 400; const popHeight = 225;
-            const popTop = window.screen.height - popHeight - 40; const popLeft = window.screen.width - popWidth - 40;
-            const features = `width=${popWidth},height=${popHeight},top=${popTop},left=${popLeft},resizable=yes`;
-            
-            const popupWindow = window.open(url, 'VIDU_Popup_Player', features);
-
-            if (popupWindow) {
-                closeModal();
-                const loadingOverlay = document.getElementById('popup-player-loading-overlay');
-                if (loadingOverlay) loadingOverlay.classList.add('show');
-                setTimeout(() => {
-                    if (loadingOverlay) loadingOverlay.classList.remove('show');
-                    const noticeOverlay = document.getElementById('popup-notice-overlay');
-                    if (noticeOverlay) noticeOverlay.classList.add('show');
-                    setTimeout(() => { if (noticeOverlay) noticeOverlay.classList.remove('show'); }, 2500);
-                }, 1500);
-            } else {
-                console.warn('Popup blocked by browser or an issue occurred.');
-            }
-        });
-    }
-
-    if (invertBtnEl) {
-        invertBtnEl.addEventListener('click', () => {
-            if (state.host) {
-                state.host.classList.toggle('vidu-player-inverted');
-            }
-            resetInactivityTimer(false);
-        });
-    }
-
     if (document.body.classList.contains('popup-mode')) {
         if(closeBtn) closeBtn.style.display = 'none';
-        if(popupBtnEl) popupBtnEl.style.display = 'none';
-        if(invertBtnEl) invertBtnEl.style.display = 'none';
         if(playlistToggleBtnEl) playlistToggleBtnEl.style.display = 'none';
         if(prevBtn) prevBtn.style.display = 'none';
         if(nextBtn) nextBtn.style.display = 'none';
@@ -1942,17 +2027,13 @@
         if(hidden){ 
             overlay.classList.add('hidden'); ctrlBg.classList.add('hidden'); 
             if(closeBtn) closeBtn.classList.add('hidden'); 
-            if(popupBtnEl) popupBtnEl.classList.add('hidden');
-            if(state.invertBtnEl) state.invertBtnEl.classList.add('hidden');
             if(playlistBtn) playlistBtn.classList.add('hidden');
-            if(speedDial) speedDial.classList.remove('open');
+            if(settingsMenu) settingsMenu.classList.remove('open');
             if(volumePanel) volumePanel.classList.remove('open');
             if(state.host) state.host.style.cursor = 'none';
         } else { 
             overlay.classList.remove('hidden'); ctrlBg.classList.remove('hidden'); 
             if(closeBtn && !document.body.classList.contains('popup-mode')) closeBtn.classList.remove('hidden'); 
-            if(popupBtnEl && !document.body.classList.contains('popup-mode')) popupBtnEl.classList.remove('hidden'); 
-            if(state.invertBtnEl && !document.body.classList.contains('popup-mode')) state.invertBtnEl.classList.remove('hidden'); 
             if(playlistBtn && !document.body.classList.contains('popup-mode')) playlistBtn.classList.remove('hidden');
             if(state.host) state.host.style.cursor = '';
         } 
@@ -1989,12 +2070,10 @@
     
     function setPlaybackRate(speed) {
         if (state.player && typeof state.player.setPlaybackRate === 'function') {
+            state.currentPlaybackRate = speed;
             state.player.setPlaybackRate(speed);
-            speedDial.querySelectorAll('.vidu-speed-dial-item').forEach(b => b.classList.remove('active'));
-            const activeButton = speedDial.querySelector(`div[data-speed="${speed}"]`);
-            if (activeButton) activeButton.classList.add('active');
-            const speedText = speed === 2 ? '2x' : `${speed}x`;
-            showOSDFeedback({ icon: speedometerSVG(), text: speedText });
+            const speedLabel = speedRates.find(s => s.rate === speed)?.label || `${speed}x`;
+            showOSDFeedback({ icon: speedSVG(), text: speedLabel });
         }
     }
 
@@ -2023,13 +2102,11 @@
             break;
         case 'n':
           e.preventDefault();
-          if (state.host) { state.host.classList.toggle('vidu-player-inverted'); }
-          resetInactivityTimer(false);
+          toggleInvertColors();
           break;
         case 'p':
           e.preventDefault();
-          const popupBtn = document.getElementById('vidu_popup_btn');
-          if (popupBtn) { popupBtn.click(); }
+          openPopupPlayer();
           resetInactivityTimer(false);
           break;
         case 'l':
@@ -2049,37 +2126,31 @@
           const downAmount = e.ctrlKey ? 1 : 5;
           setVolume((state.player.getVolume() || 0) - downAmount, true, false);
           break;
-        case 'q':
-        case 'e':
-        case 'w':
-          e.preventDefault();
-          const buttons = Array.from(speedDial.querySelectorAll('.vidu-speed-dial-item[data-speed]'));
-          const speeds = buttons.map(b => parseFloat(b.dataset.speed)).sort((a, b) => a - b);
-          
-          if (key === 'w') { setPlaybackRate(1); resetInactivityTimer(false); break; }
-          
-          const currentRate = state.player.getPlaybackRate();
-          let currentIndex = speeds.findIndex(s => s === currentRate);
-          if (currentIndex === -1) currentIndex = speeds.findIndex(s => s === 1);
-
-          let nextIndex;
-          if (key === 'e') {
-             nextIndex = (currentIndex + 1) % speeds.length;
-          } else {
-             nextIndex = (currentIndex - 1 + speeds.length) % speeds.length;
-          }
-          setPlaybackRate(speeds[nextIndex]);
-          resetInactivityTimer(false);
-          break;
-        case ',':
-            e.preventDefault();
-            playNextOrPreviousVideo(-1);
-            resetInactivityTimer();
-            break;
+        case '>':
         case '.':
-            e.preventDefault();
-            playNextOrPreviousVideo(1);
-            resetInactivityTimer();
+            if (e.shiftKey || key === '.') {
+                e.preventDefault();
+                const currentIndex = speedRates.findIndex(s => s.rate === state.currentPlaybackRate);
+                const nextIndex = Math.min(speedRates.length - 1, currentIndex + 1);
+                setPlaybackRate(speedRates[nextIndex].rate);
+                resetInactivityTimer(false);
+            } else {
+                 playNextOrPreviousVideo(1);
+                 resetInactivityTimer();
+            }
+            break;
+        case '<':
+        case ',':
+            if (e.shiftKey || key === ',') {
+                e.preventDefault();
+                const currentIndex = speedRates.findIndex(s => s.rate === state.currentPlaybackRate);
+                const prevIndex = Math.max(0, currentIndex - 1);
+                setPlaybackRate(speedRates[prevIndex].rate);
+                resetInactivityTimer(false);
+            } else {
+                 playNextOrPreviousVideo(-1);
+                 resetInactivityTimer();
+            }
             break;
       }
     };
@@ -2157,7 +2228,7 @@
     
         const hideInactiveControls = () => {
             try {
-                const isMenuOpen = speedDial.classList.contains('open') || volumePanel.classList.contains('open');
+                const isMenuOpen = settingsMenu.classList.contains('open') || volumePanel.classList.contains('open');
                 const isDragging = seekEl._drag;
     
                 if (isMenuOpen || isDragging) {
@@ -2167,8 +2238,6 @@
     
                 // Always hide top shortcut controls
                 if(closeBtn) closeBtn.classList.add('hidden');
-                if(popupBtnEl) popupBtnEl.classList.add('hidden');
-                if(state.invertBtnEl) state.invertBtnEl.classList.add('hidden');
                 if(playlistToggleBtnEl) playlistToggleBtnEl.classList.add('hidden');
     
                 let isBuffering = false;
@@ -2186,7 +2255,7 @@
                     state.inactivityTimer = setTimeout(hideInactiveControls, 3000);
                 }
     
-                if(speedDial) speedDial.classList.remove('open');
+                if(settingsMenu) settingsMenu.classList.remove('open');
                 if(volumePanel) volumePanel.classList.remove('open');
     
             } catch(e) {
@@ -2385,6 +2454,11 @@
             onReady: function(evt){
               disableIframeClicks(host); showLoading();
               setVolume(state.lastVolume, false);
+              
+              // Set initial active speed
+              const initialSpeed = state.player.getPlaybackRate();
+              state.currentPlaybackRate = initialSpeed;
+
               updatePlaylistHighlight();
               updateNavTooltips();
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
@@ -2462,8 +2536,6 @@
       if(state.osdTimer){ clearTimeout(state.osdTimer); state.osdTimer = null; }
       if(state.popupCheckInterval) { clearInterval(state.popupCheckInterval); state.popupCheckInterval = null; }
       
-      state.invertBtnEl = null;
-
       if(state.host){ 
           state.host.classList.remove('is-playing');
           try{ 
