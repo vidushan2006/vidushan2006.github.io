@@ -3295,5 +3295,69 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<!-- =================== NEW: DEVTOOLS BLOCKER SCRIPT =================== -->
+<script>
+(function() {
+    'use strict';
+
+    // This function is the core of the detection logic.
+    const detectDevTools = () => {
+        // We set a threshold for how much the window dimensions can differ.
+        // If the developer tools are docked to the side or bottom, the inner dimensions
+        // of the window will be smaller than the outer dimensions.
+        const threshold = 160;
+
+        const widthDifference = window.outerWidth - window.innerWidth > threshold;
+        const heightDifference = window.outerHeight - window.innerHeight > threshold;
+
+        // If either dimension has a significant difference, it's a strong sign.
+        if (widthDifference || heightDifference) {
+            return true;
+        }
+        
+        // This is a more advanced trick. When developer tools are open, the browser
+        // will pause execution on the `debugger` line. We can measure the time it
+        // takes to execute the code immediately before and after this line.
+        // A long delay indicates that the tools are open and paused execution.
+        const startTime = new Date().getTime();
+        // The 'debugger' keyword is a command that pauses code execution if dev tools are open.
+        // If they are not open, this line is ignored by the browser.
+        debugger; 
+        const endTime = new Date().getTime();
+
+        // If the time elapsed is more than 100 milliseconds, it's very likely
+        // that the developer tools paused the script.
+        if (endTime - startTime > 100) {
+            return true;
+        }
+
+        // If none of the checks above were triggered, we assume the tools are closed.
+        return false;
+    };
+
+    // This function is what we'll run repeatedly to check for the dev tools.
+    const checkAndReload = () => {
+        if (detectDevTools()) {
+            // If the dev tools are detected, we force the page to reload.
+            // This prevents the user from inspecting the page content or network requests.
+            window.location.reload();
+        }
+    };
+
+    // We use `setInterval` to run our check function repeatedly.
+    // Here, it runs every 1000 milliseconds (1 second). This ensures that even if
+    // a user opens the tools after the page loads, they will be detected quickly.
+    setInterval(checkAndReload, 1000);
+
+    // Additionally, we can add an event listener for the 'resize' event on the window.
+    // Docking or undocking the developer tools often triggers a resize event,
+    // which allows for an even faster detection in some cases.
+    window.addEventListener('resize', checkAndReload);
+
+})();
+</script>
+<!-- ====================================================================== -->
+
 </body>
 </html>
