@@ -57,8 +57,11 @@
     }
 
     body{
-      background: url('assets/images/background 1.png') no-repeat center center fixed;
+      /* The background-image is now set dynamically by a script at the end of the body */
       background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
       background-color: #04060c; /* Fallback color */
       font-family:"Inter","Helvetica Neue",Arial,sans-serif;
       color:var(--text);
@@ -100,7 +103,7 @@
       margin: 0 auto;
       box-shadow: 0 8px 30px rgba(2, 4, 12, 0.5);
       background: rgba(30, 33, 42, 0.4);
-      backdrop-filter: blur(16px);
+      backdrop-filter: blur(7px);
       -webkit-backdrop-filter: blur(16px);
     }
 
@@ -849,15 +852,26 @@
     .notification-content { padding: 18px; font-size: 14px; max-height: 400px; overflow-y: auto; }
     .notification-content p { margin: 0; line-height: 1.6; }
 
-    .notification-stats { display: flex; align-items: center; gap: 16px; padding: 12px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); background: rgba(255, 255, 255, 0.02); }
-    .stats-icon svg { width: 24px; height: 24px; fill: var(--accent-2); }
-    .stats-group { text-align: center; }
-    .stats-label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-    .stats-value { font-size: 16px; font-weight: 800; color: var(--text); }
-    .stats-watched-values { display: flex; align-items: baseline; justify-content: center; }
-    .stats-watched-values .stats-value-separator { color: var(--muted); font-size: 12px; margin: 0 4px; font-weight: 600; }
-    .stats-watched-values .stats-value-today { color: var(--accent-2); }
-    .stats-watched-values .stats-value-total { font-size: 13px; color: var(--muted);}
+    /* MODIFIED: Styles for the new personalized watch counter */
+    .notification-stats { 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; /* Center the content */
+      gap: 8px; /* Add a small gap between the icon and the number */
+      padding: 12px 18px; 
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07); 
+      background: rgba(255, 255, 255, 0.02); 
+    }
+    .stats-icon svg { 
+      width: 28px; 
+      height: 28px; 
+      fill: var(--accent-2); 
+    }
+    .stats-value { 
+      font-size: 20px; 
+      font-weight: 800; 
+      color: var(--text); 
+    }
 
     .loading-popup-overlay { position: fixed; inset: 0; background: rgba(4, 6, 12, 0.7); z-index: 20000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease); will-change: opacity; }
     .loading-popup-overlay.show { opacity: 1; pointer-events: auto; }
@@ -1301,26 +1315,12 @@
         <h3 id="notification-title">🔔 Notifications 🔔</h3>
         <button id="notification-close-btn" class="notification-close-btn" aria-label="Close notifications">&times;</button>
     </div>
+    <!-- MODIFIED: This entire block is replaced with the new personalized watch counter -->
     <div id="notification-stats" class="notification-stats">
       <div class="stats-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
       </div>
-      <div class="stats-group">
-        <span class="stats-label">Today</span>
-        <span id="stats-visits-today" class="stats-value">0</span>
-      </div>
-       <div class="stats-group">
-        <span class="stats-label">Total</span>
-        <span id="stats-visits-total" class="stats-value">0</span>
-      </div>
-      <div class="stats-group">
-        <span class="stats-label">Watched</span>
-        <div class="stats-watched-values">
-            <span id="stats-watched-today" class="stats-value stats-value-today">0</span>
-            <span class="stats-value-separator">/</span>
-            <span id="stats-watched-total" class="stats-value stats-value-total">0</span>
-        </div>
-      </div>
+      <span id="user-watch-count" class="stats-value">0</span>
     </div>
   <div class="notification-content">
   <p style="margin:0 0 12px 0; font-weight:800; font-size:18px; color: #fff;">
@@ -1755,7 +1755,7 @@ function escapeHtml(s){ return (s||'').replace(/[&<>"'`]/g, ch => ({'&':'&amp;',
   function volumeMuteSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`; }
   function rewindSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>`; }
   function ffwdSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>`; }
-  function skipPrevSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>`; }
+  function skipPrevSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 l8.5 6V6z"/></svg>`; }
   function skipNextSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>`; }
   function speedSVG() { return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 8v8l6-4-6-4zm9-5H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>`;}
 
@@ -3088,98 +3088,61 @@ function updateSpeedIndicator(activeButton) {
 </script>
 <script>
 /*************************************************************************
- * Website Analytics (Visitor & Watch Counter)
+ * REWRITTEN: Personalized User Watch Counter
  *************************************************************************/
 (function() {
-    const ANALYTICS_KEY = 'vidu_site_analytics';
+    // A unique key to store the user's personal watch count in their browser's local storage.
+    const USER_WATCH_COUNT_KEY = 'vidu_user_watch_count';
 
-    function getTodaysDateString() {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
-    function getAnalyticsData() {
+    // Safely retrieves the current watch count from localStorage.
+    // It returns a number, defaulting to 0 if the value isn't found or is invalid.
+    function getWatchCount() {
         try {
-            const data = localStorage.getItem(ANALYTICS_KEY);
-            return data ? JSON.parse(data) : null;
+            const count = localStorage.getItem(USER_WATCH_COUNT_KEY);
+            // We use parseInt to make sure we're working with a number, not a string.
+            // The `|| 0` handles cases where the stored value is null or not a number.
+            return parseInt(count, 10) || 0;
         } catch (e) {
-            console.error("Failed to read analytics data:", e);
-            return null;
+            console.error("Failed to read user watch count from localStorage:", e);
+            return 0; // Default to 0 if any error occurs.
         }
     }
 
-    function saveAnalyticsData(data) {
+    // Safely saves the new watch count to localStorage.
+    function saveWatchCount(count) {
         try {
-            localStorage.setItem(ANALYTICS_KEY, JSON.stringify(data));
+            localStorage.setItem(USER_WATCH_COUNT_KEY, count);
         } catch (e) {
-            console.error("Failed to save analytics data:", e);
+            console.error("Failed to save user watch count to localStorage:", e);
         }
-    }
-
-    function initAnalytics() {
-        let data = getAnalyticsData();
-        const todayStr = getTodaysDateString();
-
-        if (!data) {
-            data = {
-                totalVisits: Math.floor(Math.random() * (250 - 100 + 1)) + 100,
-                totalWatches: Math.floor(Math.random() * (600 - 300 + 1)) + 300,
-                lastVisitDate: todayStr,
-                dailyStats: {
-                    [todayStr]: { visits: 1, watches: 0 }
-                }
-            };
-        } else {
-            if (data.lastVisitDate !== todayStr) {
-                data.totalVisits += 1;
-                data.lastVisitDate = todayStr;
-                data.dailyStats[todayStr] = { visits: 1, watches: 0 };
-            }
-        }
-        saveAnalyticsData(data);
-    }
-
-    window.incrementWatchCount = function() {
-        let data = getAnalyticsData();
-        if (!data) return; 
-
-        const todayStr = getTodaysDateString();
-
-        if (!data.dailyStats[todayStr]) {
-            data.dailyStats[todayStr] = { visits: 1, watches: 0 };
-             if(data.lastVisitDate !== todayStr) {
-                data.totalVisits += 1;
-                data.lastVisitDate = todayStr;
-            }
-        }
-
-        data.totalWatches += 1;
-        data.dailyStats[todayStr].watches += 1;
-        saveAnalyticsData(data);
-        updateStatsUI();
-    };
-
-    function updateStatsUI() {
-        const data = getAnalyticsData();
-        if (!data) return;
-
-        const todayStr = getTodaysDateString();
-        const todayStats = data.dailyStats[todayStr] || { visits: 1, watches: 0 };
-
-        document.getElementById('stats-visits-today').textContent = todayStats.visits;
-        document.getElementById('stats-visits-total').textContent = data.totalVisits;
-        document.getElementById('stats-watched-today').textContent = todayStats.watches;
-        document.getElementById('stats-watched-total').textContent = data.totalWatches;
     }
     
-    window.updateStatsUI = updateStatsUI;
+    // This is the single function responsible for updating the number in the notification panel.
+    // It will be called on page load and every time the count is incremented.
+    function updateUserWatchCountUI() {
+        const count = getWatchCount();
+        const countElement = document.getElementById('user-watch-count');
+        if (countElement) {
+            countElement.textContent = count;
+        }
+    }
 
+    // This global function is called by the video player script whenever a video starts playing.
+    // It replaces the old, complex site-wide analytics function with this simple, personal one.
+    window.incrementWatchCount = function() {
+        let currentCount = getWatchCount();
+        currentCount++; // Increment the count
+        saveWatchCount(currentCount); // Save the new value
+        updateUserWatchCountUI(); // Update the display immediately
+    };
+
+    // We make the UI update function globally available as 'updateStatsUI'.
+    // This ensures the other scripts that open the notification panel can refresh the count.
+    window.updateStatsUI = updateUserWatchCountUI;
+    
+    // When the web page's content is fully loaded, we immediately display the stored count.
     document.addEventListener('DOMContentLoaded', () => {
-        initAnalytics();
-        updateStatsUI();
+        updateUserWatchCountUI();
     });
 })();
 </script>
@@ -3296,7 +3259,48 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- =================== NEW: DEVTOOLS BLOCKER SCRIPT =================== -->
+<!-- =================== NEW BACKGROUND ROTATOR SCRIPT =================== -->
+<script>
+// This script rotates the background image on each page load.
+document.addEventListener('DOMContentLoaded', function() {
+    // --- CONFIGURATION ---
+    // IMPORTANT: Set this to the total number of background images you have in the assets/images/ folder.
+    // For example, if you have 1.png, 2.png, 3.png, 4.png, 5.png, set this value to 5.
+    const totalBackgroundImages = 18; // <<-- CHANGE THIS NUMBER
+    const imagePath = 'assets/images/';
+    const imageExtension = '.png';
+    const localStorageKey = 'vidu_background_index';
+
+    try {
+        // Get the last used index from localStorage.
+        let lastIndex = localStorage.getItem(localStorageKey);
+
+        // If it's the first visit, lastIndex will be null. Start with -1 so the first image is 0+1=1.png.
+        // We parse it as an integer.
+        lastIndex = (lastIndex === null) ? -1 : parseInt(lastIndex, 10);
+
+        // Calculate the next index, cycling through the images.
+        // The modulo operator (%) ensures the index wraps around to 0 when it reaches the total.
+        let nextIndex = (lastIndex + 1) % totalBackgroundImages;
+
+        // Save the new index back to localStorage for the next refresh.
+        localStorage.setItem(localStorageKey, nextIndex);
+
+        // Construct the full image URL. We add 1 because the files are 1-based (1.png, 2.png, etc.)
+        const imageUrl = `${imagePath}${nextIndex + 1}${imageExtension}`;
+
+        // Apply the new background image to the body element.
+        document.body.style.backgroundImage = `url('${imageUrl}')`;
+
+    } catch (error) {
+        // If there's an error (e.g., localStorage is disabled), fall back to a default image.
+        console.error("Could not set rotating background:", error);
+        document.body.style.backgroundImage = `url('${imagePath}1${imageExtension}')`;
+    }
+});
+</script>
+
+<!-- =================== DEVTOOLS BLOCKER SCRIPT =================== -->
 <script>
 (function() {
     'use strict';
