@@ -158,7 +158,14 @@
       box-shadow: inset 0 0 12px rgba(57, 255, 20, 0.3), 0 0 20px rgba(57, 255, 20, 0.3);
     }
 
-    .wrapper.style1{padding-top:12px;}
+    /* MODIFICATION: Added transition and transform-origin for zoom effect */
+    .wrapper.style1{
+      padding-top:12px;
+      /* NEW: Add transition for the zoom effect */
+      transition: transform 0.4s var(--ease);
+      /* NEW: Set the origin to the top center, so it zooms "into" the page */
+      transform-origin: top center;
+    }
     .inner{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:3;}
 
     .list-container{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:flex-start;margin-top:6px;}
@@ -1300,11 +1307,9 @@
     <div class="inner">
       <ul id="playlist-list" class="list-container">
         </ul>
-      <div id="playlist-videos" style="margin-top:2rem; display:none;"></div>
-    </div>
+      <div id="playlist-videos" style="margin-top:2rem; display:none;"></div>  </div>
   </section>
   <footer id="footer">
-    <p>&copy; VIDU. 2025 All rights reserved.</p>
   </footer>
  </div>
 
@@ -1315,7 +1320,6 @@
         <h3 id="notification-title">🔔 Notifications 🔔</h3>
         <button id="notification-close-btn" class="notification-close-btn" aria-label="Close notifications">&times;</button>
     </div>
-    <!-- MODIFIED: This entire block is replaced with the new personalized watch counter -->
     <div id="notification-stats" class="notification-stats">
       <div class="stats-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
@@ -2657,6 +2661,26 @@ function updateSpeedIndicator(activeButton) {
     window.viduPopupWindow = null;
     let wrapperElement = null;
 
+    // NEW: Function to apply zoom based on playlist depth
+    function updateZoomLevel() {
+        try {
+            const contentSection = document.getElementById('home'); // This is our <section id="home" ...>
+            if (!contentSection) return;
+
+            // Get the depth from the playlist stack's length
+            const depth = (window.__viduGlobal && window.__viduGlobal.playlistStack) ? window.__viduGlobal.playlistStack.length : 0;
+            
+            // Define how much to zoom per level. 0.15 = 15% zoom per level.
+            const zoomPerLevel = 0.15; 
+            const newScale = 1 + (depth * zoomPerLevel);
+
+            // Apply the CSS transform
+            contentSection.style.transform = `scale(${newScale})`;
+        } catch (e) {
+            console.error("Failed to update zoom level:", e);
+        }
+    }
+
     window.handlePlayerLaunch = function() {
         if (!wrapperElement) {
             const wrapper = document.getElementById('wrapper');
@@ -2732,6 +2756,9 @@ function updateSpeedIndicator(activeButton) {
       if(!window.__viduGlobal.playlistStack) window.__viduGlobal.playlistStack = [];
       if(!skipPush){ window.__viduGlobal.playlistStack.push(window.__viduGlobal.currentPl || null); }
       window.__viduGlobal.currentPl = pl;
+
+      updateZoomLevel(); // NEW: Call the zoom function
+
       ul.style.display = 'none';
       container.style.display = 'block';
       container.innerHTML = `<h3 style="text-align:center;color:#fff;">${escapeHtml(pl.name)}</h3>`;
@@ -2761,6 +2788,9 @@ function updateSpeedIndicator(activeButton) {
       container.appendChild(vids); container.appendChild(back);
       document.getElementById('back-to-playlists').onclick = ()=>{
         const prev = (window.__viduGlobal.playlistStack && window.__viduGlobal.playlistStack.length) ? window.__viduGlobal.playlistStack.pop() : null;
+        
+        updateZoomLevel(); // NEW: Call the zoom function after popping
+
         if(prev === null){ ul.style.display='flex'; container.style.display='none'; window.__viduGlobal.currentPl = null; }
         else { showPlaylistVideos(prev, true); }
       };
@@ -3259,7 +3289,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- =================== NEW BACKGROUND ROTATOR SCRIPT =================== -->
 <script>
 // This script rotates the background image on each page load.
 document.addEventListener('DOMContentLoaded', function() {
@@ -3300,7 +3329,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- =================== DEVTOOLS BLOCKER SCRIPT =================== -->
 <script>
 (function() {
     'use strict';
@@ -3361,7 +3389,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 })();
 </script>
-<!-- ====================================================================== -->
-
 </body>
 </html>
