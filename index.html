@@ -1234,35 +1234,37 @@
         height: 18px; 
         fill: currentColor; 
     }
-    /* UPDATED: Styles for the "Play Last Video" button */
+    /* UPDATED: Styles for the "Play Last Video" button to use a CSS triangle */
     #play-last-video-btn {
         position: fixed;
         bottom: 25px;
         right: 25px;
         width: 60px;
         height: 60px;
-        background-color: var(--accent-2); /* Changed to green */
-        color: white;
+        background-color: var(--accent-2);
         border: none;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 8px 25px rgba(20, 200, 20, 0.3); /* Added a green glow */
+        box-shadow: 0 8px 25px rgba(20, 200, 20, 0.3);
         cursor: pointer;
         z-index: 9990;
         transition: all 0.2s var(--ease);
-        display: none; /* Initially hidden, shown by JS if a last video exists */
+        display: none;
     }
     #play-last-video-btn:hover {
         transform: scale(1.1);
-        background-color: #4aff28; /* Brighter green on hover */
+        background-color: #4aff28;
         box-shadow: 0 12px 30px rgba(20, 255, 20, 0.4);
     }
-    #play-last-video-btn svg {
-        width: 30px;
-        height: 30px;
-        transform: translateX(2px); /* Optically center the play icon */
+    .play-icon-triangle {
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 12px 0 12px 20px;
+        border-color: transparent transparent transparent white;
+        margin-left: 5px;
     }
   </style>
 </head>
@@ -1476,9 +1478,9 @@
 <div id="popup-notice-overlay" class="popup-notice">
   Playing in the VIDU Popup Player
 </div>
-<!-- UPDATED: "Play Last Video" button HTML with new play icon -->
+<!-- UPDATED: "Play Last Video" button now contains a div for the CSS triangle -->
 <button id="play-last-video-btn" title="Play Last Watched Video">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+    <div class="play-icon-triangle"></div>
 </button>
 
 <script>
