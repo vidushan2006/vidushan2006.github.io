@@ -256,7 +256,6 @@
         filter: invert(1);
     }
 
-    /* CHANGE 1: The redundant rule for `.vidu-playback-menu-container` was causing a double-inversion bug. Removing it fixes the color of the speedometer and speed menu in invert mode. */
     .vidu-player-inverted .vidu-overlay,
     .vidu-player-inverted .vidu-close-btn,
     .vidu-player-inverted .vidu-popup-btn,
@@ -1235,33 +1234,35 @@
         height: 18px; 
         fill: currentColor; 
     }
-    /* CHANGE 2: Styles for the new "Play Last Video" button */
+    /* UPDATED: Styles for the "Play Last Video" button */
     #play-last-video-btn {
         position: fixed;
         bottom: 25px;
         right: 25px;
         width: 60px;
         height: 60px;
-        background-color: var(--accent-1);
+        background-color: var(--accent-2); /* Changed to green */
         color: white;
         border: none;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        box-shadow: 0 8px 25px rgba(20, 200, 20, 0.3); /* Added a green glow */
         cursor: pointer;
         z-index: 9990;
-        transition: transform 0.2s var(--ease), background-color 0.2s var(--ease);
+        transition: all 0.2s var(--ease);
         display: none; /* Initially hidden, shown by JS if a last video exists */
     }
     #play-last-video-btn:hover {
         transform: scale(1.1);
-        background-color: var(--accent-2);
+        background-color: #4aff28; /* Brighter green on hover */
+        box-shadow: 0 12px 30px rgba(20, 255, 20, 0.4);
     }
     #play-last-video-btn svg {
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
+        transform: translateX(2px); /* Optically center the play icon */
     }
   </style>
 </head>
@@ -1475,9 +1476,9 @@
 <div id="popup-notice-overlay" class="popup-notice">
   Playing in the VIDU Popup Player
 </div>
-<!-- CHANGE 2: Added the "Play Last Video" button HTML to the page structure -->
+<!-- UPDATED: "Play Last Video" button HTML with new play icon -->
 <button id="play-last-video-btn" title="Play Last Watched Video">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
 </button>
 
 <script>
