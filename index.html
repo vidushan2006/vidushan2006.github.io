@@ -86,24 +86,6 @@
       z-index:0;
     }
 
-    /* MODIFICATION START: Fullscreen transition overlay */
-    /* This pseudo-element creates a black overlay that fades in when entering fullscreen, */
-    /* making the transition feel more immersive and modern. */
-    body::after {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background: #000;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity .6s cubic-bezier(0.4, 0, 0.2, 1);
-        z-index: 9990; /* High z-index, but below player UI */
-    }
-    body.vidu-fullscreen-active::after {
-        opacity: 1;
-    }
-    /* MODIFICATION END */
-
     #wrapper{position:relative;z-index:3;padding-bottom:48px;}
 
     header#header{
@@ -258,11 +240,7 @@
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
       -webkit-tap-highlight-color: transparent;
-      /* MODIFICATION START: Add smooth transition for fullscreen */
-      /* This adds a butter-smooth transition for the border-radius when entering/exiting fullscreen. */
-      transition: filter .3s ease, border-radius .6s cubic-bezier(0.4, 0, 0.2, 1);
-      will-change: border-radius;
-      /* MODIFICATION END */
+      transition: filter .3s ease;
     }
     .vidu-mount {
       width:100%; 
@@ -278,17 +256,12 @@
         filter: invert(1);
     }
 
+    /* CHANGE 1: The redundant rule for `.vidu-playback-menu-container` was causing a double-inversion bug. Removing it fixes the color of the speedometer and speed menu in invert mode. */
     .vidu-player-inverted .vidu-overlay,
     .vidu-player-inverted .vidu-close-btn,
     .vidu-player-inverted .vidu-popup-btn,
     .vidu-player-inverted .vidu-invert-btn,
     .vidu-player-inverted .vidu-playlist-toggle-btn,
-    /* MODIFICATION START: Explicitly target speed controls for color inversion */
-    /* This ensures the playback speed menu and its button reinvert their colors */
-    /* correctly, matching the behavior of the other player controls. */
-    .vidu-player-inverted .vidu-playback-menu,
-    .vidu-player-inverted #vidu_playbackbtn,
-    /* MODIFICATION END */
     .vidu-player-inverted .vidu-osd-feedback,
     .vidu-player-inverted .vidu-seek-feedback {
         filter: invert(1);
@@ -630,12 +603,6 @@
     }
 
     #close-player { display:none !important; }
-
-    /* MODIFICATION: Smoothly animate corners when entering/exiting fullscreen */
-    .vidu-player-host:-webkit-full-screen, 
-    .vidu-player-host:fullscreen {
-        border-radius: 0;
-    }
 
     .vidu-player-host:-webkit-full-screen .vidu-mount, .vidu-player-host:fullscreen .vidu-mount { height:100vh !important; width:100% !important; }
     .vidu-player-host:-webkit-full-screen .vidu-mount iframe, .vidu-player-host:fullscreen .vidu-mount iframe { height:100vh !important; width:100% !important; max-height:none !important; }
@@ -1268,6 +1235,34 @@
         height: 18px; 
         fill: currentColor; 
     }
+    /* CHANGE 2: Styles for the new "Play Last Video" button */
+    #play-last-video-btn {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        width: 60px;
+        height: 60px;
+        background-color: var(--accent-1);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        cursor: pointer;
+        z-index: 9990;
+        transition: transform 0.2s var(--ease), background-color 0.2s var(--ease);
+        display: none; /* Initially hidden, shown by JS if a last video exists */
+    }
+    #play-last-video-btn:hover {
+        transform: scale(1.1);
+        background-color: var(--accent-2);
+    }
+    #play-last-video-btn svg {
+        width: 32px;
+        height: 32px;
+    }
   </style>
 </head>
 <body class="landing is-preload">
@@ -1480,6 +1475,10 @@
 <div id="popup-notice-overlay" class="popup-notice">
   Playing in the VIDU Popup Player
 </div>
+<!-- CHANGE 2: Added the "Play Last Video" button HTML to the page structure -->
+<button id="play-last-video-btn" title="Play Last Watched Video">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8H12z"></path></svg>
+</button>
 
 <script>
 // Global utility function, accessible by all scripts.
@@ -2056,8 +2055,6 @@ function updateSpeedIndicator(activeButton) {
       const fullBtn = document.getElementById('vidu_fullbtn');
       if (!fullBtn) return;
       const isFullscreen = !!getFullscreenElement();
-      // MODIFICATION: Add class to body for fullscreen transition effect
-      document.body.classList.toggle('vidu-fullscreen-active', isFullscreen);
       if (isFullscreen) {
         fullBtn.innerHTML = exitFullscreenSVG();
         fullBtn.title = 'Exit Fullscreen';
@@ -2652,6 +2649,24 @@ function updateSpeedIndicator(activeButton) {
           window.saveVideoProgress(state.videoId, cur);
         } else {
           window.saveVideoProgress(state.videoId, 0);
+        }
+      }
+
+      // CHANGE 2: Save the last played video's info to localStorage when the player is closed.
+      if (state.videoId) {
+        const videoTitle = document.getElementById('modal-title')?.textContent;
+        if (videoTitle) { 
+            const lastPlayedInfo = {
+                videoId: state.videoId,
+                title: videoTitle,
+                timestamp: Date.now()
+            };
+            try {
+                localStorage.setItem('vidu_last_played_video', JSON.stringify(lastPlayedInfo));
+                // Make the button visible now that there's a video to play
+                const lastPlayedBtn = document.getElementById('play-last-video-btn');
+                if (lastPlayedBtn) lastPlayedBtn.style.display = 'flex';
+            } catch(e) { console.error("Failed to save last played video info", e); }
         }
       }
 
@@ -3363,7 +3378,38 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<!-- CHANGE 2: New script to manage the "Play Last Video" button functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const lastPlayedBtn = document.getElementById('play-last-video-btn');
+    if (!lastPlayedBtn) return;
 
+    try {
+        const lastVideoJSON = localStorage.getItem('vidu_last_played_video');
+        if (lastVideoJSON) {
+            // If we found a last-played video in storage, show the button
+            lastPlayedBtn.style.display = 'flex';
+        }
+    } catch(e) {
+        console.error("Failed to read last played video info:", e);
+    }
+
+    lastPlayedBtn.addEventListener('click', () => {
+        try {
+            const lastVideoData = JSON.parse(localStorage.getItem('vidu_last_played_video') || '{}');
+            if (lastVideoData.videoId && typeof window.playVideoWithLoading === 'function') {
+                // The `playVideoWithLoading` function already handles finding the saved timecode
+                window.playVideoWithLoading({
+                    videoId: lastVideoData.videoId,
+                    title: lastVideoData.title
+                });
+            }
+        } catch(e) {
+            console.error("Failed to play last video:", e);
+        }
+    });
+});
+</script>
 <script>
 (function() {
     'use strict';
