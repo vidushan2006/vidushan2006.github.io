@@ -1460,17 +1460,9 @@
     #ai-input::placeholder { color: #9ca3af; }
     
     #ai-switch-mode {
-        font-size: 12px;
-        color: #9ca3af;
-        margin-right: 8px;
-        cursor: pointer;
-        user-select: none;
+        display: none; /* REMOVED: No longer needed for the self-hosted AI */
     }
-    #ai-switch-mode kbd {
-        background: #4a4e69;
-        padding: 2px 5px;
-        border-radius: 4px;
-    }
+
     #ai-mic-btn {
         background: transparent;
         border: none;
@@ -1764,8 +1756,8 @@
                     <span class="icon p-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.2-4.1.6 3 2.9-.8 4.1 3.8-2 3.8 2-.8-4.1 3-2.9-4.1-.6Z"/></svg>
                     </span>
-                    <input type="text" id="ai-input" placeholder="Ask Gemini anything...">
-                    <span id="ai-switch-mode" title="Toggle website context (Tab)">Switch mode <kbd>Tab</kbd></span>
+                    <input type="text" id="ai-input" placeholder="Ask me about this website or anything else...">
+                    <span id="ai-switch-mode" title="Toggle website context (Tab)"></span>
                     <button id="ai-mic-btn" title="Ask with your voice">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
                     </button>
@@ -3718,23 +3710,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <!-- ============================================================= -->
-<!-- == NEW AI ASSISTANT SCRIPT (REBUILT & STABLE) == -->
+<!-- == NEW SELF-HOSTED AI ASSISTANT SCRIPT == -->
 <!-- ============================================================= -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 1. CONFIGURATION & STATE ---
-    const API_KEY = 'AIzaSyCiJcb8Y1ilOdrX7RYF78kIK2jCyece-HE';
-    const API_URL_TEXT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?key=${API_KEY}`;
-    
+    // --- 1. STATE & CONFIGURATION ---
     let state = {
         isAssistantVisible: false,
-        isContextMode: false,
         isRecognizing: false,
         isLoading: false,
-        chatHistory: [], // Will store objects like { role: 'user'/'model', parts: [{text: '...'}], timestamp: ... }
         promptHistory: [],
         promptHistoryIndex: -1,
-        currentAbortController: null
     };
 
     // --- 2. DOM ELEMENT REFERENCES ---
@@ -3745,8 +3731,6 @@ document.addEventListener('DOMContentLoaded', () => {
         closeBtn: document.getElementById('ai-close-btn'),
         historyContainer: document.getElementById('ai-history'),
         input: document.getElementById('ai-input'),
-        inputBox: document.getElementById('ai-input-box'),
-        switchModeBtn: document.getElementById('ai-switch-mode'),
         micBtn: document.getElementById('ai-mic-btn'),
     };
 
@@ -3764,17 +3748,88 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // --- 4. INITIALIZATION ---
-    function init() {
-        if (!API_KEY || API_KEY === 'AIzaSyCiJcb8Y1ilOdrX7RYF78kIK2jCyece-HE') {
-             console.warn("AI Assistant: API Key is not set. The assistant will not work.");
+    // --- 4. THE AI's "BRAIN" - KNOWLEDGE BASE ---
+    const knowledgeBase = {
+        // Keywords are lowercase for case-insensitive matching
+        keywords: {
+            // Identity
+            'my name': "My name is VIDU AI 2.0 Pro. It's a pleasure to assist you.",
+            'your name': "My name is VIDU AI 2.0 Pro. It's a pleasure to assist you.",
+            'who are you': "I am VIDU AI 2.0 Pro, a self-hosted assistant integrated into this website.",
+            'creator': "I was created by the talented developer VIDU. He's the architect of this entire website!",
+            'who made you': "I was created by the talented developer VIDU. He's the architect of this entire website!",
+            'vidu': "VIDU is the creator of this website and me, VIDU AI 2.0 Pro. He's a skilled developer who built everything you see here from the ground up.",
+
+            // Website Features
+            'how does this site work': "This website is a personal hub for watching private and public video playlists. It features a custom-built video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience.",
+            'features': `This website has a ton of custom features built by VIDU! Here are the highlights:
+* **The VIDU Player™️:** A completely custom-built player interface with advanced keyboard shortcuts, playback speed controls, and a "Never Lose Your Spot" feature that saves your progress.
+* **Secure Playlists:** It includes password-protection for exclusive content and a system to manage access to different playlists.
+* **YT Playlist Importer:** You can paste a YouTube playlist link into the Tools section to fetch all its videos and watch them in a sleek, fullscreen interface.
+* **VIDU Tool Shed:** A collection of handy utilities like a YouTube video downloader (the "Video Yoinker") and a link shortener.
+* **Premium UI/UX:** The whole site uses modern design principles like the "glassy" blur effect and buttery smooth animations.`,
+            'player': `The video player is a core feature and was custom-coded by VIDU. It's not the standard YouTube player! It has:
+* **Custom Controls:** A slick, modern interface built with HTML, CSS, and JavaScript.
+* **Keyboard Shortcuts:** Full control without a mouse.
+* **Playback Speed Settings:** To watch content at your own pace.
+* **Progress Saving:** It automatically saves your position in a video so you can pick up where you left off.`,
+            'shortcuts': `You can control the video player like a pro with these keyboard shortcuts:
+* **Spacebar:** Play or Pause the video.
+* **Right Arrow:** Skip forward 10 seconds.
+* **Left Arrow:** Skip backward 10 seconds.
+* **Up Arrow:** Increase volume.
+* **Down Arrow:** Decrease volume.
+* **'F' Key:** Toggle fullscreen mode.
+* **'M' Key:** Mute or unmute the audio.`,
+            'security': "Security is handled cleverly on this site. For exclusive content, there's a password protection system. VIDU also built a client-side login system for the private page, which uses a JavaScript object as a simple user database to control who can see which playlists.",
+            'password': "For exclusive content, the site uses a password check. It's a simple but effective system that verifies your password before granting access to protected videos or playlists.",
+            'tools': `The "Tools" page has some powerful utilities built by VIDU:
+* **YT Playlist Importer:** Lets you fetch and view any public YouTube playlist.
+* **The Video Yoinker:** A YouTube downloader. Just paste one or more video links to get download options.
+* **Link Glo-Up:** A YouTube link converter that shortens long, messy youtube.com links into clean youtu.be links for easy sharing.`,
+            'downloader': 'The YouTube downloader, nicknamed "The Video Yoinker", is on the Tools page. You can paste one or multiple YouTube video links there to generate download links for offline viewing.',
+        },
+        // General knowledge for non-website questions
+        general: {
+            'hello': 'Hello! How can I help you today?',
+            'how are you': "I'm just a set of code, but I'm operating perfectly! Thanks for asking. How can I assist you?",
+            'what is the time': `I don't have a direct connection to a live clock, but your device's time is currently: ${new Date().toLocaleTimeString()}`,
+            'what is your purpose': 'My purpose is to assist you by providing information about this website and answering your general questions.',
+            'thank you': "You're welcome! Let me know if you need anything else.",
+            'thanks': "You're welcome! Let me know if you need anything else.",
+            'capital of france': 'The capital of France is Paris.',
+            'who is the president of the united states': 'As of my last update, the President of the United States is Joe Biden.',
+            'what is html': 'HTML stands for HyperText Markup Language. It is the standard markup language for documents designed to be displayed in a web browser.'
+        }
+    };
+
+    function getAIResponse(prompt) {
+        const lowerCasePrompt = prompt.toLowerCase();
+
+        // 1. Check for exact matches in the general knowledge base
+        if (knowledgeBase.general[lowerCasePrompt]) {
+            return knowledgeBase.general[lowerCasePrompt];
+        }
+
+        // 2. Search for keywords related to the website
+        for (const keyword in knowledgeBase.keywords) {
+            if (lowerCasePrompt.includes(keyword)) {
+                return knowledgeBase.keywords[keyword];
+            }
         }
         
-        setupEventListeners();
-        addMessage('model', 'Hi there! How can I help you today?');
+        // 3. Fallback for general questions not in the knowledge base
+        // This simulates a web search by providing a generic but helpful response.
+        return "That's an interesting question! While I'm an expert on this website, my general knowledge is pre-loaded. For the most up-to-date and detailed information on that topic, I'd recommend a quick search on Google or your favorite search engine.";
     }
 
-    // --- 5. EVENT LISTENERS ---
+
+    // --- 5. INITIALIZATION & EVENT LISTENERS ---
+    function init() {
+        setupEventListeners();
+        addMessage('model', "Hi there! I'm VIDU AI 2.0 Pro. Ask me anything about this website's features, or any other general questions you might have.");
+    }
+
     function setupEventListeners() {
         DOMElements.toggleBtn.addEventListener('click', toggleAssistant);
         DOMElements.closeBtn.addEventListener('click', toggleAssistant);
@@ -3782,7 +3837,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target === DOMElements.overlay) toggleAssistant();
         });
         DOMElements.input.addEventListener('keydown', handleInputKeydown);
-        DOMElements.switchModeBtn.addEventListener('click', toggleContextMode);
         if (recognition) {
             DOMElements.micBtn.addEventListener('click', toggleSpeechRecognition);
         }
@@ -3794,25 +3848,10 @@ document.addEventListener('DOMContentLoaded', () => {
         DOMElements.overlay.classList.toggle('visible', state.isAssistantVisible);
         if (state.isAssistantVisible) {
             DOMElements.input.focus();
-        } else {
-            if (state.isLoading && state.currentAbortController) {
-                state.currentAbortController.abort();
-            }
         }
     }
-    
-    function toggleContextMode() {
-        state.isContextMode = !state.isContextMode;
-        DOMElements.inputBox.style.background = state.isContextMode 
-            ? 'linear-gradient(90deg, #F59E0B, #EC4899, #A855F7, #F59E0B)' 
-            : 'linear-gradient(90deg, #A855F7, #EC4899, #F59E0B, #A855F7)';
-        DOMElements.input.placeholder = state.isContextMode 
-            ? `Ask about ${location.hostname.replace('www.','')}...`
-            : 'Ask Gemini anything...';
-        DOMElements.input.focus();
-    }
 
-    async function handleSendMessage() {
+    function handleSendMessage() {
         const promptText = DOMElements.input.value.trim();
         if (!promptText || state.isLoading) return;
 
@@ -3822,80 +3861,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         state.promptHistoryIndex = state.promptHistory.length;
 
-
         addMessage('user', promptText);
-        let finalPrompt = promptText;
-
-        if(state.isContextMode) {
-            finalPrompt = `Based on the content of this webpage, answer the following question: "${promptText}". Webpage content: \n\n${document.body.innerText.substring(0, 10000)}`;
-        }
-
-        state.chatHistory.push({ role: 'user', parts: [{ text: finalPrompt }] });
         
-        await fetchStreamedResponse(state.chatHistory);
-    }
-    
-    async function fetchStreamedResponse(history) {
+        // --- The New AI Logic ---
         state.isLoading = true;
-        state.currentAbortController = new AbortController();
-        const currentMessageContainer = addMessage('model', '<div class="typing-indicator"><span></span><span></span><span></span></div>');
-        const contentDiv = currentMessageContainer.querySelector('.content');
-
-        try {
-            const response = await fetch(API_URL_TEXT, {
-                method: 'POST',
-                signal: state.currentAbortController.signal,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: history }),
-            });
-
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        const thinkingMessage = addMessage('model', '<div class="typing-indicator"><span></span><span></span><span></span></div>');
+        
+        // Simulate thinking time for a more natural feel
+        setTimeout(() => {
+            const responseText = getAIResponse(promptText);
+            const contentDiv = thinkingMessage.querySelector('.content');
+            if (contentDiv) {
+                contentDiv.innerHTML = marked.parse(responseText);
             }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let fullResponse = "";
-            contentDiv.innerHTML = '';
-
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const json = JSON.parse(line.substring(6));
-                            const textPart = json.candidates?.[0]?.content?.parts?.[0]?.text;
-                            if (textPart) {
-                                fullResponse += textPart;
-                                contentDiv.innerHTML = marked.parse(fullResponse);
-                            }
-                        } catch (e) {
-                             // Ignore parsing errors for incomplete JSON chunks
-                        }
-                    }
-                }
-                 DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
-            }
-
-            history.push({ role: 'model', parts: [{ text: fullResponse }] });
-            hljs.highlightAll(); // Apply syntax highlighting after stream is complete
-
-        } catch (error) {
-             if (error.name !== 'AbortError') {
-                contentDiv.innerHTML = `<p class="text-red-400">Sorry, something went wrong: ${error.message}</p>`;
-             } else {
-                contentDiv.innerHTML = `<p class="text-yellow-400">Request cancelled.</p>`
-             }
-        } finally {
             state.isLoading = false;
-        }
+            hljs.highlightAll(); // Apply syntax highlighting if any code is in the response
+            DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
+        }, 700 + Math.random() * 500); // Respond in 0.7-1.2 seconds
     }
-
 
     // --- 7. UI & HELPER FUNCTIONS ---
     function addMessage(role, text) {
@@ -3921,10 +3904,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage();
-        }
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            toggleContextMode();
         }
         if (e.key === 'ArrowUp') {
             if (state.promptHistoryIndex > 0) {
