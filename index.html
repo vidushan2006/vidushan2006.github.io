@@ -3494,7 +3494,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- 
   =============================================================
-  == NEW AI CHATBOT SCRIPT (REBUILT FROM THE GROUND UP) ==
+  == FINAL AI CHATBOT SCRIPT (REBUILT & STABLE) ==
   =============================================================
 -->
 <script>
@@ -3508,15 +3508,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendChat = document.getElementById('send-chat');
 
     // --- 2. CONFIGURE THE API ---
-    // Use the API Key you provided.
     const API_KEY = 'AIzaSyBjxSfcIqjyi_Kc_vmQweUh1TWPqCokDYA';
     
-    // This is the crucial part. We are switching to a more standard and reliable endpoint.
-    // - `gemini-1.5-flash-latest`: A modern, fast, and widely available model. This is less likely to cause a 404 error than older or more specific model names.
-    // - `generateContent`: This is the standard "one-shot" or "unary" endpoint. It's simpler than streaming and perfect for a chat application. It sends the request and waits for the full response. This avoids potential issues with streaming connections.
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+    // --- THE FIX ---
+    // We are now using the `gemini-pro` model, which is the most stable and universally
+    // available model for AI Studio API keys.
+    // We are also using the standard `generateContent` endpoint, which is more reliable
+    // for chat applications than the streaming endpoint.
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
     
-    // --- 3. SETUP EVENT LISTENERS for UI interactions ---
+    // --- 3. SETUP EVENT LISTENERS ---
     chatbotToggle.addEventListener('click', () => {
         chatbotPopup.classList.toggle('hidden');
         if (!chatbotPopup.classList.contains('hidden')) {
@@ -3528,7 +3529,6 @@ document.addEventListener('DOMContentLoaded', () => {
         chatbotPopup.classList.add('hidden');
     });
 
-    // Function to handle sending a message (called by button click or Enter key)
     const handleSendMessage = () => {
         const message = chatInput.value.trim();
         if (message) {
@@ -3541,14 +3541,12 @@ document.addEventListener('DOMContentLoaded', () => {
     sendChat.addEventListener('click', handleSendMessage);
     chatInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-            e.preventDefault(); // Prevents adding a new line in the input
+            e.preventDefault();
             handleSendMessage();
         }
     });
 
     // --- 4. DEFINE UI HELPER FUNCTIONS ---
-
-    // Adds a new message bubble to the chat window.
     function addMessageToHistory(sender, text) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `chat-message flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
@@ -3556,18 +3554,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const bubbleDiv = document.createElement('div');
         bubbleDiv.className = `chat-bubble p-3 rounded-lg max-w-xs md:max-w-md ${sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-600 text-white rounded-bl-none'}`;
         
-        // Sanitize and format the text to prevent HTML injection and render line breaks.
         const formattedText = escapeHtml(text).replace(/\n/g, '<br>');
         bubbleDiv.innerHTML = formattedText;
         
         messageDiv.appendChild(bubbleDiv);
         chatHistory.appendChild(messageDiv);
-        
-        // Automatically scroll to the bottom to show the latest message.
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
-    // Shows the "..." typing indicator.
     function showTypingIndicator() {
         const indicatorDiv = document.createElement('div');
         indicatorDiv.id = 'typing-indicator';
@@ -3581,7 +3575,6 @@ document.addEventListener('DOMContentLoaded', () => {
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
-    // Removes the "..." typing indicator.
     function removeTypingIndicator() {
         const indicator = document.getElementById('typing-indicator');
         if (indicator) {
@@ -3596,13 +3589,11 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.disabled = true;
 
         try {
-            // Use the modern `fetch` API to make the POST request.
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                // The body is a JSON object matching the structure the Gemini API expects.
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
@@ -3612,36 +3603,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            // If the response is not OK (e.g., 404, 400, 500), we need to handle the error.
             if (!response.ok) {
-                // Try to parse the error message from the API's JSON response for more detail.
-                const errorData = await response.json().catch(() => null); // Use .catch in case the error response isn't valid JSON.
+                const errorData = await response.json().catch(() => null);
                 const errorMessage = errorData?.error?.message || `API Error: ${response.status} ${response.statusText}`;
                 throw new Error(errorMessage);
             }
 
-            // If the response is OK, parse the successful JSON response.
             const result = await response.json();
-
-            // Navigate through the JSON structure to find the AI's generated text.
-            // Using optional chaining (?.) prevents errors if any part of the structure is missing.
             const aiText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
 
             if (!aiText) {
+                // This handles cases where the API returns a success status but the content is blocked or empty.
+                 const blockReason = result?.promptFeedback?.blockReason;
+                 if(blockReason){
+                    throw new Error(`Your request was blocked. Reason: ${blockReason}. Please modify your prompt.`);
+                 }
                 throw new Error("The AI response was empty or in an unexpected format.");
             }
 
-            // If we successfully get the text, display it.
             addMessageToHistory('ai', aiText);
 
         } catch (error) {
-            // If any part of the `try` block fails, this `catch` block will run.
             console.error("Error calling Gemini API:", error);
-            // Display a user-friendly error message in the chat window.
             addMessageToHistory('ai', `I'm sorry, I encountered an error: ${error.message}`);
         } finally {
-            // This block runs regardless of whether there was an error or not.
-            // It's important for cleaning up the UI.
             removeTypingIndicator();
             sendChat.disabled = false;
             chatInput.disabled = false;
