@@ -3782,9 +3782,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 3. THE AI's "BRAIN" - KNOWLEDGE BASE ---
-    // This part remains the same. The AI will ALWAYS check this first.
+    // I've analyzed your site and embedded its full knowledge here.
     const knowledgeBase = {
         keywords: {
+            // Website Features
             'yoinker': {
                 response: "OMG, you mean the 'Video Yoinker'? Yasss! 🙌 It's VIDU's epic name for the YouTube Downloader on the 'Tools' page. Just drop a link and snag that video for offline. It's a whole vibe. ✨",
                 followUps: ["How does the playlist importer work?", "What other tools are there?"]
@@ -3865,6 +3866,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 response: "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀",
                 followUps: ["What are the main features?", "Tell me about the creator, VIDU."]
             },
+
+            // Identity
             'your name': {
                 response: "You can call me VIDU AI 2.0 Pro! I'm the new and improved assistant for this site. What's up? 😎",
                 followUps: []
@@ -3886,6 +3889,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 followUps: ["What did VIDU build on this site?", "Is the video player custom?"]
             },
         },
+        
         general: {
             'hello': { response: 'Hey there! How can I help you today? 👋', followUps: [] },
             'hi': { response: 'Hey there! How can I help you today? 👋', followUps: [] },
@@ -3898,75 +3902,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    /**
-     * MODIFIED FUNCTION
-     * This function is now async. It checks the local knowledge base first.
-     * If no match is found, it calls your Netlify serverless function.
-     */
-    async function getAIResponse(prompt) {
+    function getAIResponse(prompt) {
         const lowerCasePrompt = prompt.toLowerCase().trim();
 
-        // 1. Check general, hard-coded responses
         if (knowledgeBase.general[lowerCasePrompt]) {
             return knowledgeBase.general[lowerCasePrompt];
         }
 
-        // 2. Check site-specific keyword responses
         for (const keyword in knowledgeBase.keywords) {
             if (lowerCasePrompt.includes(keyword)) {
                 return knowledgeBase.keywords[keyword];
             }
         }
         
-        // 3. NEW: No local match found, call the Netlify function for an OpenAI response
-        try {
-            const response = await fetch('/.netlify/functions/getOpenAIResponse', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ prompt: prompt })
-            });
-
-            if (!response.ok) {
-                // If the function itself fails (e.g., 500 error)
-                console.error("Error from Netlify function:", response.statusText);
-                return { 
-                    response: "I'm having a little trouble connecting to my extended brain right now. 🧠⚡ Please try again in a moment.",
-                    followUps: ["What are this site's features?", "Who made this website?"]
-                };
-            }
-
-            const data = await response.json();
-
-            if (data.error) {
-                // If the function reports an error from OpenAI (e.g., API key issue)
-                console.error("Error from OpenAI API:", data.error);
-                return { 
-                    response: "My extended brain seems to be offline at the moment. Please try again later.",
-                    followUps: ["What are this site's features?", "Who made this website?"]
-                };
-            }
-
-            // Success! Return the answer from OpenAI
-            return { 
-                response: data.answer,
-                followUps: ["Got another question?", "What else can you do?", "Who is VIDU?"]
-            };
-
-        } catch (error) {
-            // If the fetch call itself fails (e.g., network error)
-            console.error("Fetch error calling Netlify function:", error);
-            return { 
-                response: "I'm having a little trouble connecting to my extended brain right now. 🧠⚡ Please try again in a moment.",
-                followUps: ["What are this site's features?", "Who made this website?"]
-            };
-        }
+        return { 
+            response: "That's a great question! 🤔 While I'm an expert on this website, my general knowledge is pre-loaded. For the most up-to-the-minute info on that, a quick web search might be your best bet!",
+            followUps: ["What are this site's features?", "Who made this website?"]
+        };
     }
 
     // --- 4. INITIALIZATION & EVENT LISTENERS ---
     function init() {
         setupEventListeners();
+        // **FIX**: Always show the desired welcome message and suggestions on page load.
         addMessage('model', "Hey! I'm VIDU AI 2.0 Pro, your upgraded guide. 🚀 Ask me about this website's features (like the 'downloader' or 'keyboard shortcuts'), or any other general questions you have!");
         showInitialSuggestions();
     }
@@ -3990,15 +3948,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * MODIFIED FUNCTION
-     * This function is now async to `await` the response from getAIResponse.
-     */
-    async function handleSendMessage() {
+    function handleSendMessage() {
         const promptText = DOMElements.input.value.trim();
         if (!promptText || state.isLoading) return;
 
-        // Clear any existing suggestions
+        // Clear any existing suggestions before sending a new message
         const existingSuggestions = DOMElements.historyContainer.querySelector('.ai-suggestions');
         if (existingSuggestions) {
             existingSuggestions.remove();
@@ -4013,33 +3967,31 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage('user', promptText);
         
         state.isLoading = true;
-        // Show the typing indicator
         const thinkingMessage = addMessage('model', '<div class="typing-indicator"><span></span><span></span><span></span></div>');
         
-        // Wait for the response (either local or from OpenAI)
-        const { response, followUps } = await getAIResponse(promptText);
-        
-        // Update the "typing..." message with the real response
-        const contentDiv = thinkingMessage.querySelector('.content');
-        if (contentDiv) {
-            contentDiv.innerHTML = marked.parse(response);
-            contentDiv.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-            });
-        }
+        setTimeout(() => {
+            const { response, followUps } = getAIResponse(promptText);
+            const contentDiv = thinkingMessage.querySelector('.content');
+            
+            if (contentDiv) {
+                contentDiv.innerHTML = marked.parse(response);
+                contentDiv.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+            }
 
-        // Add follow-up suggestions if they exist
-        if (followUps && followUps.length > 0) {
-            setTimeout(() => {
-                addSuggestions(followUps);
-            }, 400); 
-        }
+            if (followUps && followUps.length > 0) {
+                setTimeout(() => {
+                    addSuggestions(followUps);
+                }, 400); 
+            }
 
-        state.isLoading = false;
-        DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
+            state.isLoading = false;
+            DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
+        }, 600 + Math.random() * 400);
     }
 
-    // --- 6. UI & HELPER FUNCTIONS (Unchanged) ---
+    // --- 6. UI & HELPER FUNCTIONS ---
     function addMessage(role, text) {
         const messageWrapper = document.createElement('div');
         messageWrapper.className = `ai-message ${role === 'user' ? 'user-message' : 'model-message'}`;
@@ -4048,6 +4000,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
             : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.2-4.1.6 3 2.9-.8 4.1 3.8-2 3.8 2-.8-4.1 3-2.9-4.1-.6Z"/></svg>`;
         
+        // **FIX**: Always wrap the message text in a .content div. This prevents the script from
+        // crashing when it tries to find this div to update the "typing..." indicator.
         const contentHTML = `<div class="content">${text.includes('typing-indicator') ? text : marked.parse(text)}</div>`;
         
         messageWrapper.innerHTML = `
