@@ -3498,7 +3498,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendChat = document.getElementById('send-chat');
 
     const API_KEY = 'AIzaSyBjxSfcIqjyi_Kc_vmQweUh1TWPqCokDYA';
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
     
     // --- Toggle Chatbot Popup ---
     chatbotToggle.addEventListener('click', () => {
@@ -3525,6 +3525,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sendChat.addEventListener('click', handleSendMessage);
     chatInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
+            e.preventDefault(); // Prevents form submission/newline
             handleSendMessage();
         }
     });
@@ -3536,7 +3537,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const bubbleDiv = document.createElement('div');
         bubbleDiv.className = `chat-bubble p-3 rounded-lg max-w-xs md:max-w-md ${sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-600 text-white rounded-bl-none'}`;
-        bubbleDiv.textContent = text;
+        
+        // Sanitize and format the text to render newlines correctly
+        const formattedText = escapeHtml(text).replace(/\n/g, '<br>');
+        bubbleDiv.innerHTML = formattedText;
         
         messageDiv.appendChild(bubbleDiv);
         chatHistory.appendChild(messageDiv);
@@ -3567,9 +3571,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- Call Gemini API ---
+    // --- Call Gemini API (REWRITTEN FOR ROBUST ERROR HANDLING) ---
     async function sendMessageToAI(message) {
         showTypingIndicator();
+        sendChat.disabled = true;
+        chatInput.disabled = true;
+
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
@@ -3585,20 +3592,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
+            // This is the critical new logic: check if the HTTP response itself is an error.
             if (!response.ok) {
-                throw new Error(`API error: ${response.statusText}`);
+                let errorText = `API Error: ${response.status} ${response.statusText}`;
+                try {
+                    // Attempt to parse a more detailed error message from Google's response body.
+                    const errorData = await response.json();
+                    console.error("API Error Data:", errorData);
+                    if (errorData.error && errorData.error.message) {
+                       // This will give a clear error like "API key not valid."
+                       errorText = `Error: ${errorData.error.message}`;
+                    }
+                } catch (e) {
+                    // If the response body isn't JSON, we stick with the status text.
+                    console.error("Could not parse error JSON.", e);
+                }
+                // Throw an error with the detailed message to be caught below.
+                throw new Error(errorText);
             }
 
             const data = await response.json();
+
+            if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts[0]) {
+                throw new Error("Received an invalid response format from the API.");
+            }
+
             const aiResponse = data.candidates[0].content.parts[0].text;
             
             removeTypingIndicator();
             addMessageToHistory('ai', aiResponse);
 
         } catch (error) {
-            console.error("Error fetching AI response:", error);
+            console.error("Full error in sendMessageToAI:", error);
             removeTypingIndicator();
-            addMessageToHistory('ai', "Sorry, I'm having trouble connecting right now.");
+            // The message displayed is now the specific error thrown above.
+            addMessageToHistory('ai', error.message || "An unknown connection error occurred.");
+        } finally {
+            sendChat.disabled = false;
+            chatInput.disabled = false;
+            chatInput.focus();
         }
     }
 });
