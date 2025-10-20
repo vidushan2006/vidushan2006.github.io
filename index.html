@@ -3508,14 +3508,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendChat = document.getElementById('send-chat');
 
     // --- 2. CONFIGURE THE API ---
-    const API_KEY = 'AIzaSyBjxSfcIqjyi_Kc_vmQweUh1TWPqCokDYA';
+    const API_KEY = 'AIzaSyAT8O4DY9LLwAteY5gsVJNY8LwsV8g583E';
     
     // --- THE FIX ---
     // We are now using the `gemini-pro` model, which is the most stable and universally
     // available model for AI Studio API keys.
     // We are also using the standard `generateContent` endpoint, which is more reliable
     // for chat applications than the streaming endpoint.
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${API_KEY};
     
     // --- 3. SETUP EVENT LISTENERS ---
     chatbotToggle.addEventListener('click', () => {
