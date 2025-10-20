@@ -21,6 +21,9 @@
   <meta name="twitter:image" content="https://vidu2006.netlify.app/assets/images/vidu_social_preview.png"> <link rel="stylesheet" href="assets/css/main.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   
+  <!-- Tailwind CSS for AI Chatbot styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -1266,6 +1269,40 @@
         border-color: transparent transparent transparent white;
         margin-left: 5px;
     }
+
+    /* AI Chatbot Styles */
+    #chatbot-toggle {
+        z-index: 10001;
+    }
+    #chatbot-popup {
+        z-index: 10002;
+    }
+    .chat-message.user {
+        justify-content: flex-end;
+    }
+    .chat-message.user .chat-bubble {
+        background-color: #3b82f6; /* blue-500 */
+        color: white;
+        border-bottom-right-radius: 0.25rem;
+    }
+    .chat-message.ai .chat-bubble {
+        background-color: #4b5563; /* gray-600 */
+        color: white;
+        border-bottom-left-radius: 0.25rem;
+    }
+    .chat-bubble {
+      max-width: 80%;
+    }
+    #chat-history::-webkit-scrollbar {
+        width: 6px;
+    }
+    #chat-history::-webkit-scrollbar-track {
+        background: #374151; /* gray-700 */
+    }
+    #chat-history::-webkit-scrollbar-thumb {
+        background: #6b7280; /* gray-500 */
+        border-radius: 3px;
+    }
   </style>
 </head>
 <body class="landing is-preload">
@@ -1482,6 +1519,36 @@
 <button id="play-last-video-btn" title="Play Last Watched Video">
     <div class="play-icon-triangle"></div>
 </button>
+
+<!-- AI Chatbot Button -->
+<button id="chatbot-toggle" class="fixed bottom-5 left-5 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-110 focus:outline-none">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+    </svg>
+</button>
+
+<!-- AI Chatbot Popup -->
+<div id="chatbot-popup" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800 border border-gray-700 w-full max-w-lg h-[70vh] max-h-[600px] rounded-lg shadow-2xl flex flex-col text-white">
+        <!-- Header -->
+        <div class="flex justify-between items-center p-4 border-b border-gray-700">
+            <h3 class="text-lg font-semibold">AI Assistant</h3>
+            <button id="close-chatbot" class="text-gray-400 hover:text-white">&times;</button>
+        </div>
+        <!-- Chat History -->
+        <div id="chat-history" class="flex-1 p-4 space-y-4 overflow-y-auto">
+            <!-- Messages will be appended here -->
+        </div>
+        <!-- Input Area -->
+        <div class="p-4 border-t border-gray-700 flex items-center gap-2">
+            <input type="text" id="chat-input" placeholder="Ask something..." class="flex-1 bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="send-chat" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+                Send
+            </button>
+        </div>
+    </div>
+</div>
+
 
 <script>
 // Global utility function, accessible by all scripts.
@@ -2181,7 +2248,7 @@ function updateSpeedIndicator(activeButton) {
 
     state.keyHandler = function(e){
       const active = document.activeElement; const seekIsActive = (active && active.id === 'vidu_seek');
-      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
+      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive && active.id !== 'chat-input') return;
       
       const root = document.getElementById('modal-root'); 
       if(!root || (root.style.display === 'none' && !document.body.classList.contains('popup-mode'))) return;
@@ -3157,6 +3224,12 @@ function updateSpeedIndicator(activeButton) {
     document.addEventListener('keydown', e => { if ((e.ctrlKey && e.shiftKey && (e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')) || (e.ctrlKey && (e.key==='U'||e.key==='u')) || (e.key==='F12')) e.preventDefault(); });
     document.addEventListener('keydown', e => { 
         if (e.key === 'Escape') { 
+            const chatbotPopup = document.getElementById('chatbot-popup');
+            if (chatbotPopup && !chatbotPopup.classList.contains('hidden')) {
+                chatbotPopup.classList.add('hidden');
+                return;
+            }
+
             const root = document.getElementById('modal-root'); 
             const fsPlaylist = document.getElementById('fullscreen-playlist-overlay');
             if (root && root.style.display !== 'none' && !document.body.classList.contains('popup-mode')) closeModal();
@@ -3413,6 +3486,125 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+
+<!-- AI Chatbot Script -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const chatbotToggle = document.getElementById('chatbot-toggle');
+    const chatbotPopup = document.getElementById('chatbot-popup');
+    const closeChatbot = document.getElementById('close-chatbot');
+    const chatHistory = document.getElementById('chat-history');
+    const chatInput = document.getElementById('chat-input');
+    const sendChat = document.getElementById('send-chat');
+
+    const API_KEY = 'AIzaSyBjxSfcIqjyi_Kc_vmQweUh1TWPqCokDYA';
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+    
+    // --- Toggle Chatbot Popup ---
+    chatbotToggle.addEventListener('click', () => {
+        chatbotPopup.classList.toggle('hidden');
+        if (!chatbotPopup.classList.contains('hidden')) {
+            chatInput.focus();
+        }
+    });
+
+    closeChatbot.addEventListener('click', () => {
+        chatbotPopup.classList.add('hidden');
+    });
+
+    // --- Send message logic ---
+    const handleSendMessage = () => {
+        const message = chatInput.value.trim();
+        if (message) {
+            addMessageToHistory('user', message);
+            sendMessageToAI(message);
+            chatInput.value = '';
+        }
+    };
+
+    sendChat.addEventListener('click', handleSendMessage);
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            handleSendMessage();
+        }
+    });
+
+    // --- Add message to UI ---
+    function addMessageToHistory(sender, text) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+        
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = `chat-bubble p-3 rounded-lg max-w-xs md:max-w-md ${sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-600 text-white rounded-bl-none'}`;
+        bubbleDiv.textContent = text;
+        
+        messageDiv.appendChild(bubbleDiv);
+        chatHistory.appendChild(messageDiv);
+        
+        // Scroll to the bottom
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    // --- Add a typing indicator ---
+    function showTypingIndicator() {
+        const indicatorDiv = document.createElement('div');
+        indicatorDiv.id = 'typing-indicator';
+        indicatorDiv.className = 'chat-message flex justify-start';
+        indicatorDiv.innerHTML = `
+            <div class="chat-bubble p-3 rounded-lg bg-gray-600 text-white rounded-bl-none">
+                <span class="animate-pulse">...</span>
+            </div>
+        `;
+        chatHistory.appendChild(indicatorDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+
+    // --- Call Gemini API ---
+    async function sendMessageToAI(message) {
+        showTypingIndicator();
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: message
+                        }]
+                    }]
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            const aiResponse = data.candidates[0].content.parts[0].text;
+            
+            removeTypingIndicator();
+            addMessageToHistory('ai', aiResponse);
+
+        } catch (error) {
+            console.error("Error fetching AI response:", error);
+            removeTypingIndicator();
+            addMessageToHistory('ai', "Sorry, I'm having trouble connecting right now.");
+        }
+    }
+});
+</script>
+
+
 <script>
 (function() {
     'use strict';
