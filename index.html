@@ -24,6 +24,12 @@
   <!-- Tailwind CSS for AI Chatbot styling -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- Libraries for AI Assistant -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -1271,37 +1277,249 @@
     }
 
     /* AI Chatbot Styles */
-    #chatbot-toggle {
-        z-index: 10001;
+    #ai-toggle-btn {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 9998;
     }
-    #chatbot-popup {
-        z-index: 20001; /* Ensure it is above other elements */
+
+    #ai-assistant-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(10, 12, 18, 0.5);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 20000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s var(--ease);
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-    .chat-message.user {
-        justify-content: flex-end;
+
+    #ai-assistant-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
     }
-    .chat-message.user .chat-bubble {
-        background-color: #3b82f6; /* blue-500 */
-        color: white;
-        border-bottom-right-radius: 0.25rem;
+
+    #ai-assistant-container {
+        width: 90vw;
+        max-width: 750px;
+        height: 80vh;
+        max-height: 700px;
+        background-color: #1E202B;
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transform: scale(0.95);
+        transition: transform 0.3s var(--ease);
     }
-    .chat-message.ai .chat-bubble {
-        background-color: #4b5563; /* gray-600 */
-        color: white;
-        border-bottom-left-radius: 0.25rem;
+
+    #ai-assistant-overlay.visible #ai-assistant-container {
+        transform: scale(1);
     }
-    .chat-bubble {
-      max-width: 80%;
+    
+    #ai-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px;
+        background-color: #2a2d3a;
+        flex-shrink: 0;
     }
-    #chat-history::-webkit-scrollbar {
-        width: 6px;
+
+    #ai-header h3 {
+        font-weight: 700;
+        font-size: 16px;
+        color: #fff;
+        background: linear-gradient(90deg, #A855F7, #EC4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
-    #chat-history::-webkit-scrollbar-track {
-        background: #374151; /* gray-700 */
+
+    #ai-history {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
     }
-    #chat-history::-webkit-scrollbar-thumb {
-        background: #6b7280; /* gray-500 */
-        border-radius: 3px;
+
+    #ai-history::-webkit-scrollbar { width: 6px; }
+    #ai-history::-webkit-scrollbar-track { background: #1E202B; }
+    #ai-history::-webkit-scrollbar-thumb { background: #4a4e69; border-radius: 3px; }
+
+    .ai-message {
+        display: flex;
+        gap: 12px;
+        max-width: 90%;
+    }
+    
+    .ai-message.user-message {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    .ai-message .icon {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #4a4e69;
+    }
+    
+    .ai-message.user-message .icon {
+        background-color: #7b61ff;
+    }
+
+    .ai-message .content {
+        background-color: #2a2d3a;
+        padding: 12px 16px;
+        border-radius: 12px;
+        color: #e2e8f0;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .ai-message .content p:not(:last-child) {
+        margin-bottom: 1em;
+    }
+    .ai-message .content h1, .ai-message .content h2, .ai-message .content h3 {
+        color: #fff;
+        font-weight: 700;
+        margin-bottom: 0.5em;
+        margin-top: 1em;
+    }
+    .ai-message .content ul, .ai-message .content ol {
+        padding-left: 20px;
+        margin-block: 1em;
+    }
+     .ai-message .content li {
+        margin-bottom: 0.5em;
+    }
+    .ai-message .content a {
+        color: #A855F7;
+        text-decoration: underline;
+    }
+    .ai-message .content pre {
+        margin-block: 1em;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    #ai-input-area {
+        padding: 16px;
+        background-color: #2a2d3a;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    #ai-input-box {
+        position: relative;
+        padding: 2px;
+        border-radius: 12px;
+        background: linear-gradient(90deg, #A855F7, #EC4899, #F59E0B, #A855F7);
+        background-size: 300% 300%;
+        animation: gradient-flow 5s ease infinite;
+    }
+
+    @keyframes gradient-flow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    #ai-input-wrapper {
+        display: flex;
+        align-items: center;
+        background-color: #1E202B;
+        border-radius: 10px;
+        padding: 0 12px;
+    }
+    
+    #ai-input-wrapper .icon {
+        color: #A855F7;
+    }
+
+    #ai-input {
+        flex-grow: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #fff;
+        padding: 12px 8px;
+        font-size: 16px;
+    }
+    #ai-input::placeholder { color: #9ca3af; }
+    
+    #ai-switch-mode {
+        font-size: 12px;
+        color: #9ca3af;
+        margin-right: 8px;
+        cursor: pointer;
+        user-select: none;
+    }
+    #ai-switch-mode kbd {
+        background: #4a4e69;
+        padding: 2px 5px;
+        border-radius: 4px;
+    }
+    #ai-mic-btn {
+        background: transparent;
+        border: none;
+        color: #EC4899;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        transition: background-color 0.2s;
+    }
+    #ai-mic-btn:hover { background-color: rgba(255,255,255,0.1); }
+    #ai-mic-btn.recording { color: #e11d48; animation: pulse-red 1.5s infinite; }
+    @keyframes pulse-red {
+        0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+    }
+    
+    .typing-indicator span {
+        height: 8px;
+        width: 8px;
+        background-color: #A855F7;
+        border-radius: 50%;
+        display: inline-block;
+        animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1.0); }
+    }
+    
+    .ai-response-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        padding-left: 44px; /* Align with content */
+    }
+    .ai-response-actions button {
+        background-color: #4a4e69;
+        border: none;
+        color: #e2e8f0;
+        padding: 6px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .ai-response-actions button:hover {
+        background-color: #7b61ff;
     }
   </style>
 </head>
@@ -1520,39 +1738,43 @@
     <div class="play-icon-triangle"></div>
 </button>
 
-<!-- AI Chatbot Button -->
-<button id="chatbot-toggle" class="fixed bottom-5 left-5 bg-blue-600 text-white w-16 h-16 rounded-full shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-110 focus:outline-none flex items-center justify-center">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-    </svg>
+<!-- ============================================================= -->
+<!-- == NEW AI ASSISTANT (REBUILT FROM THE GROUND UP) == -->
+<!-- ============================================================= -->
+<button id="ai-toggle-btn" class="bg-purple-600 text-white w-16 h-16 rounded-full shadow-lg hover:bg-purple-700 transition-transform transform hover:scale-110 focus:outline-none flex items-center justify-center">
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.2-4.1.6 3 2.9-.8 4.1 3.8-2 3.8 2-.8-4.1 3-2.9-4.1-.6Z"/></svg>
 </button>
 
-<!-- AI Chatbot Popup -->
-<div id="chatbot-popup" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-gray-800 border border-gray-700 w-full max-w-lg h-[70vh] max-h-[600px] rounded-lg shadow-2xl flex flex-col text-white">
-        <!-- Header -->
-        <div class="flex justify-between items-center p-4 border-b border-gray-700">
-            <h3 class="text-lg font-semibold">AI Assistant</h3>
-            <button id="close-chatbot" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
-        </div>
-        <!-- Chat History -->
-        <div id="chat-history" class="flex-1 p-4 space-y-4 overflow-y-auto">
-            <!-- Initial AI message -->
-            <div class="chat-message flex justify-start">
-                <div class="chat-bubble p-3 rounded-lg max-w-xs md:max-w-md bg-gray-600 text-white rounded-bl-none">
-                    Hi! How can I help you today?
+<div id="ai-assistant-overlay">
+    <div id="ai-assistant-container">
+        <header id="ai-header">
+            <h3>Gemini 2.0</h3>
+            <button id="ai-close-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+        </header>
+
+        <main id="ai-history">
+             <!-- Chat messages will be appended here -->
+        </main>
+
+        <footer id="ai-input-area">
+            <div id="ai-input-box">
+                <div id="ai-input-wrapper">
+                    <span class="icon p-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.2-4.1.6 3 2.9-.8 4.1 3.8-2 3.8 2-.8-4.1 3-2.9-4.1-.6Z"/></svg>
+                    </span>
+                    <input type="text" id="ai-input" placeholder="Ask Gemini anything...">
+                    <span id="ai-switch-mode" title="Toggle website context (Tab)">Switch mode <kbd>Tab</kbd></span>
+                    <button id="ai-mic-btn" title="Ask with your voice">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                    </button>
                 </div>
             </div>
-        </div>
-        <!-- Input Area -->
-        <div class="p-4 border-t border-gray-700 flex items-center gap-2">
-            <input type="text" id="chat-input" placeholder="Ask something..." class="flex-1 bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button id="send-chat" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
-                Send
-            </button>
-        </div>
+        </footer>
     </div>
 </div>
+<!-- ============================================================= -->
+<!-- == END OF NEW AI ASSISTANT == -->
+<!-- ============================================================= -->
 
 
 <script>
@@ -3229,9 +3451,9 @@ function updateSpeedIndicator(activeButton) {
     document.addEventListener('keydown', e => { if ((e.ctrlKey && e.shiftKey && (e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j')) || (e.ctrlKey && (e.key==='U'||e.key==='u')) || (e.key==='F12')) e.preventDefault(); });
     document.addEventListener('keydown', e => { 
         if (e.key === 'Escape') { 
-            const chatbotPopup = document.getElementById('chatbot-popup');
-            if (chatbotPopup && !chatbotPopup.classList.contains('hidden')) {
-                chatbotPopup.classList.add('hidden');
+            const aiOverlay = document.getElementById('ai-assistant-overlay');
+            if (aiOverlay && aiOverlay.classList.contains('visible')) {
+                aiOverlay.classList.remove('visible');
                 return;
             }
 
@@ -3492,146 +3714,266 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<!-- 
-  =============================================================
-  == FINAL AI CHATBOT SCRIPT (REBUILT & STABLE) ==
-  =============================================================
--->
+
+<!-- ============================================================= -->
+<!-- == NEW AI ASSISTANT SCRIPT (REBUILT & STABLE) == -->
+<!-- ============================================================= -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 1. GET ALL THE UI ELEMENTS ---
-    const chatbotToggle = document.getElementById('chatbot-toggle');
-    const chatbotPopup = document.getElementById('chatbot-popup');
-    const closeChatbot = document.getElementById('close-chatbot');
-    const chatHistory = document.getElementById('chat-history');
-    const chatInput = document.getElementById('chat-input');
-    const sendChat = document.getElementById('send-chat');
-
-    // --- 2. CONFIGURE THE API ---
-    const API_KEY = 'AIzaSyAT8O4DY9LLwAteY5gsVJNY8LwsV8g583E';
+    // --- 1. CONFIGURATION & STATE ---
+    const API_KEY = 'AIzaSyCiJcb8Y1ilOdrX7RYF78kIK2jCyece-HE';
+    const API_URL_TEXT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key=${API_KEY}&alt=sse`;
     
-    // --- THE FIX ---
-    // We are now using the `gemini-pro` model, which is the most stable and universally
-    // available model for AI Studio API keys.
-    // We are also using the standard `generateContent` endpoint, which is more reliable
-    // for chat applications than the streaming endpoint.
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-    // --- 3. SETUP EVENT LISTENERS ---
-    chatbotToggle.addEventListener('click', () => {
-        chatbotPopup.classList.toggle('hidden');
-        if (!chatbotPopup.classList.contains('hidden')) {
-            chatInput.focus();
-        }
-    });
-
-    closeChatbot.addEventListener('click', () => {
-        chatbotPopup.classList.add('hidden');
-    });
-
-    const handleSendMessage = () => {
-        const message = chatInput.value.trim();
-        if (message) {
-            addMessageToHistory('user', message);
-            sendMessageToAI(message);
-            chatInput.value = '';
-        }
+    let state = {
+        isAssistantVisible: false,
+        isContextMode: false,
+        isRecognizing: false,
+        isLoading: false,
+        chatHistory: [], // Will store objects like { role: 'user'/'model', parts: [{text: '...'}], timestamp: ... }
+        promptHistory: [],
+        promptHistoryIndex: -1,
+        currentAbortController: null
     };
 
-    sendChat.addEventListener('click', handleSendMessage);
-    chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleSendMessage();
+    // --- 2. DOM ELEMENT REFERENCES ---
+    const DOMElements = {
+        toggleBtn: document.getElementById('ai-toggle-btn'),
+        overlay: document.getElementById('ai-assistant-overlay'),
+        container: document.getElementById('ai-assistant-container'),
+        closeBtn: document.getElementById('ai-close-btn'),
+        historyContainer: document.getElementById('ai-history'),
+        input: document.getElementById('ai-input'),
+        inputBox: document.getElementById('ai-input-box'),
+        switchModeBtn: document.getElementById('ai-switch-mode'),
+        micBtn: document.getElementById('ai-mic-btn'),
+    };
+
+    // --- 3. SPEECH RECOGNITION SETUP ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.onresult = handleSpeechResult;
+        recognition.onend = () => {
+            state.isRecognizing = false;
+            DOMElements.micBtn.classList.remove('recording');
+        };
+    }
+
+    // --- 4. INITIALIZATION ---
+    function init() {
+        if (!API_KEY || API_KEY === 'AIzaSyCiJcb8Y1ilOdrX7RYF78kIK2jCyece-HE') {
+             console.warn("AI Assistant: API Key is not set. The assistant will not work.");
         }
-    });
-
-    // --- 4. DEFINE UI HELPER FUNCTIONS ---
-    function addMessageToHistory(sender, text) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `chat-message flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
         
-        const bubbleDiv = document.createElement('div');
-        bubbleDiv.className = `chat-bubble p-3 rounded-lg max-w-xs md:max-w-md ${sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-600 text-white rounded-bl-none'}`;
-        
-        const formattedText = escapeHtml(text).replace(/\n/g, '<br>');
-        bubbleDiv.innerHTML = formattedText;
-        
-        messageDiv.appendChild(bubbleDiv);
-        chatHistory.appendChild(messageDiv);
-        chatHistory.scrollTop = chatHistory.scrollHeight;
+        setupEventListeners();
+        addMessage('model', 'Hi there! How can I help you today?');
     }
 
-    function showTypingIndicator() {
-        const indicatorDiv = document.createElement('div');
-        indicatorDiv.id = 'typing-indicator';
-        indicatorDiv.className = 'chat-message flex justify-start';
-        indicatorDiv.innerHTML = `
-            <div class="chat-bubble p-3 rounded-lg bg-gray-600 text-white rounded-bl-none">
-                <span class="animate-pulse">...</span>
-            </div>
-        `;
-        chatHistory.appendChild(indicatorDiv);
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-    }
-
-    function removeTypingIndicator() {
-        const indicator = document.getElementById('typing-indicator');
-        if (indicator) {
-            indicator.remove();
+    // --- 5. EVENT LISTENERS ---
+    function setupEventListeners() {
+        DOMElements.toggleBtn.addEventListener('click', toggleAssistant);
+        DOMElements.closeBtn.addEventListener('click', toggleAssistant);
+        DOMElements.overlay.addEventListener('click', (e) => {
+            if (e.target === DOMElements.overlay) toggleAssistant();
+        });
+        DOMElements.input.addEventListener('keydown', handleInputKeydown);
+        DOMElements.switchModeBtn.addEventListener('click', toggleContextMode);
+        if (recognition) {
+            DOMElements.micBtn.addEventListener('click', toggleSpeechRecognition);
         }
     }
 
-    // --- 5. THE CORE API COMMUNICATION FUNCTION ---
-    async function sendMessageToAI(message) {
-        showTypingIndicator();
-        sendChat.disabled = true;
-        chatInput.disabled = true;
+    // --- 6. CORE FUNCTIONS ---
+    function toggleAssistant() {
+        state.isAssistantVisible = !state.isAssistantVisible;
+        DOMElements.overlay.classList.toggle('visible', state.isAssistantVisible);
+        if (state.isAssistantVisible) {
+            DOMElements.input.focus();
+        } else {
+            if (state.isLoading && state.currentAbortController) {
+                state.currentAbortController.abort();
+            }
+        }
+    }
+    
+    function toggleContextMode() {
+        state.isContextMode = !state.isContextMode;
+        DOMElements.inputBox.style.background = state.isContextMode 
+            ? 'linear-gradient(90deg, #F59E0B, #EC4899, #A855F7, #F59E0B)' 
+            : 'linear-gradient(90deg, #A855F7, #EC4899, #F59E0B, #A855F7)';
+        DOMElements.input.placeholder = state.isContextMode 
+            ? `Ask about ${location.hostname.replace('www.','')}...`
+            : 'Ask Gemini anything...';
+        DOMElements.input.focus();
+    }
+
+    async function handleSendMessage() {
+        const promptText = DOMElements.input.value.trim();
+        if (!promptText || state.isLoading) return;
+
+        DOMElements.input.value = '';
+        if (promptText !== state.promptHistory[state.promptHistory.length - 1]) {
+           state.promptHistory.push(promptText);
+        }
+        state.promptHistoryIndex = state.promptHistory.length;
+
+
+        addMessage('user', promptText);
+        let finalPrompt = promptText;
+
+        if(state.isContextMode) {
+            finalPrompt = `Based on the content of this webpage, answer the following question: "${promptText}". Webpage content: \n\n${document.body.innerText.substring(0, 10000)}`;
+        }
+
+        state.chatHistory.push({ role: 'user', parts: [{ text: finalPrompt }] });
+        
+        await fetchStreamedResponse(state.chatHistory);
+    }
+    
+    async function fetchStreamedResponse(history) {
+        state.isLoading = true;
+        state.currentAbortController = new AbortController();
+        const currentMessageContainer = addMessage('model', '<div class="typing-indicator"><span></span><span></span><span></span></div>');
+        const contentDiv = currentMessageContainer.querySelector('.content');
 
         try {
-            const response = await fetch(API_URL, {
+            const response = await fetch(API_URL_TEXT, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: message
-                        }]
-                    }]
-                })
+                signal: state.currentAbortController.signal,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: history }),
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                const errorMessage = errorData?.error?.message || `API Error: ${response.status} ${response.statusText}`;
-                throw new Error(errorMessage);
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
             }
 
-            const result = await response.json();
-            const aiText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullResponse = "";
+            contentDiv.innerHTML = '';
 
-            if (!aiText) {
-                // This handles cases where the API returns a success status but the content is blocked or empty.
-                 const blockReason = result?.promptFeedback?.blockReason;
-                 if(blockReason){
-                    throw new Error(`Your request was blocked. Reason: ${blockReason}. Please modify your prompt.`);
-                 }
-                throw new Error("The AI response was empty or in an unexpected format.");
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const json = JSON.parse(line.substring(6));
+                            const textPart = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                            if (textPart) {
+                                fullResponse += textPart;
+                                contentDiv.innerHTML = marked.parse(fullResponse);
+                            }
+                        } catch (e) {
+                             // Ignore parsing errors for incomplete JSON chunks
+                        }
+                    }
+                }
+                 DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
             }
 
-            addMessageToHistory('ai', aiText);
+            history.push({ role: 'model', parts: [{ text: fullResponse }] });
+            hljs.highlightAll(); // Apply syntax highlighting after stream is complete
 
         } catch (error) {
-            console.error("Error calling Gemini API:", error);
-            addMessageToHistory('ai', `I'm sorry, I encountered an error: ${error.message}`);
+             if (error.name !== 'AbortError') {
+                contentDiv.innerHTML = `<p class="text-red-400">Sorry, something went wrong: ${error.message}</p>`;
+             } else {
+                contentDiv.innerHTML = `<p class="text-yellow-400">Request cancelled.</p>`
+             }
         } finally {
-            removeTypingIndicator();
-            sendChat.disabled = false;
-            chatInput.disabled = false;
-            chatInput.focus();
+            state.isLoading = false;
         }
     }
+
+
+    // --- 7. UI & HELPER FUNCTIONS ---
+    function addMessage(role, text) {
+        const messageWrapper = document.createElement('div');
+        messageWrapper.className = `ai-message ${role === 'user' ? 'user-message' : 'model-message'}`;
+
+        const iconHtml = role === 'user' 
+            ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
+            : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.2-4.1.6 3 2.9-.8 4.1 3.8-2 3.8 2-.8-4.1 3-2.9-4.1-.6Z"/></svg>`;
+
+        messageWrapper.innerHTML = `
+            <div class="icon text-white">${iconHtml}</div>
+            <div class="content">${marked.parse(text)}</div>
+        `;
+        
+        DOMElements.historyContainer.appendChild(messageWrapper);
+        DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
+
+        return messageWrapper;
+    }
+
+    function handleInputKeydown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            toggleContextMode();
+        }
+        if (e.key === 'ArrowUp') {
+            if (state.promptHistoryIndex > 0) {
+                state.promptHistoryIndex--;
+                DOMElements.input.value = state.promptHistory[state.promptHistoryIndex];
+                e.preventDefault();
+            }
+        }
+        if (e.key === 'ArrowDown') {
+             if (state.promptHistoryIndex < state.promptHistory.length - 1) {
+                state.promptHistoryIndex++;
+                DOMElements.input.value = state.promptHistory[state.promptHistoryIndex];
+             } else {
+                state.promptHistoryIndex = state.promptHistory.length;
+                DOMElements.input.value = "";
+             }
+        }
+    }
+    
+    // --- 8. SPEECH RECOGNITION FUNCTIONS ---
+    function toggleSpeechRecognition() {
+        if (!recognition) return;
+        if (state.isRecognizing) {
+            recognition.stop();
+        } else {
+            state.isRecognizing = true;
+            DOMElements.micBtn.classList.add('recording');
+            recognition.start();
+        }
+    }
+    
+    function handleSpeechResult(event) {
+        let interim_transcript = '';
+        let final_transcript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                final_transcript += event.results[i][0].transcript;
+            } else {
+                interim_transcript += event.results[i][0].transcript;
+            }
+        }
+
+        DOMElements.input.value = final_transcript + interim_transcript;
+        if (final_transcript) {
+            handleSendMessage();
+        }
+    }
+
+    // --- Let's go! ---
+    init();
 });
 </script>
 
