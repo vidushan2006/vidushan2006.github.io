@@ -3758,79 +3758,210 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <!-- ============================================================= -->
-<!-- == NEW SELF-HOSTED AI ASSISTANT SCRIPT (HYBRID w/ OPENAI) == -->
+<!-- == NEW SELF-HOSTED AI ASSISTANT SCRIPT (INTELLIGENT VERSION) == -->
 <!-- ============================================================= -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // --- 1. STATE & CONFIGURATION ---
     const state = {
-// ... existing code ... -->
+        isAssistantVisible: false,
+        isLoading: false,
+        promptHistory: [],
         promptHistoryIndex: -1,
     };
-
-    // --- OpenAI API Configuration ---
-    // The API key has been removed from here for security.
-    // The call will now be made to a secure serverless function.
 
     // --- 2. DOM ELEMENT REFERENCES ---
     const DOMElements = {
         toggleBtn: document.getElementById('ai-toggle-btn'),
-// ... existing code ... -->
+        overlay: document.getElementById('ai-assistant-overlay'),
+        container: document.getElementById('ai-assistant-container'),
+        closeBtn: document.getElementById('ai-close-btn'),
+        historyContainer: document.getElementById('ai-history'),
+        input: document.getElementById('ai-input'),
+        sendBtn: document.getElementById('ai-send-btn'),
+    };
+
+    // --- 3. THE AI's "BRAIN" - KNOWLEDGE BASE ---
+    // This part remains the same. The AI will ALWAYS check this first.
+    const knowledgeBase = {
+        keywords: {
+            'yoinker': {
+                response: "OMG, you mean the 'Video Yoinker'? Yasss! 🙌 It's VIDU's epic name for the YouTube Downloader on the 'Tools' page. Just drop a link and snag that video for offline. It's a whole vibe. ✨",
+                followUps: ["How does the playlist importer work?", "What other tools are there?"]
+            },
+            'downloader': {
+                response: "The YouTube downloader, nicknamed the 'Video Yoinker', is on the 'Tools' page. 🛠️ You can paste one or more YouTube video links there to generate download links for offline viewing. So clutch!",
+                followUps: ["How does the playlist importer work?", "What other tools are there?"]
+            },
+            'link glo-up': {
+                response: "Ah, the 'Link Glo-Up'! ✨ That's the YouTube link converter on the 'Tools' page. It takes long, messy `youtube.com` links and shortens them into clean `youtu.be` links. We love that for you.💅",
+                followUps: ["Tell me about the downloader.", "What is the main feature of this site?"]
+            },
+            'converter': {
+                response: "The YouTube link converter, called 'Link Glo-Up', is on the 'Tools' page. ✨ It takes long, messy `youtube.com` links and shortens them into clean `youtu.be` links. Perfect for sharing!",
+                followUps: ["Tell me about the downloader.", "What is the main feature of this site?"]
+            },
+            'tools': {
+                response: `The 'Tools' page is a powerhouse! 🤖 It has some awesome utilities built by VIDU:
+* **YT Playlist Importer:** Lets you fetch and view any public YouTube playlist in a slick interface.
+* **The Video Yoinker:** A YouTube downloader.
+* **Link Glo-Up:** A YouTube link shortener.`,
+                followUps: ["Explain the playlist importer.", "How secure is this site?"]
+            },
+            'keyboard': {
+                response: `Bet. Control the video player like a pro with these keyboard shortcuts: ⌨️
+* **Spacebar:** Play or Pause
+* **Right Arrow:** Skip forward 10s
+* **Left Arrow:** Skip backward 10s
+* **Up/Down Arrows:** Adjust volume
+* **'F' Key:** Toggle fullscreen
+* **'M' Key:** Mute/unmute`,
+                followUps: ["Does the player save my progress?", "What are the playback speed options?"]
+            },
+            'shortcuts': {
+                response: `You got it! Control the video player like a pro with these keyboard shortcuts: ⌨️
+* **Spacebar:** Play or Pause
+* **Right Arrow:** Skip forward 10s
+* **Left Arrow:** Skip backward 10s
+* **Up/Down Arrows:** Adjust volume
+* **'F' Key:** Toggle fullscreen
+* **'M' Key:** Mute/unmute`,
+                followUps: ["Does the player save my progress?", "What are the playback speed options?"]
+            },
+            'save progress': {
+                response: "Oh yeah, the 'Never Lose Your Spot' feature is a lifesaver! ✨ The player automatically saves your position in a video to your browser's `localStorage`. When you come back to that video, it magically picks up right where you left off.",
+                followUps: ["What are the keyboard shortcuts?", "Tell me about the player's design."]
+            },
+            'password': {
+                response: "For the exclusive content, the site uses a password check. It's a simple but effective system that verifies your password before granting access to protected videos or playlists. Very VIP! 💅",
+                followUps: ["Is there a login system too?", "Who built this site?"]
+            },
+            'security': {
+                response: "Security is handled cleverly here! For exclusive content, there's a password-protection system. VIDU also built a client-side login system for the private page to control who can see which playlists. Low-key genius. 🤫",
+                followUps: ["How does password protection work?", "Who is VIDU?"]
+            },
+            'player': {
+                response: `The video player is the star of the show and was custom-coded by VIDU! 🎬 It's not the standard YouTube player. It has:
+* **Custom Controls:** A slick, modern interface.
+* **Keyboard Shortcuts:** Full control without a mouse.
+* **Playback Speed Settings:** Watch at your own pace.
+* **Progress Saving:** It automatically saves your position in a video.`,
+                followUps: ["Tell me all the keyboard shortcuts.", "How does it save my progress?", "Who made this player?"]
+            },
+            'features': {
+                response: `This website has a ton of custom features built by VIDU! Here are the highlights:
+* **The VIDU Player™️:** A completely custom-built player with advanced controls and progress saving.
+* **Secure Playlists:** Password-protection and a private login system.
+* **YT Playlist Importer:** Fetches any YouTube playlist for you.
+* **VIDU Tool Shed:** Includes a video downloader and link shortener.
+* **Premium UI/UX:** The whole site uses cool effects like the 'glassy' blur and super smooth animations.`,
+                followUps: ["Tell me more about the player.", "Who is VIDU?", "What are the tools?"]
+            },
+            'how does this work': {
+                response: "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀",
+                followUps: ["What are the main features?", "Tell me about the creator, VIDU."]
+            },
+            'what is this site': {
+                response: "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀",
+                followUps: ["What are the main features?", "Tell me about the creator, VIDU."]
+            },
+            'your name': {
+                response: "You can call me VIDU AI 2.0 Pro! I'm the new and improved assistant for this site. What's up? 😎",
+                followUps: []
+            },
+            'who are you': {
+                response: "I'm VIDU AI 2.0 Pro, a highly advanced assistant integrated into this website. I know everything about its features and can answer your other questions too! 🤓",
+                followUps: ["Who made you?", "What can you do?"]
+            },
+            'creator': {
+                response: "My creator? That would be the legend himself, VIDU! 👑 He coded me and this entire website from scratch. Mad skills, right? 👨‍💻",
+                followUps: ["What are the site's best features?", "What technologies does this site use?"]
+            },
+            'who made you': {
+                response: "I was created and trained by the one and only VIDU! 👑 He's the talented developer who built this entire website from the ground up. He's the real MVP. 👨‍💻",
+                followUps: ["What are the site's best features?", "What technologies does this site use?"]
+            },
+            'vidu': {
+                response: "VIDU is the creator of this website and me, VIDU AI 2.0 Pro. He's a skilled developer who built everything you see here. Pretty cool, right? ✌️",
+                followUps: ["What did VIDU build on this site?", "Is the video player custom?"]
+            },
+        },
+        general: {
+            'hello': { response: 'Hey there! How can I help you today? 👋', followUps: [] },
+            'hi': { response: 'Hey there! How can I help you today? 👋', followUps: [] },
+            'hey': { response: 'Hey there! How can I help you today? 👋', followUps: [] },
+            'how are you': { response: "Vibing! ✌️ Just processing 1s and 0s. What's the tea? How can I help you? 😄", followUps: [] },
+            'what is the time': { response: `I don't have a direct connection to a live clock, but your device's time is currently: ${new Date().toLocaleTimeString()} ⏰`, followUps: [] },
+            'what is your purpose': { response: 'My purpose is to be your friendly guide! I can tell you all about this website, answer your questions, and generally make your visit more awesome. 🤖', followUps: ["What are the site's main features?", "Who made you?"] },
+            'thank you': { response: "You're very welcome! Let me know if you need anything else. I'm here to help! 😊", followUps: [] },
             'thanks': { response: "You're very welcome! Let me know if you need anything else. I'm here to help! 😊", followUps: [] },
         }
     };
 
-    async function getOpenAIResponse(prompt) {
-        // This function now calls our own secure Netlify Function endpoint
-        // instead of the OpenAI API directly.
-        const url = '/.netlify/functions/getOpenAIResponse';
+    /**
+     * MODIFIED FUNCTION
+     * This function is now async. It checks the local knowledge base first.
+     * If no match is found, it calls your Netlify serverless function.
+     */
+    async function getAIResponse(prompt) {
+        const lowerCasePrompt = prompt.toLowerCase().trim();
 
+        // 1. Check general, hard-coded responses
+        if (knowledgeBase.general[lowerCasePrompt]) {
+            return knowledgeBase.general[lowerCasePrompt];
+        }
+
+        // 2. Check site-specific keyword responses
+        for (const keyword in knowledgeBase.keywords) {
+            if (lowerCasePrompt.includes(keyword)) {
+                return knowledgeBase.keywords[keyword];
+            }
+        }
+        
+        // 3. NEW: No local match found, call the Netlify function for an OpenAI response
         try {
-            const response = await fetch(url, {
+            const response = await fetch('/.netlify/functions/getOpenAIResponse', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ prompt: prompt })
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Serverless Function Error:', errorData);
-                return `Sorry, I encountered an error: ${errorData.error || 'Unknown error'}`;
+                // If the function itself fails (e.g., 500 error)
+                console.error("Error from Netlify function:", response.statusText);
+                return { 
+                    response: "I'm having a little trouble connecting to my extended brain right now. 🧠⚡ Please try again in a moment.",
+                    followUps: ["What are this site's features?", "Who made this website?"]
+                };
             }
 
             const data = await response.json();
-            return data.response;
+
+            if (data.error) {
+                // If the function reports an error from OpenAI (e.g., API key issue)
+                console.error("Error from OpenAI API:", data.error);
+                return { 
+                    response: "My extended brain seems to be offline at the moment. Please try again later.",
+                    followUps: ["What are this site's features?", "Who made this website?"]
+                };
+            }
+
+            // Success! Return the answer from OpenAI
+            return { 
+                response: data.answer,
+                followUps: ["Got another question?", "What else can you do?", "Who is VIDU?"]
+            };
 
         } catch (error) {
-            console.error('Network or Fetch Error:', error);
-            return "Sorry, I'm having trouble connecting to the network right now. Please check your connection and try again.";
+            // If the fetch call itself fails (e.g., network error)
+            console.error("Fetch error calling Netlify function:", error);
+            return { 
+                response: "I'm having a little trouble connecting to my extended brain right now. 🧠⚡ Please try again in a moment.",
+                followUps: ["What are this site's features?", "Who made this website?"]
+            };
         }
-    }
-
-    async function getAIResponse(prompt) {
-        const lowerCasePrompt = prompt.toLowerCase().trim();
-
-        // 1. Check for simple, general keywords first
-        if (knowledgeBase.general[lowerCasePrompt]) {
-            return { ...knowledgeBase.general[lowerCasePrompt], isLocal: true };
-        }
-
-        // 2. Check for website-specific keywords
-        for (const keyword in knowledgeBase.keywords) {
-            if (lowerCasePrompt.includes(keyword)) {
-                return { ...knowledgeBase.keywords[keyword], isLocal: true };
-            }
-        }
-        
-        // 3. If no local match, call OpenAI API
-        const openAIResponse = await getOpenAIResponse(prompt);
-        return { 
-            response: openAIResponse,
-            followUps: [], // OpenAI responses won't have pre-programmed follow-ups
-            isLocal: false
-        };
     }
 
     // --- 4. INITIALIZATION & EVENT LISTENERS ---
@@ -3859,12 +3990,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * MODIFIED FUNCTION
+     * This function is now async to `await` the response from getAIResponse.
+     */
     async function handleSendMessage() {
         const promptText = DOMElements.input.value.trim();
         if (!promptText || state.isLoading) return;
 
+        // Clear any existing suggestions
         const existingSuggestions = DOMElements.historyContainer.querySelector('.ai-suggestions');
-        if (existingSuggestions) existingSuggestions.remove();
+        if (existingSuggestions) {
+            existingSuggestions.remove();
+        }
 
         DOMElements.input.value = '';
         if (promptText !== state.promptHistory[state.promptHistory.length - 1]) {
@@ -3875,15 +4013,13 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage('user', promptText);
         
         state.isLoading = true;
+        // Show the typing indicator
         const thinkingMessage = addMessage('model', '<div class="typing-indicator"><span></span><span></span><span></span></div>');
         
-        const { response, followUps, isLocal } = await getAIResponse(promptText);
-
-        // Simulate a short delay for local answers to feel more natural
-        if(isLocal) {
-            await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 400));
-        }
-
+        // Wait for the response (either local or from OpenAI)
+        const { response, followUps } = await getAIResponse(promptText);
+        
+        // Update the "typing..." message with the real response
         const contentDiv = thinkingMessage.querySelector('.content');
         if (contentDiv) {
             contentDiv.innerHTML = marked.parse(response);
@@ -3892,15 +4028,18 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Add follow-up suggestions if they exist
         if (followUps && followUps.length > 0) {
-            setTimeout(() => addSuggestions(followUps), 400); 
+            setTimeout(() => {
+                addSuggestions(followUps);
+            }, 400); 
         }
 
         state.isLoading = false;
         DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
     }
 
-    // --- 6. UI & HELPER FUNCTIONS ---
+    // --- 6. UI & HELPER FUNCTIONS (Unchanged) ---
     function addMessage(role, text) {
         const messageWrapper = document.createElement('div');
         messageWrapper.className = `ai-message ${role === 'user' ? 'user-message' : 'model-message'}`;
@@ -4056,5 +4195,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
-
