@@ -1513,6 +1513,55 @@
     .ai-response-actions button:hover {
         background-color: #7b61ff;
     }
+
+    .ai-suggestions {
+        align-self: flex-start;
+        width: 100%;
+        max-width: 90%;
+        padding-left: 44px; /* Align with model messages */
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: -10px; /* Pull it closer to the message above */
+        margin-bottom: 10px;
+    }
+    .ai-suggestion-item {
+        background-color: #2a2d3a;
+        border: 1px solid #4a4e69;
+        padding: 8px 8px 8px 12px;
+        border-radius: 10px;
+        color: #e2e8f0;
+        font-size: 14px;
+        transition: background-color 0.2s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .ai-suggestion-item-text {
+        flex-grow: 1;
+        cursor: pointer;
+    }
+    .ai-suggestion-item:hover, .ai-suggestion-item-text:hover {
+        background-color: #3c3f52;
+    }
+    .ai-suggestion-btn {
+        background: transparent;
+        border: none;
+        color: #EC4899;
+        cursor: pointer;
+        padding: 4px;
+        margin-left: 8px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s, transform 0.2s;
+        flex-shrink: 0;
+    }
+    .ai-suggestion-btn:hover {
+        color: #ff73b5;
+        transform: scale(1.1);
+    }
   </style>
 </head>
 <body class="landing is-preload">
@@ -1733,9 +1782,9 @@
 <!-- ============================================================= -->
 <!-- == NEW AI ASSISTANT (REBUILT FROM THE GROUND UP) == -->
 <!-- ============================================================= -->
-<button id="ai-toggle-btn" class="fixed bottom-5 left-5 bg-gradient-to-r from-purple-500 to-pink-500 text-white w-14 h-14 rounded-full shadow-lg hover:from-purple-600 hover:to-pink-600 transition-transform transform hover:scale-110 focus:outline-none flex items-center justify-center">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.546-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+<button id="ai-toggle-btn" class="fixed bottom-5 left-5 bg-green-500 text-white w-12 h-12 rounded-full shadow-lg hover:bg-green-600 transition-transform transform hover:scale-110 focus:outline-none flex items-center justify-center" style="z-index: 20001;">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
     </svg>
 </button>
 
@@ -1757,8 +1806,8 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.2-4.1.6 3 2.9-.8 4.1 3.8-2 3.8 2-.8-4.1 3-2.9-4.1-.6Z"/></svg>
                     </span>
                     <input type="text" id="ai-input" placeholder="Ask about this site or anything else...">
-                    <button id="ai-mic-btn" title="Ask with your voice">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                    <button id="ai-send-btn" title="Send Message" class="p-2 text-pink-500 hover:text-pink-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                     </button>
                 </div>
             </div>
@@ -3716,7 +3765,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. STATE & CONFIGURATION ---
     const state = {
         isAssistantVisible: false,
-        isRecognizing: false,
         isLoading: false,
         promptHistory: [],
         promptHistoryIndex: -1,
@@ -3730,113 +3778,159 @@ document.addEventListener('DOMContentLoaded', () => {
         closeBtn: document.getElementById('ai-close-btn'),
         historyContainer: document.getElementById('ai-history'),
         input: document.getElementById('ai-input'),
-        micBtn: document.getElementById('ai-mic-btn'),
+        sendBtn: document.getElementById('ai-send-btn'),
     };
 
-    // --- 3. SPEECH RECOGNITION SETUP ---
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition;
-    if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.onresult = handleSpeechResult;
-        recognition.onend = () => {
-            state.isRecognizing = false;
-            DOMElements.micBtn.classList.remove('recording');
-        };
-    }
-
-    // --- 4. THE AI's "BRAIN" - KNOWLEDGE BASE ---
+    // --- 3. THE AI's "BRAIN" - KNOWLEDGE BASE ---
     // I've analyzed your site and embedded its full knowledge here.
     const knowledgeBase = {
-        // Keywords are lowercase for case-insensitive matching.
-        // More specific keywords are listed first.
         keywords: {
             // Website Features
-            'yoinker': "The 'Video Yoinker' is a cool name for the YouTube Downloader tool on the 'Tools' page. 🛠️ You can paste one or more YouTube video links there to get download options for offline viewing. Super handy!",
-            'downloader': "The YouTube downloader, nicknamed the 'Video Yoinker', is on the 'Tools' page. 🛠️ You can paste one or more YouTube video links there to generate download links for offline viewing. Super handy!",
-            'link glo-up': "Ah, the 'Link Glo-Up'! ✨ That's the YouTube link converter on the 'Tools' page. It takes long, messy `youtube.com` links and shortens them into clean `youtu.be` links. Perfect for sharing!",
-            'converter': "The YouTube link converter, called 'Link Glo-Up', is on the 'Tools' page. ✨ It takes long, messy `youtube.com` links and shortens them into clean `youtu.be` links. Perfect for sharing!",
-            'tools': `The 'Tools' page is a powerhouse! 🤖 It has some awesome utilities built by VIDU:
+            'yoinker': {
+                response: "OMG, you mean the 'Video Yoinker'? Yasss! 🙌 It's VIDU's epic name for the YouTube Downloader on the 'Tools' page. Just drop a link and snag that video for offline. It's a whole vibe. ✨",
+                followUps: ["How does the playlist importer work?", "What other tools are there?"]
+            },
+            'downloader': {
+                response: "The YouTube downloader, nicknamed the 'Video Yoinker', is on the 'Tools' page. 🛠️ You can paste one or more YouTube video links there to generate download links for offline viewing. So clutch!",
+                followUps: ["How does the playlist importer work?", "What other tools are there?"]
+            },
+            'link glo-up': {
+                response: "Ah, the 'Link Glo-Up'! ✨ That's the YouTube link converter on the 'Tools' page. It takes long, messy `youtube.com` links and shortens them into clean `youtu.be` links. We love that for you.💅",
+                followUps: ["Tell me about the downloader.", "What is the main feature of this site?"]
+            },
+            'converter': {
+                response: "The YouTube link converter, called 'Link Glo-Up', is on the 'Tools' page. ✨ It takes long, messy `youtube.com` links and shortens them into clean `youtu.be` links. Perfect for sharing!",
+                followUps: ["Tell me about the downloader.", "What is the main feature of this site?"]
+            },
+            'tools': {
+                response: `The 'Tools' page is a powerhouse! 🤖 It has some awesome utilities built by VIDU:
 * **YT Playlist Importer:** Lets you fetch and view any public YouTube playlist in a slick interface.
 * **The Video Yoinker:** A YouTube downloader.
 * **Link Glo-Up:** A YouTube link shortener.`,
-            'keyboard': `You can control the video player like a pro with these keyboard shortcuts: ⌨️
+                followUps: ["Explain the playlist importer.", "How secure is this site?"]
+            },
+            'keyboard': {
+                response: `Bet. Control the video player like a pro with these keyboard shortcuts: ⌨️
 * **Spacebar:** Play or Pause
 * **Right Arrow:** Skip forward 10s
 * **Left Arrow:** Skip backward 10s
 * **Up/Down Arrows:** Adjust volume
 * **'F' Key:** Toggle fullscreen
 * **'M' Key:** Mute/unmute`,
-            'shortcuts': `You can control the video player like a pro with these keyboard shortcuts: ⌨️
+                followUps: ["Does the player save my progress?", "What are the playback speed options?"]
+            },
+            'shortcuts': {
+                response: `You got it! Control the video player like a pro with these keyboard shortcuts: ⌨️
 * **Spacebar:** Play or Pause
 * **Right Arrow:** Skip forward 10s
 * **Left Arrow:** Skip backward 10s
 * **Up/Down Arrows:** Adjust volume
 * **'F' Key:** Toggle fullscreen
 * **'M' Key:** Mute/unmute`,
-            'save progress': `Oh yeah, the 'Never Lose Your Spot' feature is a lifesaver! ✨ The player automatically saves your position in a video to your browser's \`localStorage\`. When you come back to that video, it magically picks up right where you left off.`,
-            'password': "For exclusive content, the site uses a password check. It's a simple but effective system that verifies your password before granting access to protected videos or playlists. Very VIP! 💅",
-            'security': "Security is handled cleverly here! For exclusive content, there's a password-protection system. VIDU also built a client-side login system for the private page to control who can see which playlists. 🤫",
-            'player': `The video player is the star of the show and was custom-coded by VIDU! 🎬 It's not the standard YouTube player. It has:
+                followUps: ["Does the player save my progress?", "What are the playback speed options?"]
+            },
+            'save progress': {
+                response: "Oh yeah, the 'Never Lose Your Spot' feature is a lifesaver! ✨ The player automatically saves your position in a video to your browser's `localStorage`. When you come back to that video, it magically picks up right where you left off.",
+                followUps: ["What are the keyboard shortcuts?", "Tell me about the player's design."]
+            },
+            'password': {
+                response: "For the exclusive content, the site uses a password check. It's a simple but effective system that verifies your password before granting access to protected videos or playlists. Very VIP! 💅",
+                followUps: ["Is there a login system too?", "Who built this site?"]
+            },
+            'security': {
+                response: "Security is handled cleverly here! For exclusive content, there's a password-protection system. VIDU also built a client-side login system for the private page to control who can see which playlists. Low-key genius. 🤫",
+                followUps: ["How does password protection work?", "Who is VIDU?"]
+            },
+            'player': {
+                response: `The video player is the star of the show and was custom-coded by VIDU! 🎬 It's not the standard YouTube player. It has:
 * **Custom Controls:** A slick, modern interface.
 * **Keyboard Shortcuts:** Full control without a mouse.
 * **Playback Speed Settings:** Watch at your own pace.
 * **Progress Saving:** It automatically saves your position in a video.`,
-            'features': `This website has a ton of custom features built by VIDU! Here are the highlights:
+                followUps: ["Tell me all the keyboard shortcuts.", "How does it save my progress?", "Who made this player?"]
+            },
+            'features': {
+                response: `This website has a ton of custom features built by VIDU! Here are the highlights:
 * **The VIDU Player™️:** A completely custom-built player with advanced controls and progress saving.
 * **Secure Playlists:** Password-protection and a private login system.
 * **YT Playlist Importer:** Fetches any YouTube playlist for you.
 * **VIDU Tool Shed:** Includes a video downloader and link shortener.
 * **Premium UI/UX:** The whole site uses cool effects like the 'glassy' blur and super smooth animations.`,
-            'how does this work': "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀",
-            'what is this site': "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀",
+                followUps: ["Tell me more about the player.", "Who is VIDU?", "What are the tools?"]
+            },
+            'how does this work': {
+                response: "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀",
+                followUps: ["What are the main features?", "Tell me about the creator, VIDU."]
+            },
+            'what is this site': {
+                response: "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀",
+                followUps: ["What are the main features?", "Tell me about the creator, VIDU."]
+            },
 
             // Identity
-            'your name': "You can call me VIDU AI 2.0 Pro! I'm the new and improved assistant for this site. What's up? 😎",
-            'who are you': "I'm VIDU AI 2.0 Pro, a highly advanced assistant integrated into this website. I know everything about its features and can answer your other questions too! 🤓",
-            'creator': "I was created and trained by the one and only VIDU! He's the talented developer who built this entire website from the ground up. He's the real MVP. 👨‍💻",
-            'who made you': "I was created and trained by the one and only VIDU! He's the talented developer who built this entire website from the ground up. He's the real MVP. 👨‍💻",
-            'vidu': "VIDU is the creator of this website and me, VIDU AI 2.0 Pro. He's a skilled developer who built everything you see here. Pretty cool, right? ✌️",
+            'your name': {
+                response: "You can call me VIDU AI 2.0 Pro! I'm the new and improved assistant for this site. What's up? 😎",
+                followUps: []
+            },
+            'who are you': {
+                response: "I'm VIDU AI 2.0 Pro, a highly advanced assistant integrated into this website. I know everything about its features and can answer your other questions too! 🤓",
+                followUps: ["Who made you?", "What can you do?"]
+            },
+            'creator': {
+                response: "My creator? That would be the legend himself, VIDU! 👑 He coded me and this entire website from scratch. Mad skills, right? 👨‍💻",
+                followUps: ["What are the site's best features?", "What technologies does this site use?"]
+            },
+            'who made you': {
+                response: "I was created and trained by the one and only VIDU! 👑 He's the talented developer who built this entire website from the ground up. He's the real MVP. 👨‍💻",
+                followUps: ["What are the site's best features?", "What technologies does this site use?"]
+            },
+            'vidu': {
+                response: "VIDU is the creator of this website and me, VIDU AI 2.0 Pro. He's a skilled developer who built everything you see here. Pretty cool, right? ✌️",
+                followUps: ["What did VIDU build on this site?", "Is the video player custom?"]
+            },
         },
         
-        // General knowledge for non-website questions
         general: {
-            'hello': 'Hey there! How can I help you today? 👋',
-            'hi': 'Hey there! How can I help you today? 👋',
-            'hey': 'Hey there! How can I help you today? 👋',
-            'how are you': "I'm running on all cylinders and ready to help! What can I do for you? 😄",
-            'what is the time': `I don't have a direct connection to a live clock, but your device's time is currently: ${new Date().toLocaleTimeString()} ⏰`,
-            'what is your purpose': 'My purpose is to be your friendly guide! I can tell you all about this website, answer your questions, and generally make your visit more awesome. 🤖',
-            'thank you': "You're very welcome! Let me know if you need anything else. I'm here to help! 😊",
-            'thanks': "You're very welcome! Let me know if you need anything else. I'm here to help! 😊",
+            'hello': { response: 'Hey there! How can I help you today? 👋', followUps: [] },
+            'hi': { response: 'Hey there! How can I help you today? 👋', followUps: [] },
+            'hey': { response: 'Hey there! How can I help you today? 👋', followUps: [] },
+            'how are you': { response: "Vibing! ✌️ Just processing 1s and 0s. What's the tea? How can I help you? 😄", followUps: [] },
+            'what is the time': { response: `I don't have a direct connection to a live clock, but your device's time is currently: ${new Date().toLocaleTimeString()} ⏰`, followUps: [] },
+            'what is your purpose': { response: 'My purpose is to be your friendly guide! I can tell you all about this website, answer your questions, and generally make your visit more awesome. 🤖', followUps: ["What are the site's main features?", "Who made you?"] },
+            'thank you': { response: "You're very welcome! Let me know if you need anything else. I'm here to help! 😊", followUps: [] },
+            'thanks': { response: "You're very welcome! Let me know if you need anything else. I'm here to help! 😊", followUps: [] },
         }
     };
 
     function getAIResponse(prompt) {
         const lowerCasePrompt = prompt.toLowerCase().trim();
 
-        // 1. Check for exact matches in the general knowledge base
         if (knowledgeBase.general[lowerCasePrompt]) {
             return knowledgeBase.general[lowerCasePrompt];
         }
 
-        // 2. Search for keywords related to the website
         for (const keyword in knowledgeBase.keywords) {
             if (lowerCasePrompt.includes(keyword)) {
                 return knowledgeBase.keywords[keyword];
             }
         }
         
-        // 3. Fallback for general questions not in the knowledge base
-        return "That's a great question! 🤔 While I'm an expert on this website, my general knowledge is pre-loaded. For the most up-to-the-minute info on that, a quick web search might be your best bet!";
+        return { 
+            response: "That's a great question! 🤔 While I'm an expert on this website, my general knowledge is pre-loaded. For the most up-to-the-minute info on that, a quick web search might be your best bet!",
+            followUps: ["What are this site's features?", "Who made this website?"]
+        };
     }
 
-    // --- 5. INITIALIZATION & EVENT LISTENERS ---
+    // --- 4. INITIALIZATION & EVENT LISTENERS ---
     function init() {
         setupEventListeners();
-        addMessage('model', "Hey! I'm VIDU AI 2.0 Pro, your upgraded guide. 🚀 Ask me about this website's features (like the 'downloader' or 'keyboard shortcuts'), or any other general questions you have!");
+        if (!sessionStorage.getItem('vidu_ai_session_started')) {
+            addMessage('model', "Hey! I'm VIDU AI 2.0 Pro, your upgraded guide. 🚀 Ask me about this website's features (like the 'downloader' or 'keyboard shortcuts'), or any other general questions you have!");
+            showInitialSuggestions();
+            sessionStorage.setItem('vidu_ai_session_started', 'true');
+        } else {
+            addMessage('model', "I'm back! What's cookin'? Let me know if you need anything. 🔥");
+        }
     }
 
     function setupEventListeners() {
@@ -3846,14 +3940,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target === DOMElements.overlay) toggleAssistant();
         });
         DOMElements.input.addEventListener('keydown', handleInputKeydown);
-        if (recognition) {
-            DOMElements.micBtn.addEventListener('click', toggleSpeechRecognition);
-        } else {
-            DOMElements.micBtn.style.display = 'none';
-        }
+        DOMElements.sendBtn.addEventListener('click', handleSendMessage);
     }
 
-    // --- 6. CORE FUNCTIONS ---
+    // --- 5. CORE FUNCTIONS ---
     function toggleAssistant() {
         state.isAssistantVisible = !state.isAssistantVisible;
         DOMElements.overlay.classList.toggle('visible', state.isAssistantVisible);
@@ -3866,6 +3956,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const promptText = DOMElements.input.value.trim();
         if (!promptText || state.isLoading) return;
 
+        // Clear any existing suggestions before sending a new message
+        const existingSuggestions = DOMElements.historyContainer.querySelector('.ai-suggestions');
+        if (existingSuggestions) {
+            existingSuggestions.remove();
+        }
+
         DOMElements.input.value = '';
         if (promptText !== state.promptHistory[state.promptHistory.length - 1]) {
            state.promptHistory.push(promptText);
@@ -3875,26 +3971,31 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage('user', promptText);
         
         state.isLoading = true;
-        const thinkingMessage = addMessage('model', '<div class="content"><div class="typing-indicator"><span></span><span></span><span></span></div></div>');
+        const thinkingMessage = addMessage('model', '<div class="typing-indicator"><span></span><span></span><span></span></div>');
         
-        // Simulate thinking for a more natural feel
         setTimeout(() => {
-            const responseText = getAIResponse(promptText);
+            const { response, followUps } = getAIResponse(promptText);
             const contentDiv = thinkingMessage.querySelector('.content');
+            
             if (contentDiv) {
-                // Use marked.parse to convert Markdown (like lists) to HTML
-                contentDiv.innerHTML = marked.parse(responseText);
-                // Apply syntax highlighting to any code blocks
+                contentDiv.innerHTML = marked.parse(response);
                 contentDiv.querySelectorAll('pre code').forEach((block) => {
                     hljs.highlightElement(block);
                 });
             }
+
+            if (followUps && followUps.length > 0) {
+                setTimeout(() => {
+                    addSuggestions(followUps);
+                }, 400); 
+            }
+
             state.isLoading = false;
             DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
-        }, 600 + Math.random() * 400); // Respond in 0.6-1.0 seconds
+        }, 600 + Math.random() * 400);
     }
 
-    // --- 7. UI & HELPER FUNCTIONS ---
+    // --- 6. UI & HELPER FUNCTIONS ---
     function addMessage(role, text) {
         const messageWrapper = document.createElement('div');
         messageWrapper.className = `ai-message ${role === 'user' ? 'user-message' : 'model-message'}`;
@@ -3902,16 +4003,62 @@ document.addEventListener('DOMContentLoaded', () => {
         const iconHtml = role === 'user' 
             ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
             : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.2-4.1.6 3 2.9-.8 4.1 3.8-2 3.8 2-.8-4.1 3-2.9-4.1-.6Z"/></svg>`;
-
+        
+        const contentHTML = text.includes('typing-indicator') ? text : `<div class="content">${marked.parse(text)}</div>`;
+        
         messageWrapper.innerHTML = `
             <div class="icon text-white">${iconHtml}</div>
-            ${text}
+            ${contentHTML}
         `;
         
         DOMElements.historyContainer.appendChild(messageWrapper);
         DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
 
         return messageWrapper;
+    }
+
+    function addSuggestions(suggestions) {
+        const rocketIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>`;
+        const suggestionsContainer = document.createElement('div');
+        suggestionsContainer.className = 'ai-suggestions';
+
+        suggestions.forEach(text => {
+            const item = document.createElement('div');
+            item.className = 'ai-suggestion-item';
+
+            const itemText = document.createElement('span');
+            itemText.className = 'ai-suggestion-item-text';
+            itemText.textContent = text;
+            item.appendChild(itemText);
+
+            const sendBtn = document.createElement('button');
+            sendBtn.className = 'ai-suggestion-btn';
+            sendBtn.innerHTML = rocketIcon;
+            sendBtn.title = `Ask: "${text}"`;
+            item.appendChild(sendBtn);
+
+            const sendSuggestion = () => {
+                DOMElements.input.value = text;
+                handleSendMessage();
+            };
+
+            itemText.addEventListener('click', sendSuggestion);
+            sendBtn.addEventListener('click', sendSuggestion);
+
+            suggestionsContainer.appendChild(item);
+        });
+
+        DOMElements.historyContainer.appendChild(suggestionsContainer);
+        DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
+    }
+
+    function showInitialSuggestions() {
+        const suggestions = [
+            "Who is VIDU?",
+            "What are the best features of this site?",
+            "Tell me about the video player's keyboard shortcuts."
+        ];
+        setTimeout(() => addSuggestions(suggestions), 300);
     }
 
     function handleInputKeydown(e) {
@@ -3937,36 +4084,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- 8. SPEECH RECOGNITION FUNCTIONS ---
-    function toggleSpeechRecognition() {
-        if (!recognition) return;
-        if (state.isRecognizing) {
-            recognition.stop();
-        } else {
-            state.isRecognizing = true;
-            DOMElements.micBtn.classList.add('recording');
-            recognition.start();
-        }
-    }
-    
-    function handleSpeechResult(event) {
-        let interim_transcript = '';
-        let final_transcript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-                final_transcript += event.results[i][0].transcript;
-            } else {
-                interim_transcript += event.results[i][0].transcript;
-            }
-        }
-
-        DOMElements.input.value = final_transcript + interim_transcript;
-        if (final_transcript) {
-            handleSendMessage();
-        }
-    }
-
     // --- Let's go! ---
     init();
 });
