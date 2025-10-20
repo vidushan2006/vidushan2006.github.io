@@ -3782,114 +3782,29 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 3. THE AI's "BRAIN" - KNOWLEDGE BASE ---
-    // I've analyzed your site and embedded its full knowledge here.
+    // This remains the same, providing instant answers for site-specific questions.
     const knowledgeBase = {
         keywords: {
-            // Website Features
-            'yoinker': {
-                response: "OMG, you mean the 'Video Yoinker'? Yasss! 🙌 It's VIDU's epic name for the YouTube Downloader on the 'Tools' page. Just drop a link and snag that video for offline. It's a whole vibe. ✨",
-                followUps: ["How does the playlist importer work?", "What other tools are there?"]
-            },
-            'downloader': {
-                response: "The YouTube downloader, nicknamed the 'Video Yoinker', is on the 'Tools' page. 🛠️ You can paste one or more YouTube video links there to generate download links for offline viewing. So clutch!",
-                followUps: ["How does the playlist importer work?", "What other tools are there?"]
-            },
-            'link glo-up': {
-                response: "Ah, the 'Link Glo-Up'! ✨ That's the YouTube link converter on the 'Tools' page. It takes long, messy `youtube.com` links and shortens them into clean `youtu.be` links. We love that for you.💅",
-                followUps: ["Tell me about the downloader.", "What is the main feature of this site?"]
-            },
-            'converter': {
-                response: "The YouTube link converter, called 'Link Glo-Up', is on the 'Tools' page. ✨ It takes long, messy `youtube.com` links and shortens them into clean `youtu.be` links. Perfect for sharing!",
-                followUps: ["Tell me about the downloader.", "What is the main feature of this site?"]
-            },
-            'tools': {
-                response: `The 'Tools' page is a powerhouse! 🤖 It has some awesome utilities built by VIDU:
-* **YT Playlist Importer:** Lets you fetch and view any public YouTube playlist in a slick interface.
-* **The Video Yoinker:** A YouTube downloader.
-* **Link Glo-Up:** A YouTube link shortener.`,
-                followUps: ["Explain the playlist importer.", "How secure is this site?"]
-            },
-            'keyboard': {
-                response: `Bet. Control the video player like a pro with these keyboard shortcuts: ⌨️
-* **Spacebar:** Play or Pause
-* **Right Arrow:** Skip forward 10s
-* **Left Arrow:** Skip backward 10s
-* **Up/Down Arrows:** Adjust volume
-* **'F' Key:** Toggle fullscreen
-* **'M' Key:** Mute/unmute`,
-                followUps: ["Does the player save my progress?", "What are the playback speed options?"]
-            },
-            'shortcuts': {
-                response: `You got it! Control the video player like a pro with these keyboard shortcuts: ⌨️
-* **Spacebar:** Play or Pause
-* **Right Arrow:** Skip forward 10s
-* **Left Arrow:** Skip backward 10s
-* **Up/Down Arrows:** Adjust volume
-* **'F' Key:** Toggle fullscreen
-* **'M' Key:** Mute/unmute`,
-                followUps: ["Does the player save my progress?", "What are the playback speed options?"]
-            },
-            'save progress': {
-                response: "Oh yeah, the 'Never Lose Your Spot' feature is a lifesaver! ✨ The player automatically saves your position in a video to your browser's `localStorage`. When you come back to that video, it magically picks up right where you left off.",
-                followUps: ["What are the keyboard shortcuts?", "Tell me about the player's design."]
-            },
-            'password': {
-                response: "For the exclusive content, the site uses a password check. It's a simple but effective system that verifies your password before granting access to protected videos or playlists. Very VIP! 💅",
-                followUps: ["Is there a login system too?", "Who built this site?"]
-            },
-            'security': {
-                response: "Security is handled cleverly here! For exclusive content, there's a password-protection system. VIDU also built a client-side login system for the private page to control who can see which playlists. Low-key genius. 🤫",
-                followUps: ["How does password protection work?", "Who is VIDU?"]
-            },
-            'player': {
-                response: `The video player is the star of the show and was custom-coded by VIDU! 🎬 It's not the standard YouTube player. It has:
-* **Custom Controls:** A slick, modern interface.
-* **Keyboard Shortcuts:** Full control without a mouse.
-* **Playback Speed Settings:** Watch at your own pace.
-* **Progress Saving:** It automatically saves your position in a video.`,
-                followUps: ["Tell me all the keyboard shortcuts.", "How does it save my progress?", "Who made this player?"]
-            },
-            'features': {
-                response: `This website has a ton of custom features built by VIDU! Here are the highlights:
-* **The VIDU Player™️:** A completely custom-built player with advanced controls and progress saving.
-* **Secure Playlists:** Password-protection and a private login system.
-* **YT Playlist Importer:** Fetches any YouTube playlist for you.
-* **VIDU Tool Shed:** Includes a video downloader and link shortener.
-* **Premium UI/UX:** The whole site uses cool effects like the 'glassy' blur and super smooth animations.`,
-                followUps: ["Tell me more about the player.", "Who is VIDU?", "What are the tools?"]
-            },
-            'how does this work': {
-                response: "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀",
-                followUps: ["What are the main features?", "Tell me about the creator, VIDU."]
-            },
-            'what is this site': {
-                response: "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀",
-                followUps: ["What are the main features?", "Tell me about the creator, VIDU."]
-            },
-
-            // Identity
-            'your name': {
-                response: "You can call me VIDU AI 2.0 Pro! I'm the new and improved assistant for this site. What's up? 😎",
-                followUps: []
-            },
-            'who are you': {
-                response: "I'm VIDU AI 2.0 Pro, a highly advanced assistant integrated into this website. I know everything about its features and can answer your other questions too! 🤓",
-                followUps: ["Who made you?", "What can you do?"]
-            },
-            'creator': {
-                response: "My creator? That would be the legend himself, VIDU! 👑 He coded me and this entire website from scratch. Mad skills, right? 👨‍💻",
-                followUps: ["What are the site's best features?", "What technologies does this site use?"]
-            },
-            'who made you': {
-                response: "I was created and trained by the one and only VIDU! 👑 He's the talented developer who built this entire website from the ground up. He's the real MVP. 👨‍💻",
-                followUps: ["What are the site's best features?", "What technologies does this site use?"]
-            },
-            'vidu': {
-                response: "VIDU is the creator of this website and me, VIDU AI 2.0 Pro. He's a skilled developer who built everything you see here. Pretty cool, right? ✌️",
-                followUps: ["What did VIDU build on this site?", "Is the video player custom?"]
-            },
+            'yoinker': { response: "OMG, you mean the 'Video Yoinker'? Yasss! 🙌 It's VIDU's epic name for the YouTube Downloader on the 'Tools' page. Just drop a link and snag that video for offline. It's a whole vibe. ✨", followUps: ["How does the playlist importer work?", "What other tools are there?"] },
+            'downloader': { response: "The YouTube downloader, nicknamed the 'Video Yoinker', is on the 'Tools' page. 🛠️ You can paste one or more YouTube video links there to generate download links for offline viewing. So clutch!", followUps: ["How does the playlist importer work?", "What other tools are there?"] },
+            'link glo-up': { response: "Ah, the 'Link Glo-Up'! ✨ That's the YouTube link converter on the 'Tools' page. It takes long, messy `youtube.com` links and shortens them into clean `youtu.be` links. We love that for you.💅", followUps: ["Tell me about the downloader.", "What is the main feature of this site?"] },
+            'converter': { response: "The YouTube link converter, called 'Link Glo-Up', is on the 'Tools' page. ✨ It takes long, messy `youtube.com` links and shortens them into clean `youtu.be` links. Perfect for sharing!", followUps: ["Tell me about the downloader.", "What is the main feature of this site?"] },
+            'tools': { response: `The 'Tools' page is a powerhouse! 🤖 It has some awesome utilities built by VIDU:\n* **YT Playlist Importer:** Lets you fetch and view any public YouTube playlist in a slick interface.\n* **The Video Yoinker:** A YouTube downloader.\n* **Link Glo-Up:** A YouTube link shortener.`, followUps: ["Explain the playlist importer.", "How secure is this site?"] },
+            'keyboard': { response: `Bet. Control the video player like a pro with these keyboard shortcuts: ⌨️\n* **Spacebar:** Play or Pause\n* **Right Arrow:** Skip forward 10s\n* **Left Arrow:** Skip backward 10s\n* **Up/Down Arrows:** Adjust volume\n* **'F' Key:** Toggle fullscreen\n* **'M' Key:** Mute/unmute`, followUps: ["Does the player save my progress?", "What are the playback speed options?"] },
+            'shortcuts': { response: `You got it! Control the video player like a pro with these keyboard shortcuts: ⌨️\n* **Spacebar:** Play or Pause\n* **Right Arrow:** Skip forward 10s\n* **Left Arrow:** Skip backward 10s\n* **Up/Down Arrows:** Adjust volume\n* **'F' Key:** Toggle fullscreen\n* **'M' Key:** Mute/unmute`, followUps: ["Does the player save my progress?", "What are the playback speed options?"] },
+            'save progress': { response: "Oh yeah, the 'Never Lose Your Spot' feature is a lifesaver! ✨ The player automatically saves your position in a video to your browser's `localStorage`. When you come back to that video, it magically picks up right where you left off.", followUps: ["What are the keyboard shortcuts?", "Tell me about the player's design."] },
+            'password': { response: "For the exclusive content, the site uses a password check. It's a simple but effective system that verifies your password before granting access to protected videos or playlists. Very VIP! 💅", followUps: ["Is there a login system too?", "Who built this site?"] },
+            'security': { response: "Security is handled cleverly here! For exclusive content, there's a password-protection system. VIDU also built a client-side login system for the private page to control who can see which playlists. Low-key genius. 🤫", followUps: ["How does password protection work?", "Who is VIDU?"] },
+            'player': { response: `The video player is the star of the show and was custom-coded by VIDU! 🎬 It's not the standard YouTube player. It has:\n* **Custom Controls:** A slick, modern interface.\n* **Keyboard Shortcuts:** Full control without a mouse.\n* **Playback Speed Settings:** Watch at your own pace.\n* **Progress Saving:** It automatically saves your position in a video.`, followUps: ["Tell me all the keyboard shortcuts.", "How does it save my progress?", "Who made this player?"] },
+            'features': { response: `This website has a ton of custom features built by VIDU! Here are the highlights:\n* **The VIDU Player™️:** A completely custom-built player with advanced controls and progress saving.\n* **Secure Playlists:** Password-protection and a private login system.\n* **YT Playlist Importer:** Fetches any YouTube playlist for you.\n* **VIDU Tool Shed:** Includes a video downloader and link shortener.\n* **Premium UI/UX:** The whole site uses cool effects like the 'glassy' blur and super smooth animations.`, followUps: ["Tell me more about the player.", "Who is VIDU?", "What are the tools?"] },
+            'how does this work': { response: "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀", followUps: ["What are the main features?", "Tell me about the creator, VIDU."] },
+            'what is this site': { response: "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀", followUps: ["What are the main features?", "Tell me about the creator, VIDU."] },
+            'your name': { response: "You can call me VIDU AI 2.0 Pro! I'm the new and improved assistant for this site. What's up? 😎", followUps: [] },
+            'who are you': { response: "I'm VIDU AI 2.0 Pro, a highly advanced assistant integrated into this website. I know everything about its features and can answer your other questions too! 🤓", followUps: ["Who made you?", "What can you do?"] },
+            'creator': { response: "My creator? That would be the legend himself, VIDU! 👑 He coded me and this entire website from scratch. Mad skills, right? 👨‍💻", followUps: ["What are the site's best features?", "What technologies does this site use?"] },
+            'who made you': { response: "I was created and trained by the one and only VIDU! 👑 He's the talented developer who built this entire website from the ground up. He's the real MVP. 👨‍💻", followUps: ["What are the site's best features?", "What technologies does this site use?"] },
+            'vidu': { response: "VIDU is the creator of this website and me, VIDU AI 2.0 Pro. He's a skilled developer who built everything you see here. Pretty cool, right? ✌️", followUps: ["What did VIDU build on this site?", "Is the video player custom?"] },
         },
-        
         general: {
             'hello': { response: 'Hey there! How can I help you today? 👋', followUps: [] },
             'hi': { response: 'Hey there! How can I help you today? 👋', followUps: [] },
@@ -3902,7 +3817,86 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    function getAIResponse(prompt) {
+    // --- NEW: Function to call your secure serverless function ---
+    async function fetchFromOpenAI(prompt) {
+        try {
+            // This is the special path Netlify uses for functions
+            const response = await fetch('/.netlify/functions/getOpenAIResponse', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Error from serverless function:', errorData);
+                return `Sorry, there was an error connecting to the AI service: ${errorData.error || 'Unknown error'}`;
+            }
+
+            const data = await response.json();
+            return data.response;
+
+        } catch (error) {
+            console.error('Network error calling serverless function:', error);
+            return "Sorry, I'm having trouble connecting to my brain right now. Please check your internet connection and try again.";
+        }
+    }
+
+    // --- MODIFIED: The core logic for handling a user's message ---
+    async function handleSendMessage() { // This function is now 'async'
+        const promptText = DOMElements.input.value.trim();
+        if (!promptText || state.isLoading) return;
+
+        const existingSuggestions = DOMElements.historyContainer.querySelector('.ai-suggestions');
+        if (existingSuggestions) existingSuggestions.remove();
+
+        DOMElements.input.value = '';
+        if (promptText !== state.promptHistory[state.promptHistory.length - 1]) {
+           state.promptHistory.push(promptText);
+        }
+        state.promptHistoryIndex = state.promptHistory.length;
+
+        addMessage('user', promptText);
+        
+        state.isLoading = true;
+        const thinkingMessage = addMessage('model', '<div class="typing-indicator"><span></span><span></span><span></span></div>');
+        
+        // Step 1: Check our local, pre-programmed knowledge first.
+        const localResponse = getLocalResponse(promptText);
+        let finalResponse;
+        let followUps = [];
+
+        if (localResponse) {
+            // If we found a local answer, use it. It's fast and free!
+            await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 400)); // Simulate thinking
+            finalResponse = localResponse.response;
+            followUps = localResponse.followUps || [];
+        } else {
+            // If no local answer, call the OpenAI API via our secure function.
+            finalResponse = await fetchFromOpenAI(promptText); // 'await' pauses here until OpenAI responds
+            // Provide default follow-up questions for general API answers.
+            followUps = ["What are this site's features?", "Who made this website?"];
+        }
+        
+        // Step 2: Update the chat bubble with the final answer.
+        const contentDiv = thinkingMessage.querySelector('.content');
+        if (contentDiv) {
+            contentDiv.innerHTML = marked.parse(finalResponse);
+            contentDiv.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        }
+
+        if (followUps && followUps.length > 0) {
+            setTimeout(() => addSuggestions(followUps), 400); 
+        }
+
+        state.isLoading = false;
+        DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
+    }
+
+    // --- RENAMED: This function now only checks the local knowledge base ---
+    function getLocalResponse(prompt) {
         const lowerCasePrompt = prompt.toLowerCase().trim();
 
         if (knowledgeBase.general[lowerCasePrompt]) {
@@ -3915,16 +3909,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        return { 
-            response: "That's a great question! 🤔 While I'm an expert on this website, my general knowledge is pre-loaded. For the most up-to-the-minute info on that, a quick web search might be your best bet!",
-            followUps: ["What are this site's features?", "Who made this website?"]
-        };
+        // IMPORTANT: Return null if no local answer is found, signaling to call the API.
+        return null;
     }
-
-    // --- 4. INITIALIZATION & EVENT LISTENERS ---
+    
+    // --- All other helper functions remain the same (init, setupEventListeners, addMessage, etc.) ---
+    
     function init() {
         setupEventListeners();
-        // **FIX**: Always show the desired welcome message and suggestions on page load.
         addMessage('model', "Hey! I'm VIDU AI 2.0 Pro, your upgraded guide. 🚀 Ask me about this website's features (like the 'downloader' or 'keyboard shortcuts'), or any other general questions you have!");
         showInitialSuggestions();
     }
@@ -3939,7 +3931,6 @@ document.addEventListener('DOMContentLoaded', () => {
         DOMElements.sendBtn.addEventListener('click', handleSendMessage);
     }
 
-    // --- 5. CORE FUNCTIONS ---
     function toggleAssistant() {
         state.isAssistantVisible = !state.isAssistantVisible;
         DOMElements.overlay.classList.toggle('visible', state.isAssistantVisible);
@@ -3947,51 +3938,7 @@ document.addEventListener('DOMContentLoaded', () => {
             DOMElements.input.focus();
         }
     }
-
-    function handleSendMessage() {
-        const promptText = DOMElements.input.value.trim();
-        if (!promptText || state.isLoading) return;
-
-        // Clear any existing suggestions before sending a new message
-        const existingSuggestions = DOMElements.historyContainer.querySelector('.ai-suggestions');
-        if (existingSuggestions) {
-            existingSuggestions.remove();
-        }
-
-        DOMElements.input.value = '';
-        if (promptText !== state.promptHistory[state.promptHistory.length - 1]) {
-           state.promptHistory.push(promptText);
-        }
-        state.promptHistoryIndex = state.promptHistory.length;
-
-        addMessage('user', promptText);
-        
-        state.isLoading = true;
-        const thinkingMessage = addMessage('model', '<div class="typing-indicator"><span></span><span></span><span></span></div>');
-        
-        setTimeout(() => {
-            const { response, followUps } = getAIResponse(promptText);
-            const contentDiv = thinkingMessage.querySelector('.content');
-            
-            if (contentDiv) {
-                contentDiv.innerHTML = marked.parse(response);
-                contentDiv.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                });
-            }
-
-            if (followUps && followUps.length > 0) {
-                setTimeout(() => {
-                    addSuggestions(followUps);
-                }, 400); 
-            }
-
-            state.isLoading = false;
-            DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
-        }, 600 + Math.random() * 400);
-    }
-
-    // --- 6. UI & HELPER FUNCTIONS ---
+    
     function addMessage(role, text) {
         const messageWrapper = document.createElement('div');
         messageWrapper.className = `ai-message ${role === 'user' ? 'user-message' : 'model-message'}`;
@@ -4000,8 +3947,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
             : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.2-4.1.6 3 2.9-.8 4.1 3.8-2 3.8 2-.8-4.1 3-2.9-4.1-.6Z"/></svg>`;
         
-        // **FIX**: Always wrap the message text in a .content div. This prevents the script from
-        // crashing when it tries to find this div to update the "typing..." indicator.
         const contentHTML = `<div class="content">${text.includes('typing-indicator') ? text : marked.parse(text)}</div>`;
         
         messageWrapper.innerHTML = `
@@ -4011,7 +3956,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         DOMElements.historyContainer.appendChild(messageWrapper);
         DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
-
         return messageWrapper;
     }
 
@@ -4023,26 +3967,18 @@ document.addEventListener('DOMContentLoaded', () => {
         suggestions.forEach(text => {
             const item = document.createElement('div');
             item.className = 'ai-suggestion-item';
-
             const itemText = document.createElement('span');
             itemText.className = 'ai-suggestion-item-text';
             itemText.textContent = text;
             item.appendChild(itemText);
-
             const sendBtn = document.createElement('button');
             sendBtn.className = 'ai-suggestion-btn';
             sendBtn.innerHTML = rocketIcon;
             sendBtn.title = `Ask: "${text}"`;
             item.appendChild(sendBtn);
-
-            const sendSuggestion = () => {
-                DOMElements.input.value = text;
-                handleSendMessage();
-            };
-
+            const sendSuggestion = () => { DOMElements.input.value = text; handleSendMessage(); };
             itemText.addEventListener('click', sendSuggestion);
             sendBtn.addEventListener('click', sendSuggestion);
-
             suggestionsContainer.appendChild(item);
         });
 
@@ -4051,38 +3987,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showInitialSuggestions() {
-        const suggestions = [
-            "Who is VIDU?",
-            "What are the best features of this site?",
-            "Tell me about the video player's keyboard shortcuts."
-        ];
+        const suggestions = ["Who is VIDU?", "What are the best features of this site?", "Tell me about the video player's keyboard shortcuts."];
         setTimeout(() => addSuggestions(suggestions), 300);
     }
 
     function handleInputKeydown(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-        }
-        if (e.key === 'ArrowUp') {
-            if (state.promptHistoryIndex > 0) {
-                state.promptHistoryIndex--;
-                DOMElements.input.value = state.promptHistory[state.promptHistoryIndex];
-                e.preventDefault();
-            }
-        }
-        if (e.key === 'ArrowDown') {
-             if (state.promptHistoryIndex < state.promptHistory.length - 1) {
-                state.promptHistoryIndex++;
-                DOMElements.input.value = state.promptHistory[state.promptHistoryIndex];
-             } else {
-                state.promptHistoryIndex = state.promptHistory.length;
-                DOMElements.input.value = "";
-             }
-        }
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
+        if (e.key === 'ArrowUp') { if (state.promptHistoryIndex > 0) { state.promptHistoryIndex--; DOMElements.input.value = state.promptHistory[state.promptHistoryIndex]; e.preventDefault(); } }
+        if (e.key === 'ArrowDown') { if (state.promptHistoryIndex < state.promptHistory.length - 1) { state.promptHistoryIndex++; DOMElements.input.value = state.promptHistory[state.promptHistoryIndex]; } else { state.promptHistoryIndex = state.promptHistory.length; DOMElements.input.value = ""; } }
     }
     
-    // --- Let's go! ---
     init();
 });
 </script>
