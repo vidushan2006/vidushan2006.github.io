@@ -3842,33 +3842,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- NEW: Function to call your secure serverless function ---
-    async function fetchFromOpenAI(prompt) {
+    // --- NEW: Function to call the Mistral AI API ---
+    async function fetchFromMistral(prompt) {
+        // As requested, the API key is placed directly here.
+        const mistralApiKey = 'Z3rwkLmquAj7CK2poBsj0vSimQvlj0RE';
+        const mistralApiUrl = 'https://api.mistral.ai/v1/chat/completions';
+
+        // We use mistral-small-latest for a good balance of intelligence and speed.
+        const payload = {
+            model: 'mistral-small-latest',
+            messages: [
+                { role: "user", content: prompt }
+            ]
+        };
+
         try {
-            // This is the special path Netlify uses for functions
-            const response = await fetch('/.netlify/functions/getOpenAIResponse', {
+            const response = await fetch(mistralApiUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: prompt }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${mistralApiKey}`
+                },
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Error from serverless function:', errorData);
-                return `Sorry, there was an error connecting to the AI service: ${errorData.error || 'Unknown error'}`;
+                console.error('Error from Mistral API:', errorData);
+                let errorMessage = `Sorry, there was an error connecting to the Mistral AI service.`;
+                if (errorData.message) {
+                    errorMessage += ` (Details: ${errorData.message})`;
+                }
+                // Check for common 401 Unauthorized error
+                if (response.status === 401) {
+                    errorMessage = "Sorry, the Mistral API key seems to be invalid or has expired. Please check the key.";
+                }
+                return errorMessage;
             }
 
             const data = await response.json();
-            return data.response;
+            
+            // Extract the response content from Mistral's JSON structure
+            if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+                return data.choices[0].message.content;
+            } else {
+                return "Sorry, I received an unusual response from the Mistral AI. Please try again.";
+            }
 
         } catch (error) {
-            console.error('Network error calling serverless function:', error);
+            console.error('Network error calling Mistral API:', error);
             return "Sorry, I'm having trouble connecting to my brain right now. Please check your internet connection and try again.";
         }
     }
 
     // --- MODIFIED: The core logic for handling a user's message ---
-    async function handleSendMessage() { // This function is now 'async'
+    async function handleSendMessage() { // This function is async
         const promptText = DOMElements.input.value.trim();
         if (!promptText || state.isLoading) return;
 
@@ -3892,13 +3920,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let followUps = [];
 
         if (localResponse) {
-            // If we found a local answer, use it. It's fast and free!
+            // If we found a local answer, use it. It's fast.
             await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 400)); // Simulate thinking
             finalResponse = localResponse.response;
             followUps = localResponse.followUps || [];
         } else {
-            // If no local answer, call the OpenAI API via our secure function.
-            finalResponse = await fetchFromOpenAI(promptText); // 'await' pauses here until OpenAI responds
+            // If no local answer, call the NEW MISTRAL API function.
+            finalResponse = await fetchFromMistral(promptText); // 'await' pauses here until Mistral responds
             // Provide default follow-up questions for general API answers.
             followUps = ["What are this site's features?", "Who made this website?"];
         }
@@ -3920,7 +3948,7 @@ document.addEventListener('DOMContentLoaded', () => {
         DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
     }
 
-    // --- RENAMED: This function now only checks the local knowledge base ---
+    // This function checks the local knowledge base.
     function getLocalResponse(prompt) {
         const lowerCasePrompt = prompt.toLowerCase().trim();
 
@@ -3934,7 +3962,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // IMPORTANT: Return null if no local answer is found, signaling to call the API.
+        // Return null if no local answer is found, signaling to call the API.
         return null;
     }
     
