@@ -3782,10 +3782,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 
-<!-- ============================================================= -->
-<!-- == NEW SELF-HOSTED AI ASSISTANT SCRIPT (INTELLIGENT VERSION) == -->
-<!-- ============================================================= -->
-<script>
+<!-- ============================================================= --><!-- == NEW SELF-HOSTED AI ASSISTANT SCRIPT (INTELLIGENT VERSION) == --><!-- ============================================================= --><script>
 document.addEventListener('DOMContentLoaded', () => {
     // --- 1. STATE & CONFIGURATION ---
     const state = {
@@ -3842,7 +3839,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- NEW: Function to call the Mistral AI API ---
+    // --- Function to call the Mistral AI API ---
     async function fetchFromMistral(prompt) {
         // As requested, the API key is placed directly here.
         const mistralApiKey = 'Z3rwkLmquAj7CK2poBsj0vSimQvlj0RE';
@@ -3996,9 +3993,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const messageWrapper = document.createElement('div');
         messageWrapper.className = `ai-message ${role === 'user' ? 'user-message' : 'model-message'}`;
 
-        const iconHtml = role === 'user' 
-            ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
-            : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.2-4.1.6 3 2.9-.8 4.1 3.8-2 3.8 2-.8-4.1 3-2.9-4.1-.6Z"/></svg>`;
+        let iconHtml;
+        if (role === 'user') {
+            iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+        } else {
+            // NEW: Use the provided image URL for the model's avatar
+            iconHtml = `<img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="AI Avatar" class="ai-avatar-image"/>`;
+        }
         
         const contentHTML = `<div class="content">${text.includes('typing-indicator') ? text : marked.parse(text)}</div>`;
         
