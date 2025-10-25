@@ -2517,7 +2517,10 @@ function updateSpeedIndicator(activeButton) {
 
     state.keyHandler = function(e){
       const active = document.activeElement; const seekIsActive = (active && active.id === 'vidu_seek');
-      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
+      const aiChatBox = document.getElementById('ai-chat-box'); // Assuming 'ai-chat-box' is the ID of your main AI chat popup container
+      if (aiChatBox && aiChatBox.classList.contains('active')) return; // Assuming 'active' class indicates the chat box is open/visible
+
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
       
       const root = document.getElementById('modal-root'); 
       if(!root || (root.style.display === 'none' && !document.body.classList.contains('popup-mode'))) return;
