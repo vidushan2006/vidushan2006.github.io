@@ -2516,7 +2516,6 @@ function updateSpeedIndicator(activeButton) {
     }
 
     state.keyHandler = function(e){
-      // NEW: Check if the AI Assistant is visible. If so, disable all player shortcuts.
       const aiOverlay = document.getElementById('ai-assistant-overlay');
       if (aiOverlay && aiOverlay.classList.contains('visible')) {
           return;
@@ -2586,40 +2585,6 @@ function updateSpeedIndicator(activeButton) {
             resetInactivityTimer(false); 
             break; 
           }
-          
-          const currentRate = state.player.getPlaybackRate();
-          let currentIndex = -1;
-          for(let i=0; i<buttons.length; i++) {
-              if (buttons[i].classList.contains('active')) {
-                  currentIndex = i;
-                  break;
-              }
-          }
-          if (currentIndex === -1) currentIndex = buttons.findIndex(b => b.dataset.speed === "1");
-
-          let nextIndex;
-          if (key === 'e') {
-             nextIndex = (currentIndex + 1) % buttons.length;
-          } else {
-             nextIndex = (currentIndex - 1 + buttons.length) % buttons.length;
-          }
-          if (buttons[nextIndex]) {
-            buttons[nextIndex].click();
-          }
-          resetInactivityTimer(false);
-          break;
-        case ',':
-            e.preventDefault();
-            playNextOrPreviousVideo(-1);
-            resetInactivityTimer();
-            break;
-        case '.':
-            e.preventDefault();
-            playNextOrPreviousVideo(1);
-            resetInactivityTimer();
-            break;
-      }
-    };
           
           const currentRate = state.player.getPlaybackRate();
           let currentIndex = -1;
