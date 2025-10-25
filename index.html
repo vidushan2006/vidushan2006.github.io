@@ -2516,11 +2516,14 @@ function updateSpeedIndicator(activeButton) {
     }
 
     state.keyHandler = function(e){
-      const active = document.activeElement; const seekIsActive = (active && active.id === 'vidu_seek');
-      const aiChatBox = document.getElementById('ai-chat-box'); // Assuming 'ai-chat-box' is the ID of your main AI chat popup container
-      if (aiChatBox && aiChatBox.classList.contains('active')) return; // Assuming 'active' class indicates the chat box is open/visible
+      // NEW: Check if the AI Assistant is visible. If so, disable all player shortcuts.
+      const aiOverlay = document.getElementById('ai-assistant-overlay');
+      if (aiOverlay && aiOverlay.classList.contains('visible')) {
+          return;
+      }
 
-      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
+      const active = document.activeElement; const seekIsActive = (active && active.id === 'vidu_seek');
+      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
       
       const root = document.getElementById('modal-root'); 
       if(!root || (root.style.display === 'none' && !document.body.classList.contains('popup-mode'))) return;
@@ -2583,6 +2586,40 @@ function updateSpeedIndicator(activeButton) {
             resetInactivityTimer(false); 
             break; 
           }
+          
+          const currentRate = state.player.getPlaybackRate();
+          let currentIndex = -1;
+          for(let i=0; i<buttons.length; i++) {
+              if (buttons[i].classList.contains('active')) {
+                  currentIndex = i;
+                  break;
+              }
+          }
+          if (currentIndex === -1) currentIndex = buttons.findIndex(b => b.dataset.speed === "1");
+
+          let nextIndex;
+          if (key === 'e') {
+             nextIndex = (currentIndex + 1) % buttons.length;
+          } else {
+             nextIndex = (currentIndex - 1 + buttons.length) % buttons.length;
+          }
+          if (buttons[nextIndex]) {
+            buttons[nextIndex].click();
+          }
+          resetInactivityTimer(false);
+          break;
+        case ',':
+            e.preventDefault();
+            playNextOrPreviousVideo(-1);
+            resetInactivityTimer();
+            break;
+        case '.':
+            e.preventDefault();
+            playNextOrPreviousVideo(1);
+            resetInactivityTimer();
+            break;
+      }
+    };
           
           const currentRate = state.player.getPlaybackRate();
           let currentIndex = -1;
