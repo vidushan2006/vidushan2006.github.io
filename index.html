@@ -2517,7 +2517,7 @@ function updateSpeedIndicator(activeButton) {
 
     state.keyHandler = function(e){
       const active = document.activeElement; const seekIsActive = (active && active.id === 'vidu_seek');
-      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive && active.id !== 'ai-input') return;
+      if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable) && !seekIsActive) return;
       
       const root = document.getElementById('modal-root'); 
       if(!root || (root.style.display === 'none' && !document.body.classList.contains('popup-mode'))) return;
