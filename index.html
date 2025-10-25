@@ -1562,6 +1562,15 @@
         color: #ff73b5;
         transform: scale(1.1);
     }
+    #wrapper {
+        transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+        will-change: opacity, transform;
+    }
+    #wrapper.wrapper-hidden {
+        opacity: 0;
+        transform: translateY(-30px);
+        pointer-events: none;
+    }
   </style>
 </head>
 <body class="landing is-preload">
@@ -3075,13 +3084,10 @@ function updateSpeedIndicator(activeButton) {
         }
     }
 
-    window.handlePlayerLaunch = function() {
-        if (!wrapperElement) {
-            const wrapper = document.getElementById('wrapper');
-            if (wrapper) {
-                wrapperElement = wrapper;
-                wrapper.remove();
-            }
+   window.handlePlayerLaunch = function() {
+        const wrapper = document.getElementById('wrapper');
+        if (wrapper) {
+            wrapper.classList.add('wrapper-hidden');
         }
     };
 
@@ -3091,10 +3097,12 @@ function updateSpeedIndicator(activeButton) {
         
         const isPlayerActive = (modalRoot && modalRoot.style.display !== 'none') || (fsPlaylist && fsPlaylist.classList.contains('show'));
 
-        if (!isPlayerActive && wrapperElement && !document.getElementById('wrapper')) {
-            document.body.insertBefore(wrapperElement, document.getElementById('modal-root'));
-            (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
-            wrapperElement = null;
+        if (!isPlayerActive) {
+            const wrapper = document.getElementById('wrapper');
+            if (wrapper) {
+                wrapper.classList.remove('wrapper-hidden');
+                (function stagger(){ const cards=document.querySelectorAll('.list-item'); cards.forEach((c,i)=> c.style.animationDelay=(i*60)+'ms'); })();
+            }
         }
     };
 
