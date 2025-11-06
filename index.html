@@ -3844,59 +3844,96 @@ document.addEventListener('DOMContentLoaded', () => {
             'thanks': { response: "You're very welcome! Let me know if you need anything else. I'm here to help! 😊", followUps: [] },
         }
     };
+// --- Function to call your Mistral Agent (API key kept inline as requested) ---
+async function fetchFromMistral(prompt) {
+  
+    // Replace with your actual agent id (e.g. "ag_abc123...")
+    const AGENT_ID = 'ag_019a5a7aa859713cb9f0559996223a82';
 
-    // --- Function to call the Mistral AI API ---
-    async function fetchFromMistral(prompt) {
-        // As requested, the API key is placed directly here.
-        const mistralApiKey = 'VE8p88SwDcGXMsS9BFcqqjkSl9jiH4Zu';
-        const mistralApiUrl = 'https://api.mistral.ai/v1/chat/completions';
+    // Agents completions endpoint
+    const mistralApiUrl = 'https://api.mistral.ai/v1/agents/completions';
 
-        // We use mistral-small-latest for a good balance of intelligence and speed.
-        const payload = {
-            model: 'mistral-small-latest',
-            messages: [
-                { role: "user", content: prompt }
-            ]
-        };
+    // Payload for the Agent endpoint (uses agent_id + messages)
+    const payload = {
+        agent_id: AGENT_ID,
+        messages: [
+            { role: "user", content: prompt }
+        ]
+    };
 
-        try {
-            const response = await fetch(mistralApiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${mistralApiKey}`
-                },
-                body: JSON.stringify(payload),
-            });
+    try {
+        const response = await fetch(mistralApiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${mistralApiKey}`
+            },
+            body: JSON.stringify(payload),
+        });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Error from Mistral API:', errorData);
-                let errorMessage = `Sorry, there was an error connecting to the Mistral AI service.`;
-                if (errorData.message) {
-                    errorMessage += ` (Details: ${errorData.message})`;
-                }
-                // Check for common 401 Unauthorized error
-                if (response.status === 401) {
-                    errorMessage = "Sorry, the Mistral API key seems to be invalid or has expired. Please check the key.";
-                }
-                return errorMessage;
+        if (!response.ok) {
+            // try to parse JSON error body, fall back to text
+            let errorText;
+            try {
+                const errJson = await response.json();
+                console.error('Agent API error JSON:', errJson);
+                errorText = errJson.message || JSON.stringify(errJson);
+            } catch (e) {
+                const errStr = await response.text();
+                console.error('Agent API error text:', errStr);
+                errorText = errStr;
             }
 
-            const data = await response.json();
-            
-            // Extract the response content from Mistral's JSON structure
-            if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
-                return data.choices[0].message.content;
-            } else {
-                return "Sorry, I received an unusual response from the Mistral AI. Please try again.";
+            let errorMessage = `Sorry, there was an error connecting to the Mistral Agent service.`;
+            if (errorText) errorMessage += ` (Details: ${errorText})`;
+            if (response.status === 401) {
+                errorMessage = "Sorry, the Mistral API key seems to be invalid or has expired. Please check the key.";
             }
-
-        } catch (error) {
-            console.error('Network error calling Mistral API:', error);
-            return "Sorry, I'm having trouble connecting to my brain right now. Please check your internet connection and try again.";
+            return errorMessage;
         }
+
+        const data = await response.json();
+        // Typical agent response shapes vary — try to extract the user-facing text robustly.
+
+        // 1) choices[0].message.content (string or object)
+        if (data.choices && data.choices[0]) {
+            const choice = data.choices[0];
+            // If the API returned a simple string message
+            if (typeof choice.message === 'string') return choice.message;
+
+            // If message is an object with content as string
+            if (choice.message && typeof choice.message.content === 'string') {
+                return choice.message.content;
+            }
+
+            // If content is an object (e.g., { text: "..." } or other structured data)
+            if (choice.message && typeof choice.message.content === 'object') {
+                // prefer .text, then fallback to JSON
+                return choice.message.content.text ||
+                       choice.message.content.text_ ||
+                       JSON.stringify(choice.message.content);
+            }
+
+            // fallback to choice.text if present
+            if (choice.text) return choice.text;
+        }
+
+        // 2) some agent responses put text under data.output or data.output_text
+        if (typeof data.output === 'string') return data.output;
+        if (Array.isArray(data.output)) {
+            // join array outputs if present
+            return data.output.map(x => (x.text || x)).join('\n');
+        }
+        if (data.output_text) return data.output_text;
+
+        // 3) last resort: return a short JSON snapshot
+        return "Sorry, I received an unusual response from the Mistral Agent. Raw: " + JSON.stringify(data).slice(0, 2000);
+
+    } catch (error) {
+        console.error('Network error calling Mistral Agent API:', error);
+        return "Sorry, I'm having trouble connecting to my brain right now. Please check your internet connection and try again.";
     }
+}
 
     // --- MODIFIED: The core logic for handling a user's message ---
     async function handleSendMessage() { // This function is async
