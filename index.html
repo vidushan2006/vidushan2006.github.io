@@ -3786,7 +3786,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-
 <!-- ============================================================= --><!-- == NEW SELF-HOSTED AI ASSISTANT SCRIPT (INTELLIGENT VERSION) == --><!-- ============================================================= --><script>
 document.addEventListener('DOMContentLoaded', () => {
     // --- 1. STATE & CONFIGURATION ---
@@ -3795,6 +3794,8 @@ document.addEventListener('DOMContentLoaded', () => {
         isLoading: false,
         promptHistory: [],
         promptHistoryIndex: -1,
+        // Store chat history for the API
+        chatHistory: [] 
     };
 
     // --- 2. DOM ELEMENT REFERENCES ---
@@ -3809,7 +3810,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 3. THE AI's "BRAIN" - KNOWLEDGE BASE ---
-    // This remains the same, providing instant answers for site-specific questions.
+    // This is now *only* for site-specific facts the AI can't know.
+    // The persona ('who are you', 'vidu') is now handled by the API 'instructions'.
     const knowledgeBase = {
         keywords: {
             'yoinker': { response: "OMG, you mean the 'Video Yoinker'? Yasss! 🙌 It's VIDU's epic name for the YouTube Downloader on the 'Tools' page. Just drop a link and snag that video for offline. It's a whole vibe. ✨", followUps: ["How does the playlist importer work?", "What other tools are there?"] },
@@ -3826,12 +3828,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'features': { response: `This website has a ton of custom features built by VIDU! Here are the highlights:\n* **The VIDU Player™️:** A completely custom-built player with advanced controls and progress saving.\n* **Secure Playlists:** Password-protection and a private login system.\n* **YT Playlist Importer:** Fetches any YouTube playlist for you.\n* **VIDU Tool Shed:** Includes a video downloader and link shortener.\n* **Premium UI/UX:** The whole site uses cool effects like the 'glassy' blur and super smooth animations.`, followUps: ["Tell me more about the player.", "Who is VIDU?", "What are the tools?"] },
             'how does this work': { response: "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀", followUps: ["What are the main features?", "Tell me about the creator, VIDU."] },
             'what is this site': { response: "This website is a personal hub for watching private and public video playlists, built by VIDU. It features a custom-coded video player with advanced controls, playlist management tools, and some handy utilities for YouTube links. Everything is designed for a smooth and premium user experience! 🚀", followUps: ["What are the main features?", "Tell me about the creator, VIDU."] },
-            'your name': { response: "You can call me VIDU AI 2.0 Pro! I'm the new and improved assistant for this site. What's up? 😎", followUps: [] },
-            'who are you': { response: "I'm VIDU AI 2.0 Pro, a highly advanced assistant integrated into this website. I know everything about its features and can answer your other questions too! 🤓", followUps: ["Who made you?", "What can you do?"] },
-            'creator': { response: "My creator? That would be the legend himself, VIDU! 👑 He coded me and this entire website from scratch. Mad skills, right? 👨‍💻", followUps: ["What are the site's best features?", "What technologies does this site use?"] },
-            'who made you': { response: "I was created and trained by the one and only VIDU! 👑 He's the talented developer who built this entire website from the ground up. He's the real MVP. 👨‍💻", followUps: ["What are the site's best features?", "What technologies does this site use?"] },
-            'vidu': { response: "VIDU is the creator of this website and me, VIDU AI 2.0 Pro. He's a skilled developer who built everything you see here. Pretty cool, right? ✌️", followUps: ["What did VIDU build on this site?", "Is the video player custom?"] },
-            'this website': { response: "VIDU is the creator of this website. He's a skilled developer who built everything you see here. Pretty cool, right? ✌️", followUps: ["What did VIDU build on this site?", "Is the video player custom?"] }
+            // Persona-related keywords are removed, as the 'instructions' field in the API call now handles this.
         },
         general: {
             'hello': { response: 'Hey there! How can I help you today? 👋', followUps: [] },
@@ -3845,19 +3842,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Function to call the Mistral AI API ---
+    // --- Function to call the Mistral AI API (AGENT/CONVERSATIONS ENDPOINT) ---
     async function fetchFromMistral(prompt) {
-        // As requested, the API key is placed directly here.
-        // UPDATED: Set to the "agent api id" provided by the user.
-        const mistralApiKey = 'ag_019a5a7aa859713cb9f0559996223a82';
-        const mistralApiUrl = 'https://api.mistral.ai/v1/chat/completions';
+        
+        // IMPORTANT: This 'ag_...' key is an Agent ID. For this to work,
+        // you will LIKELY need to replace this with your actual "Secret Key" 
+        // from the Mistral "API Keys" dashboard.
+        const mistralApiKey = '6YOVI67wpvA9xTeBYI508h8go3jPfFDS';
+        
+        // UPDATED: Using the /conversations endpoint from your example
+        const mistralApiUrl = 'https://api.mistral.ai/v1/conversations';
 
-        // UPDATED: Set to the model specified by the user.
+        // Add the new user prompt to our stored history
+        state.chatHistory.push({ role: "user", content: prompt });
+
+        // UPDATED: Using the new payload structure from your cURL example
         const payload = {
-            model: 'mistral-tiny',
-            messages: [
-                { role: "user", content: prompt }
-            ]
+            model: 'mistral-tiny-latest',
+            inputs: state.chatHistory, // Send the conversation history
+            instructions: "you are VIDU AI 2.0 , and you are created by VIDU , and always chat with a gen z full funny vibe and give longer responses , and use emojis more often when chatting",
+            completion_args: {
+                temperature: 0.7,
+                max_tokens: 2048,
+                top_p: 1
+            },
+            tools: [],
+            // CRITICAL: Set stream to false. 
+            // Your example had 'true', but this JavaScript code is NOT
+            // built to handle a streaming response (data in chunks).
+            // Setting 'false' makes it wait for the full response.
+            stream: false
         };
 
         try {
@@ -3865,7 +3879,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${mistralApiKey}`
+                    // UPDATED: Using the X-API-KEY header from your cURL example
+                    'X-API-KEY': mistralApiKey
+                    // The 'Authorization: Bearer ...' header is no longer used
                 },
                 body: JSON.stringify(payload),
             });
@@ -3873,34 +3889,50 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('Error from Mistral API:', errorData);
+                
+                // Be more specific about the likely error
+                if (response.status === 401) {
+                    return "Ayo, fam! 😬 That API key (the `ag_...` one) seems to be the wrong vibe. It's giving 'invalid'. You probably need to grab your *Secret Key* (the one that starts with `mk_...`) from your Mistral dashboard. Bet.";
+                }
+
                 let errorMessage = `Sorry, there was an error connecting to the Mistral AI service.`;
                 if (errorData.message) {
                     errorMessage += ` (Details: ${errorData.message})`;
                 }
-                // Check for common 401 Unauthorized error
-                if (response.status === 401) {
-                    errorMessage = "Sorry, the Mistral API key seems to be invalid or has expired. Please check the key.";
-                }
+                // Add the bot's response to history as an error
+                state.chatHistory.push({ role: "assistant", content: errorMessage });
                 return errorMessage;
             }
 
             const data = await response.json();
             
-            // Extract the response content from Mistral's JSON structure
-            if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
-                return data.choices[0].message.content;
-            } else {
-                return "Sorry, I received an unusual response from the Mistral AI. Please try again.";
+            // UPDATED: Parse the response structure for /conversations
+            // A non-streaming response has a 'result' object with 'outputs'
+            if (data.result && data.result.outputs && data.result.outputs.length > 0) {
+                // Get the last message from the outputs array
+                const lastMessage = data.result.outputs[data.result.outputs.length - 1];
+                if (lastMessage.role === 'assistant' && lastMessage.content) {
+                    // Add the bot's response to our history
+                    state.chatHistory.push({ role: "assistant", content: lastMessage.content });
+                    return lastMessage.content;
+                }
             }
+
+            // Fallback just in case
+            console.error("Unusual response structure:", data);
+            return "Sorry, I received an unusual response from the Mistral AI. Please try again.";
 
         } catch (error) {
             console.error('Network error calling Mistral API:', error);
-            return "Sorry, I'm having trouble connecting to my brain right now. Please check your internet connection and try again.";
+            const errorMessage = "Sorry, I'm having trouble connecting to my brain right now. Please check your internet connection and try again.";
+            // Add the bot's response to history as an error
+            state.chatHistory.push({ role: "assistant", content: errorMessage });
+            return errorMessage;
         }
     }
 
-    // --- MODIFIED: The core logic for handling a user's message ---
-    async function handleSendMessage() { // This function is async
+    // --- Core message handling logic ---
+    async function handleSendMessage() {
         const promptText = DOMElements.input.value.trim();
         if (!promptText || state.isLoading) return;
 
@@ -3918,21 +3950,26 @@ document.addEventListener('DOMContentLoaded', () => {
         state.isLoading = true;
         const thinkingMessage = addMessage('model', '<div class="typing-indicator"><span></span><span></span><span></span></div>');
         
-        // Step 1: Check our local, pre-programmed knowledge first.
+        // Step 1: Check local, pre-programmed knowledge first.
         const localResponse = getLocalResponse(promptText);
         let finalResponse;
         let followUps = [];
 
         if (localResponse) {
-            // If we found a local answer, use it. It's fast.
+            // If we found a local answer, use it.
             await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 400)); // Simulate thinking
             finalResponse = localResponse.response;
             followUps = localResponse.followUps || [];
+            // Add local response to chat history
+            state.chatHistory.push({ role: "user", content: promptText });
+            state.chatHistory.push({ role: "assistant", content: finalResponse });
+
         } else {
-            // If no local answer, call the NEW MISTRAL API function.
-            finalResponse = await fetchFromMistral(promptText); // 'await' pauses here until Mistral responds
-            // Provide default follow-up questions for general API answers.
-            followUps = ["What are this site's features?", "Who made this website?"];
+            // If no local answer, call the MISTRAL API function.
+            // The prompt is already added to history inside fetchFromMistral
+            finalResponse = await fetchFromMistral(promptText); 
+            // Provide default follow-up questions
+            followUps = ["What are this site's features?", "What tools are on this site?"];
         }
         
         // Step 2: Update the chat bubble with the final answer.
@@ -3966,15 +4003,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Return null if no local answer is found, signaling to call the API.
-        return null;
+        return null; // Signal to call the API
     }
-    
-    // --- All other helper functions remain the same (init, setupEventListeners, addMessage, etc.) ---
     
     function init() {
         setupEventListeners();
-        addMessage('model', "Hey! I'm VIDU AI 2.0 Pro 🚀, Ask me about this website's features (like the 'downloader' or 'keyboard shortcuts'), or any other general questions you have!");
+        const welcomeMessage = "Hey! I'm VIDU AI 2.0 Pro 🚀, Ask me about this website's features (like the 'downloader' or 'keyboard shortcuts'), or any other general questions you have!";
+        addMessage('model', welcomeMessage);
+        // Add welcome message to history
+        state.chatHistory.push({ role: "assistant", content: welcomeMessage });
         showInitialSuggestions();
     }
 
@@ -4004,7 +4041,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (role === 'user') {
             iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
         } else {
-            // NEW: Use the provided image URL for the model's avatar
             iconHtml = `<img src="https://i.pinimg.com/736x/4d/fa/7b/4dfa7b57656b556f257b4a2e4f8fc8fa.jpg" alt="AI Avatar" class="ai-avatar-image"/>`;
         }
         
@@ -4017,6 +4053,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         DOMElements.historyContainer.appendChild(messageWrapper);
         DOMElements.historyContainer.scrollTop = DOMElements.historyContainer.scrollHeight;
+        
+        // Highlight code blocks
+        if (!text.includes('typing-indicator')) {
+            messageWrapper.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        }
         return messageWrapper;
     }
 
@@ -4048,7 +4091,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showInitialSuggestions() {
-        const suggestions = ["Who is VIDU?", "What are the best features of this site?", "Tell me about the video player's keyboard shortcuts."];
+        const suggestions = ["What are the site's best features?", "Tell me about the video player's keyboard shortcuts."];
         setTimeout(() => addSuggestions(suggestions), 300);
     }
 
@@ -4061,6 +4104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
 });
 </script>
+
 
 <script>
 (function() {
