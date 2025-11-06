@@ -3842,36 +3842,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Function to call the Mistral AI API (AGENT/CONVERSATIONS ENDPOINT) ---
+    // --- Function to call the Mistral AI API (FIXED) ---
     async function fetchFromMistral(prompt) {
         
-        // IMPORTANT: This 'ag_...' key is an Agent ID. For this to work,
-        // you will LIKELY need to replace this with your actual "Secret Key" 
-        // from the Mistral "API Keys" dashboard.
-        const mistralApiKey = '6YOVI67wpvA9xTeBYI508h8go3jPfFDS';
+        // !! CRITICAL !!
+        // This 'ag_...' key is your Agent ID. It WILL NOT WORK.
+        // You MUST replace this with your "Secret Key" from Mistral's
+        // "API Keys" page. It will start with 'mk_...' or 'sk_...'
+        const mistralApiKey = 'XyHmw8gyb3V1tMgflxTU8LZ0wyDlx1bA';
         
-        // UPDATED: Using the /conversations endpoint from your example
-        const mistralApiUrl = 'https://api.mistral.ai/v1/conversations';
+        // REVERTED: Go back to the standard chat endpoint that supports CORS
+        const mistralApiUrl = 'https://api.mistral.ai/v1/chat/completions';
 
         // Add the new user prompt to our stored history
         state.chatHistory.push({ role: "user", content: prompt });
 
-        // UPDATED: Using the new payload structure from your cURL example
+        // NEW: Define the system prompt (persona)
+        const systemPrompt = {
+            role: "system",
+            content: "you are VIDU AI 2.0 , and you are created by VIDU , and always chat with a gen z full funny vibe and give longer responses , and use emojis more often when chatting"
+        };
+
+        // REVERTED: Use the standard /chat/completions payload
         const payload = {
-            model: 'mistral-tiny-latest',
-            inputs: state.chatHistory, // Send the conversation history
-            instructions: "you are VIDU AI 2.0 , and you are created by VIDU , and always chat with a gen z full funny vibe and give longer responses , and use emojis more often when chatting",
-            completion_args: {
-                temperature: 0.7,
-                max_tokens: 2048,
-                top_p: 1
-            },
-            tools: [],
-            // CRITICAL: Set stream to false. 
-            // Your example had 'true', but this JavaScript code is NOT
-            // built to handle a streaming response (data in chunks).
-            // Setting 'false' makes it wait for the full response.
-            stream: false
+            model: 'mistral-tiny-latest', // Kept 'mistral-tiny-latest'
+            messages: [systemPrompt, ...state.chatHistory], // Prepend system prompt to history
+            temperature: 0.7,
+            max_tokens: 2048,
+            top_p: 1,
+            stream: false // Must be false for this code
         };
 
         try {
@@ -3879,9 +3878,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // UPDATED: Using the X-API-KEY header from your cURL example
-                    'X-API-KEY': mistralApiKey
-                    // The 'Authorization: Bearer ...' header is no longer used
+                    // REVERTED: Use 'Authorization: Bearer' header
+                    'Authorization': `Bearer ${mistralApiKey}`
                 },
                 body: JSON.stringify(payload),
             });
@@ -3890,43 +3888,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errorData = await response.json();
                 console.error('Error from Mistral API:', errorData);
                 
-                // Be more specific about the likely error
+                // This is the error we expect you to see until you change the key
                 if (response.status === 401) {
-                    return "Ayo, fam! 😬 That API key (the `ag_...` one) seems to be the wrong vibe. It's giving 'invalid'. You probably need to grab your *Secret Key* (the one that starts with `mk_...`) from your Mistral dashboard. Bet.";
+                    return "Ayo, fam! 😬 That API key (the `ag_...` one) seems to be the wrong vibe. It's giving 'invalid'. You probably need to grab your *Secret Key* (the one that starts with `mk_...` or `sk_...`) from your Mistral dashboard. Bet.";
                 }
 
                 let errorMessage = `Sorry, there was an error connecting to the Mistral AI service.`;
-                if (errorData.message) {
-                    errorMessage += ` (Details: ${errorData.message})`;
-                }
-                // Add the bot's response to history as an error
-                state.chatHistory.push({ role: "assistant", content: errorMessage });
+                if (errorData.message) { errorMessage += ` (Details: ${errorData.message})`; }
+                state.chatHistory.push({ role: "assistant", content: errorMessage }); // Add error to history
                 return errorMessage;
             }
 
             const data = await response.json();
             
-            // UPDATED: Parse the response structure for /conversations
-            // A non-streaming response has a 'result' object with 'outputs'
-            if (data.result && data.result.outputs && data.result.outputs.length > 0) {
-                // Get the last message from the outputs array
-                const lastMessage = data.result.outputs[data.result.outputs.length - 1];
-                if (lastMessage.role === 'assistant' && lastMessage.content) {
-                    // Add the bot's response to our history
-                    state.chatHistory.push({ role: "assistant", content: lastMessage.content });
-                    return lastMessage.content;
-                }
+            // REVERTED: Parse the standard /chat/completions response
+            if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+                const botResponse = data.choices[0].message.content;
+                state.chatHistory.push({ role: "assistant", content: botResponse }); // Add good response to history
+                return botResponse;
             }
 
-            // Fallback just in case
+            // Fallback...
             console.error("Unusual response structure:", data);
             return "Sorry, I received an unusual response from the Mistral AI. Please try again.";
 
         } catch (error) {
             console.error('Network error calling Mistral API:', error);
-            const errorMessage = "Sorry, I'm having trouble connecting to my brain right now. Please check your internet connection and try again.";
-            // Add the bot's response to history as an error
-            state.chatHistory.push({ role: "assistant", content: errorMessage });
+            // This is the error you are seeing now
+            const errorMessage = "Sorry, I'm having trouble connecting to my brain right now. Please check your internet connection and try again. (This is likely a CORS error from trying to use the wrong API endpoint, bro!)";
+            state.chatHistory.push({ role: "assistant", content: errorMessage }); // Add error to history
             return errorMessage;
         }
     }
