@@ -3844,97 +3844,107 @@ document.addEventListener('DOMContentLoaded', () => {
             'thanks': { response: "You're very welcome! Let me know if you need anything else. I'm here to help! 😊", followUps: [] },
         }
     };
-// --- Function to call your Mistral Agent (API key kept inline as requested) ---
-async function fetchFromMistral(prompt) {
-  
-    // Replace with your actual agent id (e.g. "ag_abc123...")
-    const AGENT_ID = 'ag_019a5a7aa859713cb9f0559996223a82';
+// --- Function to call your custom Agent AI ---
+// I've updated this function to show you how to call
+// your new agent. You will need to fill in the
+// placeholder values from your agent's hosting service.
+async function fetchFromAgentAI(prompt) {
 
-    // Agents completions endpoint
-    const mistralApiUrl = 'https://api.mistral.ai/v1/agents/completions';
+    // --- 1. YOUR AGENT ID ---
+    // This is the Agent ID you provided.
+    const agentId = 'ag_019a5a7aa859713cb9f0559996223a82';
 
-    // Payload for the Agent endpoint (uses agent_id + messages)
+
+    // --- 2. YOUR NEW API KEY ---
+    // You MUST replace this. This is the API Key from the service
+    // that hosts your agent (e.g., Vercel, OpenAI, a custom platform).
+    // The old Mistral key ('VE8p88...') will NOT work here.
+    const agentServiceApiKey = 'YOUR_AGENT_SERVICE_API_KEY_GOES_HERE';
+
+
+    // --- 3. YOUR NEW API ENDPOINT URL ---
+    // You MUST replace this. This is the URL for the API of
+    // your agent's hosting service. I've put a common-looking
+    // example, but you must find the real one in your service's documentation.
+    const agentServiceApiUrl = 'https://api.your-agent-service.com/v1/chat/completions'; // <-- This is just an EXAMPLE
+
+
+    // --- 4. YOUR NEW PAYLOAD STRUCTURE ---
+    // The data you send (the payload) will also be different.
+    // You need to check your agent service's documentation to see
+    // how to send the 'prompt' and the 'agentId'.
+    // This is just a GUESS:
     const payload = {
-        agent_id: AGENT_ID,
+        // Many services might use a 'model' or 'agent_id' field.
+        model: agentId, // This is a guess! It might be 'agent_id: agentId'
         messages: [
             { role: "user", content: prompt }
         ]
+        // Some services might require the agentId in a different place,
+        // like 'agent_id': agentId
     };
 
+    // --- End of new values ---
+
+
     try {
-        const response = await fetch(mistralApiUrl, {
+        const response = await fetch(agentServiceApiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${mistralApiKey}`
+                // The Authorization header now uses your NEW API key.
+                'Authorization': `Bearer ${agentServiceApiKey}`
             },
             body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
-            // try to parse JSON error body, fall back to text
-            let errorText;
-            try {
-                const errJson = await response.json();
-                console.error('Agent API error JSON:', errJson);
-                errorText = errJson.message || JSON.stringify(errJson);
-            } catch (e) {
-                const errStr = await response.text();
-                console.error('Agent API error text:', errStr);
-                errorText = errStr;
+            const errorData = await response.json();
+            console.error('Error from Agent AI service:', errorData);
+            let errorMessage = `Sorry, there was an error connecting to the Agent AI service.`;
+            if (errorData.message) {
+                errorMessage += ` (Details: ${errorData.message})`;
             }
-
-            let errorMessage = `Sorry, there was an error connecting to the Mistral Agent service.`;
-            if (errorText) errorMessage += ` (Details: ${errorText})`;
+            // Check for common 401 Unauthorized error
             if (response.status === 401) {
-                errorMessage = "Sorry, the Mistral API key seems to be invalid or has expired. Please check the key.";
+                errorMessage = "Sorry, the Agent AI service API key seems to be invalid or has expired. Please check the key.";
             }
             return errorMessage;
         }
 
         const data = await response.json();
-        // Typical agent response shapes vary — try to extract the user-facing text robustly.
 
-        // 1) choices[0].message.content (string or object)
-        if (data.choices && data.choices[0]) {
-            const choice = data.choices[0];
-            // If the API returned a simple string message
-            if (typeof choice.message === 'string') return choice.message;
+        // --- 5. YOUR NEW RESPONSE DATA STRUCTURE ---
+        // The format of the response JSON will ALSO be different.
+        // It is very unlikely to be 'data.choices[0].message.content'
+        // like Mistral's was.
 
-            // If message is an object with content as string
-            if (choice.message && typeof choice.message.content === 'string') {
-                return choice.message.content;
-            }
+        // Log the data so you can see its structure in the console:
+        console.log("Full response from Agent AI:", JSON.stringify(data, null, 2));
 
-            // If content is an object (e.g., { text: "..." } or other structured data)
-            if (choice.message && typeof choice.message.content === 'object') {
-                // prefer .text, then fallback to JSON
-                return choice.message.content.text ||
-                       choice.message.content.text_ ||
-                       JSON.stringify(choice.message.content);
-            }
-
-            // fallback to choice.text if present
-            if (choice.text) return choice.text;
+        // You must find the correct path to the text.
+        // It MIGHT be something like 'data.response', 'data.output',
+        // or 'data.text'.
+        //
+        // This is just a GUESS:
+        if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+             // This is the OLD MISTRAL-style response, here just in case
+             return data.choices[0].message.content;
+        } else if (data.response_text) {
+             // This is another guess
+             return data.response_text;
+        } else if (data.output) {
+             // And another guess
+             return data.output;
+        } else {
+            return "Sorry, I received an unusual response from the Agent AI. Please check the developer console to see the data structure and update the code.";
         }
-
-        // 2) some agent responses put text under data.output or data.output_text
-        if (typeof data.output === 'string') return data.output;
-        if (Array.isArray(data.output)) {
-            // join array outputs if present
-            return data.output.map(x => (x.text || x)).join('\n');
-        }
-        if (data.output_text) return data.output_text;
-
-        // 3) last resort: return a short JSON snapshot
-        return "Sorry, I received an unusual response from the Mistral Agent. Raw: " + JSON.stringify(data).slice(0, 2000);
 
     } catch (error) {
-        console.error('Network error calling Mistral Agent API:', error);
+        console.error('Network error calling Agent AI service:', error);
         return "Sorry, I'm having trouble connecting to my brain right now. Please check your internet connection and try again.";
     }
 }
-
     // --- MODIFIED: The core logic for handling a user's message ---
     async function handleSendMessage() { // This function is async
         const promptText = DOMElements.input.value.trim();
