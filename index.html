@@ -1562,6 +1562,61 @@
         color: #ff73b5;
         transform: scale(1.1);
     }
+    /* === MOBILE FIX START === */
+    /* This specifically targets screens smaller than 768px (Tablets and Phones) */
+    @media (max-width: 768px) {
+      
+      /* 1. Fix the Header Container */
+      header#header {
+        flex-wrap: wrap;       /* Allows items to drop to the next line */
+        gap: 12px;             /* Adds space between the rows */
+        padding: 10px 15px;    /* Reduces bulky padding to save space */
+        height: auto;          /* Allows header to grow taller to fit 2 rows */
+      }
+
+      /* 2. Position the Logo (Top Left) */
+      .logo {
+        order: 1;              /* Force Logo to be first */
+        margin-right: auto;    /* Pushes everything else to the right */
+      }
+      
+      /* 3. Shrink the Logo slightly for mobile */
+      .logo-circle {
+        width: 50px;           /* Hard limit on size so it doesn't dominate */
+        height: 50px;
+        box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.06), 0 5px 12px rgba(0,0,0,0.4); /* Adjust border size */
+      }
+
+      /* 4. Position the Right Controls (Top Right) */
+      .header-right-controls {
+        order: 2;              /* Force Controls to be second (next to logo) */
+        gap: 10px;             /* Reduce gap between bell/download icons */
+      }
+
+      /* 5. Fix the Navigation Links (The Buttons) */
+      nav {
+        order: 3;              /* Force Nav to be third (new row) */
+        width: 100%;           /* Make it take up the full width */
+        display: flex;
+        justify-content: center; /* Center the buttons */
+        margin-top: 5px;
+      }
+
+      /* 6. Adjust Button Size */
+      nav ul li a {
+        font-size: 12px;       /* Slightly smaller text */
+        padding: 8px 12px;     /* Reduce padding inside buttons */
+        width: auto;           /* Let them size naturally */
+      }
+      
+      /* 7. Tame the Background Zoom */
+      body {
+        /* This shifts the background anchor point to the top center.
+           It often helps portrait images look less like a random zoomed-in face. */
+        background-position: center top; 
+      }
+    }
+    /* === MOBILE FIX END === */
   </style>
 </head>
 <body class="landing is-preload">
