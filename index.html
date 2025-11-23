@@ -226,42 +226,6 @@
     .muted{color:var(--muted);font-size:13px;}
 
     @media (max-width:720px){ .list-item{width:calc(50% - 12px);} }
-    /* ADD THIS TO YOUR CSS (around line 220) */
-    @media (max-width: 600px) {
-    /* 1. Fix the Header Overlap */
-    header#header {
-        flex-direction: column; /* Stack items vertically */
-        gap: 12px;
-        padding: 10px;
-        height: auto; /* Let it grow */
-    }
-
-    /* 2. Shrink the Logo */
-    .logo-circle {
-        width: 60px; /* Force it smaller */
-        height: 60px;
-        box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.06), 0 5px 12px rgba(0,0,0,0.4);
-    }
-
-    /* 3. Adjust Navigation Buttons */
-    nav ul li a {
-        font-size: 11px;
-        padding: 6px 10px;
-    }
-
-    /* 4. Fix the Container Zoom/Scale Issue */
-    #home.wrapper.style1 {
-        transform: none !important; /* Disable the zoom effect on mobile */
-        padding-top: 20px;
-    }
-    
-    /* 5. Ensure the list items don't fly off screen */
-    .list-container {
-        width: 100%;
-        padding: 0 10px;
-        box-sizing: border-box;
-    }
-}
 
     .list-item{opacity:0;transform-origin:center;animation:floatIn .5s forwards;}
     @keyframes floatIn{from{opacity:0;transform:translateY(12px) scale(.995);}to{opacity:1;transform:translateY(0) scale(1);} }
@@ -1598,40 +1562,112 @@
         color: #ff73b5;
         transform: scale(1.1);
     }
-    /* --- MOBILE VISIBILITY FIX --- */
-    /* Hides AI and Play Last Video buttons on screens smaller than 768px (Tablets/Phones) */
-    @media (max-width: 768px) {
-        #ai-toggle-btn,
-        #play-last-video-btn {
-            display: none !important;
-        }
+    #mobile-no-entry {
+    display: none; /* Hidden on desktop */
     }
-  /* --- FIX: Mobile Overlay Centering --- */
+
     @media (max-width: 768px) {
-        /* Force full screen and centering on mobile */
-        .loading-popup-overlay, 
-        .fs-playlist-overlay,
-        .modal-backdrop {
-            inset: auto !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            margin: 0 !important;
-        }
-        
-        /* Ensure the content box inside isn't squashed */
-        .loading-popup-content {
-            width: 85% !important;
-            margin: auto !important;
-        }
-    }  
+    /* 1. Hide the actual site content */
+    #wrapper, #header, #modal-root, #ai-toggle-btn, .popup-notice, .vidu-player-host {
+        display: none !important;
+    }
+    
+    body {
+        overflow: hidden !important;
+        background: #000 !important;
+    }
+
+    /* 2. Show the Overlay */
+    #mobile-no-entry {
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 40px;
+        color: #fff;
+    }
+
+    /* 3. Animations & Styling */
+    .mobile-content-box {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 40px 30px;
+        border-radius: 24px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        animation: floatUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    .mobile-emoji {
+        font-size: 60px;
+        margin-bottom: 20px;
+        display: block;
+        animation: shakeHead 1.5s infinite ease-in-out;
+    }
+
+    .mobile-title {
+        font-size: 28px;
+        font-weight: 800;
+        margin-bottom: 12px;
+        background: linear-gradient(90deg, #ff6b6b, #fcc419);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-transform: uppercase;
+        letter-spacing: -1px;
+    }
+
+    .mobile-text {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #bfc8dd;
+        font-weight: 500;
+        margin-bottom: 30px;
+    }
+
+    .mobile-footer {
+        font-size: 12px;
+        color: rgba(255,255,255,0.3);
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    /* Animations */
+    @keyframes floatUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shakeHead {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-10deg); }
+        75% { transform: rotate(10deg); }
+    }
+}
   </style>
 </head>
 <body class="landing is-preload">
+  <div id="mobile-no-entry">
+  <div class="mobile-content-box">
+    <span class="mobile-emoji">💀</span>
+    <h1 class="mobile-title">Bruh... Hold Up</h1>
+    <p class="mobile-text">
+      Naurrr bestie, this screen is giving <strong>tiny</strong>. 🤏<br><br>
+      The vibes on this site are too immaculate for a phone. 
+      It's high-performance, high-def, and main character energy only.<br><br>
+      <strong>Hop on a PC to witness the greatness. No cap.</strong> 🧢
+    </p>
+    <div class="mobile-footer">
+      — VIDU Says: Go Find A Desktop —
+    </div>
+  </div>
+</div>
 <script>
 // POPUP MODE HANDLER
 (function() {
@@ -2982,9 +3018,7 @@ function updateSpeedIndicator(activeButton) {
             playsinline: 1, 
             iv_load_policy: 3, 
             origin: location.origin,
-            start: Math.floor(startTime),
-            mute: (window.innerWidth < 768) ? 1 : 0,
-            autoplay: 1
+            start: Math.floor(startTime)
           },
           events: {
             onReady: function(evt){
@@ -3002,10 +3036,7 @@ function updateSpeedIndicator(activeButton) {
               updatePlaylistHighlight();
               updateNavTooltips();
               try{ if(typeof evt.target.setPlaybackQuality === 'function'){ evt.target.setPlaybackQuality('default'); } }catch(e){}
-              try { 
-                  if(window.innerWidth < 768) { evt.target.mute(); }
-                  evt.target.playVideo(); 
-              } catch(e){}
+              try{ evt.target.playVideo(); }catch(e){}
               if(state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
               updatePlayerUI();
               if(state.mo) state.mo.disconnect();
