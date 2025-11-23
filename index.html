@@ -1695,7 +1695,7 @@
   </style>
 </head>
 <body class="landing is-preload">
- <div id="mobile-no-entry">
+<div id="mobile-no-entry">
   <div class="mobile-content-box">
     <span class="mobile-icon">🖥️</span>
     <h1 class="mobile-title">Desktop Required</h1>
@@ -1708,35 +1708,71 @@
     
     <div class="copy-link-wrapper">
         <input type="text" class="url-display" id="mobile-url-input" readonly value="https://vidu2006.netlify.app/">
-        <button class="copy-btn" id="mobile-copy-btn" onclick="copyToClipboard()">Copy</button>
+        <button class="copy-btn" id="mobile-copy-btn">Copy</button>
     </div>
   </div>
 </div>
 
 <script>
-    // Automatically set the current URL in the input box so it's always accurate
-    document.getElementById('mobile-url-input').value = window.location.href;
-
-    function copyToClipboard() {
+    document.getElementById("mobile-copy-btn").addEventListener("click", function() {
         const copyText = document.getElementById("mobile-url-input");
         const copyBtn = document.getElementById("mobile-copy-btn");
-        
-        // Standard clipboard API
-        navigator.clipboard.writeText(window.location.href).then(() => {
-            // Visual Feedback
+        const staticLink = "https://vidu2006.netlify.app/";
+
+        // 1. Visual Success Function
+        function showSuccess() {
             const originalText = copyBtn.innerText;
             copyBtn.innerText = "Copied!";
-            copyBtn.style.backgroundColor = "#ffffff"; // Flash white
-            
+            copyBtn.style.backgroundColor = "#ffffff";
             setTimeout(() => {
                 copyBtn.innerText = originalText;
-                copyBtn.style.backgroundColor = "#39ff14"; // Back to green
+                copyBtn.style.backgroundColor = "#39ff14";
             }, 2000);
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
+        }
+
+        // 2. Visual Error Function
+        function showError(err) {
+            console.error("Copy failed:", err);
             copyBtn.innerText = "Error";
-        });
-    }
+            copyBtn.style.backgroundColor = "#ff4444";
+            setTimeout(() => {
+                copyBtn.innerText = "Copy";
+                copyBtn.style.backgroundColor = "#39ff14";
+            }, 2000);
+        }
+
+        // 3. The Robust Copy Logic
+        // Method A: Try Modern API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(staticLink)
+                .then(showSuccess)
+                .catch(() => {
+                    // If Modern API fails, try Method B immediately
+                    fallbackCopyText();
+                });
+        } else {
+            // If Modern API doesn't exist, use Method B
+            fallbackCopyText();
+        }
+
+        // Method B: Old School Fallback (Works on almost all phones)
+        function fallbackCopyText() {
+            try {
+                copyText.select();
+                copyText.setSelectionRange(0, 99999); // For mobile devices
+                const successful = document.execCommand("copy");
+                if (successful) {
+                    showSuccess();
+                    // Remove selection highlight to look clean
+                    if (window.getSelection) { window.getSelection().removeAllRanges(); }
+                } else {
+                    showError("execCommand failed");
+                }
+            } catch (err) {
+                showError(err);
+            }
+        }
+    });
 </script>
 <script>
 // POPUP MODE HANDLER
