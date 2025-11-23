@@ -1651,7 +1651,7 @@
     .url-display {
         background: transparent;
         border: none;
-        color: #39ff14; /* Highlighted in green */
+        color: #39ff14;
         font-size: 14px;
         padding: 8px;
         width: 100%;
@@ -1659,12 +1659,17 @@
         font-family: monospace;
         text-align: center;
         
-        /* CRITICAL: Allow user to select this text */
+        /* Force interaction */
         pointer-events: auto !important;
         user-select: text !important;
         -webkit-user-select: text !important;
+        
+        /* Make selection background visible (Green bg, Black text) */
+        ::selection {
+            background: #39ff14;
+            color: #000;
+        }
     }
-
     .mobile-hint {
         display: block;
         font-size: 11px;
@@ -1695,9 +1700,15 @@
     </p>
     
     <div class="copy-link-wrapper">
-        <input type="text" class="url-display" value="https://vidu2006.netlify.app/" readonly onclick="this.select();">
+        <input type="text" 
+               class="url-display" 
+               value="https://vidu2006.netlify.app/" 
+               inputmode="none"
+               spellcheck="false"
+               onclick="this.select();" 
+               onkeydown="return false;">
     </div>
-    <span class="mobile-hint">Tap text to copy</span>
+    <span class="mobile-hint">Tap link & press copy</span>
   </div>
 </div>
 <script>
