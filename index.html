@@ -1281,21 +1281,23 @@
     }
     /* UPDATED: Styles for the "Play Last Video" button */
     #play-last-video-btn {
-    position: fixed;
-    bottom: 90px; /* Moved up safely */
-    right: 20px;
-    width: 50px;  /* Slightly larger for mobile tap */
-    height: 50px;
-    background-color: #39ff14 !important; /* Neon Green Force */
-    border-radius: 50%;
-    z-index: 2147483647; /* Max Z-Index */
-    display: none; /* JS toggles this to flex */
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    border: 2px solid rgba(255,255,255,0.2);
+        position: fixed;
+        bottom: 12px;  /* MODIFIED: Moved lower */
+        right: 12px;   /* MODIFIED: Moved more to the edge */
+        width: 40px;   /* MODIFIED: Size reduced to 40px */
+        height: 40px;  /* MODIFIED: Size reduced to 40px */
+        background-color: var(--accent-2);
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 25px rgba(20, 200, 20, 0.3);
+        cursor: pointer;
+        z-index: 9990;
+        transition: all 0.2s var(--ease);
+        display: none;
     }
-    
     #play-last-video-btn:hover {
         transform: scale(1.1);
         background-color: #4aff28;
@@ -1312,72 +1314,51 @@
 
     /* AI Chatbot Styles */
     #ai-toggle-btn {
-    position: fixed;
-    bottom: 90px; /* Moved up safely */
-    left: 20px;
-    width: 50px;
-    height: 50px;
-    background-color: #10b981 !important; /* Emerald Green Force */
-    color: white !important;
-    border-radius: 50%;
-    z-index: 2147483647; /* Max Z-Index */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    border: 2px solid rgba(255,255,255,0.2);
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 9998;
     }
-    
-    /* --- AI POPUP FIXES --- */
 
-/* --- AI POPUP FIX (Forced Rendering) --- */
-#ai-assistant-overlay {
-    position: fixed;
-    inset: 0;
-    /* FIX: Use a solid dark color, remove blur to stop GPU glitches */
-    background-color: rgba(0, 0, 0, 0.9) !important; 
-    z-index: 2147483647; /* Maximum Z-Index */
-    
-    /* FIX: Use display none instead of opacity */
-    display: none; 
-    align-items: center;
-    justify-content: center;
-}
+    #ai-assistant-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(10, 12, 18, 0.5);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 20000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s var(--ease);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-#ai-assistant-overlay.visible {
-    /* FIX: Force flex when active to trigger a repaint */
-    display: flex !important; 
-    animation: fadeIn 0.2s ease-out forwards;
-}
+    #ai-assistant-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-#ai-assistant-container {
-    width: 90vw;
-    max-width: 750px;
-    height: 80vh; /* Safe height */
-    
-    /* FIX: Ensure background is solid so it's not transparent */
-    background-color: #1E202B !important; 
-    border-radius: 16px;
-    box-shadow: 0 0 50px rgba(0,0,0,1);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* FIX: Handle mobile keyboard resizing */
-@media (max-width: 600px) {
     #ai-assistant-container {
-        width: 100%;
-        height: 100%;
-        border-radius: 0;
+        width: 90vw;
+        max-width: 750px;
+        height: 80vh;
+        max-height: 700px;
+        background-color: #1E202B;
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transform: scale(0.95);
+        transition: transform 0.3s var(--ease);
     }
-}
+
+    #ai-assistant-overlay.visible #ai-assistant-container {
+        transform: scale(1);
+    }
     
     #ai-header {
         display: flex;
@@ -3110,7 +3091,8 @@ function updateSpeedIndicator(activeButton) {
     window.viduPopupWindow = null;
     let wrapperElement = null;
 
-   // REPLACE your existing updateZoomLevel function (around line 1238) with this:
+    // NEW: Function to apply zoom based on playlist depth
+    // REPLACE your existing updateZoomLevel function (around line 1238) with this:
     function updateZoomLevel() {
         try {
             // FIX: Stop this function from running on mobile devices
@@ -3128,7 +3110,7 @@ function updateSpeedIndicator(activeButton) {
             console.error("Failed to update zoom level:", e);
         }
     }
-
+  
     window.handlePlayerLaunch = function() {
         if (!wrapperElement) {
             const wrapper = document.getElementById('wrapper');
@@ -4071,25 +4053,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function toggleAssistant() {
         state.isAssistantVisible = !state.isAssistantVisible;
-        
-        const overlay = DOMElements.overlay;
-        
+        DOMElements.overlay.classList.toggle('visible', state.isAssistantVisible);
         if (state.isAssistantVisible) {
-            // 1. Show the overlay
-            overlay.classList.add('visible');
-            
-            // 2. Wait 50ms for the browser to "paint" the popup before focusing
-            // This prevents the keyboard from freezing the animation
-            setTimeout(() => {
-                try {
-                    DOMElements.input.focus();
-                } catch(e) { console.log(e); }
-            }, 50);
-            
-        } else {
-            // Hide the overlay
-            overlay.classList.remove('visible');
-            DOMElements.input.blur(); // Close keyboard
+            DOMElements.input.focus();
         }
     }
     
@@ -4169,22 +4135,61 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 (function() {
     'use strict';
+
+    // This function is the core of the detection logic.
     const detectDevTools = () => {
+        // We set a threshold for how much the window dimensions can differ.
+        // If the developer tools are docked to the side or bottom, the inner dimensions
+        // of the window will be smaller than the outer dimensions.
         const threshold = 160;
+
         const widthDifference = window.outerWidth - window.innerWidth > threshold;
         const heightDifference = window.outerHeight - window.innerHeight > threshold;
-        if (widthDifference || heightDifference) { return true; }
+
+        // If either dimension has a significant difference, it's a strong sign.
+        if (widthDifference || heightDifference) {
+            return true;
+        }
+        
+        // This is a more advanced trick. When developer tools are open, the browser
+        // will pause execution on the `debugger` line. We can measure the time it
+        // takes to execute the code immediately before and after this line.
+        // A long delay indicates that the tools are open and paused execution.
         const startTime = new Date().getTime();
+        // The 'debugger' keyword is a command that pauses code execution if dev tools are open.
+        // If they are not open, this line is ignored by the browser.
         debugger; 
         const endTime = new Date().getTime();
-        if (endTime - startTime > 100) { return true; }
+
+        // If the time elapsed is more than 100 milliseconds, it's very likely
+        // that the developer tools paused the script.
+        if (endTime - startTime > 100) {
+            return true;
+        }
+
+        // If none of the checks above were triggered, we assume the tools are closed.
         return false;
     };
+
+    // This function is what we'll run repeatedly to check for the dev tools.
     const checkAndReload = () => {
-        if (detectDevTools()) { window.location.reload(); }
+        if (detectDevTools()) {
+            // If the dev tools are detected, we force the page to reload.
+            // This prevents the user from inspecting the page content or network requests.
+            window.location.reload();
+        }
     };
+
+    // We use `setInterval` to run our check function repeatedly.
+    // Here, it runs every 1000 milliseconds (1 second). This ensures that even if
+    // a user opens the tools after the page loads, they will be detected quickly.
     setInterval(checkAndReload, 1000);
+
+    // Additionally, we can add an event listener for the 'resize' event on the window.
+    // Docking or undocking the developer tools often triggers a resize event,
+    // which allows for an even faster detection in some cases.
     window.addEventListener('resize', checkAndReload);
+
 })();
 </script>
 </body>
