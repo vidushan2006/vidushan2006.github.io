@@ -1281,23 +1281,21 @@
     }
     /* UPDATED: Styles for the "Play Last Video" button */
     #play-last-video-btn {
-        position: fixed;
-        bottom: 12px;  /* MODIFIED: Moved lower */
-        right: 12px;   /* MODIFIED: Moved more to the edge */
-        width: 40px;   /* MODIFIED: Size reduced to 40px */
-        height: 40px;  /* MODIFIED: Size reduced to 40px */
-        background-color: var(--accent-2);
-        border: none;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 8px 25px rgba(20, 200, 20, 0.3);
-        cursor: pointer;
-        z-index: 9990;
-        transition: all 0.2s var(--ease);
-        display: none;
+    position: fixed;
+    bottom: 90px; /* Moved up safely */
+    right: 20px;
+    width: 50px;  /* Slightly larger for mobile tap */
+    height: 50px;
+    background-color: #39ff14 !important; /* Neon Green Force */
+    border-radius: 50%;
+    z-index: 2147483647; /* Max Z-Index */
+    display: none; /* JS toggles this to flex */
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    border: 2px solid rgba(255,255,255,0.2);
     }
+    
     #play-last-video-btn:hover {
         transform: scale(1.1);
         background-color: #4aff28;
@@ -1314,51 +1312,73 @@
 
     /* AI Chatbot Styles */
     #ai-toggle-btn {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        z-index: 9998;
+    position: fixed;
+    bottom: 90px; /* Moved up safely */
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: #10b981 !important; /* Emerald Green Force */
+    color: white !important;
+    border-radius: 50%;
+    z-index: 2147483647; /* Max Z-Index */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    border: 2px solid rgba(255,255,255,0.2);
     }
+    
+    /* --- AI POPUP FIXES --- */
 
-    #ai-assistant-overlay {
-        position: fixed;
-        inset: 0;
-        background-color: rgba(10, 12, 18, 0.5);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        z-index: 20000;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s var(--ease);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+#ai-assistant-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.85) !important; /* Darker background to hide site behind it */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    z-index: 2147483647; /* Max Z-Index to force it on TOP of header */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-    #ai-assistant-overlay.visible {
-        opacity: 1;
-        pointer-events: auto;
-    }
+#ai-assistant-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
 
+#ai-assistant-container {
+    width: 90vw;
+    max-width: 750px;
+    height: 80vh;
+    max-height: 700px;
+    background-color: #1E202B; /* Solid background color */
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transform: scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#ai-assistant-overlay.visible #ai-assistant-container {
+    transform: scale(1);
+}
+
+/* IMPORTANT: Mobile Keyboard Fix for Popup */
+@media (max-width: 600px) {
     #ai-assistant-container {
-        width: 90vw;
-        max-width: 750px;
-        height: 80vh;
-        max-height: 700px;
-        background-color: #1E202B;
-        border-radius: 16px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        transform: scale(0.95);
-        transition: transform 0.3s var(--ease);
+        width: 100%;
+        height: 100%; /* Take full height on mobile */
+        max-height: none;
+        border-radius: 0; /* No corners on full screen */
     }
-
-    #ai-assistant-overlay.visible #ai-assistant-container {
-        transform: scale(1);
-    }
+}
     
     #ai-header {
         display: flex;
