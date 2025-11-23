@@ -1598,6 +1598,14 @@
         color: #ff73b5;
         transform: scale(1.1);
     }
+    /* --- MOBILE VISIBILITY FIX --- */
+    /* Hides AI and Play Last Video buttons on screens smaller than 768px (Tablets/Phones) */
+    @media (max-width: 768px) {
+        #ai-toggle-btn,
+        #play-last-video-btn {
+            display: none !important;
+        }
+    }
   </style>
 </head>
 <body class="landing is-preload">
