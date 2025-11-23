@@ -1562,7 +1562,7 @@
         color: #ff73b5;
         transform: scale(1.1);
     }
-    /* --- ⛔ PROFESSIONAL MOBILE BLOCKER UI --- */
+  /* --- ⛔ PROFESSIONAL MOBILE BLOCKER UI (MANUAL COPY) --- */
 #mobile-no-entry {
     display: none;
 }
@@ -1580,7 +1580,7 @@
         width: 100%;
         height: 100%;
         overflow: hidden !important;
-        background: #0b0d15 !important; /* Deep dark background */
+        background: #0b0d15 !important;
     }
 
     /* 3. The Full-Screen Overlay */
@@ -1589,10 +1589,9 @@
         top: 0;
         left: 0;
         width: 100vw;
-        /* Use dvh for dynamic height (ignores address bars), fallback to vh */
         height: 100vh;
         height: 100dvh; 
-        z-index: 2147483647; /* Max Z-Index */
+        z-index: 2147483647;
         background: radial-gradient(circle at center, #1a1d29 0%, #000000 100%);
         display: flex !important;
         flex-direction: column;
@@ -1640,12 +1639,10 @@
         font-weight: 500;
     }
 
-    /* 5. Copy Link UI */
+    /* 5. Manual Link Display UI */
     .copy-link-wrapper {
-        display: flex;
-        gap: 8px;
         background: rgba(0, 0, 0, 0.4);
-        padding: 6px;
+        padding: 10px;
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         margin-top: 10px;
@@ -1654,37 +1651,28 @@
     .url-display {
         background: transparent;
         border: none;
-        color: #64748b;
-        font-size: 13px;
-        padding: 8px 12px;
+        color: #39ff14; /* Highlighted in green */
+        font-size: 14px;
+        padding: 8px;
         width: 100%;
         outline: none;
         font-family: monospace;
-        pointer-events: none; /* Read only */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        text-align: center;
+        
+        /* CRITICAL: Allow user to select this text */
+        pointer-events: auto !important;
+        user-select: text !important;
+        -webkit-user-select: text !important;
     }
 
-    .copy-btn {
-        background: #39ff14; /* VIDU Green */
-        color: #000;
-        border: none;
-        border-radius: 8px;
-        padding: 0 16px;
+    .mobile-hint {
+        display: block;
+        font-size: 11px;
+        color: rgba(255,255,255,0.4);
+        margin-top: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
         font-weight: 700;
-        font-size: 13px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .copy-btn:active {
-        transform: scale(0.95);
-        background: #fff;
     }
 
     @keyframes fadeUp {
@@ -1707,73 +1695,11 @@
     </p>
     
     <div class="copy-link-wrapper">
-        <input type="text" class="url-display" id="mobile-url-input" readonly value="https://vidu2006.netlify.app/">
-        <button class="copy-btn" id="mobile-copy-btn">Copy</button>
+        <input type="text" class="url-display" value="https://vidu2006.netlify.app/" readonly onclick="this.select();">
     </div>
+    <span class="mobile-hint">Tap text to copy</span>
   </div>
 </div>
-
-<script>
-    document.getElementById("mobile-copy-btn").addEventListener("click", function() {
-        const copyText = document.getElementById("mobile-url-input");
-        const copyBtn = document.getElementById("mobile-copy-btn");
-        const staticLink = "https://vidu2006.netlify.app/";
-
-        // 1. Visual Success Function
-        function showSuccess() {
-            const originalText = copyBtn.innerText;
-            copyBtn.innerText = "Copied!";
-            copyBtn.style.backgroundColor = "#ffffff";
-            setTimeout(() => {
-                copyBtn.innerText = originalText;
-                copyBtn.style.backgroundColor = "#39ff14";
-            }, 2000);
-        }
-
-        // 2. Visual Error Function
-        function showError(err) {
-            console.error("Copy failed:", err);
-            copyBtn.innerText = "Error";
-            copyBtn.style.backgroundColor = "#ff4444";
-            setTimeout(() => {
-                copyBtn.innerText = "Copy";
-                copyBtn.style.backgroundColor = "#39ff14";
-            }, 2000);
-        }
-
-        // 3. The Robust Copy Logic
-        // Method A: Try Modern API
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(staticLink)
-                .then(showSuccess)
-                .catch(() => {
-                    // If Modern API fails, try Method B immediately
-                    fallbackCopyText();
-                });
-        } else {
-            // If Modern API doesn't exist, use Method B
-            fallbackCopyText();
-        }
-
-        // Method B: Old School Fallback (Works on almost all phones)
-        function fallbackCopyText() {
-            try {
-                copyText.select();
-                copyText.setSelectionRange(0, 99999); // For mobile devices
-                const successful = document.execCommand("copy");
-                if (successful) {
-                    showSuccess();
-                    // Remove selection highlight to look clean
-                    if (window.getSelection) { window.getSelection().removeAllRanges(); }
-                } else {
-                    showError("execCommand failed");
-                }
-            } catch (err) {
-                showError(err);
-            }
-        }
-    });
-</script>
 <script>
 // POPUP MODE HANDLER
 (function() {
